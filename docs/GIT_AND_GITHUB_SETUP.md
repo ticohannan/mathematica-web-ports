@@ -106,7 +106,7 @@ git switch --detach tested-20261002-1830   :: look at an old tested version (git
 
 ## 7. Private files (`_internal/`)
 
-`_internal/` holds the notes shared with Claude (RULES, CHANGELOG, OBSERVATIONS, …), assignment
+`_internal/` holds private working notes (RULES, CHANGELOG, OBSERVATIONS, …), assignment
 material and the original notebooks. It is ignored by the main repository. To version it **locally**
 (never pushed), make it its own repository:
 

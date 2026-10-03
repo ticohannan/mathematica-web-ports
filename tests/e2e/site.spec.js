@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Tico Hannan
+// SPDX-FileCopyrightText: Adapted from Wolfram Demonstrations Project content (see LICENSE.md)
+// SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // tests/e2e/site.spec.js — landing page, links, attribution
 import { test, expect } from '@playwright/test';
 

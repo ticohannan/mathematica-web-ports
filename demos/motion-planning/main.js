@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Tico Hannan
+// SPDX-FileCopyrightText: Original Wolfram Demonstration by Shreyas Poyrekar, Aaron T. Becker and Arifa Sultana
+// SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // demos/motion-planning/main.js — SVG rendering + locator dragging (browser only).
 import { Controls, svgEl } from '../../shared/ui.js';
 import { computeScene, lineList, pathLength, DEFAULTS, LOCATOR_RANGES, PLOT_RANGE, regularPolygon } from './planner.js';

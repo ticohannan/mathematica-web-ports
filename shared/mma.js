@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2026 Tico Hannan
+// SPDX-License-Identifier: MIT
 // shared/mma.js
 // Small helpers that reproduce Mathematica (Wolfram Language) numeric semantics
 // the original notebooks rely on. Pure functions: no DOM, safe to import in Node tests.

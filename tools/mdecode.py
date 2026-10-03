@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Tico Hannan
+# SPDX-License-Identifier: MIT
 import re,base64,zlib,struct,sys
 def dec(b, i=0):
     tag=chr(b[i]); i+=1

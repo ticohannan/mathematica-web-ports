@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 Tico Hannan
+# SPDX-License-Identifier: MIT
 """Extract readable source + text from Mathematica .nb files without a Wolfram kernel.
 
 Parses only the top-level notebook expression structure (heads, lists, strings,

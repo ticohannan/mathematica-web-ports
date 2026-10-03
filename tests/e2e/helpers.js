@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2026 Tico Hannan
+// SPDX-License-Identifier: MIT
 // tests/e2e/helpers.js — shared helpers for the browser tests
 import { expect } from '@playwright/test';
 import fs from 'node:fs';

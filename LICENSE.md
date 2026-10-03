@@ -8,15 +8,37 @@ of Wolfram Demonstrations Project content, which is licensed under the
 <https://creativecommons.org/licenses/by-nc-sa/3.0/>
 (Wolfram's terms: <https://wolfram.com/legal/terms/wolfram-demonstrations-project.html>).
 
-As required by that licence's ShareAlike term, **this repository is released under CC BY-NC-SA 3.0**.
-You may share and adapt it for **non-commercial** purposes, provided you credit the original authors
-and this adaptation, indicate any changes, and release adaptations under the same licence.
-Because of the NonCommercial term this project is *source-available*, not "open source" in the OSI
-sense. Third-party components keep their own licences (below).
+As required by that licence's ShareAlike term, **the adapted demonstrations, and everything derived
+from the original notebooks, are released under CC BY-NC-SA 3.0**. You may share and adapt them for
+**non-commercial** purposes, provided you credit the original authors and this adaptation, indicate
+any changes, and release adaptations under the same licence. Because of the NonCommercial term these
+parts are *source-available*, not "open source" in the OSI sense.
 
-Adaptation © 2026 Tico Hannan (<https://github.com/ticohannan/mathematica-web-ports>).
-The adaptation code was generated with an AI coding assistant (Claude, Anthropic) and reviewed and
-tested by the repository owner.
+**Separable tooling and generic helpers that are not derived from the Demonstrations are released
+under the MIT licence** (see the table below). Third-party components keep their own licences.
+
+Author of the adaptation and of the MIT-licensed tooling: **Tico Hannan**, © 2026
+(<https://github.com/ticohannan/mathematica-web-ports>). The code was produced with an AI
+code-generation tool (Claude, by Anthropic) used by the author; the tool is not an author.
+
+Licence texts: [`LICENSES/CC-BY-NC-SA-3.0.txt`](LICENSES/CC-BY-NC-SA-3.0.txt) and
+[`LICENSES/MIT.txt`](LICENSES/MIT.txt) (from the SPDX licence list). Each source file carries an
+`SPDX-License-Identifier` header; [`REUSE.toml`](REUSE.toml) covers files that cannot (JSON, Markdown).
+
+## Which licence applies to which file
+
+| Path | Licence | Why |
+|------|---------|-----|
+| `demos/**` (all three apps, incl. `teapot-data.js`) | CC BY-NC-SA 3.0 | adaptations of the Demonstrations |
+| `index.html`, `README.md`, `LICENSE.md` | CC BY-NC-SA 3.0 | describe and present the adaptations |
+| `docs/original-source/**`, `docs/MANUAL_TEST_CHECKLIST.md` | CC BY-NC-SA 3.0 | readable copies of / derived from the originals |
+| `tests/**` except the two MIT files below | CC BY-NC-SA 3.0 | encode the originals' behaviour and data (`tests/golden/*.json` is extracted from the notebooks) |
+| `tools/**` | MIT | separable tooling (notebook decoder/extractor, local server, publish and exploration scripts). Data the tools *produce* from the notebooks stays CC BY-NC-SA |
+| `shared/**` (`mma.js`, `linalg.js`, `ui.js`, `three-helpers.js`, `style.css`) | MIT | generic helpers: Wolfram Language numeric semantics, 3×3 algebra, Manipulate-style controls, three.js helpers, page style |
+| `tests/unit/mma.test.js`, `tests/e2e/helpers.js` | MIT | test generic helpers only |
+| `vitest.config.js`, `playwright.config.js`, `package.json`, `package-lock.json`, `.gitignore`, `.gitattributes`, `.nojekyll`, `REUSE.toml`, `LICENSES/**` | MIT | configuration |
+| `docs/ARCHITECTURE.md`, `docs/TESTING.md`, `docs/GIT_AND_GITHUB_SETUP.md` | MIT | generic project documentation |
+| `vendor/three/**` | MIT, © three.js authors | third-party |
 
 ## Original works adapted
 

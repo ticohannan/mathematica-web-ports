@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2026 Tico Hannan
+// SPDX-License-Identifier: MIT
 // shared/ui.js
 // Minimal re-implementation of Mathematica Manipulate controls in plain DOM:
 // labelled sliders (with the "+" animation panel), setter bars, a 2D slider,

@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2026 Tico Hannan
+// SPDX-License-Identifier: MIT
 // shared/three-helpers.js
 // three.js utilities that mimic Mathematica Graphics3D conventions:
 // z-up camera from a ViewPoint in "scaled box coordinates", Mathematica's

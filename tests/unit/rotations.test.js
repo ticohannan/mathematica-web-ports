@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Tico Hannan
+// SPDX-FileCopyrightText: Adapted from Wolfram Demonstrations Project content (see LICENSE.md)
+// SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // tests/unit/rotations.test.js — rotation parametrizations + Euler gyroscope model
 import { describe, it, expect } from 'vitest';
 import * as R from '../../demos/three-parametrizations/rotations.js';

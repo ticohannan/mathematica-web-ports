@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Tico Hannan
+// SPDX-FileCopyrightText: Original Wolfram Demonstration by Aaron T. Becker and Benedict Isichei
+// SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // demos/three-parametrizations/main.js — page wiring + three.js scene (browser only).
 import { THREE, createViewer, surface, fatLine, label, inkFraction } from '../../shared/three-helpers.js';
 import { Controls } from '../../shared/ui.js';

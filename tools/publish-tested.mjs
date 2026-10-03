@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// SPDX-FileCopyrightText: 2026 Tico Hannan
+// SPDX-License-Identifier: MIT
 // tools/publish-tested.mjs — push to GitHub ONLY if all automated tests pass.
 //
 //   npm run publish:tested            (unit + golden + Firefox browser tests, then tag + push)

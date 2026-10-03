@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Tico Hannan
+// SPDX-FileCopyrightText: Adapted from Wolfram Demonstrations Project content (see LICENSE.md)
+// SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // tests/support/reference-planner.js
 //
 // An INDEPENDENT reference implementation used only as a test oracle for the
@@ -158,7 +161,11 @@ export function referencePlan(state) {
   const sc = referenceScene(state);
   const freePoint = (p) => sc.insideBoundary(p) && !sc.cobstacles.some((c) => strictlyInsideConvex(p, c));
   const startOk = freePoint(state.r1), goalOk = freePoint(state.r2);
-  if (!startOk || !goalOk) return { ...sc, startOk, goalOk, length: Infinity, path: [] };
+  if (!startOk || !goalOk) return { ...sc, startOk, goalOk, freePoint, length: Infinity, path: [] };
+  // start == goal: zero-length path (the node list below would merge the two into one node)
+  if (Math.abs(state.r1[0] - state.r2[0]) < 1e-12 && Math.abs(state.r1[1] - state.r2[1]) < 1e-12) {
+    return { ...sc, startOk, goalOk, freePoint, length: 0, path: [state.r1, state.r2] };
+  }
   const nodes = [state.r1, state.r2, ...sc.cobstacles.flat()].filter((v, i, arr) =>
     arr.findIndex((w) => Math.abs(w[0] - v[0]) < 1e-12 && Math.abs(w[1] - v[1]) < 1e-12) === i);
   const okNode = nodes.map((v, i) => i < 2 || freePoint(v));

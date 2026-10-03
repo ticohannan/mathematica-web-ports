@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Tico Hannan
+// SPDX-FileCopyrightText: Adapted from Wolfram Demonstrations Project content (see LICENSE.md)
+// SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // tests/e2e/motion-planning.spec.js — Motion Planning for Robot Path around Obstacles (browser tests)
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';

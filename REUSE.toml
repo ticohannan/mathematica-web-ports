@@ -1,0 +1,30 @@
+# Machine-readable licence map (REUSE specification, https://reuse.software/).
+# Source files carry their own SPDX header; these rules cover files that cannot
+# (JSON, Markdown, images) and act as the default for each folder.
+# "closest" = a file's own header wins over these rules.
+# Human-readable summary: LICENSE.md, "Which licence applies to which file".
+version = 1
+
+# Separable tooling, shared helpers and generic docs: MIT
+[[annotations]]
+path = ["tools/**", "shared/**", "LICENSES/**", "REUSE.toml", ".gitignore", ".gitattributes", ".nojekyll",
+        "package.json", "package-lock.json", "vitest.config.js", "playwright.config.js",
+        "docs/ARCHITECTURE.md", "docs/TESTING.md", "docs/GIT_AND_GITHUB_SETUP.md"]
+precedence = "closest"
+SPDX-FileCopyrightText = "2026 Tico Hannan"
+SPDX-License-Identifier = "MIT"
+
+# Everything adapted from, or derived from, the Wolfram Demonstrations: CC BY-NC-SA 3.0
+[[annotations]]
+path = ["demos/**", "index.html", "README.md", "LICENSE.md", "tests/**",
+        "docs/original-source/**", "docs/MANUAL_TEST_CHECKLIST.md"]
+precedence = "closest"
+SPDX-FileCopyrightText = ["2026 Tico Hannan", "Original Wolfram Demonstrations by their authors, see LICENSE.md"]
+SPDX-License-Identifier = "CC-BY-NC-SA-3.0"
+
+# Third-party: three.js
+[[annotations]]
+path = "vendor/three/**"
+precedence = "closest"
+SPDX-FileCopyrightText = "2010-2026 three.js authors"
+SPDX-License-Identifier = "MIT"

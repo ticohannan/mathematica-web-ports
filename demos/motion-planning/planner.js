@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Tico Hannan
+// SPDX-FileCopyrightText: Original Wolfram Demonstration by Shreyas Poyrekar, Aaron T. Becker and Arifa Sultana
+// SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // demos/motion-planning/planner.js
 //
 // Line-by-line port of the Wolfram Language code in

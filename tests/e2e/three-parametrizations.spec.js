@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Tico Hannan
+// SPDX-FileCopyrightText: Adapted from Wolfram Demonstrations Project content (see LICENSE.md)
+// SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // tests/e2e/three-parametrizations.spec.js — Three Parametrizations of Rotations (browser tests)
 import { test, expect } from '@playwright/test';
 import { openDemo, reviewShot } from './helpers.js';

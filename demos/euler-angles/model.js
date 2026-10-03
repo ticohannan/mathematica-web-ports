@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Tico Hannan
+// SPDX-FileCopyrightText: Original Wolfram Demonstration by Kevin Hernandez; Sándor Kabai
+// SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // demos/euler-angles/model.js
 //
 // Port of the computation in "Euler Angles: Precession, Nutation, and Spin"

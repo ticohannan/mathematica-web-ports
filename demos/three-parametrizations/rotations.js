@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Tico Hannan
+// SPDX-FileCopyrightText: Original Wolfram Demonstration by Aaron T. Becker and Benedict Isichei
+// SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // demos/three-parametrizations/rotations.js
 //
 // Port of the Wolfram Language code in "Three Parametrizations of Rotations"

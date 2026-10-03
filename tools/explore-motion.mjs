@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// SPDX-FileCopyrightText: 2026 Tico Hannan
+// SPDX-License-Identifier: MIT
 // tools/explore-motion.mjs — randomized differential testing of the motion-planning port.
 //
 // Generates reproducible random scenes (seeded), runs the port (planner.js)

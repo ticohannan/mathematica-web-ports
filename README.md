@@ -68,6 +68,7 @@ original authors — Shreyas Poyrekar, Aaron T. Becker and Arifa Sultana (motion
 Becker and Benedict Isichei (rotation parametrizations); Kevin Hernandez, based on a program by
 Sándor Kabai (Euler angles) — licensed
 [CC BY-NC-SA 3.0](https://creativecommons.org/licenses/by-nc-sa/3.0/). This repository is released
-under the same licence, for non-commercial use. Adaptation © 2026 Tico Hannan; the code was generated
-with an AI coding assistant (Claude, Anthropic). Not affiliated with or endorsed by the original
-authors or Wolfram Research. Full credits, sources and third-party licences: [LICENSE.md](LICENSE.md).
+under the same licence, for non-commercial use; separable tooling (`tools/`, `shared/`, configuration)
+is MIT-licensed. Author of the adaptation: Tico Hannan (© 2026), who produced it with an AI
+code-generation tool. Not affiliated with or endorsed by the original authors or Wolfram Research.
+Full credits, sources, the per-file licence map and third-party licences: [LICENSE.md](LICENSE.md).

@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// SPDX-FileCopyrightText: 2026 Tico Hannan
+// SPDX-License-Identifier: MIT
 // tools/serve.mjs — zero-dependency static file server for local testing.
 // Usage:  node tools/serve.mjs [port]      (default port 8080)
 // Serves the repository root, the same way GitHub Pages will. Binds to

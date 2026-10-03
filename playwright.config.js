@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2026 Tico Hannan
+// SPDX-License-Identifier: MIT
 // playwright.config.js — browser tests (tests/e2e). Default browser: Firefox.
 //   npx playwright install firefox      (one-time download of Playwright's Firefox build)
 //   npm run test:e2e                    (runs the Firefox project)

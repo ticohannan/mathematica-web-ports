@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2026 Tico Hannan
+// SPDX-License-Identifier: MIT
 // shared/linalg.js — tiny 3x3 linear-algebra helpers (row-major arrays). Pure, Node-testable.
 
 export const matMul = (A, B) =>

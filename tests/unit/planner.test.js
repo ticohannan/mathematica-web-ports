@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Tico Hannan
+// SPDX-FileCopyrightText: Adapted from Wolfram Demonstrations Project content (see LICENSE.md)
+// SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // tests/unit/planner.test.js — motion-planning port, hand-derived and property-based checks.
 // Every expected value below is derived independently (by hand, or by the
 // independent oracle in tests/support/reference-planner.js), never by

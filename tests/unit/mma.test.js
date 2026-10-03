@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2026 Tico Hannan
+// SPDX-License-Identifier: MIT
 // tests/unit/mma.test.js — Mathematica-semantics helpers
 import { describe, it, expect } from 'vitest';
 import { arcTan, mod, roundHalfEven, roundTo, circlePoints, sortMma, mEqual, mLess, chop } from '../../shared/mma.js';

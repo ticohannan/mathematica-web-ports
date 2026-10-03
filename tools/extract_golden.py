@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Tico Hannan
+# SPDX-License-Identifier: MIT
 """Extract saved control states (and the original program's computed results)
 from the cached Manipulate outputs inside the original .nb files.
 These are produced by the ORIGINAL Mathematica code, so they serve as

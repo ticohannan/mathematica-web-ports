@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Tico Hannan
+// SPDX-FileCopyrightText: Adapted from Wolfram Demonstrations Project content (see LICENSE.md)
+// SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // tests/golden/parity.test.js
 // PARITY WITH THE ORIGINAL NOTEBOOKS.
 // The JSON fixtures in this folder were extracted (tools/extract_golden.py) from
