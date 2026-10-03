@@ -32,10 +32,10 @@ Licence texts: [`LICENSES/CC-BY-NC-SA-3.0.txt`](LICENSES/CC-BY-NC-SA-3.0.txt) an
 | `demos/**` (all three apps, incl. `teapot-data.js`) | CC BY-NC-SA 3.0 | adaptations of the Demonstrations |
 | `index.html`, `README.md`, `LICENSE.md` | CC BY-NC-SA 3.0 | describe and present the adaptations |
 | `docs/original-source/**`, `docs/MANUAL_TEST_CHECKLIST.md` | CC BY-NC-SA 3.0 | readable copies of / derived from the originals |
-| `tests/**` except the two MIT files below | CC BY-NC-SA 3.0 | encode the originals' behaviour and data (`tests/golden/*.json` is extracted from the notebooks) |
-| `tools/**` | MIT | separable tooling (notebook decoder/extractor, local server, publish and exploration scripts). Data the tools *produce* from the notebooks stays CC BY-NC-SA |
+| `tests/**` except the MIT files below | CC BY-NC-SA 3.0 | encode the originals' behaviour and data (`tests/golden/*.json` is extracted from the notebooks) |
+| `tools/**` | MIT | separable tooling (notebook decoder/extractor, local server, publish, exploration and comparison scripts, incl. the Wolfram Language script `tools/wolfram/mp-original.wls`, which contains no original code: it loads and runs the code from a notebook you supply). Data the tools *produce* from the notebooks stays CC BY-NC-SA |
 | `shared/**` (`mma.js`, `linalg.js`, `ui.js`, `three-helpers.js`, `style.css`) | MIT | generic helpers: Wolfram Language numeric semantics, 3×3 algebra, Manipulate-style controls, three.js helpers, page style |
-| `tests/unit/mma.test.js`, `tests/e2e/helpers.js` | MIT | test generic helpers only |
+| `tests/unit/mma.test.js`, `tests/unit/licence-headers.test.js`, `tests/unit/motion-compare.test.js`, `tests/e2e/helpers.js` | MIT | test the MIT helpers and tooling |
 | `vitest.config.js`, `playwright.config.js`, `package.json`, `package-lock.json`, `.gitignore`, `.gitattributes`, `.nojekyll`, `REUSE.toml`, `LICENSES/**` | MIT | configuration |
 | `docs/ARCHITECTURE.md`, `docs/TESTING.md`, `docs/GIT_AND_GITHUB_SETUP.md` | MIT | generic project documentation |
 | `vendor/three/**` | MIT, © three.js authors | third-party |

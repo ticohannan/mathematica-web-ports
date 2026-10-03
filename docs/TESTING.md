@@ -1,6 +1,6 @@
 # Testing guide
 
-Four layers. Run them in this order; each one catches problems the others cannot.
+Five layers. Run them in this order; each one catches problems the others cannot.
 
 | Layer | Command | Needs | What it proves |
 |-------|---------|-------|----------------|
@@ -8,6 +8,7 @@ Four layers. Run them in this order; each one catches problems the others cannot
 | 2. Golden parity tests | `npm test` (same run) | Node | the port reproduces numbers **computed by the original Mathematica code** (cached in the .nb files) |
 | 3. Browser tests | `npm run test:e2e` | Firefox (Playwright build) | controls exist and work, the screen shows what the math computed, drag/keyboard interaction, error-free load |
 | 4. Manual / exploratory | `docs/MANUAL_TEST_CHECKLIST.md` | a person, a browser, ideally the original running in Wolfram software | look & feel, behaviour compared with the original, things no script can judge |
+| 5. Automated comparison with the original (motion planning) | `npm run compare:original` | local Mathematica / Wolfram Engine (`wolframscript`) | the port computes the same validity, C-obstacles, lines, path and trajectory as the **original code run live**, on many scenes, not only the 5 saved ones |
 
 Plus an investigation tool: `node tools/explore-motion.mjs` (randomized differential testing).
 
@@ -79,18 +80,62 @@ Use `docs/MANUAL_TEST_CHECKLIST.md`. Copy it per test session (e.g.
 `2026-10-05_alice_checklist.md`), fill it in, email it back. Completed copies are kept in
 `_internal/test-runs/` (private) unless decided otherwise.
 
-### Getting the ORIGINAL running for comparison (demonstrations.wolfram.com is down)
-You have the author notebooks (`_internal/originals/*.nb`). Options, cheapest first — check each
-vendor's current terms, they change:
-1. **Wolfram Player** (free desktop app, Windows) — opens `.nb` files and should run their
-   `Manipulate` interactively. You can drag locators and sliders but cannot edit code.
-2. **Wolfram Cloud** (free basic account) — upload the `.nb`, run it in the browser; you can edit code,
-   e.g. change the initial locator positions to reproduce a scene exactly.
-3. **Wolfram Engine** (free for developers, non-commercial) + Jupyter/`wolframscript` — scriptable.
-4. The live site, when it returns.
+### Getting the ORIGINAL running for comparison
+You have the author notebooks (`_internal/originals/*.nb`). Options — check each vendor's current
+terms, they change:
+1. **Mathematica** or the **Wolfram Engine** (free for developers, non-commercial) — open the
+   notebook (Mathematica) or run it headless with `wolframscript`; used by the automated
+   comparison below.
+2. **Wolfram Player** (free desktop app) — opens `.nb` files and runs their `Manipulate`
+   interactively. You can drag locators and sliders but cannot edit code.
+3. **Wolfram Cloud** (free basic account) — upload the `.nb` and run it in the browser.
+4. The published Demonstration on demonstrations.wolfram.com (online again since Oct 2026).
 
-To reproduce a specific port scene in the original (e.g. a lead from the exploration tool), edit the
-initial values in the Manipulate, e.g. `{{r1,{-2.0,2.75}},…}` → `{{r1,{2.84,0.34}},…}`, and re-evaluate.
+To reproduce a specific port scene by hand, edit the initial values in the Manipulate, e.g.
+`{{r1,{-2.0,2.75}},…}` → `{{r1,{2.84,0.34}},…}`, and re-evaluate.
+
+## Layer 5: automated comparison with the original (`npm run compare:original`)
+
+Needs a local Mathematica or Wolfram Engine with `wolframscript`. The comparison runs the
+**original code itself** — the definitions and the Manipulate body stored in the author notebook —
+headless, for many scenes, and compares its numbers with the port's.
+
+```bat
+where wolframscript                                   :: find it (PowerShell: Get-Command wolframscript)
+npm run compare:original                              :: 5 saved states + 20 named + 40 random scenes
+npm run compare:original -- --random=200 --seed=7     :: more random scenes
+npm run compare:original -- --history                 :: also the "after a drag" variant of each scene
+npm run compare:original -- --images --only=A1,B1,C1  :: pictures: original (PNG) next to port (screenshot)
+npm run compare:original -- --wolframscript="C:\Program Files\Wolfram Research\WolframScript\wolframscript.exe"
+```
+
+How it works
+1. `tools/compare-with-original.mjs` writes the scenes to `test-output/compare-original/scenes.json`
+   (coordinates as exact fractions `m/2^k`, so Mathematica gets the identical doubles).
+2. It calls `wolframscript -file tools/wolfram/mp-original.wls <notebook> <scenes> <results>`. The
+   script reads the notebook without evaluating it, takes the stored `Initialization` and `"Body"`,
+   evaluates the definitions, and for every scene sets the Manipulate variables the way the front end
+   would and evaluates the body. The only change to the original code is instrumentation: the final
+   `Graphics[…]` is wrapped so the body's local variables (path, validity, C-obstacles, …) are
+   copied out, and messages are collected instead of silenced. Reals are written with 20 digits from
+   their exact binary value (bit-exact transfer back to JavaScript).
+3. The port (`planner.js`) and the independent reference planner run on the same scenes.
+
+Read `test-output/compare-original/report.md`:
+- **Harness self-check** — the notebook contains results the original computed when it was saved;
+  the harness must reproduce them in your Mathematica. If this FAILS, fix the harness or note the
+  Mathematica-version difference before trusting anything else in the report.
+- **Verdict per scene**: `identical` (bit for bit), `last-bit` (only rounding-level differences),
+  `DIFFERENT` (validity, route, lines or shapes differ: a port fault, or a behaviour that depends on
+  the Mathematica version), `original-error` (timeout or error in the original).
+- **Reference checks** — paths through obstacles, detours, missed paths, validity disagreements;
+  `inherited` means the original shows the same problem (report it as a property of the original
+  algorithm that the port reproduces), `port only` means the port is at fault.
+- **Messages** the original produced (e.g. the `First::normal` case the port treats as "no path").
+
+Limits: the harness evaluates the stored code in a fresh kernel, not in the front end, and it clears
+the original's change-detection caches before every scene (`--history` adds the drag variant); the
+pictures (`--images`) need the Wolfram front end and are for human review only.
 
 ## Investigation tool: `tools/explore-motion.mjs`
 

@@ -39,6 +39,7 @@ npx playwright install firefox        :: one-time
 npm run test:e2e                      :: browser tests in Firefox
 npm run publish:tested                :: run everything, then tag + push to GitHub
 node tools\explore-motion.mjs 300 1   :: randomized investigation of the motion planner
+npm run compare:original              :: motion planning: port vs the ORIGINAL code run in local Mathematica
 ```
 
 Human/manual tests: [docs/MANUAL_TEST_CHECKLIST.md](docs/MANUAL_TEST_CHECKLIST.md).
@@ -56,7 +57,8 @@ tests/unit/                Vitest unit + property tests
 tests/golden/              fixtures extracted from the ORIGINAL notebooks + parity tests
 tests/e2e/                 Playwright browser tests
 tests/support/             independent reference implementation used as a test oracle
-tools/                     serve.mjs (local server), explore-motion.mjs, notebook extraction scripts, publish-tested.mjs
+tools/                     serve.mjs (local server), explore-motion.mjs, compare-with-original.mjs (+ wolfram/,
+                           lib/, data/), notebook extraction scripts, publish-tested.mjs
 docs/                      architecture, testing, checklist, git guide, readable original source
 _internal/                 PRIVATE (git-ignored): notes, assignment material, original .nb files
 ```

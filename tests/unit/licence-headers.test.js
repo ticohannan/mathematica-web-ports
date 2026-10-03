@@ -12,7 +12,7 @@ function walk(dir, out = []) {
     if (SKIP.has(e.name)) continue;
     const p = path.join(dir, e.name);
     if (e.isDirectory()) walk(p, out);
-    else if (/\.(js|mjs|py|css|html)$/.test(e.name)) out.push(p.split(path.sep).join('/'));
+    else if (/\.(js|mjs|py|css|html|wls)$/.test(e.name)) out.push(p.split(path.sep).join('/'));
   }
   return out;
 }
