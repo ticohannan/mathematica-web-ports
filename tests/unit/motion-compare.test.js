@@ -142,3 +142,13 @@ describe('the Wolfram script refers to the original\'s real variables', () => {
     expect(t).toMatch(/Initialization:>\(\{\$CellContext`ConvexMinkowskiSumRev3\[/);
   });
 });
+
+describe('tool scripts parse (catches syntax errors in scripts no other test imports)', () => {
+  const scripts = fs.readdirSync('tools').filter((f) => f.endsWith('.mjs')).map((f) => `tools/${f}`);
+  it.each(scripts)('%s', async (f) => {
+    const { spawnSync } = await import('node:child_process');
+    const r = spawnSync(process.execPath, ['--check', f], { encoding: 'utf8' });
+    expect(r.stderr).toBe('');
+    expect(r.status).toBe(0);
+  });
+});

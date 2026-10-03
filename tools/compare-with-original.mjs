@@ -214,7 +214,7 @@ for (const r of rows) {
   md.push(`| ${r.id} | ${r.group} | ${r.verdict} | ${fmtValid(r.validity.original)} / ${fmtValid(r.validity.port)} | ${fmtLen(r.length.original)} / ${fmtLen(r.length.port)} / ${fmtLen(r.length.ref)} | ${r.issues.map((i) => i.flag).join(', ')} | ${r.seconds != null ? r.seconds.toFixed(2) : '—'} | [open](${r.link}) |`);
 }
 md.push('');
-md.push('Notes: scene links open the port with the exact scene. "history" scenes (option `--history`) first place the obstacles while the robot stands at the default start and then move the robot, as a user would by dragging; the original keeps the C-obstacles from that moment (it only recomputes them when obstacles or the robot shape change), the port always recomputes. A history row that differs while its plain row does not means the interactive original's result depends on how the user arrived at the scene.', '');
+md.push('Notes: scene links open the port with the exact scene. "history" scenes (option `--history`) first place the obstacles while the robot stands at the default start and then move the robot, as a user would by dragging; the original keeps the C-obstacles from that moment (it only recomputes them when obstacles or the robot shape change), the port always recomputes. A history row that differs while its plain row does not means the interactive original\'s result depends on how the user arrived at the scene.', '');
 fs.writeFileSync(path.join(outDir, 'report.md'), md.join('\n'));
 fs.writeFileSync(path.join(outDir, 'report.json'), JSON.stringify({ original: { ...original, scenes: undefined }, selfCheck: selfOk, rows }, null, 1));
 if (wantImages) writeSideBySide(rows.filter((r) => r.image));
