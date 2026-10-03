@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Euler Angles: Precession, Nutation, and Spin</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <script type="importmap">
+    { "imports": { "three": "../../vendor/three/three.module.js", "three/addons/": "../../vendor/three/addons/" } }
+  </script>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs"><a href="../../index.html">All demos</a> › Euler angles</div>
+    <h1 class="demo-title">Euler Angles: Precession, Nutation, and Spin</h1>
+
+    <section class="manipulate" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <label>Bookmarks
+          <select id="bookmarks" data-testid="bookmarks"></select>
+        </label>
+        <button type="button" class="ctl-btn" id="animate-bookmarks" data-testid="animate-bookmarks">▶ Animate bookmarks</button>
+        <button type="button" class="ctl-btn" id="reset-view" data-testid="reset-view">Reset view</button>
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="graphic" id="graphic" data-testid="graphic"></div>
+    </section>
+
+    <p class="caption">Here a gyroscope is used to illustrate the Euler angles in a 3-2-3 rotation. The outer ring is fixed in space. The angles are generally designated ψ, θ, φ or α, β, γ.</p>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. Drag in the picture to rotate the view, scroll to zoom
+      (Mathematica's "Rotate and Zoom in 3D"). All computation runs in your browser.</p>
+
+    <div class="credits">
+      Original: <a href="https://demonstrations.wolfram.com/EulerAnglesPrecessionNutationAndSpin/">Euler Angles: Precession, Nutation, and Spin</a>,
+      Wolfram Demonstrations Project. Contributed by: Kevin Hernandez. Based on a program by: Sándor Kabai.
+      Licensed CC BY-NC-SA 3.0; this port is a derivative work under the same licence (see LICENSE.md).
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

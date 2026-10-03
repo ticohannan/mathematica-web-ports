@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Motion Planning for Robot Path around Obstacles</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <style>
+    .locator { cursor: grab; }
+    .locator.dragging { cursor: grabbing; }
+    .locator .ring { fill: #ffffff; fill-opacity: 0.55; stroke: #3c3c3c; }
+    .locator .hair { stroke: #3c3c3c; }
+    #progress-row input[type=range] { max-width: 120px; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs"><a href="../../index.html">All demos</a> › Motion planning</div>
+    <h1 class="demo-title">Motion Planning for Robot Path around Obstacles</h1>
+
+    <section class="manipulate" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <label><input type="checkbox" id="show-readout" data-testid="show-readout"> show numbers</label>
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="graphic" id="graphic" data-testid="graphic"></div>
+      <div class="readout" id="readout" data-testid="readout" hidden></div>
+    </section>
+
+    <p class="caption">Motion planning seeks a continuous sequence of valid configurations for a robot to move from the initial
+      position to the destination position. Valid configurations do not enter or collide with any obstacle. In this
+      Demonstration, you can drag locators to change the initial and destination positions of the robot and obstacles. Move
+      the "progress" slider to follow the robot's path. You can change the number of sides for the robot or the boundary.
+      Switch between the workspace and configuration space to see the obstacles and path in each space.</p>
+
+    <details class="details">
+      <summary>Details</summary>
+      <p>This Demonstration determines the path for a polygonal robot that can move inside a bounded workspace populated by
+        polygonal obstacles. Motion planning requires determination if a given path would cause a collision with an obstacle.
+        Planning in the workspace is challenging because collision checks apparently require sweeping the polygonal robot along
+        the path and continuously checking for collision. A common trick in motion planning is to perform the planning in the
+        configuration space for the robot. In the configuration space, the robot's configuration is represented by a point at
+        its center (<i>x</i>, <i>y</i>). The polygonal obstacles map to polygonal obstacle regions in the configuration space.
+        These obstacle regions are calculated using the Minkowski sum. The shortest path is then the line from the initial
+        configuration to the destination configuration that does not intersect the obstacle regions in the configuration space.
+        This same line represents the shortest path in both the configuration space and the workspace.</p>
+      <p>A valid path for a 2D robot in a 2D environment can be computed in four steps.</p>
+      <ol>
+        <li>Check whether the robot's initial or final position collides with or enters any obstacle or is out of the workspace. If so, then there exists no possible path.</li>
+        <li>Compute the Minkowski sum of all the obstacles and the inverse Minkowski sum of the boundary. The Minkowski sum is the polygon generated from the robot and the obstacle such that the robot centroid can move along this polygon without colliding with or entering the obstacle. Computing the Minkowski sum requires that the robot and the obstacles be convex polygons.</li>
+        <li>Draw visible bitangent lines from the vertex of each Minkowski polygon and the centroids of the robot's initial and final positions. Bitangent lines are the lines whose ends are reflex vertices. Reflex vertices are the vertices of the polygons whose exterior angles are greater than π (also called convex vertices). To obtain the visible bitangent lines, calculate the visibility graph and compute the intersection of the visibility graph and the bitangent lines. Form a graph of the visible bitangent lines and the Minkowski polygon lines.</li>
+        <li>Determine the shortest path from the generated graph using the A* search algorithm.</li>
+      </ol>
+      <p>References: [1] S. M. LaValle, <i>Planning Algorithms</i>, Cambridge University Press, 2006.
+        [2] D.-T. Lee, "Proximity and Reachability in the Plane," Ph.D. dissertation, University of Illinois at Urbana-Champaign, 1978.
+        [3] Wikipedia, "Visibility Graph." [4] Wikipedia, "A* Search Algorithm."</p>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. Drag the circular locators to move the robot start/end
+      positions and the four obstacles. All computation runs in your browser.</p>
+    <div class="credits">
+      Original: <a href="https://demonstrations.wolfram.com/MotionPlanningForRobotPathAroundObstacles/">Motion Planning for Robot Path around Obstacles</a>,
+      Wolfram Demonstrations Project. Contributed by: Shreyas Poyrekar, Aaron T. Becker and Arifa Sultana.
+      Licensed CC BY-NC-SA 3.0; this port is a derivative work under the same licence (see LICENSE.md).
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

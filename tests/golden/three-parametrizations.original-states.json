@@ -1,0 +1,81 @@
+{
+ "source": "threeparam.nb",
+ "note": "Saved Manipulate states from the ORIGINAL notebook (thumbnail + snapshots). Values computed by the original Mathematica code; used as golden parity fixtures.",
+ "states": [
+  {
+   "typeRot": 1.0,
+   "progress": 1.0,
+   "angle": 0.0,
+   "axis": [
+    0.0,
+    0.0
+   ],
+   "Alpha": 0.0,
+   "Beta": 0.0,
+   "Gamma": 0.0,
+   "Theta": 0.0,
+   "Phi": 0.0,
+   "Psi": 0.0
+  },
+  {
+   "typeRot": 1.0,
+   "progress": 0.78,
+   "angle": 1.56,
+   "axis": [
+    -0.839,
+    -0.101
+   ],
+   "Alpha": 1.543,
+   "Beta": -0.739,
+   "Gamma": -0.92,
+   "Theta": 1.5500000000000003,
+   "Phi": -2.5100000000000002,
+   "Psi": 2.31
+  },
+  {
+   "typeRot": 2.0,
+   "progress": 0.78,
+   "angle": 1.5299999999999998,
+   "axis": [
+    -0.8399999999999997,
+    -0.10000000000000013
+   ],
+   "Alpha": 1.502,
+   "Beta": -0.743,
+   "Gamma": -0.889,
+   "Theta": 1.52,
+   "Phi": -2.5060000000000002,
+   "Psi": 2.315
+  },
+  {
+   "typeRot": 3.0,
+   "progress": 0.78,
+   "angle": 1.53,
+   "axis": [
+    -0.84,
+    -0.1
+   ],
+   "Alpha": 1.5023624075109583,
+   "Beta": -0.7432827162612163,
+   "Gamma": -0.8892005861929912,
+   "Theta": 1.52,
+   "Phi": -2.5060000000000002,
+   "Psi": 2.315
+  },
+  {
+   "typeRot": 1.0,
+   "progress": 0.78,
+   "angle": 3.133,
+   "axis": [
+    2.301,
+    0.0
+   ],
+   "Alpha": -3.1350000000000002,
+   "Beta": 0.006,
+   "Gamma": -1.68,
+   "Theta": 3.15,
+   "Phi": -2.5063459352841795,
+   "Psi": 2.3152467183056133
+  }
+ ]
+}

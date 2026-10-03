@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Three Parametrizations of Rotations</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <script type="importmap">
+    { "imports": { "three": "../../vendor/three/three.module.js", "three/addons/": "../../vendor/three/addons/" } }
+  </script>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs"><a href="../../index.html">All demos</a> › Rotation parametrizations</div>
+    <h1 class="demo-title">Three Parametrizations of Rotations</h1>
+
+    <section class="manipulate" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset-view" data-testid="reset-view">Reset view</button>
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="top-controls" style="max-width:none;width:100%"></div>
+      <div class="controls" id="controls"></div>
+      <div class="graphic" id="graphic" data-testid="graphic"></div>
+    </section>
+
+    <div class="caption">
+      <p>A rotation can be parameterized in several ways. This Demonstration compares three popular parametrizations:</p>
+      <ul>
+        <li>Euler angles about the <i>ZYZ</i> axes</li>
+        <li>the angle of rotation about an arbitrary axis</li>
+        <li>the roll, pitch and yaw about the world <i>XYZ</i> axes</li>
+      </ul>
+      <p>The progress slider rotates a teapot shape through these rotations, from an initial orientation in green to a final
+        orientation in red. The intermediate configurations of the teapot depend on the parametrization chosen, but the final
+        configuration is always the same.</p>
+    </div>
+
+    <details class="details">
+      <summary>Details</summary>
+      <p>This Demonstration shows three parametrizations to describe rotations between a fixed coordinate frame
+        o<sub>0</sub>x<sub>0</sub>y<sub>0</sub>z<sub>0</sub> and a rotated frame o<sub>1</sub>x<sub>1</sub>y<sub>1</sub>z<sub>1</sub>.</p>
+      <p>The first parametrization uses Euler angles. There are many Euler angle conventions. This Demonstration uses the
+        <i>ZYZ</i> convention, which specifies the orientation of frame o<sub>1</sub>x<sub>1</sub>y<sub>1</sub>z<sub>1</sub> by three
+        successive rotations. The first rotates about the <i>z</i> axis by the angle φ. Next, we rotate about the current
+        <i>y</i> axis by the angle θ. Finally, we rotate about the current <i>z</i> axis by the angle ψ.</p>
+      <p class="formula">R<sub>ZYZ</sub> = R<sub>z,φ</sub> R<sub>y,θ</sub> R<sub>z,ψ</sub></p>
+      <p>Euler's rotation theorem states that any combination of rotations of a rigid body, such that a point in the rigid body
+        remains fixed, is equivalent to a single rotation about some axis that runs through the fixed point. The second
+        parametrization uses axis/angle parametrization, a rotation of Ω about the unit axis k = [k<sub>x</sub>, k<sub>y</sub>, k<sub>z</sub>]<sup>T</sup>,
+        with k given by a latitude/longitude pair.</p>
+      <p>The final parametrization uses roll, pitch, and yaw angles, denoted as α, β and γ. The order of rotation is around
+        the fixed coordinate frame <i>XYZ</i> axes: first, a yaw about x<sub>0</sub> through an angle α; second, a pitch about
+        y<sub>0</sub> by an angle β; and third, a roll about z<sub>0</sub> by an angle γ. Because the rotations are about the fixed
+        coordinate frame, the successive rotations pre-multiply, giving the composite rotation</p>
+      <p class="formula">R<sub>ZYX</sub> = R<sub>z,γ</sub> R<sub>y,β</sub> R<sub>x,α</sub></p>
+      <p>Reference: M. W. Spong, S. Hutchinson and M. Vidyasagar, <i>Robot Modeling and Control</i>, Hoboken, NJ: John Wiley &amp; Sons, 2006.</p>
+      <p class="port-note">Port note: the original Details text writes the ZYZ product as R<sub>z,φ</sub>R<sub>y,θ</sub>R<sub>z,φ</sub>
+        (φ twice) and gives k with latitude and longitude swapped relative to its own code. The text here follows the code.</p>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. Drag in the picture to rotate the view, scroll to zoom. All computation runs in your browser.</p>
+    <div class="credits">
+      Original: <a href="https://demonstrations.wolfram.com/ThreeParametrizationsOfRotations/">Three Parametrizations of Rotations</a>,
+      Wolfram Demonstrations Project. Contributed by: Aaron T. Becker and Benedict Isichei.
+      Licensed CC BY-NC-SA 3.0; this port is a derivative work under the same licence (see LICENSE.md).
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

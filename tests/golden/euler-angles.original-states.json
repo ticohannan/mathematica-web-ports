@@ -1,0 +1,26 @@
+{
+ "source": "euler.nb",
+ "note": "Saved Manipulate states from the ORIGINAL notebook (thumbnail + snapshots). Values computed by the original Mathematica code; used as golden parity fixtures.",
+ "states": [
+  {
+   "a1": 0.0,
+   "a2": 0.0,
+   "a3": 0.0
+  },
+  {
+   "a1": 45.0,
+   "a2": 30.0,
+   "a3": 15.0
+  },
+  {
+   "a1": 45.0,
+   "a2": 0.0,
+   "a3": 0.0
+  },
+  {
+   "a1": 45.0,
+   "a2": 30.0,
+   "a3": 0.0
+  }
+ ]
+}

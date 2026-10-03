@@ -1,0 +1,23 @@
+{
+  "name": "mathematica-web-ports",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Browser ports of three Wolfram Demonstrations (Euler angles, rotation parametrizations, robot motion planning). Static site: all computation runs in the browser.",
+  "type": "module",
+  "scripts": {
+    "serve": "node tools/serve.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test --project=firefox",
+    "test:e2e:headed": "playwright test --project=firefox --headed",
+    "test:all": "vitest run && playwright test --project=firefox",
+    "report": "playwright show-report test-output/html-report",
+    "publish:tested": "node tools/publish-tested.mjs",
+    "explore": "node tools/explore-motion.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "three": "0.186.1",
+    "vitest": "5.0.3"
+  }
+}
