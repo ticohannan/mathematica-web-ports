@@ -37,7 +37,9 @@ Runs `tests/unit/*.test.js` and `tests/golden/parity.test.js` with Vitest. Takes
   (incl. the property *robot overlaps obstacle ⇔ centre inside C-obstacle* checked with an
   independent separating-axis test), configuration-space boundary, A*, discretisation, scene
   behaviour, and 25 random scenes compared with the independent reference planner in
-  `tests/support/reference-planner.js` (path collision-free and of optimal length).
+  `tests/support/reference-planner.js` (path collision-free and of optimal length). "Independent"
+  means it shares no code with the port; it was written with knowledge of the original algorithm,
+  so it is not a clean-room implementation.
 - **rotations.test.js** — rotation matrices, the formulas in the Details text, round-trip
   conversions for 200 random rotations, progress behaviour, gyroscope orientation.
 - **golden/parity.test.js** — for each saved state of the original notebooks: obstacle/robot
@@ -67,9 +69,9 @@ Starts `tools/serve.mjs` on port 8090 automatically and runs `tests/e2e/*.spec.j
 - Headed (watch it happen): `npm run test:e2e:headed`.
 - Second engine (optional): `npx playwright install chromium` then `npx playwright test --project=chromium`.
 
-> Status note (first version): the browser suite was run in Chromium in the authoring sandbox
-> (Playwright's Firefox download was blocked there). Your first Firefox run is therefore the first
-> Firefox run ever — failures there are real findings, not setup noise. Record them.
+> Status: v0.1.0 was first run in Firefox (Playwright's Firefox 155) on Windows 10 on 2026-10-03 —
+> 38/38 passed. It had previously been run only in Chromium in the authoring sandbox. Any later
+> failure is a finding — record it.
 
 ## Layer 4: manual testing
 

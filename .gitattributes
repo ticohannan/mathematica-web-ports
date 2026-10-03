@@ -1,0 +1,10 @@
+# Store text files with LF line endings in the repository; each machine checks them out in its
+# native style. Makes behaviour the same for collaborators whatever their core.autocrlf setting.
+* text=auto
+
+# Binary files (never convert line endings)
+*.png binary
+*.jpg binary
+*.ico binary
+*.zip binary
+*.nb  binary

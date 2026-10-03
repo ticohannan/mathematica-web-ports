@@ -1,5 +1,7 @@
 # Wolfram Demonstrations — Browser Ports
 
+**Live site:** <https://ticohannan.github.io/mathematica-web-ports/> · **Source:** <https://github.com/ticohannan/mathematica-web-ports>
+
 Three Mathematica `Manipulate` demonstrations re-implemented as a **static website**:
 plain HTML + JavaScript (ES modules, no build step), SVG for 2D, three.js/WebGL for 3D.
 
@@ -59,6 +61,13 @@ docs/                      architecture, testing, checklist, git guide, readable
 _internal/                 PRIVATE (git-ignored): notes, assignment material, original .nb files
 ```
 
-## Licence
+## Licence and credits
 
-Ports of Wolfram Demonstrations Project content, CC BY-NC-SA 3.0 — see [LICENSE.md](LICENSE.md).
+These are adaptations (JavaScript translations) of Wolfram Demonstrations Project content by their
+original authors — Shreyas Poyrekar, Aaron T. Becker and Arifa Sultana (motion planning); Aaron T.
+Becker and Benedict Isichei (rotation parametrizations); Kevin Hernandez, based on a program by
+Sándor Kabai (Euler angles) — licensed
+[CC BY-NC-SA 3.0](https://creativecommons.org/licenses/by-nc-sa/3.0/). This repository is released
+under the same licence, for non-commercial use. Adaptation © 2026 Tico Hannan; the code was generated
+with an AI coding assistant (Claude, Anthropic). Not affiliated with or endorsed by the original
+authors or Wolfram Research. Full credits, sources and third-party licences: [LICENSE.md](LICENSE.md).

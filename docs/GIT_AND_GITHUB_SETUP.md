@@ -80,7 +80,8 @@ Use `npm run publish:tested -- --dry` to run all checks without pushing.
 Repository → **Settings** → **Pages** → *Build and deployment* → Source **Deploy from a branch** →
 Branch **main**, folder **/ (root)** → **Save**. After a minute the site is at
 
-`https://USERNAME.github.io/mathematica-web-ports/`
+`https://USERNAME.github.io/mathematica-web-ports/` — for this project:
+<https://ticohannan.github.io/mathematica-web-ports/>
 
 (The repository contains an empty `.nojekyll` file so GitHub serves all files as they are.)
 

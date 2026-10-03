@@ -7,6 +7,8 @@
 // Pure functions only: no DOM, no SVG. Every function keeps the name of the
 // Mathematica function it ports so the two can be compared side by side
 // (readable original source: docs/original-source/motion-planning.txt).
+// Licence: CC BY-NC-SA 3.0, as an adaptation of the original. The original's own upstream
+// sources (LaValle, Wikipedia, UPenn notes, Stack Exchange) are credited in LICENSE.md.
 //
 // Indexing: Mathematica lists are 1-based, JS arrays 0-based. Wherever the
 // original uses an index *value* (A* node ids, Position[...]) the port uses
