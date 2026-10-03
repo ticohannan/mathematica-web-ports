@@ -276,7 +276,7 @@ export function angleSortCond(point, l1, l2) {
 }
 
 /** distSortCond — distance along the sweep ray (only reorders jList; has no effect on results). */
-function distSortCond(line, l1, l2, point) {
+export function distSortCond(line, l1, l2, point) {
   const a = dist(LineIntersectionPoint(chop([line, l1])), point);
   const b = dist(LineIntersectionPoint(chop([line, l2])), point);
   return a < b;

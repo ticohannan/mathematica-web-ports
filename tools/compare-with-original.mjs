@@ -30,11 +30,18 @@
 //   --time-limit=SEC      per-scene time limit inside Mathematica (default 60)
 //   --base=URL            base of the scene links in the report (default: the live site)
 //   --out=DIR             output folder (default test-output/compare-original)
+//   --jobs=N              run N Mathematica kernels in parallel (default 1; your licence must allow N kernels)
+//   --trace=ID,ID         diagnostics: record every call of the original's functions in these scenes,
+//                         replay them through the port, and test candidate formulas for Det, Norm,
+//                         VectorAngle, ArcTan, EuclideanDistance → <out>/trace-report.md
 
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { exactRational } from './lib/motion-compare.mjs';
+import { DEFAULT_TRACE_FUNCTIONS, DEFAULT_TRACE_SYSTEM, traceMarkdown, candidateMarkdown } from './lib/trace-replay.mjs';
+import { probeArguments } from './lib/numerics-candidates.mjs';
 import {
   clampScene, sceneForWolfram, sceneUrl, randomScenes, withHistory, portRecord, compareScene,
   referenceFor, referenceFlags, goldenSelfCheck, pathLen,
@@ -47,10 +54,10 @@ const opt = (name, dflt) => {
   if (!a) return dflt;
   return a.includes('=') ? a.slice(a.indexOf('=') + 1) : true;
 };
-const unknown = argv.filter((a) => !/^--(wolframscript|nb|random|seed|history|scenes|only|images|browser|no-run|time-limit|base|out|help)(=|$)/.test(a));
+const unknown = argv.filter((a) => !/^--(wolframscript|nb|random|seed|history|scenes|only|images|browser|no-run|time-limit|base|out|jobs|trace|help)(=|$)/.test(a));
 if (opt('help') || unknown.length) {
   if (unknown.length) console.error(`unknown option(s): ${unknown.join(' ')}`);
-  console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split("\n").filter((l) => l.startsWith("//")).slice(3, 31).map((l) => l.slice(3)).join('\n'));
+  console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split("\n").filter((l) => l.startsWith("//")).slice(3, 35).map((l) => l.slice(3)).join('\n'));
   process.exit(unknown.length ? 2 : 0);
 }
 
@@ -81,30 +88,102 @@ scenes = scenes.map((s) => ({ ...s, ...clampScene(s) }));
 const ids = new Set();
 for (const s of scenes) { if (ids.has(s.id)) throw new Error(`duplicate scene id ${s.id}`); ids.add(s.id); }
 
-fs.writeFileSync(scenesFile, JSON.stringify({ timeLimit: Number(opt('time-limit', 60)), scenes: scenes.map(sceneForWolfram) }, null, 1));
-console.log(`${scenes.length} scenes -> ${path.relative(root, scenesFile)}`);
+const timeLimit = Number(opt('time-limit', 60));
+const traceIds = opt('trace', null);
 
 // ---------------------------------------------------------------- 2. the original, in Mathematica
-if (!opt('no-run', false)) {
-  if (!fs.existsSync(nbFile)) {
-    console.error(`Original notebook not found: ${nbFile}\nPass --nb=PATH to the author notebook (MotionPlanningForRobotPathAroundObstacles-author.nb).`);
-    process.exit(2);
-  }
-  if (wantImages) fs.mkdirSync(imagesDir, { recursive: true });
+/** Run mp-original.wls on a list of scene records (async, so several kernels can run at once). */
+function runWolfram(sceneRecords, inFile, outFile, extra = {}, label = '') {
+  fs.writeFileSync(inFile, JSON.stringify({ timeLimit, ...extra, scenes: sceneRecords }, null, 1));
   const wls = path.join(root, 'tools/wolfram/mp-original.wls');
-  const wsArgs = ['-file', wls, nbFile, scenesFile, resultsFile, ...(wantImages ? [imagesDir] : [])];
-  console.log(`Running the original in Mathematica: ${wolframscript} -file tools/wolfram/mp-original.wls …`);
-  const t0 = Date.now();
-  const r = spawnSync(wolframscript, wsArgs, { stdio: 'inherit', windowsHide: true });
+  const args = ['-file', wls, nbFile, inFile, outFile, ...(wantImages ? [imagesDir] : [])];
+  return new Promise((resolve) => {
+    const child = spawn(wolframscript, args, { windowsHide: true });
+    const relay = (stream, dest) => {
+      let buf = '';
+      stream.on('data', (d) => {
+        buf += d.toString();
+        const lines = buf.split(/\r?\n/); buf = lines.pop();
+        for (const l of lines) dest.write(`${label}${l}\n`);
+      });
+    };
+    relay(child.stdout, process.stdout); relay(child.stderr, process.stderr);
+    child.on('error', (e) => resolve({ error: e }));
+    child.on('close', (code) => resolve({ code }));
+  });
+}
+function wolframFailed(r) {
   if (r.error) {
     console.error(`Could not start "${wolframscript}": ${r.error.message}\n` +
       'Find it with  where wolframscript  (Command Prompt) or  Get-Command wolframscript  (PowerShell), then pass\n' +
       '  --wolframscript="C:\\Program Files\\Wolfram Research\\WolframScript\\wolframscript.exe"   (example path)');
-    process.exit(2);
+    return true;
   }
-  if (r.status !== 0) { console.error(`wolframscript exited with status ${r.status}`); process.exit(2); }
+  if (r.code !== 0) { console.error(`wolframscript exited with status ${r.code}`); return true; }
+  return false;
+}
+if (!opt('no-run', false) && !fs.existsSync(nbFile)) {
+  console.error(`Original notebook not found: ${nbFile}\nPass --nb=PATH to the author notebook (MotionPlanningForRobotPathAroundObstacles-author.nb).`);
+  process.exit(2);
+}
+if (wantImages) fs.mkdirSync(imagesDir, { recursive: true });
+
+// ---------------------------------------------------------------- 2a. trace mode (diagnostics)
+if (traceIds) {
+  const want = String(traceIds).split(',');
+  const traced = want.map((id) => scenes.find((s) => s.id === id) ?? (() => { console.error(`unknown scene id ${id}`); process.exit(2); })());
+  const deep = (v) => (Array.isArray(v) ? v.map(deep) : typeof v === 'number' ? exactRational(v) : v);
+  const probes = Object.fromEntries(Object.entries(probeArguments(Number(opt('seed', 1)))).map(([k, v]) => [k, deep(v)]));
+  const traceFile = path.join(outDir, 'original-trace.json');
+  if (!opt('no-run', false)) {
+    console.log(`Tracing ${traced.length} scene(s) in Mathematica (this records many calls; may take a few minutes) …`);
+    const t0 = Date.now();
+    const r = await runWolfram(traced.map((s) => ({ ...sceneForWolfram(s), trace: true })), path.join(outDir, 'trace-scenes.json'), traceFile,
+      { traceFunctions: DEFAULT_TRACE_FUNCTIONS, traceSystemFunctions: DEFAULT_TRACE_SYSTEM, probes, timeLimit: Math.max(timeLimit, 900) });
+    if (wolframFailed(r)) process.exit(2);
+    console.log(`Mathematica finished in ${((Date.now() - t0) / 1000).toFixed(1)} s`);
+  }
+  const tr = JSON.parse(fs.readFileSync(traceFile, 'utf8'));
+  const md = ['# Trace report — where do port and original part ways?', '',
+    `Generated ${new Date().toISOString()} by \`tools/compare-with-original.mjs --trace\`. Original evaluated in **${tr.wolframVersion}**.`, ''];
+  md.push('## 1. Built-in functions on probe arguments', '',
+    'Mathematica evaluated each built-in on seeded arguments (normal and nearly degenerate). Each candidate formula is',
+    'a way the port could compute the same thing; the one with 0 mismatches reproduces Mathematica bit for bit.', '');
+  for (const [name, results] of Object.entries(tr.probes ?? {})) {
+    const calls = probeArguments(Number(opt('seed', 1)))[name].map((args, i) => [args, results[i]]);
+    md.push(...candidateMarkdown(name, name, calls));
+  }
+  md.push('## 2. Traced scenes', '');
+  for (const sc of tr.scenes) {
+    if (!Array.isArray(sc.trace)) { md.push(`### Scene ${sc.id}: status ${sc.status}, no trace`, ''); continue; }
+    if (sc.status !== 'ok') md.push(`(Scene ${sc.id} ended with status "${sc.status}": the trace below is partial.)`, '');
+    md.push(...traceMarkdown(sc.id, sc.trace).md);
+  }
+  fs.writeFileSync(path.join(outDir, 'trace-report.md'), md.join('\n'));
+  console.log(`Trace report: ${path.relative(root, path.join(outDir, 'trace-report.md'))}`);
+  process.exit(0);
+}
+
+// ---------------------------------------------------------------- 2b. normal run (optionally in parallel)
+if (!opt('no-run', false)) {
+  const jobs = Math.max(1, Math.min(Number(opt('jobs', 1)), scenes.length));
+  console.log(`Running the original in Mathematica (${jobs} kernel${jobs > 1 ? 's' : ''}) …`);
+  const t0 = Date.now();
+  const chunks = Array.from({ length: jobs }, (_, k) => scenes.filter((_, i) => i % jobs === k));
+  const parts = chunks.map((_, k) => path.join(outDir, jobs > 1 ? `original-results.part${k + 1}.json` : 'original-results.json'));
+  const results = await Promise.all(chunks.map((c, k) => runWolfram(c.map(sceneForWolfram),
+    jobs > 1 ? path.join(outDir, `scenes.part${k + 1}.json`) : scenesFile, parts[k], {}, jobs > 1 ? `[k${k + 1}] ` : '')));
+  if (results.some(wolframFailed)) process.exit(2);
+  if (jobs > 1) {
+    const merged = parts.map((f) => JSON.parse(fs.readFileSync(f, 'utf8')));
+    const order = new Map(scenes.map((s, i) => [s.id, i]));
+    const all = merged.flatMap((m) => m.scenes).sort((a, b) => order.get(a.id) - order.get(b.id));
+    fs.writeFileSync(resultsFile, JSON.stringify({ ...merged[0], scenes: all }));
+    for (let k = 0; k < jobs; k++) { fs.rmSync(parts[k]); fs.rmSync(path.join(outDir, `scenes.part${k + 1}.json`)); }
+  }
   console.log(`Mathematica finished in ${((Date.now() - t0) / 1000).toFixed(1)} s`);
 }
+fs.writeFileSync(scenesFile, JSON.stringify({ timeLimit, scenes: scenes.map(sceneForWolfram) }, null, 1));
 if (!fs.existsSync(resultsFile)) { console.error(`No results file ${resultsFile} (run without --no-run first).`); process.exit(2); }
 const original = JSON.parse(fs.readFileSync(resultsFile, 'utf8'));
 const origById = new Map(original.scenes.map((r) => [r.id, r]));
@@ -183,6 +262,25 @@ for (const r of diffRows) {
   for (const n of r.notes) md.push(`- ${n}`);
   for (const i of r.issues) md.push(`- reference check: ${i.flag} — ${i.where}`);
   md.push('');
+}
+
+md.push('## 3b. The original against itself: fresh vs after a drag', '');
+const histRows = rows.filter((r) => r.id.endsWith('~h'));
+if (!histRows.length) md.push('Not run (use `--history`).', '');
+else {
+  md.push('Each scene computed fresh vs reached by dragging the robot after the obstacles were placed (C-obstacles kept from', 'that moment, as the interactive original does). Rows listed = the ORIGINAL gives a different validity or path.', '');
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  const lines = [];
+  for (const h of histRows) {
+    const f = byId.get(h.id.slice(0, -2));
+    if (!f) continue;
+    const vf = JSON.stringify(f.validity.original), vh = JSON.stringify(h.validity.original);
+    const lf = f.length.original, lh = h.length.original;
+    const pathDiff = (lf == null) !== (lh == null) || (lf != null && Math.abs(lf - lh) > 1e-9);
+    if (vf !== vh || pathDiff) lines.push(`| ${f.id} | ${fmtValid(f.validity.original)} | ${fmtLen(lf)} | ${fmtValid(h.validity.original)} | ${fmtLen(lh)} | ${fmtLen(f.length.ref)} | [open](${f.link}) |`);
+  }
+  if (!lines.length) md.push('None: the original gave the same result both ways in every scene.', '');
+  else md.push('| scene | fresh: valid | fresh: length | after drag: valid | after drag: length | reference | link |', '|---|---|---|---|---|---|---|', ...lines, '');
 }
 
 md.push('## 4. Checks against the independent reference planner', '');

@@ -152,3 +152,33 @@ describe('tool scripts parse (catches syntax errors in scripts no other test imp
     expect(r.status).toBe(0);
   });
 });
+
+describe('numerics candidates and trace replay (diagnostic tooling)', async () => {
+  const N = await import('../../tools/lib/numerics-candidates.mjs');
+  const T = await import('../../tools/lib/trace-replay.mjs');
+  it('exact fma has a single rounding (checked against Dekker TwoProduct)', () => {
+    const split = (x) => { const t = 134217729 * x; const hi = t - (t - x); return [hi, x - hi]; };
+    for (let i = 0; i < 2000; i++) {
+      const a = Math.sin(i) * 7.3, b = Math.cos(i * 1.7) * 3.1, p = a * b;
+      const [ah, al] = split(a), [bh, bl] = split(b);
+      expect(N.fma(a, b, -p) === ((ah * bh - p) + ah * bl + al * bh) + al * bl).toBe(true);
+    }
+  });
+  it('every Det candidate is exact on simple integer matrices', () => {
+    for (const f of Object.values(N.DET_CANDIDATES)) {
+      expect(f([[2, 3], [4, 5]])).toBe(-2);
+      expect(f([[1, 2, 3], [1, 3, 5], [1, 4, 8]])).toBe(1);
+    }
+  });
+  it('replay finds the function whose result differs', () => {
+    const a = [[0, 0], [2, 2]], b = [[0, 2], [2, 0]];
+    const recs = [['SegmentIntersectionQ', [[a, b]], true], ['reflex', [[0, 0], [1, 0], [0, 1]], false]];
+    const st = T.replayPort(recs);
+    expect(st.SegmentIntersectionQ.mismatches).toBe(0);
+    expect(st.reflex.mismatches).toBe(1);
+  });
+  it('candidate scoring counts mismatches per formula', () => {
+    const sc = T.scoreCandidates('Norm', [[[[3, 4]], 5]]);
+    for (const s of Object.values(sc)) expect(s.mismatches).toBe(0);
+  });
+});

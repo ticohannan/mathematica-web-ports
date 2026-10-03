@@ -16,8 +16,10 @@ export default defineConfig({
   outputDir: 'test-output/e2e-artifacts',
   timeout: 60_000,
   expect: { timeout: 10_000 },
-  fullyParallel: false,
-  workers: 1,
+  // Tests are independent (each opens its own page), so they run in parallel. Default 6 browser
+  // workers; override with the PW_WORKERS environment variable (e.g. set PW_WORKERS=1 to debug).
+  fullyParallel: true,
+  workers: Number(process.env.PW_WORKERS || 6),
   retries: 0,
   reporter: [['list'], ['html', { outputFolder: 'test-output/html-report', open: 'never' }]],
   use: {

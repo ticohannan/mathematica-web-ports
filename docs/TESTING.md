@@ -67,6 +67,9 @@ Starts `tools/serve.mjs` on port 8090 automatically and runs `tests/e2e/*.spec.j
 - `test-output/review-screenshots/firefox/*.png` — screenshots of every original snapshot state
   and other key states, **for human side-by-side comparison** with the original's snapshots.
   They are not compared automatically (pixel comparison across machines/GPUs is unreliable).
+- Parallel: 6 browser workers by default (tests are independent). Change with the `PW_WORKERS`
+  environment variable, e.g. `set PW_WORKERS=12` (Command Prompt) before `npm run test:e2e`, or
+  `set PW_WORKERS=1` to debug one test at a time.
 - Headed (watch it happen): `npm run test:e2e:headed`.
 - Second engine (optional): `npx playwright install chromium` then `npx playwright test --project=chromium`.
 
@@ -106,6 +109,8 @@ npm run compare:original                              :: 5 saved states + 20 nam
 npm run compare:original -- --random=200 --seed=7     :: more random scenes
 npm run compare:original -- --history                 :: also the "after a drag" variant of each scene
 npm run compare:original -- --images --only=A1,B1,C1  :: pictures: original (PNG) next to port (screenshot)
+npm run compare:original -- --history --jobs=4        :: 4 Mathematica kernels in parallel (licence permitting)
+npm run compare:original -- --trace=C2,C3             :: diagnostics: where exactly do port and original part ways?
 npm run compare:original -- --wolframscript="C:\Program Files\Wolfram Research\WolframScript\wolframscript.exe"
 ```
 
@@ -132,6 +137,14 @@ Read `test-output/compare-original/report.md`:
   `inherited` means the original shows the same problem (report it as a property of the original
   algorithm that the port reproduces), `port only` means the port is at fault.
 - **Messages** the original produced (e.g. the `First::normal` case the port treats as "no path").
+
+**Trace mode** (`--trace=ID,…`) records every call of the original's functions (and of the built-ins
+`Det`, `VectorAngle`, `Norm`, `ArcTan`, `EuclideanDistance`) in the given scenes, replays each call through
+the port's function with the same arguments, and reports per function how many results differ and where
+the first difference occurs (`test-output/compare-original/trace-report.md`). It also evaluates those
+built-ins on a few thousand seeded probe arguments and scores alternative formulas (e.g. `a*d - b*c` versus
+an LU decomposition for `Det`) — the formula with 0 mismatches is the one Mathematica uses. This is how a
+remaining difference is traced to its root cause instead of guessed.
 
 Limits: the harness evaluates the stored code in a fresh kernel, not in the front end, and it clears
 the original's change-detection caches before every scene (`--history` adds the drag variant); the
