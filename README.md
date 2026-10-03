@@ -35,15 +35,15 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for details. Development tools 
 
 ```bat
 npm test                              :: unit + golden parity tests (Node, no browser)
-npx playwright install firefox        :: one-time
-npm run test:e2e                      :: browser tests in Firefox
+npx playwright install firefox chromium  :: one-time
+npm run test:e2e                      :: browser tests in Firefox and Chromium
 npm run publish:tested                :: run everything, then tag + push to GitHub
 node tools\explore-motion.mjs 300 1   :: randomized investigation of the motion planner
 npm run compare:original              :: motion planning: port vs the ORIGINAL code run in local Mathematica
 ```
 
 Human/manual tests: [docs/MANUAL_TEST_CHECKLIST.md](docs/MANUAL_TEST_CHECKLIST.md).
-Full guide: [docs/TESTING.md](docs/TESTING.md). Publishing: [docs/GIT_AND_GITHUB_SETUP.md](docs/GIT_AND_GITHUB_SETUP.md).
+Full guide: [docs/TESTING.md](docs/TESTING.md). Feature changes: [docs/DESIGN_PROCESS.md](docs/DESIGN_PROCESS.md).
 
 ## Repository layout
 

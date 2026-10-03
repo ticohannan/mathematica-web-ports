@@ -230,6 +230,12 @@ Notes:
 Result: [ ] PASS  [ ] FAIL  [ ] UNSURE
 Notes:
 
+### M-TP-09  Caption, Details text and credits
+Steps: read the caption and open Details; compare with the original's text.
+Expected: same text as the original, except the corrections described in the port note (DESIGN.md D-TP-04); credits footer present.
+Result: [ ] PASS  [ ] FAIL  [ ] UNSURE
+Notes:
+
 ---------------------------------------------------------------------------------------------------
 ## EA — Euler Angles: Precession, Nutation, and Spin
 

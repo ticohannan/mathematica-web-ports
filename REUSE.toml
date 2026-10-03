@@ -9,7 +9,7 @@ version = 1
 [[annotations]]
 path = ["tools/**", "shared/**", "LICENSES/**", "REUSE.toml", ".gitignore", ".gitattributes", ".nojekyll",
         "package.json", "package-lock.json", "vitest.config.js", "playwright.config.js",
-        "docs/ARCHITECTURE.md", "docs/TESTING.md", "docs/GIT_AND_GITHUB_SETUP.md"]
+        "docs/ARCHITECTURE.md", "docs/TESTING.md", "docs/DESIGN_PROCESS.md"]
 precedence = "closest"
 SPDX-FileCopyrightText = "2026 Tico Hannan"
 SPDX-License-Identifier = "MIT"

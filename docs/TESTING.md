@@ -6,7 +6,7 @@ Five layers. Run them in this order; each one catches problems the others cannot
 |-------|---------|-------|----------------|
 | 1. Unit & property tests | `npm test` | Node | the math functions behave correctly on hand-derived cases and random cases checked by an independent oracle |
 | 2. Golden parity tests | `npm test` (same run) | Node | the port reproduces numbers **computed by the original Mathematica code** (cached in the .nb files) |
-| 3. Browser tests | `npm run test:e2e` | Firefox (Playwright build) | controls exist and work, the screen shows what the math computed, drag/keyboard interaction, error-free load |
+| 3. Browser tests | `npm run test:e2e` | Firefox and Chromium (Playwright builds) | controls exist and work, the screen shows what the math computed, drag/keyboard interaction, error-free load |
 | 4. Manual / exploratory | `docs/MANUAL_TEST_CHECKLIST.md` | a person, a browser, ideally the original running in Wolfram software | look & feel, behaviour compared with the original, things no script can judge |
 | 5. Automated comparison with the original (motion planning) | `npm run compare:original` | local Mathematica / Wolfram Engine (`wolframscript`) | the port computes the same validity, C-obstacles, lines, path and trajectory as the **original code run live**, on many scenes, not only the 5 saved ones |
 
@@ -24,10 +24,10 @@ Plus an investigation tool: `node tools/explore-motion.mjs` (randomized differen
 4. In the repository folder:
    ```bat
    npm install
-   npx playwright install firefox
+   npx playwright install firefox chromium
    ```
-   The second command downloads Playwright's own build of Firefox (~100 MB). Tests drive that
-   build, not your installed Firefox; your installed Firefox is for manual testing.
+   The second command downloads Playwright's own builds of Firefox and Chromium (~100 MB each). Tests
+   drive those builds, not your installed browsers; your installed Firefox is for manual testing.
 
 ## Layer 1 + 2: `npm test`
 
@@ -61,17 +61,18 @@ states are cached. Boundary 5 and robot 5 have **no** golden data — test those
 
 ## Layer 3: `npm run test:e2e`
 
-Starts `tools/serve.mjs` on port 8090 automatically and runs `tests/e2e/*.spec.js` in Firefox.
+Starts `tools/serve.mjs` on port 8090 automatically and runs `tests/e2e/*.spec.js` in Firefox AND
+Chromium (two Playwright projects; `npm run test:e2e:firefox` / `test:e2e:chromium` run one).
+`npm run publish:tested` requires both to pass.
 
 - Results: terminal + HTML report (`npm run report`).
-- `test-output/review-screenshots/firefox/*.png` — screenshots of every original snapshot state
+- `test-output/review-screenshots/<firefox|chromium>/*.png` — screenshots of every original snapshot state
   and other key states, **for human side-by-side comparison** with the original's snapshots.
   They are not compared automatically (pixel comparison across machines/GPUs is unreliable).
 - Parallel: 6 browser workers by default (tests are independent). Change with the `PW_WORKERS`
   environment variable, e.g. `set PW_WORKERS=12` (Command Prompt) before `npm run test:e2e`, or
   `set PW_WORKERS=1` to debug one test at a time.
 - Headed (watch it happen): `npm run test:e2e:headed`.
-- Second engine (optional): `npx playwright install chromium` then `npx playwright test --project=chromium`.
 
 > Status: v0.1.0 was first run in Firefox (Playwright's Firefox 155) on Windows 10 on 2026-10-03 —
 > 38/38 passed. It had previously been run only in Chromium in the authoring sandbox. Any later

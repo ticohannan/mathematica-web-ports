@@ -45,3 +45,36 @@ test('attribution on the landing page', async ({ page }) => {
   await expect(credits.locator('a[href="https://creativecommons.org/licenses/by-nc-sa/3.0/"]')).toHaveCount(1);
   await expect(credits).toContainText('Not affiliated with or endorsed');
 });
+
+// Design documents are the specification (docs/DESIGN_PROCESS.md): every interactive element of an
+// app page must be listed in that app's UI inventory, and every inventory row must exist on the page.
+import fs from 'node:fs';
+const INVENTORY_PAGES = [
+  { url: '/demos/motion-planning/', doc: 'demos/motion-planning/DESIGN.md' },
+  { url: '/demos/three-parametrizations/', doc: 'demos/three-parametrizations/DESIGN.md' },
+  { url: '/demos/euler-angles/', doc: 'demos/euler-angles/DESIGN.md' },
+];
+function inventoryPatterns(docFile) {
+  const md = fs.readFileSync(docFile, 'utf8');
+  const sec = md.slice(md.indexOf('## 5. UI inventory'), md.indexOf('\n## 6.'));
+  return [...sec.matchAll(/^\| `([^`]+)` \|/gm)].map((m) => m[1]);
+}
+const toRegExp = (p) => new RegExp(`^${p.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*')}$`);
+for (const p of INVENTORY_PAGES) {
+  test(`every control on ${p.url} is specified in its design document`, async ({ page }) => {
+    await page.goto(p.url);
+    await page.waitForFunction(() => window.__demo && window.__demo.ready === true);
+    const ids = await page.$$eval(
+      'button, input, select, textarea, a[href], summary, canvas, [role=button], [role=slider], [tabindex]:not([tabindex="-1"])',
+      (els) => els.map((e) => {
+        const own = e.getAttribute('data-testid');
+        const anc = e.closest('[data-testid]');
+        return own || (anc && anc.getAttribute('data-testid')) || `UNIDENTIFIED <${e.tagName.toLowerCase()}> "${(e.textContent || '').trim().slice(0, 30)}"`;
+      }));
+    const patterns = inventoryPatterns(p.doc).map((s) => ({ s, re: toRegExp(s) }));
+    const unlisted = [...new Set(ids.filter((id) => !patterns.some((q) => q.re.test(id))))];
+    expect(unlisted, `controls not in ${p.doc} §5 (add a design entry first)`).toEqual([]);
+    const unused = patterns.filter((q) => !ids.some((id) => q.re.test(id))).map((q) => q.s);
+    expect(unused, `inventory rows in ${p.doc} that match nothing on the page`).toEqual([]);
+  });
+}

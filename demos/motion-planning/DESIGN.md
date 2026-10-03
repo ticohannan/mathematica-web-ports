@@ -1,101 +1,190 @@
-# Design: Motion Planning for Robot Path around Obstacles
+# Design document: Motion Planning for Robot Path around Obstacles
 
-Original: Wolfram Demonstrations Project, by Shreyas Poyrekar, Aaron T. Becker and Arifa Sultana
-(author notebook created with Mathematica 10.2). Readable original source:
-`docs/original-source/motion-planning.txt`. Port files: `planner.js` (pure computation, line-by-line
-port), `main.js` (SVG rendering + interaction), `index.html`.
+| | |
+|---|---|
+| Code version: | 0.1.6 |
+| Document revision | 2 (2026-10-03) — first full design document (rev. 1 was a feature list) |
+| Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
+| Original | Wolfram Demonstrations Project, "Motion Planning for Robot Path around Obstacles" by Shreyas Poyrekar, Aaron T. Becker and Arifa Sultana (CC BY-NC-SA 3.0); author notebook made with Mathematica 10.2. Readable source: [`docs/original-source/motion-planning.txt`](../../docs/original-source/motion-planning.txt) |
+| Port files | `planner.js` (computation, pure), `main.js` (SVG drawing and interaction), `index.html` (page) |
 
-## 1. Features re-implemented
+## 1. Purpose and background
 
-### Controls (left panel, `ControlPlacement -> Left`)
-| ID | Feature (original spec) | Port | Verified by |
-|----|-------------------------|------|-------------|
-| F-MP-01 | View setter `{configOrWork, "workspace"}` with options workspace / configuration space | setter bar | e2e "configuration space view…", M-MP-10 |
-| F-MP-02 | Label "number of sides" | heading | M-MP-01 |
-| F-MP-03 | Boundary sides `{{x,4},3,5,1,SetterBar}` | setter 3/4/5, default 4 | e2e "boundary sides setter…", M-MP-06 |
-| F-MP-04 | Robot sides `{{n,3},3,5,1,SetterBar}` | setter 3/4/5, default 3 | e2e "robot sides setter…", M-MP-07 |
-| F-MP-05 | Progress slider `{{s,1},1,Length@discretePath,1, ImageSize->90}`, unlabelled | slider 1…len, step 1, ⊕ animation panel | e2e "progress slider…", M-MP-08 |
-| F-MP-06 | Six locators: r1 (-2,2.75), r2 (0.5,-3) in [-4.25,4.15]²; o1 (2,2.5), o2 (-1,-0.5), o3 (-2,-2.4), o4 (2,-1) in [-3.75,3.75]² | draggable SVG locators, clamped | e2e drag + clamping tests, M-MP-02…05 |
-| F-MP-07 | Progress resets to 1 when robot/obstacle locators or robot sides change | yes | e2e "robot sides setter…" |
+The original Demonstration teaches **motion planning for a polygonal robot among polygonal
+obstacles**. Its caption: "Motion planning seeks a continuous sequence of valid configurations for a
+robot to move from the initial position to the destination position. Valid configurations do not
+enter or collide with any obstacle." The Details text explains the standard textbook method that the
+app makes visible step by step:
 
-### Geometry and algorithm (`planner.js`)
-| ID | Feature | Original function | Verified by |
-|----|---------|-------------------|-------------|
-| F-MP-10 | Boundary: regular x-gon, radius 5 (x<5) or 4.75 (x=5), centred vertically | `borderpoly` | unit "boundary polygons are centred", golden |
-| F-MP-11 | Robot: regular n-gon radius 0.5 at r1 (start) and r2 (end) | `robotStartPoly` | golden "robot polygons" |
-| F-MP-12 | Obstacles: o1 triangle, o2 square, o3 pentagon, o4 hexagon, radius 0.5 | `obstaclepoly` | golden "obstacle polygons" |
-| F-MP-13 | C-obstacle = Minkowski sum of obstacle and reflected robot (convex merge) | `ConvexMinkowskiSumRev3` | golden (vertex order), unit property test |
-| F-MP-14 | Configuration-space boundary (boundary shrunk by robot) | `configBoundaryFunc` | unit "square boundary, triangle robot" |
-| F-MP-15 | Start/end validity: centroid inside C-boundary and outside every C-obstacle | `testpoint`, `robotinsideobstcond` | unit "start inside…", "robot partly outside…" |
-| F-MP-16 | Visibility from start/end (rotational sweep) | `visiblePolys` | golden "visibility lines" |
-| F-MP-17 | Bitangent lines between C-obstacles, filtered by visibility | `visBiLineRev2`, `biTangents2polyRev1` | golden "visible bitangent lines" |
-| F-MP-18 | C-obstacle edges that cross no other C-obstacle edge join the graph | `noInterConfig` | golden (via trajectory) |
-| F-MP-19 | Graph nodes outside the C-boundary removed | `dpoints` | exploration tool |
-| F-MP-20 | Direct path if the straight line hits no C-obstacle edge | main body | unit "direct line…" |
-| F-MP-21 | Shortest path by `myAstarRev2` | `myAstarRev2` | unit A* tests, golden trajectory |
-| F-MP-22 | Path discretised every 0.09 units, r2 appended | `discretizeLineRev1` | unit, golden trajectory |
+1. reject start/goal positions that collide with an obstacle or leave the workspace;
+2. map each obstacle into the robot's **configuration space** with a Minkowski sum (and shrink the
+   boundary accordingly), so the robot can be treated as a point (its centre);
+3. build a **visibility graph** from the start, the goal and the C-obstacle vertices (visible
+   bitangent lines);
+4. find the **shortest path** in that graph (A*), and animate the robot along it.
 
-### Graphics (order as in the original `Graphics[...]`)
-| ID | Feature | Verified by |
-|----|---------|-------------|
-| F-MP-30 | Background square ±4.75: white; in configuration space red if start or end invalid | e2e "start inside an obstacle…", M-MP-11 |
-| F-MP-31 | Workspace: LightYellow boundary, LightRed obstacles, LightBlue start robot, LightGreen end robot (red if invalid), thin black edges | M-MP-01, review screenshots |
-| F-MP-32 | Workspace: path Darker[Green] 50 % Thick; travelled part solid; orange 50 % robot and red point at progress position | e2e progress test, M-MP-08 |
-| F-MP-33 | Configuration space: LightGray C-boundary, C-obstacles white (red if containing start/end), Lighter[Green] path, dark green point at progress if s≠1 | e2e config test, M-MP-10 |
-| F-MP-34 | Both views: orange start-visibility lines, purple end-visibility lines, blue bitangent lines (25 % opacity) | M-MP-12 |
-| F-MP-35 | Both views: gray C-obstacle and C-boundary outlines, red points at C-obstacle vertices | M-MP-12 |
-| F-MP-36 | "No path exists." in large dark red at r1 + (0, 0.5) when there is no path | e2e "start inside an obstacle…" |
-| F-MP-37 | Plot range ±4.65, image size 425 | M-MP-01 |
+Every visual element exists to show one of these steps; the controls exist so a learner can move
+things and watch the steps react. The port's purpose is to make this Demonstration run in any modern
+browser without Wolfram software, **faithfully**: same controls, same pictures, same numbers
+(see `compare`). It is also the subject of a course assignment that evaluates an AI-assisted
+conversion, which is why faithfulness is preferred over "improvements" (deviations are recorded in §7).
 
-### Page content
-| ID | Feature | Verified by |
-|----|---------|-------------|
-| F-MP-40 | Caption, Details (4 steps), references, author credit | M-MP-14 |
+## 2. Scope
 
-### Port additions (not in the original — flag them in any comparison)
-| ID | Addition | Why |
-|----|----------|-----|
-| A-MP-01 | "Initial settings" button | stands in for Manipulate's ⊕ menu → Initial Settings |
-| A-MP-02 | "show numbers" readout: path vertices, length, graph size, link to scene | lets testers check calculations, share scenes |
-| A-MP-03 | Scene from URL parameters (`?r1=x,y&…&n=3&x=4&view=config`) | reproducible test cases |
-| A-MP-04 | Arrow keys move a focused locator (Shift = bigger step) | accessibility / precise testing |
-| A-MP-05 | `window.__demo` automation hook | browser tests |
+In scope: everything the original Manipulate shows and lets the user do (§4.1–4.4), plus a few
+port additions for testing, accessibility and sharing (§4.5), each labelled `A-MP-nn`.
 
-## 2. Deliberate deviations (D) and preserved original quirks (Q)
+Out of scope (would each need a design entry first): other planning algorithms, robot rotation, more
+or fewer obstacles, other obstacle shapes, saving scenes, touch-specific gestures beyond pointer
+events, fixing the original algorithm's quirks (§7).
+
+## 3. Users and use cases
+
+| ID | User | Use case |
+|----|------|----------|
+| UC-MP-01 | student | move the robot and obstacles and see where a path exists and what it looks like |
+| UC-MP-02 | student | switch to configuration space to understand C-obstacles (Minkowski sums) |
+| UC-MP-03 | student | follow the robot along its path with the progress slider or its animation |
+| UC-MP-04 | tester / grader | compare the port with the original: same scene, same numbers, same picture |
+| UC-MP-05 | tester | reproduce a scene exactly and share it (link), read exact numbers |
+
+## 4. Features
+
+Columns: **Why** = the reason the feature exists; **Since** = first code version with it;
+**Verified by** = tests and checks (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)).
+
+### 4.1 Controls (original Manipulate, `ControlPlacement -> Left`)
+
+| ID | Feature | Why | Since | Verified by |
+|----|---------|-----|-------|-------------|
+| F-MP-01 | View setter "workspace" / "configuration space" (default workspace) | shows the same problem in both spaces — the core idea of the method (UC-MP-02) | v0.1.0 | e2e "configuration space view shows C-obstacles"; M-MP-10 |
+| F-MP-02 | Heading "number of sides" above the two side-count setters | original layout; groups the shape controls | v0.1.0 | M-MP-01 |
+| F-MP-03 | Boundary sides setter 3 / 4 / 5 (default 4) | shows how the workspace shape changes the free space | v0.1.0 | e2e "boundary sides setter changes the boundary polygon"; M-MP-06 |
+| F-MP-04 | Robot sides setter 3 / 4 / 5 (default 3) | shows how the robot's shape changes the C-obstacles | v0.1.0 | e2e "robot sides setter changes the robot polygon"; M-MP-07 |
+| F-MP-05 | "progress" slider without a value field, 1 … number of path points, step 1, with the ⊕ animation panel (step back, play/pause, step forward; the animation sweeps the range in 8 s and loops) | moves the robot along its path (UC-MP-03) | v0.1.0 | e2e "progress slider moves the robot along the path"; M-MP-08 |
+| F-MP-06 | Six draggable locators: start r1 (−2, 2.75), goal r2 (0.5, −3), obstacles o1 (2, 2.5), o2 (−1, −0.5), o3 (−2, −2.4), o4 (2, −1); robot locators kept in [−4.25, 4.15]², obstacle locators in [−3.75, 3.75]² | direct manipulation of the planning problem (UC-MP-01) | v0.1.0 | e2e "dragging the start locator with the mouse"; e2e "locators stay inside their ranges"; M-MP-02; M-MP-03; M-MP-04; M-MP-05 |
+| F-MP-07 | Progress resets to 1 when a locator or the robot side count changes | a new path starts at its beginning | v0.1.0 | e2e "robot sides setter changes the robot polygon and resets progress" |
+
+### 4.2 Computation (`planner.js`, function-by-function port of the original)
+
+| ID | Feature | Why | Since | Verified by |
+|----|---------|-----|-------|-------------|
+| F-MP-10 | Boundary: regular x-gon of radius 5 (x < 5) or 4.75 (x = 5), centred vertically | the workspace | v0.1.0 | unit "boundary polygons are centred vertically"; M-MP-06 |
+| F-MP-11 | Robot: regular n-gon of radius 0.5 at the start and at the goal | the robot at both ends of the task | v0.1.0 | golden "robot polygons (bit-identical)" |
+| F-MP-12 | Obstacles: o1 triangle, o2 square, o3 pentagon, o4 hexagon, radius 0.5 | four obstacles of different shapes | v0.1.0 | golden "obstacle polygons (bit-identical)" |
+| F-MP-13 | C-obstacle of each obstacle = Minkowski sum with the reflected robot (`ConvexMinkowskiSumRev3`), vertex order as in the original | step 2 of the method | v0.1.0 | golden "Minkowski sums (C-obstacles), vertex for vertex"; unit "property: robot overlaps obstacle"; compare |
+| F-MP-14 | Configuration-space boundary: the boundary shrunk by the robot (`configBoundaryFunc`) | step 2 (inverse Minkowski sum of the boundary) | v0.1.0 | unit "square boundary, triangle robot"; compare |
+| F-MP-15 | Start and goal validity: centre inside the C-boundary and outside every C-obstacle (`testpoint`) | step 1 | v0.1.0 | unit "start inside an obstacle -> invalid"; unit "robot partly outside the boundary -> invalid"; compare |
+| F-MP-16 | Vertices visible from the start and from the goal (rotational sweep, `visiblePolys`) | step 3 | v0.1.0 | golden "visibility lines from the start (bit-identical)"; golden "visibility lines from the end (bit-identical)"; compare |
+| F-MP-17 | Visible bitangent lines between C-obstacles (`visBiLineRev2`, `biTangents2polyRev1`) | step 3 | v0.1.0 | golden "visible bitangent lines between C-obstacles (bit-identical)"; compare |
+| F-MP-18 | C-obstacle edges that cross no other C-obstacle edge are added to the graph; graph nodes outside the C-boundary are removed | completes the graph so paths can slide along obstacle edges and stay inside the workspace | v0.1.0 | golden "discretised path (robot trajectory)"; compare |
+| F-MP-19 | Straight path when the start–goal line crosses no C-obstacle edge | shortest possible path; no graph needed | v0.1.0 | unit "direct line when nothing is in the way" |
+| F-MP-20 | Shortest path through the graph (`myAstarRev2`); "no path" when the goal is unreachable | step 4 | v0.1.0 | unit "finds the shorter of two routes"; unit "returns -1 when the goal is unreachable"; unit "default scene: path is the hand-checkable"; compare |
+| F-MP-21 | Path discretised every 0.09 units, goal appended (`discretizeLineRev1`) → the progress positions | smooth robot animation | v0.1.0 | unit "discretises a segment every 0.09 units"; golden "discretised path (robot trajectory)" |
+
+### 4.3 Graphics (drawn in the order of the original `Graphics[…]`, plot range ±4.65, image size 425)
+
+| ID | Feature | Why | Since | Verified by |
+|----|---------|-----|-------|-------------|
+| F-MP-30 | Background square ±4.75: white; in configuration space red when the start or the goal is invalid | signals an impossible task | v0.1.0 | e2e "start inside an obstacle: robot drawn red"; M-MP-11 |
+| F-MP-31 | Workspace: LightYellow boundary, LightRed obstacles, LightBlue start robot and LightGreen goal robot (red when invalid), thin black edges | the real-world picture | v0.1.0 | M-MP-01; review |
+| F-MP-32 | Workspace: path in dark green (50 %), the travelled part solid, an orange half-transparent robot and a red point at the progress position | shows the robot moving along the path | v0.1.0 | e2e "progress slider moves the robot along the path"; M-MP-08 |
+| F-MP-33 | Configuration space: LightGray C-boundary with a black edge, C-obstacles white (red if the start or goal is inside) at 50 % opacity, light-green path, dark-green point at the progress position when progress ≠ 1 | the planning picture | v0.1.0 | e2e "configuration space view shows C-obstacles"; M-MP-10 |
+| F-MP-34 | Both views, all at 25 % opacity: orange lines visible from the start, purple lines visible from the goal, blue bitangent lines | shows the visibility graph | v0.1.0 | M-MP-12; golden "visibility lines from the start (bit-identical)" |
+| F-MP-35 | Both views: gray outlines (70 % opacity) of the C-obstacles and C-boundary, red points at C-obstacle vertices | shows the C-obstacles also in the workspace view | v0.1.0 | M-MP-12 |
+| F-MP-36 | "No path exists." in large dark-red text at start + (0, 0.5) when there is no path | tells the user the task is impossible | v0.1.0 | e2e "start inside an obstacle: robot drawn red and" |
+
+### 4.4 Page content
+
+| ID | Feature | Why | Since | Verified by |
+|----|---------|-----|-------|-------------|
+| F-MP-40 | Title, caption and the original's Details text (four steps, references), collapsible | explains the method; part of the original | v0.1.0 | M-MP-14 |
+
+### 4.5 Port additions (not in the original — flag them in any comparison)
+
+| ID | Feature | Why | Since | Verified by |
+|----|---------|-----|-------|-------------|
+| A-MP-01 | "Initial settings" button: restores all controls and locators | stands in for the Manipulate ⊕ menu → Initial Settings | v0.1.0 | inventory; M-MP-01 |
+| A-MP-02 | "show numbers" checkbox and readout: start/goal, validity, path vertices and length, graph size, link to the scene | lets testers check calculations exactly and share scenes (UC-MP-04, UC-MP-05) | v0.1.0 | inventory; M-MP-12 |
+| A-MP-03 | Scene from URL parameters `?r1=x,y&r2=…&o1…o4=…&n=3&x=4&view=config` (values clamped to the locator ranges) | reproducible test cases and links from reports (UC-MP-05) | v0.1.0 | e2e "a scene can be opened from a link" |
+| A-MP-04 | Arrow keys move a focused locator by 0.05 (Shift: 0.25) | keyboard accessibility and precise positioning | v0.1.0 | e2e "keyboard: arrow keys move a focused locator"; M-GEN-04 |
+| A-MP-05 | `window.__demo` automation hook (read/set state, read results) | automated browser tests and the comparison tools | v0.1.0 | e2e "loads without errors with the original default scene" |
+| A-MP-06 | "All demos" link back to the landing page | site navigation | v0.1.0 | inventory; M-GEN-01 |
+| A-MP-07 | Credit footer: original title, authors, licence, adaptation notice, links to this document and LICENSE.md | required by the CC BY-NC-SA 3.0 licence | v0.1.1 | e2e "attribution on" |
+
+## 5. UI inventory
+
+Every interactive element of the page, identified by its `data-testid` (or that of the nearest
+ancestor). `*` matches any text. The browser test "every control on … is specified in its design
+document" fails if the page has an element not listed here, or a row here matches nothing.
+
+| data-testid | Feature |
+|-------------|---------|
+| `setter-configOrWork-*` | F-MP-01 |
+| `setter-x-*` | F-MP-03 |
+| `setter-n-*` | F-MP-04 |
+| `*-s` | F-MP-05 |
+| `locator-*` | F-MP-06, A-MP-04 |
+| `details` | F-MP-40 |
+| `reset` | A-MP-01 |
+| `show-readout` | A-MP-02 |
+| `crumbs` | A-MP-06 |
+| `credits` | A-MP-07 |
+
+## 6. Design
+
+- **Pure model, separate rendering.** `planner.js` contains only computation: each original
+  function is ported with the same name, arguments and order of operations, so that its results can be
+  compared with the original number for number. `computeScene(state)` evaluates the whole Manipulate
+  body for one set of control values and returns every quantity that is drawn. `main.js` owns the
+  state, builds the controls (`shared/ui.js`), draws the SVG and handles pointer and keyboard input.
+- **State.** `{configOrWork, x, n, s, r1, r2, o1…o4}` — the Manipulate variables of the original.
+  Moving a locator or changing x or n recomputes the scene (on the next animation frame while
+  dragging) and redraws it; the view setter and the progress slider only redraw.
+- **Numbers.** Wolfram Language semantics the original depends on are reproduced in `shared/mma.js`
+  (argument order of `ArcTan`, tolerant `Equal`/`Less`, `Chop`, `Mod`, exact `CirclePoints`, `Sort`
+  tie order, compensated `Total`, `EuclideanDistance`). Last-bit agreement matters: it decides
+  near-degenerate visibility and validity questions.
+- **Drawing.** SVG in the original's coordinates (y up); Mathematica sizes (`Thin`, `Thick`,
+  `Thickness`, `PointSize`, "Large" text) converted for the 425-pixel image size.
+- **Verification.** Golden tests compare with results stored in the original notebook; the
+  comparison tool (`npm run compare:original`) runs the original code in Mathematica on many scenes;
+  an independent reference planner checks paths for collisions and optimality.
+
+## 7. Deviations (D), original quirks kept (Q), known issues (K)
 
 | ID | Kind | Description |
 |----|------|-------------|
 | D-MP-01 | deviation | Progress `s` is clamped to the new path length when the path gets shorter without a reset (e.g. boundary change). Original behaviour for s > Length[discretePath] unknown (likely a Part error). |
 | D-MP-02 | deviation | If start or goal is missing from the graph (all their lines were removed) the port reports no path; the original evaluates `First@@{}` (error, silenced by `Quiet`) with undefined result. |
-| D-MP-03 | deviation | Progress slider disabled when there is no path (original: slider range 1…0 or 1…1, behaviour unknown). |
-| D-MP-04 | deviation | Locator look approximates Mathematica's; clicking on empty space does not move a locator (Mathematica's LocatorPane may move the nearest locator — **verify in the original**, M-MP-05). |
-| D-MP-05 | deviation | Line widths: `Thin` = 0.5 px, `Thick` = 2 px, "Large" text = 18 px at nominal size — approximations of Mathematica's sizes. |
-| D-MP-06 | deviation | The original caches intermediate results between evaluations (`prev*` variables) and recomputes the C-obstacles only when an obstacle or the robot shape changes; the port recomputes everything on each change. *Corrected in v0.1.3* (first described as affecting speed only): the C-obstacle coordinates depend in their last bits on where the robot stood when they were computed, and in near-degenerate scenes (start or goal very close to a C-obstacle) those bits can change the path or the validity. So the interactive original can give different results for the same scene depending on the order of drags; the port always gives the result of a fresh computation (the original's result right after a robot-setter click). Check with `npm run compare:original -- --history`. |
+| D-MP-03 | deviation | Progress slider disabled only when the start or goal is invalid (the original's range is then 1…0). With valid ends but no route the path is {goal}, so the slider stays enabled with range 1…1, as in the original. |
+| D-MP-04 | deviation | Locator look approximates Mathematica's; clicking on empty space does not move a locator (Mathematica's LocatorPane may move the nearest locator — verify in the original, M-MP-05). |
+| D-MP-05 | deviation | Line widths: `Thin` = 0.5 px, `Thick` = 2 px, "Large" text = 18 px at nominal size — approximations of Mathematica's sizes. The progress slider is 120 px wide (original `ImageSize -> 90`); its animation speed (8 s per sweep) is a guess. |
+| D-MP-06 | deviation | The original caches intermediate results (`prev*` variables) and recomputes the C-obstacles only when an obstacle or the robot shape changes; the port recomputes everything on each change. The C-obstacle coordinates depend in their last bits on where the robot stood when they were computed, and in near-degenerate scenes that can change the path or the validity, so the interactive original can give different results for the same scene depending on the order of drags. The port always gives the result of a fresh computation. Check with `npm run compare:original -- --history`. (Corrected in v0.1.3; first described as affecting speed only.) |
 | Q-MP-01 | quirk kept | `myAstarRev2` heuristic is `EuclideanDistance[verts[[nbr]], verts[[nbr]]]` = 0 → it is Dijkstra's algorithm (still optimal on its graph). |
 | Q-MP-02 | quirk kept | `angleSortCond` tie-break compares a distance with an angle (`c < b`, intended `c < d`). |
 | Q-MP-03 | quirk kept | In `visiblePolys` one `SegmentIntersectionQ` call has the wrong argument shape and never evaluates; the port reproduces the resulting no-op. |
 | Q-MP-04 | quirk kept | `getClockwiseAngle` forces the angle to 0 when the two vectors agree in either coordinate. |
 | Q-MP-05 | quirk kept | `SegmentIntersectionQ` ignores intersections at endpoints and treats parallel/collinear segments as non-intersecting. |
 | Q-MP-06 | quirk kept | `testpoint`: points exactly on a polygon edge count as outside. |
-| Q-MP-07 | quirk kept | Minkowski sum keeps collinear intermediate vertices for parallel edges, in Mathematica's tie order (reproduced via `sortMma` + exact `CirclePoints`). |
+| Q-MP-07 | quirk kept | Minkowski sum keeps collinear intermediate vertices for parallel edges, in Mathematica's tie order. |
 | Q-MP-08 | quirk kept | C-obstacles are built from the robot START polygon; overlapping obstacles are not merged — edges that cross another C-obstacle edge are dropped from the graph instead. |
 | Q-MP-09 | quirk kept | Obstacles are not checked against the boundary or each other. |
+| K-MP-01 | known issue | In v0.1.4 the comparison with the original (Mathematica 15.0.1) matched in 52 of 65 freshly computed scenes; in the others some visibility/bitangent lines differ and in 3 scenes the path differs. Likely cause (built-ins shown to differ, link to each scene not yet proven): last-bit differences in built-in functions (`ArcTan`, `Norm`, `Det`, `VectorAngle`) between Mathematica and JavaScript; under investigation with `npm run compare:original -- --trace=…`; fix proposed as P-MP-01. |
 
-## 3. Test plan
+## 8. Proposed changes
 
-### Automated (run `npm test`, `npm run test:e2e`)
-- Golden parity: all 5 cached states of the original (3 distinct scenes) reproduce, BIT FOR BIT, polygons,
-  Minkowski sums, visibility/bitangent lines and the full trajectory (`tests/golden/parity.test.js`).
-- Unit/property: see `tests/unit/planner.test.js` (hand-derived + independent oracle).
-- Browser: `tests/e2e/motion-planning.spec.js` (controls present, mouse drag, clamping, invalid
-  start, setters, progress, configuration view, URL scenes, keyboard, snapshot trajectories + screenshots).
-- Investigation: `tools/explore-motion.mjs` — differential testing vs the reference planner.
+One open proposal. Template for a request: copy a row (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)).
 
-### Manual
-`docs/MANUAL_TEST_CHECKLIST.md`, section MP.
+| ID | Status | Requested by / date | Change | Reason | Acceptance criteria |
+|----|--------|---------------------|--------|--------|---------------------|
+| P-MP-01 | proposed | comparison with the original / 2026-10-03 | compute `Norm`, `ArcTan`, `Det` and `VectorAngle` exactly as Mathematica does (formulas identified with `compare:original --trace`) | fixes K-MP-01: the port should give the original's result in every scene | `npm run compare:original` reports no DIFFERENT scene among fresh computations; golden and unit tests still pass; no change to controls or drawing |
 
-### Known coverage gaps
-- No golden data for boundary 5 or robot 5 sides.
-- Behaviour of the original in degenerate scenes (overlapping obstacles, start touching an obstacle,
-  points exactly on boundaries) is unknown until compared in Wolfram software.
-- Performance on slow machines while dragging (recomputation runs on every animation frame).
+## 9. Revision history
+
+| Doc rev. | Code version | Date | Change |
+|----------|--------------|------|--------|
+| 1 | v0.1.0 | 2026-10-02 | feature list F/A/D/Q written with the first port |
+| 1 | v0.1.1 | 2026-10-03 | credit footer added (A-MP-07) |
+| 1 | v0.1.3 | 2026-10-03 | D-MP-06 corrected |
+| 2 | v0.1.6 | 2026-10-03 | full design document: purpose, scope, use cases, reasons, versions, UI inventory, design, known issues, change process; no feature changes |

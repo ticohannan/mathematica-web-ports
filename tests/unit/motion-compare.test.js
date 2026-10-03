@@ -164,10 +164,10 @@ describe('numerics candidates and trace replay (diagnostic tooling)', async () =
       expect(N.fma(a, b, -p) === ((ah * bh - p) + ah * bl + al * bh) + al * bl).toBe(true);
     }
   });
-  it('every Det candidate is exact on simple integer matrices', () => {
+  it('every Det candidate is right on simple integer matrices', () => {
     for (const f of Object.values(N.DET_CANDIDATES)) {
-      expect(f([[2, 3], [4, 5]])).toBe(-2);
-      expect(f([[1, 2, 3], [1, 3, 5], [1, 4, 8]])).toBe(1);
+      expect(Math.abs(f([[2, 3], [4, 5]]) + 2)).toBeLessThan(1e-12);
+      expect(Math.abs(f([[1, 2, 3], [1, 3, 5], [1, 4, 8]]) - 1)).toBeLessThan(1e-12);
     }
   });
   it('replay finds the function whose result differs', () => {

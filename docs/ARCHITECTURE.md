@@ -1,5 +1,8 @@
 # Architecture
 
+What each app does and why is specified in its design document (`demos/<app>/DESIGN.md`);
+how features are added is described in [`DESIGN_PROCESS.md`](DESIGN_PROCESS.md).
+
 ## Server vs. client
 
 The deployment target is a **static file host** (GitHub Pages now; nginx/Caddy/OpenBSD httpd later if

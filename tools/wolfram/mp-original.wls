@@ -193,7 +193,8 @@ mpSeen = <||>;   (* identical calls are recorded once (first occurrence keeps th
 mpRecord[name_, args_, r_] := If[mpTraceOn && mpTraceCount < traceLimit,
   With[{key = name <> ToString[args, InputForm]},   (* string key: exact, unlike SameQ on reals *)
     If[!KeyExistsQ[mpSeen, key], mpSeen[key] = True; mpTraceCount++; Sow[{name, args, r}, "mpTrace"]]]];
-installUserTrace[name_String] := Module[{f = Symbol["$CellContext`" <> name], g = Symbol["mpOrig`" <> name]},
+(* With (not Module): DownValues is HoldAll, so the symbols must be inserted literally *)
+installUserTrace[name_String] := With[{f = Symbol["$CellContext`" <> name], g = Symbol["mpOrig`" <> name]},
   If[DownValues[f] === {}, say["warning: cannot trace ", name, " (no DownValues)"],
     DownValues[g] = Replace[DownValues[f],
       (Verbatim[HoldPattern][lhs_] :> rhs_) :> ((HoldPattern[lhs] /. f -> g) :> rhs), {1}];
@@ -220,6 +221,18 @@ probes = Lookup[input, "probes", <||>];
 probeResults = Association @ KeyValueMap[
   Function[{fn, argLists}, fn -> Map[Quiet[Symbol[fn] @@ deepNum[#]] &, argLists]], probes];
 If[Length[probes] > 0, say["probes: ", StringRiffle[KeyValueMap[#1 <> " " <> ToString[Length[#2]] &, probes], ", "]]];
+(* formulas written in Wolfram Language, evaluated on the same probe arguments and compared EXACTLY
+   with the built-in's results: tells which composition of other built-ins the built-in matches *)
+probeFormulas = Lookup[input, "probeFormulas", <||>];
+probeFormulaResults = Association @ KeyValueMap[Function[{fn, forms},
+    fn -> Association @ Map[Function[form, form -> With[{f = ToExpression[form], argsN = deepNum /@ probes[fn]},
+        Count[MapThread[Quiet[SetPrecision[f @@ #1, Infinity] === SetPrecision[#2, Infinity]] &, {argsN, probeResults[fn]}], True]]],
+      forms]], KeyTake[probeFormulas, Keys[probeResults]]];
+(* readable definitions of built-ins, where Mathematica allows it *)
+builtinDefinitions = Association @ Map[# -> Quiet @ Check[With[{sym = Symbol[#]},
+      Unprotect[sym]; ClearAttributes[sym, ReadProtected]; Protect[sym];
+      clip[ToString[Definition[sym], InputForm], 6000]], "unavailable"] &,
+  Lookup[input, "inspectDefinitions", {}]];
 results = {};
 imageProblem = None;
 
@@ -253,7 +266,8 @@ out = <|"tool" -> "tools/wolfram/mp-original.wls", "wolframVersion" -> $Version,
   "versionNumber" -> $VersionNumber, "releaseNumber" -> $ReleaseNumber,
   "notebook" -> nbFile, "numberFormatSelfTest" -> fmtOK, "initCopies" -> Length[inits], "initDistinct" -> Length[Union[inits]],
   "bodyCopies" -> Length[bodies], "bodyDistinct" -> Length[Union[bodies]],
-  "imageProblem" -> imageProblem, "probes" -> probeResults, "scenes" -> results|>;
+  "imageProblem" -> imageProblem, "probes" -> probeResults, "probeFormulas" -> probeFormulaResults,
+  "builtinDefinitions" -> builtinDefinitions, "scenes" -> results|>;
 strm = OpenWrite[outFile, CharacterEncoding -> "ASCII"];
 WriteString[strm, toJSON[out]];
 Close[strm];

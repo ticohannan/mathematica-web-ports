@@ -42,6 +42,26 @@ import { fileURLToPath } from 'node:url';
 import { exactRational } from './lib/motion-compare.mjs';
 import { DEFAULT_TRACE_FUNCTIONS, DEFAULT_TRACE_SYSTEM, traceMarkdown, candidateMarkdown } from './lib/trace-replay.mjs';
 import { probeArguments } from './lib/numerics-candidates.mjs';
+
+/** Wolfram Language compositions tested against the built-ins inside Mathematica (trace mode). */
+const PROBE_FORMULAS = {
+  VectorAngle: [
+    'ArcCos[#1.#2/(Norm[#1] Norm[#2])] &',
+    'ArcCos[#1.#2/Norm[#1]/Norm[#2]] &',
+    'ArcCos[Clip[#1.#2/(Norm[#1] Norm[#2]), {-1, 1}]] &',
+    'ArcCos[Normalize[#1].Normalize[#2]] &',
+    'ArcCos[(#1/Norm[#1]).(#2/Norm[#2])] &',
+    '2 ArcTan[Norm[#1 Norm[#2] + #2 Norm[#1]], Norm[#1 Norm[#2] - #2 Norm[#1]]] &',
+    '2 ArcTan[Norm[Normalize[#1] + Normalize[#2]], Norm[Normalize[#1] - Normalize[#2]]] &',
+    '2 ArcTan[Norm[#1/Norm[#1] + #2/Norm[#2]], Norm[#1/Norm[#1] - #2/Norm[#2]]] &',
+    'ArcTan[#1.#2, Norm[Cross[PadRight[#1, 3], PadRight[#2, 3]]]] &',
+    'ArcTan[#1.#2, Abs[#1[[1]] #2[[2]] - #1[[2]] #2[[1]]]] &',
+  ],
+  ArcTan: ['ArcTan[#1, #2] &', 'Arg[#1 + I #2] &', 'If[#1 > 0, ArcTan[#2/#1], ArcTan[#1, #2]] &'],
+  Norm: ['Sqrt[#1.#1] &', 'Sqrt[Total[#1^2]] &', 'Abs[#1[[1]] + I #1[[2]]] &'],
+  EuclideanDistance: ['Norm[#1 - #2] &', 'Sqrt[Total[(#1 - #2)^2]] &'],
+  Det: ['Det[Transpose[#1]] &', 'Det[SetPrecision[#1, Infinity]] &'],
+};
 import {
   clampScene, sceneForWolfram, sceneUrl, randomScenes, withHistory, portRecord, compareScene,
   referenceFor, referenceFlags, goldenSelfCheck, pathLen,
@@ -139,7 +159,8 @@ if (traceIds) {
     console.log(`Tracing ${traced.length} scene(s) in Mathematica (this records many calls; may take a few minutes) …`);
     const t0 = Date.now();
     const r = await runWolfram(traced.map((s) => ({ ...sceneForWolfram(s), trace: true })), path.join(outDir, 'trace-scenes.json'), traceFile,
-      { traceFunctions: DEFAULT_TRACE_FUNCTIONS, traceSystemFunctions: DEFAULT_TRACE_SYSTEM, probes, timeLimit: Math.max(timeLimit, 900) });
+      { traceFunctions: DEFAULT_TRACE_FUNCTIONS, traceSystemFunctions: DEFAULT_TRACE_SYSTEM, probes, timeLimit: Math.max(timeLimit, 900),
+        probeFormulas: PROBE_FORMULAS, inspectDefinitions: DEFAULT_TRACE_SYSTEM });
     if (wolframFailed(r)) process.exit(2);
     console.log(`Mathematica finished in ${((Date.now() - t0) / 1000).toFixed(1)} s`);
   }
@@ -152,6 +173,21 @@ if (traceIds) {
   for (const [name, results] of Object.entries(tr.probes ?? {})) {
     const calls = probeArguments(Number(opt('seed', 1)))[name].map((args, i) => [args, results[i]]);
     md.push(...candidateMarkdown(name, name, calls));
+  }
+  if (tr.probeFormulas && Object.keys(tr.probeFormulas).length) {
+    md.push('## 1b. Wolfram Language formulas on the same probe arguments', '',
+      'Each formula was evaluated IN Mathematica and compared exactly with the built-in. A formula that matches all',
+      'probes shows how the built-in is composed from other built-ins.', '');
+    for (const [fn, forms] of Object.entries(tr.probeFormulas)) {
+      const total = (tr.probes?.[fn] ?? []).length;
+      md.push(`#### ${fn} (${total} probes)`, '', '| formula | exact matches |', '|---|---|');
+      for (const [f, n] of Object.entries(forms).sort((a, b) => b[1] - a[1])) md.push(`| \`${f.replace(/\|/g, '\\|')}\` | ${n} / ${total} |`);
+      md.push('');
+    }
+  }
+  if (tr.builtinDefinitions && Object.keys(tr.builtinDefinitions).length) {
+    md.push('## 1c. Readable definitions of the built-ins', '');
+    for (const [fn, def] of Object.entries(tr.builtinDefinitions)) md.push(`#### ${fn}`, '', '```', String(def).slice(0, 3000), '```', '');
   }
   md.push('## 2. Traced scenes', '');
   for (const sc of tr.scenes) {

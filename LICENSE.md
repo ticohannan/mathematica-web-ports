@@ -35,9 +35,9 @@ Licence texts: [`LICENSES/CC-BY-NC-SA-3.0.txt`](LICENSES/CC-BY-NC-SA-3.0.txt) an
 | `tests/**` except the MIT files below | CC BY-NC-SA 3.0 | encode the originals' behaviour and data (`tests/golden/*.json` is extracted from the notebooks) |
 | `tools/**` | MIT | separable tooling (notebook decoder/extractor, local server, publish, exploration and comparison scripts, incl. the Wolfram Language script `tools/wolfram/mp-original.wls`, which contains no original code: it loads and runs the code from a notebook you supply). Data the tools *produce* from the notebooks stays CC BY-NC-SA |
 | `shared/**` (`mma.js`, `linalg.js`, `ui.js`, `three-helpers.js`, `style.css`) | MIT | generic helpers: Wolfram Language numeric semantics, 3×3 algebra, Manipulate-style controls, three.js helpers, page style |
-| `tests/unit/mma.test.js`, `tests/unit/licence-headers.test.js`, `tests/unit/motion-compare.test.js`, `tests/e2e/helpers.js` | MIT | test the MIT helpers and tooling |
+| `tests/unit/mma.test.js`, `tests/unit/licence-headers.test.js`, `tests/unit/motion-compare.test.js`, `tests/unit/design-docs.test.js`, `tests/e2e/helpers.js` | MIT | test the MIT helpers and tooling |
 | `vitest.config.js`, `playwright.config.js`, `package.json`, `package-lock.json`, `.gitignore`, `.gitattributes`, `.nojekyll`, `REUSE.toml`, `LICENSES/**` | MIT | configuration |
-| `docs/ARCHITECTURE.md`, `docs/TESTING.md`, `docs/GIT_AND_GITHUB_SETUP.md` | MIT | generic project documentation |
+| `docs/ARCHITECTURE.md`, `docs/TESTING.md`, `docs/DESIGN_PROCESS.md` | MIT | generic project documentation |
 | `vendor/three/**` | MIT, © three.js authors | third-party |
 
 ## Original works adapted

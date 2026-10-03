@@ -18,7 +18,7 @@
 </head>
 <body>
   <main class="page">
-    <div class="crumbs"><a href="../../index.html">All demos</a> › Motion planning</div>
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Motion planning</div>
     <h1 class="demo-title">Motion Planning for Robot Path around Obstacles</h1>
 
     <section class="manipulate" aria-label="Interactive demonstration">
@@ -37,7 +37,7 @@
       the "progress" slider to follow the robot's path. You can change the number of sides for the robot or the boundary.
       Switch between the workspace and configuration space to see the obstacles and path in each space.</p>
 
-    <details class="details">
+    <details class="details" data-testid="details">
       <summary>Details</summary>
       <p>This Demonstration determines the path for a polygonal robot that can move inside a bounded workspace populated by
         polygonal obstacles. Motion planning requires determination if a given path would cause a collision with an obstacle.

@@ -5,6 +5,8 @@
 // mode of tools/compare-with-original.mjs to find out WHICH formula reproduces Mathematica's
 // machine-number results bit for bit. Includes an exact fused multiply-add (JavaScript has none).
 
+import { arcTanCR, arcCosCR } from './hp-math.mjs';
+
 // ---------------------------------------------------------------- exact arithmetic helpers
 const dv = new DataView(new ArrayBuffer(8));
 /** x = m * 2^e exactly (m BigInt). */
@@ -76,16 +78,18 @@ function naiveDet(M, useFma = false) {
   }
   return NaN;
 }
+const transpose = (M) => M[0].map((_, j) => M.map((r) => r[j]));
 export const DET_CANDIDATES = {
   'naive a*d-b*c / cofactor': (M) => naiveDet(M),
   'naive with fma': (M) => naiveDet(M, true),
-  'LU, l = a/p': (M) => luDet(M),
-  'LU, l = a*(1/p)': (M) => luDet(M, { recip: true }),
-  'LU, l = a/p, fma update': (M) => luDet(M, { useFma: true }),
-  'LU, l = a*(1/p), fma update': (M) => luDet(M, { recip: true, useFma: true }),
-  'LU, l = a/p, product right-to-left': (M) => luDet(M, { prodRight: true }),
-  'LU, l = a*(1/p), product right-to-left': (M) => luDet(M, { recip: true, prodRight: true }),
 };
+// LU variants: row-major (pivot down the first column) or column-major, i.e. LAPACK given the
+// row-major array = LU of the TRANSPOSE (pivot along the first row); l by division or reciprocal;
+// update with or without fused multiply-add; diagonal product left-to-right or right-to-left.
+for (const tr of [false, true]) for (const recip of [false, true]) for (const useFma of [false, true]) for (const prodRight of [false, true]) {
+  const name = `LU${tr ? ' of transpose' : ''}, l = ${recip ? 'a*(1/p)' : 'a/p'}${useFma ? ', fma update' : ''}${prodRight ? ', product right-to-left' : ''}`;
+  DET_CANDIDATES[name] = (M) => luDet(tr ? transpose(M) : M, { recip, useFma, prodRight });
+}
 
 // ---------------------------------------------------------------- Norm / distance
 function dnrm2Classic(v) { // reference BLAS dnrm2 (scale / sum of squares), pre-LAPACK-3.10
@@ -111,8 +115,23 @@ export const EUCLID_CANDIDATES = Object.fromEntries(Object.entries(NORM_CANDIDAT
 // ---------------------------------------------------------------- angles
 export const ARCTAN_CANDIDATES = {
   'Math.atan2(y, x)': (x, y) => Math.atan2(y, x),
+  'correctly rounded atan2': (x, y) => arcTanCR(x, y),
 };
 const dot = (a, b) => a.reduce((s, x, i) => s + x * b[i], 0);
+const cross3 = (u, v) => {
+  const a = [...u, 0, 0].slice(0, 3), b = [...v, 0, 0].slice(0, 3);
+  return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+};
+const clamp1 = (c) => Math.max(-1, Math.min(1, c));
+const NORMS = { sqrt: (v) => Math.sqrt(sumSq(v)), dnrm2: dnrm2Classic };
+const VA_FORMULAS = {
+  'ArcCos[u.v/(|u||v|)]': (u, v, N) => arcCosCR(clamp1(dot(u, v) / (N(u) * N(v)))),
+  'ArcCos[u.v/|u|/|v|]': (u, v, N) => arcCosCR(clamp1(dot(u, v) / N(u) / N(v))),
+  'ArcCos[(u/|u|).(v/|v|)]': (u, v, N) => { const a = N(u), b = N(v); return arcCosCR(clamp1(dot(u.map((x) => x / a), v.map((x) => x / b)))); },
+  'Kahan 2 ArcTan[|u|v|-v|u||,|u|v|+v|u||]': (u, v, N) => { const a = N(u), b = N(v); return 2 * arcTanCR(N(u.map((x, i) => x * b + v[i] * a)), N(u.map((x, i) => x * b - v[i] * a))); },
+  'Kahan unit 2 ArcTan[|û+v̂|,|û-v̂|]': (u, v, N) => { const a = N(u), b = N(v); const uu = u.map((x) => x / a), vv = v.map((x) => x / b); return 2 * arcTanCR(N(uu.map((x, i) => x + vv[i])), N(uu.map((x, i) => x - vv[i]))); },
+  'ArcTan[u.v, |u×v|]': (u, v, N) => arcTanCR(dot(u, v), N(cross3(u, v))),
+};
 export const VECTORANGLE_CANDIDATES = {
   'ArcCos[u.v/(|u||v|)] (sqrt norms)': (u, v) => Math.acos(Math.max(-1, Math.min(1, dot(u, v) / (Math.sqrt(sumSq(u)) * Math.sqrt(sumSq(v)))))),
   'ArcCos[u.v/(|u||v|)] (hypot norms)': (u, v) => Math.acos(Math.max(-1, Math.min(1, dot(u, v) / (Math.hypot(...u) * Math.hypot(...v))))),
@@ -124,6 +143,9 @@ export const VECTORANGLE_CANDIDATES = {
   },
   'ArcTan[u.v, |u x v|]': (u, v) => Math.atan2(Math.abs(u[0] * v[1] - u[1] * v[0]), dot(u, v)),
 };
+for (const [fn, f] of Object.entries(VA_FORMULAS)) for (const [nn, N] of Object.entries(NORMS)) {
+  VECTORANGLE_CANDIDATES[`${fn} — correctly rounded ArcTan/ArcCos, ${nn} norm`] = (u, v) => f(u, v, N);
+}
 
 export const CANDIDATES = {
   Det: (args) => Object.fromEntries(Object.entries(DET_CANDIDATES).map(([k, f]) => [k, f(args[0])])),
