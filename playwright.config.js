@@ -1,9 +1,11 @@
 // SPDX-FileCopyrightText: 2026 Tico Hannan
 // SPDX-License-Identifier: MIT
-// playwright.config.js — browser tests (tests/e2e). Default browser: Firefox.
-//   npx playwright install firefox      (one-time download of Playwright's Firefox build)
-//   npm run test:e2e                    (runs the Firefox project)
-//   npx playwright test --project=chromium   (optional second engine: npx playwright install chromium)
+// playwright.config.js — browser tests (tests/e2e). Three engines:
+//   npx playwright install firefox chromium webkit   (one-time download of Playwright's browser builds)
+//   npm run test:e2e           Firefox + Chromium (the set publish:tested requires)
+//   npm run test:e2e:webkit    WebKit — the engine of Safari, but Playwright's own build, NOT Safari:
+//                              on Windows it differs in graphics stack, fonts and WebGL. Report it as
+//                              "WebKit (Playwright)". Not yet part of publish:tested.
 import { defineConfig, devices } from '@playwright/test';
 
 const PORT = Number(process.env.PORT || 8090);
@@ -44,5 +46,6 @@ export default defineConfig({
         launchOptions: chromiumPath ? { executablePath: chromiumPath, args: chromiumArgs } : {},
       },
     },
+    { name: 'webkit', use: { ...devices['Desktop Safari'], viewport: { width: 1100, height: 900 } } },
   ],
 });

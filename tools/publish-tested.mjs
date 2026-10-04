@@ -30,7 +30,7 @@ step('Unit + golden parity tests');
 if (!run('npm test').ok) fail('unit/golden tests failed.');
 
 step('Browser tests (Firefox + Chromium)');
-if (!run('npx playwright test').ok) fail('browser tests failed.');
+if (!run('npx playwright test --project=firefox --project=chromium').ok) fail('browser tests failed.'); // WebKit: npm run test:e2e:webkit (not yet required)
 
 const branch = run('git rev-parse --abbrev-ref HEAD', { capture: true }).out;
 const d = new Date();

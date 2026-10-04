@@ -24,9 +24,9 @@ Plus an investigation tool: `node tools/explore-motion.mjs` (randomized differen
 4. In the repository folder:
    ```bat
    npm install
-   npx playwright install firefox chromium
+   npx playwright install firefox chromium webkit
    ```
-   The second command downloads Playwright's own builds of Firefox and Chromium (~100 MB each). Tests
+   The second command downloads Playwright's own builds of Firefox, Chromium and WebKit (~100 MB each). Tests
    drive those builds, not your installed browsers; your installed Firefox is for manual testing.
 
 ## Layer 1 + 2: `npm test`
@@ -68,8 +68,14 @@ Starts `tools/serve.mjs` on port 8090 automatically and runs `tests/e2e/*.spec.j
 Chromium (two Playwright projects; `npm run test:e2e:firefox` / `test:e2e:chromium` run one).
 `npm run publish:tested` requires both to pass.
 
+**WebKit** (the engine of Safari): `npm run test:e2e:webkit` runs the same tests in Playwright's WebKit
+build (since v0.1.9). It is not Safari: on Windows and Linux it is a separate WebKit port with its own
+graphics stack, fonts and WebGL, so a pass means "works in the WebKit engine", not "works in Safari on a
+Mac or iPhone" — report it as *WebKit (Playwright)*. It is not yet required by `publish:tested`; it can be
+added once it has passed on the owner's machine. A real-Safari check (macOS/iOS) remains a manual test.
+
 - Results: terminal + HTML report (`npm run report`).
-- `test-output/review-screenshots/<firefox|chromium>/*.png` — screenshots of every original snapshot state
+- `test-output/review-screenshots/<firefox|chromium|webkit>/*.png` — screenshots of every original snapshot state
   and other key states, **for human side-by-side comparison** with the original's snapshots.
   They are not compared automatically (pixel comparison across machines/GPUs is unreliable).
 - Parallel: 6 browser workers by default (tests are independent). Change with the `PW_WORKERS`
