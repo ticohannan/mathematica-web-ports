@@ -6,7 +6,7 @@ Five layers. Run them in this order; each one catches problems the others cannot
 |-------|---------|-------|----------------|
 | 1. Unit & property tests | `npm test` | Node | the math functions behave correctly on hand-derived cases and random cases checked by an independent oracle |
 | 2. Golden parity tests | `npm test` (same run) | Node | the port reproduces numbers **computed by the original Mathematica code** (cached in the .nb files) |
-| 3. Browser tests | `npm run test:e2e` | Firefox and Chromium (Playwright builds) | controls exist and work, the screen shows what the math computed, drag/keyboard interaction, error-free load |
+| 3. Browser tests | `npm run test:e2e` | Firefox, Chromium and WebKit (Playwright builds) | controls exist and work, the screen shows what the math computed, drag/keyboard interaction, error-free load |
 | 4. Manual / exploratory | `docs/MANUAL_TEST_CHECKLIST.md` | a person, a browser, ideally the original running in Wolfram software | look & feel, behaviour compared with the original, things no script can judge |
 | 5. Automated comparison with the original (motion planning) | `npm run compare:original` | local Mathematica / Wolfram Engine (`wolframscript`) | the port computes the same validity, C-obstacles, lines, path and trajectory as the **original code run live**, on many scenes, not only the 5 saved ones |
 
@@ -64,15 +64,16 @@ states are cached. Boundary 5 and robot 5 have **no** golden data — test those
 
 ## Layer 3: `npm run test:e2e`
 
-Starts `tools/serve.mjs` on port 8090 automatically and runs `tests/e2e/*.spec.js` in Firefox AND
-Chromium (two Playwright projects; `npm run test:e2e:firefox` / `test:e2e:chromium` run one).
-`npm run publish:tested` requires both to pass.
+Starts `tools/serve.mjs` on port 8090 automatically and runs `tests/e2e/*.spec.js` in Firefox,
+Chromium AND WebKit (three Playwright projects; `npm run test:e2e:firefox` / `test:e2e:chromium` /
+`test:e2e:webkit` run one). `npm run publish:tested` requires all three to pass (WebKit since v0.1.10).
 
 **WebKit** (the engine of Safari): `npm run test:e2e:webkit` runs the same tests in Playwright's WebKit
 build (since v0.1.9). It is not Safari: on Windows and Linux it is a separate WebKit port with its own
 graphics stack, fonts and WebGL, so a pass means "works in the WebKit engine", not "works in Safari on a
-Mac or iPhone" — report it as *WebKit (Playwright)*. It is not yet required by `publish:tested`; it can be
-added once it has passed on the owner's machine. A real-Safari check (macOS/iOS) remains a manual test.
+Mac or iPhone" — report it as *WebKit (Playwright)*. It passed 45/45 on its first run on the owner's
+machine (v0.1.9) and is required by `publish:tested` since v0.1.10. A real-Safari check (macOS/iOS)
+remains a manual test.
 
 - Results: terminal + HTML report (`npm run report`).
 - `test-output/review-screenshots/<firefox|chromium|webkit>/*.png` — screenshots of every original snapshot state

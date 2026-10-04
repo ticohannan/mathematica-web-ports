@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.9 |
+| Code version: | 0.1.10 |
 | Document revision | 4 (2026-10-03) — first comparison after P-MP-01; division as in Mathematica; K-MP-03…05 updated |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Motion Planning for Robot Path around Obstacles" by Shreyas Poyrekar, Aaron T. Becker and Arifa Sultana (CC BY-NC-SA 3.0); author notebook made with Mathematica 10.2. Readable source: [`docs/original-source/motion-planning.txt`](../../docs/original-source/motion-planning.txt) |
@@ -208,6 +208,7 @@ No open proposal. Template for a request: copy a row (see [`docs/DESIGN_PROCESS.
 | 3 | v0.1.7 | 2026-10-03 | P-MP-01 implemented (F-MP-22); K-MP-01 cause found; K-MP-02…04 recorded; §10 *Improvements to consider* added; no change to controls or drawing |
 | 4 | v0.1.8 | 2026-10-03 | F-MP-22 extended to division (`a·b⁻¹`), fixes K-MP-04; K-MP-01 result of the v0.1.7 comparison; K-MP-03 measured; K-MP-05 recorded; no change to controls or drawing |
 | 4 | v0.1.9 | 2026-10-03 | no change (WebKit browser tests added, test tooling only) |
+| 4 | v0.1.10 | 2026-10-03 | no change (WebKit browser tests now required to publish; test tooling only) |
 
 ## 10. Improvements to consider (not implemented)
 

@@ -35,8 +35,8 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for details. Development tools 
 
 ```bat
 npm test                              :: unit + golden parity tests (Node, no browser)
-npx playwright install firefox chromium  :: one-time
-npm run test:e2e                      :: browser tests in Firefox and Chromium
+npx playwright install firefox chromium webkit  :: one-time
+npm run test:e2e                      :: browser tests in Firefox, Chromium and WebKit
 npm run publish:tested                :: run everything, then tag + push to GitHub
 node tools\explore-motion.mjs 300 1   :: randomized investigation of the motion planner
 npm run compare:original              :: motion planning: port vs the ORIGINAL code run in local Mathematica

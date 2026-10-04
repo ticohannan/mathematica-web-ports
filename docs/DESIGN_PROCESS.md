@@ -71,4 +71,4 @@ mechanically; for that, rule 1 relies on review, the golden tests and the compar
 1. Raise `version` in `package.json`.
 2. In every design document: set `Code version:` to the new version and add a revision-history row
    (even if only "no feature changes").
-3. `npm run publish:tested` (unit + Firefox + Chromium browser tests, then tag and push).
+3. `npm run publish:tested` (unit + Firefox + Chromium + WebKit browser tests, then tag and push).

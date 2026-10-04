@@ -3,11 +3,11 @@
 // SPDX-License-Identifier: MIT
 // tools/publish-tested.mjs — push to GitHub ONLY if all automated tests pass.
 //
-//   npm run publish:tested            (unit + golden + browser tests in Firefox AND Chromium, then tag + push)
+//   npm run publish:tested            (unit + golden + browser tests in Firefox, Chromium AND WebKit, then tag + push)
 //   npm run publish:tested -- --dry   (run every check, do not tag or push)
 //
 // Steps: refuse if private files are tracked or there are uncommitted changes;
-// run `npm test`; run Playwright (Firefox and Chromium projects); create an annotated tag
+// run `npm test`; run Playwright (Firefox, Chromium and WebKit projects); create an annotated tag
 // "tested-YYYYMMDD-HHMM" on the current commit; push the branch and the tag.
 import { spawnSync } from 'node:child_process';
 
@@ -29,8 +29,8 @@ if (run('git status --porcelain', { capture: true }).out) fail('there are uncomm
 step('Unit + golden parity tests');
 if (!run('npm test').ok) fail('unit/golden tests failed.');
 
-step('Browser tests (Firefox + Chromium)');
-if (!run('npx playwright test --project=firefox --project=chromium').ok) fail('browser tests failed.'); // WebKit: npm run test:e2e:webkit (not yet required)
+step('Browser tests (Firefox + Chromium + WebKit)');
+if (!run('npx playwright test --project=firefox --project=chromium --project=webkit').ok) fail('browser tests failed.');
 
 const branch = run('git rev-parse --abbrev-ref HEAD', { capture: true }).out;
 const d = new Date();
@@ -39,7 +39,7 @@ const tag = `tested-${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())
 if (dry) { console.log(`\n✔ All checks passed. (dry run: would tag ${tag} and push ${branch})`); process.exit(0); }
 
 step(`Tag ${tag} and push ${branch}`);
-if (!run(`git tag -a ${tag} -m "All automated tests passed (unit, golden, Firefox + Chromium e2e)"`).ok) fail('could not create tag.');
+if (!run(`git tag -a ${tag} -m "All automated tests passed (unit, golden, Firefox + Chromium + WebKit e2e)"`).ok) fail('could not create tag.');
 if (!run(`git push origin ${branch}`).ok) fail('git push failed (tag was created locally).');
 if (!run(`git push origin ${tag}`).ok) fail('pushing the tag failed.');
 console.log(`\n✔ Published ${branch} (tag ${tag}). GitHub Pages updates within a minute or two.`);

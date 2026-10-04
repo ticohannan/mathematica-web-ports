@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: MIT
 // playwright.config.js — browser tests (tests/e2e). Three engines:
 //   npx playwright install firefox chromium webkit   (one-time download of Playwright's browser builds)
-//   npm run test:e2e           Firefox + Chromium (the set publish:tested requires)
-//   npm run test:e2e:webkit    WebKit — the engine of Safari, but Playwright's own build, NOT Safari:
-//                              on Windows it differs in graphics stack, fonts and WebGL. Report it as
-//                              "WebKit (Playwright)". Not yet part of publish:tested.
+//   npm run test:e2e           all three: Firefox, Chromium, WebKit (what publish:tested requires)
+//   npm run test:e2e:firefox | test:e2e:chromium | test:e2e:webkit    one engine
+//   WebKit is the engine of Safari, but Playwright's own build, NOT Safari: on Windows it differs in
+//   graphics stack, fonts and WebGL. Report it as "WebKit (Playwright)".
 import { defineConfig, devices } from '@playwright/test';
 
 const PORT = Number(process.env.PORT || 8090);
