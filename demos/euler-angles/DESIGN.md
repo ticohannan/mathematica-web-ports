@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.7 |
+| Code version: | 0.1.8 |
 | Document revision | 3 (2026-10-03) — P-EA-01 withdrawn (moved to §10 as I-EA-01) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Euler Angles: Precession, Nutation, and Spin", contributed by Kevin Hernandez, based on a program by Sándor Kabai (CC BY-NC-SA 3.0). Readable source: [`docs/original-source/euler-angles.txt`](../../docs/original-source/euler-angles.txt) |
@@ -132,6 +132,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 1 | v0.1.1 | 2026-10-03 | credit footer added (A-EA-05) |
 | 2 | v0.1.6 | 2026-10-03 | full design document: purpose, scope, use cases, reasons, versions, UI inventory, design, change process; no feature changes |
 | 3 | v0.1.7 | 2026-10-03 | P-EA-01 withdrawn; K-EA-01 to be checked against the original (M-EA-08); §10 *Improvements to consider* added; no feature changes |
+| 3 | v0.1.8 | 2026-10-03 | no change (motion-planning numerics and comparison tooling only) |
 
 ## 10. Improvements to consider (not implemented)
 

@@ -20,10 +20,13 @@ export const PORT_FUNCTIONS = {
   // built-ins as the port computes them
   ArcTan: (x, y) => arcTanExact(x, y),
 };
+// configBoundaryFunc[borderpoly, Polygon@robotStartPoly, r]: the Polygon argument is recorded as
+// Wolfram text, so these calls are reported but not replayed; linelineInt inside it is replayed.
 export const DEFAULT_TRACE_FUNCTIONS = ['reflex', 'biTangent', 'glancingBlow', 'LineIntersectionPoint',
   'SegmentIntersectionQ', 'getAngle', 'pointOnSegmentQ', 'getClockwiseAngle', 'intersectInteriorQRev2',
-  'angleSortCond', 'distSortCond', 'testpoint', 'visiblePolys', 'visBiLineRev2', 'biTangents2polyRev1'];
-export const DEFAULT_TRACE_SYSTEM = ['Det', 'VectorAngle', 'Norm', 'ArcTan', 'EuclideanDistance'];
+  'angleSortCond', 'distSortCond', 'testpoint', 'visiblePolys', 'visBiLineRev2', 'biTangents2polyRev1',
+  'configBoundaryFunc', 'linelineInt', 'ConvexMinkowskiSumRev3'];
+export const DEFAULT_TRACE_SYSTEM = ['Det', 'VectorAngle', 'Norm', 'ArcTan', 'EuclideanDistance', 'Dot'];
 
 const same = (a, b) => {
   if (Array.isArray(a)) return Array.isArray(b) && a.length === b.length && a.every((v, i) => same(v, b[i]));

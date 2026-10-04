@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.7 |
-| Document revision | 3 (2026-10-03) — P-MP-01 implemented; improvements to consider (§10) added |
+| Code version: | 0.1.8 |
+| Document revision | 4 (2026-10-03) — first comparison after P-MP-01; division as in Mathematica; K-MP-03…05 updated |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Motion Planning for Robot Path around Obstacles" by Shreyas Poyrekar, Aaron T. Becker and Arifa Sultana (CC BY-NC-SA 3.0); author notebook made with Mathematica 10.2. Readable source: [`docs/original-source/motion-planning.txt`](../../docs/original-source/motion-planning.txt) |
 | Port files | `planner.js` (computation, pure), `main.js` (SVG drawing and interaction), `index.html` (page) |
@@ -83,7 +83,7 @@ Columns: **Why** = the reason the feature exists; **Since** = first code version
 | F-MP-19 | Straight path when the start–goal line crosses no C-obstacle edge | shortest possible path; no graph needed | v0.1.0 | unit "direct line when nothing is in the way" |
 | F-MP-20 | Shortest path through the graph (`myAstarRev2`); "no path" when the goal is unreachable | step 4 | v0.1.0 | unit "finds the shorter of two routes"; unit "returns -1 when the goal is unreachable"; unit "default scene: path is the hand-checkable"; compare |
 | F-MP-21 | Path discretised every 0.09 units, goal appended (`discretizeLineRev1`) → the progress positions | smooth robot animation | v0.1.0 | unit "discretises a segment every 0.09 units"; golden "discretised path (robot trajectory)" |
-| F-MP-22 | Mathematica's own floating-point results for `Det`, `Norm`, `Normalize` and `ArcTan` (bit for bit) and for `VectorAngle` (as closely as known, K-MP-02), in `shared/mma-exact.js` (from P-MP-01) | near-degenerate scenes then take the same decisions as the original (visibility, intersections, validity) and give the same picture and path | v0.1.7 | unit "results recorded from Mathematica"; unit "matches exact BigInt arithmetic"; unit "the unrolled 2x2 path follows the general algorithm"; compare |
+| F-MP-22 | Mathematica's own floating-point results for `Det`, `Norm`, `Normalize` and `ArcTan` (bit for bit) and for `VectorAngle` (as closely as known, K-MP-02), in `shared/mma-exact.js` (from P-MP-01); since v0.1.8 also division as Mathematica evaluates it, `a/b` = `a·b⁻¹` (`linelineInt`, `λ`) | near-degenerate scenes then take the same decisions as the original (visibility, intersections, validity) and give the same picture and path | v0.1.7 | unit "results recorded from Mathematica"; unit "matches exact BigInt arithmetic"; unit "the unrolled 2x2 path follows the general algorithm"; unit "configBoundaryFunc reproduces the original bit for bit"; compare |
 
 ### 4.3 Graphics (drawn in the order of the original `Graphics[…]`, plot range ±4.65, image size 425)
 
@@ -154,6 +154,8 @@ document" fails if the page has an element not listed here, or a row here matche
   correctly rounded `atan2`; `Normalize` = multiplication by `1/Norm`. JavaScript has no fused
   multiply-add and its `Math.atan2` is not correctly rounded, so both are computed with double-double
   arithmetic, with an exact BigInt fallback for the rare cases the fast path cannot prove.
+  Division: Mathematica evaluates `a/b` as `Times[a, Power[b, -1]]`, i.e. `a * (1/b)` with two
+  roundings; the port writes such divisions the same way (v0.1.8; found through `configBoundaryFunc`).
   Cost: none measurable — the same version replaced a string-based comparison in `visiblePolys`
   with a structural one, and a whole scene computes in about 35 ms in Node (41 ms in v0.1.6).
 - **Drawing.** SVG in the original's coordinates (y up); Mathematica sizes (`Thin`, `Thick`,
@@ -181,10 +183,11 @@ document" fails if the page has an element not listed here, or a row here matche
 | Q-MP-07 | quirk kept | Minkowski sum keeps collinear intermediate vertices for parallel edges, in Mathematica's tie order. |
 | Q-MP-08 | quirk kept | C-obstacles are built from the robot START polygon; overlapping obstacles are not merged — edges that cross another C-obstacle edge are dropped from the graph instead. |
 | Q-MP-09 | quirk kept | Obstacles are not checked against the boundary or each other. |
-| K-MP-01 | known issue (fixed in v0.1.7, confirmation pending) | In v0.1.4 the comparison with the original (Mathematica 15.0.1) matched in 52 of 65 freshly computed scenes; in the others some visibility/bitangent lines differ and in 3 scenes the path differs. Cause found with the v0.1.6 trace: `Det` rounding in `LineIntersectionPoint` → `SegmentIntersectionQ` endpoint tests → `visiblePolys`. Fixed by P-MP-01 / F-MP-22: replaying the traced scenes C2, C3 and R016, every function of the original now gives the original's result except `getClockwiseAngle` (K-MP-02, K-MP-03). Closed when `npm run compare:original` reports no DIFFERENT fresh scene. |
+| K-MP-01 | known issue (cause fixed in v0.1.7; see K-MP-05) | In v0.1.4 the comparison with the original (Mathematica 15.0.1) matched in 52 of 65 freshly computed scenes; 13 differed, 3 with a different path. Cause: `Det` rounding in `LineIntersectionPoint` → `SegmentIntersectionQ` endpoint tests → `visiblePolys`. Fixed by P-MP-01 / F-MP-22. Owner's run on v0.1.7: 60 of 65 scenes match, **the path is the original's in all 65**; the 5 remaining differences are K-MP-05. |
 | K-MP-02 | known issue | `VectorAngle`: the best formula found matches Mathematica bit for bit in about 87 % of calls; the rest differ by one unit in the last place. It enters only `getClockwiseAngle`, whose results are compared with other angles; in the traced scenes this never changed a decision. |
-| K-MP-03 | known issue | `getClockwiseAngle` returns `N[2 Pi, 3]` — a 3-digit arbitrary-precision number — when its angle is forced to 0 (Q-MP-04) and the cross product is negative; the port returns the machine number 2π. Mathematica compares such a number with a machine number at 3-digit precision, so `intersectInteriorQRev2` can differ when the other angle is within about 0.01 of 2π. Not seen to change a result yet; `compare:original --trace` now asks Mathematica how it compares them (report section 1d) so it can be reproduced. |
-| K-MP-04 | known issue | In some fresh scenes (e.g. R016, pentagon robot) a few C-obstacle coordinates differ from the original in the last bit; present before v0.1.7, source not yet found, no effect on the path in the traced scene. |
+| K-MP-03 | known issue | `getClockwiseAngle` returns `N[2 Pi, 3]` — a 3-digit arbitrary-precision number — when its angle is forced to 0 (Q-MP-04) and the cross product is negative; the port returns the machine number 2π. Measured in Mathematica 15.0.1 (v0.1.7 trace, section 1d): such a number counts as *equal* to machine numbers within about 0.016 of 2π (6.27 and 6.29 compare equal; 6.25 is smaller, 6.30 larger), so `intersectInteriorQRev2` can differ when the other angle lies in that band. A model of this changes no decision in any of the 65 comparison scenes; the exact limits are measured by the next trace run (bisection, section 1d) and the rule will then be reproduced. |
+| K-MP-04 | known issue (fixed in v0.1.8) | The configuration-space boundary differed from the original in the last bit in most scenes (all 48 "last-bit" scenes of the v0.1.7 run). Cause: the port computed `a/b` in `linelineInt`; Mathematica computes `a·b⁻¹`. Fixed; bit-identical in the traced scenes C2, C3, R016. |
+| K-MP-05 | known issue | Owner's run on v0.1.7: in 5 of 65 scenes (B3, R017, R019, R025, R039) some visibility or bitangent lines differ from the original (`verticestoVertices`, once `linesStarttoObstacles`); start/goal validity and the path are the same in all of them. Not caused by K-MP-03 or K-MP-04 (modelling or fixing those does not change these scenes). Next: trace these scenes (`compare:original -- --trace=…`); the report now lists the lines that differ. |
 
 ## 8. Proposed changes
 
@@ -203,6 +206,7 @@ No open proposal. Template for a request: copy a row (see [`docs/DESIGN_PROCESS.
 | 1 | v0.1.3 | 2026-10-03 | D-MP-06 corrected |
 | 2 | v0.1.6 | 2026-10-03 | full design document: purpose, scope, use cases, reasons, versions, UI inventory, design, known issues, change process; no feature changes |
 | 3 | v0.1.7 | 2026-10-03 | P-MP-01 implemented (F-MP-22); K-MP-01 cause found; K-MP-02…04 recorded; §10 *Improvements to consider* added; no change to controls or drawing |
+| 4 | v0.1.8 | 2026-10-03 | F-MP-22 extended to division (`a·b⁻¹`), fixes K-MP-04; K-MP-01 result of the v0.1.7 comparison; K-MP-03 measured; K-MP-05 recorded; no change to controls or drawing |
 
 ## 10. Improvements to consider (not implemented)
 

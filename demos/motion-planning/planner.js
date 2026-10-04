@@ -156,10 +156,11 @@ export function testpoint(poly, pt) {
 
 /** linelineInt — intersection of two infinite lines given by point pairs (Wikipedia formula). */
 export function linelineInt([[x1, y1], [x2, y2]], [[x3, y3], [x4, y4]]) {
-  const den = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+  // Mathematica evaluates a/b on machine numbers as a * b^-1 (one more rounding than a / b).
+  const r = 1 / ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
   return [
-    ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / den,
-    ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / den,
+    ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) * r,
+    ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) * r,
   ];
 }
 
@@ -214,7 +215,7 @@ export function glancingBlow(a, [p1, p2, p3]) {
 /** λ[{a,b}][p] — parameter of the projection of p on line a→b (0 at a, 1 at b). */
 export function lambda([a, b], p) {
   const ab = sub(a, b);
-  return dot(sub(a, p), ab) / dot(ab, ab);
+  return dot(sub(a, p), ab) * (1 / dot(ab, ab)); // a/b = a * b^-1 in Mathematica
 }
 
 /** LineIntersectionPoint[{{a,b},{c,d}}] — intersection of the infinite lines ab and cd. */

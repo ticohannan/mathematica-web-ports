@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.7 |
+| Code version: | 0.1.8 |
 | Document revision | 3 (2026-10-03) — improvements to consider (§10) added |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Three Parametrizations of Rotations" by Aaron T. Becker and Benedict Isichei (CC BY-NC-SA 3.0). Readable source: [`docs/original-source/three-parametrizations.txt`](../../docs/original-source/three-parametrizations.txt) |
@@ -157,6 +157,7 @@ None yet. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)
 | 1 | v0.1.1 | 2026-10-03 | credit footer added (A-TP-05) |
 | 2 | v0.1.6 | 2026-10-03 | full design document: purpose, scope, use cases, reasons, versions, UI inventory, design, change process; page content F-TP-30 listed; no feature changes |
 | 3 | v0.1.7 | 2026-10-03 | §10 *Improvements to consider* added; no feature changes |
+| 3 | v0.1.8 | 2026-10-03 | no change (motion-planning numerics and comparison tooling only) |
 
 ## 10. Improvements to consider (not implemented)
 

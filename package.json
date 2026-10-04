@@ -1,6 +1,6 @@
 {
   "name": "mathematica-web-ports",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "private": true,
   "description": "Browser ports of three Wolfram Demonstrations (Euler angles, rotation parametrizations, robot motion planning). Static site: all computation runs in the browser.",
   "author": "Tico Hannan",

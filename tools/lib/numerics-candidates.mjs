@@ -147,7 +147,25 @@ for (const [fn, f] of Object.entries(VA_FORMULAS)) for (const [nn, N] of Object.
   VECTORANGLE_CANDIDATES[`${fn} — correctly rounded ArcTan/ArcCos, ${nn} norm`] = (u, v) => f(u, v, N);
 }
 
+/** Dot of two real vectors (2 or 3 components): ways Mathematica / BLAS ddot might round. */
+const exactDot = (u, v) => { // correctly rounded sum of products (BigInt-free: double-double is exact enough here)
+  let s = 0, c = 0;
+  for (let i = 0; i < u.length; i++) {
+    const p = u[i] * v[i], e = fma(u[i], v[i], -p);
+    const t = s + p, z = t - s, err = (s - (t - z)) + (p - z);
+    s = t; c += err + e;
+  }
+  return s + c;
+};
+export const DOT_CANDIDATES = {
+  'plain, left to right': (u, v) => u.reduce((s, x, i) => s + x * v[i], 0),
+  'plain, right to left': (u, v) => u.reduceRight((s, x, i) => s + x * v[i], 0),
+  'fma chain, left to right': (u, v) => u.reduce((s, x, i) => fma(x, v[i], s), 0),
+  'fma chain, right to left': (u, v) => u.reduceRight((s, x, i) => fma(x, v[i], s), 0),
+  'compensated (≈ correctly rounded)': exactDot,
+};
 export const CANDIDATES = {
+  Dot: (args) => Object.fromEntries(Object.entries(DOT_CANDIDATES).map(([k, f]) => [k, f(args[0], args[1])])),
   Det: (args) => Object.fromEntries(Object.entries(DET_CANDIDATES).map(([k, f]) => [k, f(args[0])])),
   Norm: (args) => Object.fromEntries(Object.entries(NORM_CANDIDATES).map(([k, f]) => [k, f(args[0])])),
   EuclideanDistance: (args) => Object.fromEntries(Object.entries(EUCLID_CANDIDATES).map(([k, f]) => [k, f(args[0], args[1])])),
@@ -161,7 +179,7 @@ export function probeArguments(seed = 1, count = 1500) {
   const rand = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
   const c = () => Number(((rand() - 0.5) * 9).toFixed(2)); // a locator-like coordinate
   const w = () => (rand() - 0.5) * 9 + (rand() - 0.5) * 1e-3 * rand(); // non-round value
-  const out = { Det: [], Norm: [], EuclideanDistance: [], ArcTan: [], VectorAngle: [] };
+  const out = { Det: [], Norm: [], EuclideanDistance: [], ArcTan: [], VectorAngle: [], Dot: [] };
   for (let i = 0; i < count; i++) {
     const a = [w(), w()], b = [w(), w()];
     out.Det.push([[a, b]]);
@@ -175,6 +193,9 @@ export function probeArguments(seed = 1, count = 1500) {
     out.ArcTan.push([w(), w()]);
     out.VectorAngle.push([[w(), w()], [w(), w()]]);
     out.VectorAngle.push([a, [a[0] * 2 + (rand() - 0.5) * 1e-10, a[1] * 2]]); // nearly parallel
+    out.Dot.push([[w(), w()], [w(), w()]]);
+    out.Dot.push([a, [-a[1] * t + (rand() - 0.5) * 1e-9, a[0] * t]]); // nearly orthogonal: cancellation
+    out.Dot.push([[w(), w(), w()], [w(), w(), w()]]);
   }
   return out;
 }

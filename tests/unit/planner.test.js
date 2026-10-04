@@ -200,3 +200,17 @@ describe('computeScene vs independent reference planner (seeded random scenes)',
 });
 
 export { samePointSet };
+
+describe('configuration-space boundary vs the original run in Mathematica 15.0.1', () => {
+  // configBoundary recorded by `npm run compare:original -- --trace=C2,C3,R016` (owner's run, v0.1.6).
+  // Before v0.1.8 the port divided with `/`; Mathematica computes a/b as a * b^-1, so the last bits differed.
+  const cases = [
+    ['C2', { r1: [2.28, -2.71], n: 5, x: 4 }, [[3.0600056477851605, 3.0355339059327373], [-3.060005647785161, 3.0355339059327373], [-3.060005647785161, -3.1310254087452636], [3.0600056477851605, -3.1310254087452636]]],
+    ['C3', { r1: [2.77, -3.17], n: 3, x: 4 }, [[3.102521204040518, 3.0355339059327373], [-3.1025212040405177, 3.0355339059327373], [-3.1025212040405177, -3.285533905932737], [3.102521204040518, -3.285533905932737]]],
+    ['R016', { r1: [1.42, -0.05], n: 5, x: 4 }, [[3.0600056477851605, 3.0355339059327373], [-3.060005647785161, 3.0355339059327373], [-3.060005647785161, -3.1310254087452636], [3.0600056477851605, -3.1310254087452636]]],
+  ];
+  it.each(cases)('scene %s: configBoundaryFunc reproduces the original bit for bit', (id, { r1, n, x }, expected) => {
+    const robot = P.regularPolygon(r1, n);
+    expect(P.configBoundaryFunc(P.borderPolygon(x), robot, r1)).toEqual(expected);
+  });
+});

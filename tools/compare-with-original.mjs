@@ -76,6 +76,10 @@ const WL_CHECKS = {
   'N[2 Pi, 3] == 2.Pi - 2^-k': 'Table[{k, N[2 Pi, 3] == N[2 Pi] - 2.^-k}, {k, 1, 40}]',
   'samples x: {x, N[2 Pi, 3] > x, x > N[2 Pi, 3]}': 'Table[{x, N[2 Pi, 3] > x, x > N[2 Pi, 3]}, {x, {6.2, 6.25, 6.27, 6.275, 6.278, 6.28, 6.2825, 6.283, 6.2835, 6.285, 6.29, 6.3, 6.35}}]',
   'N[2 Pi, 3] > N[2 Pi, 3]': 'N[2 Pi, 3] > N[2 Pi, 3]',
+  // exact thresholds (bisection to adjacent machine numbers): {last x with v > x, first x without}
+  'bisect below: v > x': 'Module[{v = N[2 Pi, 3], lo = 6.25, hi = 6.27, m}, Do[m = (lo + hi)/2; If[m === lo || m === hi, Break[]]; If[v > m, lo = m, hi = m], {200}]; {lo, hi}]',
+  // {last x without x > v, first x with x > v}
+  'bisect above: x > v': 'Module[{v = N[2 Pi, 3], lo = 6.29, hi = 6.3, m}, Do[m = (lo + hi)/2; If[m === lo || m === hi, Break[]]; If[m > v, hi = m, lo = m], {200}]; {lo, hi}]',
 };
 import {
   clampScene, sceneForWolfram, sceneUrl, randomScenes, withHistory, portRecord, compareScene,

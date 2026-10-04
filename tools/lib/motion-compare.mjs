@@ -150,7 +150,13 @@ export function compareScene(orig, port) {
   fields.validity = exactEqual(orig.robotinsideobstcond, port.robotinsideobstcond) ? { status: 'identical', diff: 0 } : { status: 'DIFFERENT', diff: Infinity };
   fields.obstCollision = exactEqual(orig.obstCollision, port.obstCollision) ? { status: 'identical', diff: 0 } : { status: 'DIFFERENT', diff: Infinity };
   for (const k of ['obstaclepoly', 'robotStartPoly', 'robotEndPoly', 'borderpoly', 'robotobstconfig', 'configBoundary']) fields[k] = compareNumeric(orig[k], port[k]);
-  for (const k of ['linesStarttoObstacles', 'linesEndtoObstacles', 'verticestoVertices']) fields[k] = compareLines(orig[k] ?? [], port[k] ?? []);
+  for (const k of ['linesStarttoObstacles', 'linesEndtoObstacles', 'verticestoVertices']) {
+    fields[k] = compareLines(orig[k] ?? [], port[k] ?? []);
+    if (fields[k].status === 'DIFFERENT') {
+      const show = (ls) => (ls.length ? ls.slice(0, 6).map((l) => JSON.stringify(l.map((pt) => pt.map((v) => Number(v.toFixed(6)))))).join(', ') + (ls.length > 6 ? ` … (${ls.length})` : '') : 'none');
+      notes.push(`${k}: only in the original ${show(fields[k].onlyOrig)}; only in the port ${show(fields[k].onlyPort)}`);
+    }
+  }
   if (!isPath(orig.path)) {
     fields.path = { status: 'DIFFERENT', diff: Infinity };
     notes.push(`original path is not a list of points: ${String(orig.path).slice(0, 160)}`);
