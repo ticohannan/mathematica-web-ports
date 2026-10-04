@@ -32,7 +32,12 @@ design document, not the other way round.**
    gets a `D-xx-nn` entry; where it deliberately keeps an oddity of the original it gets a `Q-xx-nn`
    entry; known open problems get `K-xx-nn` entries. Fixing a deviation or a known issue is a change
    like any other: proposed, approved, then built.
-5. **Design documents are tied to code versions.** Each design document states the code version it
+5. **Improvements are collected, not built.** Section 10 of each design document, *Improvements to
+   consider*, lists ideas that would make an app better than the original (`I-xx-nn`: improvement,
+   benefit, cost/risk, related entries). The delivered code reproduces the original's behaviour, so
+   nothing in section 10 is implemented; an idea is built only after it has become an approved
+   proposal (rule 1), which then names its I- ID.
+6. **Design documents are tied to code versions.** Each design document states the code version it
    describes (`Code version:`), which must equal `version` in `package.json`; every feature row says
    since which version it exists; the revision history lists what changed in each version.
 
@@ -43,14 +48,15 @@ design document, not the other way round.**
 | proposed | entry written in *Proposed changes* (P-xx-nn): request, reason, acceptance criteria | anyone |
 | approved | owner agrees; may get a target version | owner |
 | implemented | code + tests done; the entry moves to the feature table with its new F-/A- ID and *Since* version | developer |
-| rejected / withdrawn | stays in the table with the reason | owner |
+| rejected / withdrawn | stays in the table with the reason; a worthwhile idea moves to section 10 | owner |
 
 ## What the tests enforce
 
 - `tests/unit/design-docs.test.js` (runs with `npm test`):
   each design document names the current code version; IDs are unique; every feature row has a
   reason, a *Since* version and at least one verification reference, and every referenced test title
-  and checklist item exists; every UI-inventory row points to a feature of the document.
+  and checklist item exists; every UI-inventory row points to a feature of the document; every
+  improvement in section 10 has a unique I- ID, a benefit and a cost/risk.
 - `tests/e2e/site.spec.js`, test "every control on … is specified in its design document":
   every interactive element on each app page (buttons, inputs, links, locators, …) must match a row
   of the UI inventory in that app's design document, and every inventory row must match something on

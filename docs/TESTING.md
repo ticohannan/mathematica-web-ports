@@ -34,6 +34,9 @@ Plus an investigation tool: `node tools/explore-motion.mjs` (randomized differen
 Runs `tests/unit/*.test.js` and `tests/golden/parity.test.js` with Vitest. Takes a few seconds.
 
 - **mma.test.js** — Mathematica-semantics helpers.
+- **mma-exact.test.js** — bit-exact `Det`, `Norm`, `ArcTan`, `VectorAngle` and the fused multiply-add
+  (`shared/mma-exact.js`): fast paths against exact BigInt arithmetic, and results recorded from
+  Mathematica 15.0.1 (`tests/unit/fixtures/mma-exact.recorded.json`, taken from a trace run).
 - **planner.test.js** — polygon helpers, winding test, segment intersection, Minkowski sum
   (incl. the property *robot overlaps obstacle ⇔ centre inside C-obstacle* checked with an
   independent separating-axis test), configuration-space boundary, A*, discretisation, scene
@@ -145,7 +148,9 @@ the port's function with the same arguments, and reports per function how many r
 the first difference occurs (`test-output/compare-original/trace-report.md`). It also evaluates those
 built-ins on a few thousand seeded probe arguments and scores alternative formulas (e.g. `a*d - b*c` versus
 an LU decomposition for `Det`) — the formula with 0 mismatches is the one Mathematica uses. This is how a
-remaining difference is traced to its root cause instead of guessed.
+remaining difference is traced to its root cause instead of guessed. Section 1d of the report lists a few
+free-form Wolfram Language checks (`WL_CHECKS` in the tool), used for questions that are not about one
+built-in, such as how Mathematica compares a 3-digit number with a machine number.
 
 Limits: the harness evaluates the stored code in a fresh kernel, not in the front end, and it clears
 the original's change-detection caches before every scene (`--history` adds the drag variant); the

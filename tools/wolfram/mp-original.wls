@@ -233,6 +233,11 @@ builtinDefinitions = Association @ Map[# -> Quiet @ Check[With[{sym = Symbol[#]}
       Unprotect[sym]; ClearAttributes[sym, ReadProtected]; Protect[sym];
       clip[ToString[Definition[sym], InputForm], 6000]], "unavailable"] &,
   Lookup[input, "inspectDefinitions", {}]];
+(* free-form checks: name -> Wolfram Language expression (string), read in the notebook's context so the
+   original's functions can be called; result returned in InputForm *)
+wlChecks = Association @ KeyValueMap[#1 -> Quiet[
+    clip[Block[{$Context = "$CellContext`"}, ToString[ToExpression[#2], InputForm]], 20000]] &,
+  Lookup[input, "wlChecks", <||>]];
 results = {};
 imageProblem = None;
 
@@ -267,7 +272,7 @@ out = <|"tool" -> "tools/wolfram/mp-original.wls", "wolframVersion" -> $Version,
   "notebook" -> nbFile, "numberFormatSelfTest" -> fmtOK, "initCopies" -> Length[inits], "initDistinct" -> Length[Union[inits]],
   "bodyCopies" -> Length[bodies], "bodyDistinct" -> Length[Union[bodies]],
   "imageProblem" -> imageProblem, "probes" -> probeResults, "probeFormulas" -> probeFormulaResults,
-  "builtinDefinitions" -> builtinDefinitions, "scenes" -> results|>;
+  "builtinDefinitions" -> builtinDefinitions, "wlChecks" -> wlChecks, "scenes" -> results|>;
 strm = OpenWrite[outFile, CharacterEncoding -> "ASCII"];
 WriteString[strm, toJSON[out]];
 Close[strm];

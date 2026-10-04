@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.6 |
-| Document revision | 2 (2026-10-03) — first full design document (rev. 1 was a feature list) |
+| Code version: | 0.1.7 |
+| Document revision | 3 (2026-10-03) — P-EA-01 withdrawn (moved to §10 as I-EA-01) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Euler Angles: Precession, Nutation, and Spin", contributed by Kevin Hernandez, based on a program by Sándor Kabai (CC BY-NC-SA 3.0). Readable source: [`docs/original-source/euler-angles.txt`](../../docs/original-source/euler-angles.txt) |
 | Port files | `model.js` (orientations, bookmarks, geometry constants; pure), `main.js` (three.js scene and controls), `index.html` |
@@ -112,17 +112,17 @@ its design document".
 | D-EA-02 | deviation | Bookmark animation (9 s per cycle) and slider animation (6 s per sweep) speeds are guesses; Mathematica's defaults may differ. |
 | D-EA-03 | deviation | Labels are HTML overlays: always on top, never hidden behind geometry. |
 | D-EA-04 | deviation | The 3D picture is as wide as its column, at most 520 px (original `ImageSize -> 400`). |
-| K-EA-01 | known issue | While "Animate bookmarks" runs, "Initial settings" and slider moves are overwritten by the next animation frame (the animation is not stopped). Found by design review, v0.1.6; fix proposed as P-EA-01. |
+| K-EA-01 | known issue | While "Animate bookmarks" runs, "Initial settings" and slider moves are overwritten by the next animation frame (the animation is not stopped). Found by design review, v0.1.6. What the original does in the same situation (⊕ menu → Initial Settings during the bookmark animation) is to be checked (M-EA-08); the port is to behave like the original. A possible improvement is I-EA-01. |
 | N-EA-01 | note | `s1 = a1/1°` in the extracted source is `(a1/1)°` = a1 degrees in radians (box grouping), not a bug. |
 | N-EA-02 | note | Sliders go 0 … 360; the original has no negative angles. |
 
 ## 8. Proposed changes
 
-One open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
+No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
 
 | ID | Status | Requested by / date | Change | Reason | Acceptance criteria |
 |----|--------|---------------------|--------|--------|---------------------|
-| P-EA-01 | proposed | design review / 2026-10-03 | "Initial settings" and any slider input stop a running bookmark animation | fixes K-EA-01: the reset should win | after pressing Initial settings during the animation, all angles stay 0 and the button shows "▶ Animate bookmarks" |
+| P-EA-01 | withdrawn 2026-10-03 (owner: keep the original's behaviour; kept as I-EA-01) | design review / 2026-10-03 | "Initial settings" and any slider input stop a running bookmark animation | fixes K-EA-01: the reset should win | after pressing Initial settings during the animation, all angles stay 0 and the button shows "▶ Animate bookmarks" |
 
 ## 9. Revision history
 
@@ -131,3 +131,18 @@ One open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PR
 | 1 | v0.1.0 | 2026-10-02 | feature list written with the first port |
 | 1 | v0.1.1 | 2026-10-03 | credit footer added (A-EA-05) |
 | 2 | v0.1.6 | 2026-10-03 | full design document: purpose, scope, use cases, reasons, versions, UI inventory, design, change process; no feature changes |
+| 3 | v0.1.7 | 2026-10-03 | P-EA-01 withdrawn; K-EA-01 to be checked against the original (M-EA-08); §10 *Improvements to consider* added; no feature changes |
+
+## 10. Improvements to consider (not implemented)
+
+Ideas for making the app better than the original. **None of them is implemented**: the port
+reproduces the original's behaviour. An idea becomes work only when the owner turns it into a
+proposal in §8 and approves it.
+
+| ID | Improvement | Benefit | Cost / risk | Related |
+|----|-------------|---------|-------------|---------|
+| I-EA-01 | "Initial settings" and any slider input stop a running bookmark animation (was P-EA-01) | the reset wins; no fight between the user and the animation | may differ from the original (see M-EA-08) | K-EA-01 |
+| I-EA-02 | Allow negative angles (−180 … 180) | rotations in both directions, as in most textbooks | slider ranges differ from the original | N-EA-02 |
+| I-EA-03 | Show the rotation matrix Rz(a1)·Ry(a2)·Rz(a3) with its current numbers | connects the picture with the formula | more page content (needs an F- entry) | F-EA-04 |
+| I-EA-04 | Hide labels that are behind geometry | the picture is easier to read when rotated | needs depth tests for the HTML labels; small cost per frame | D-EA-03 |
+

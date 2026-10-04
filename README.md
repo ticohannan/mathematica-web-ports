@@ -50,8 +50,8 @@ Full guide: [docs/TESTING.md](docs/TESTING.md). Feature changes: [docs/DESIGN_PR
 ```
 index.html                 landing page
 demos/<demo>/              index.html, main.js (page/rendering), pure model file, DESIGN.md
-shared/                    mma.js (Mathematica semantics), linalg.js, ui.js (Manipulate-style controls),
-                           three-helpers.js, style.css
+shared/                    mma.js (Mathematica semantics), mma-exact.js (bit-exact Det/Norm/ArcTan),
+                           linalg.js, ui.js (Manipulate-style controls), three-helpers.js, style.css
 vendor/three/              three.js r186 (MIT), served locally — no CDN needed
 tests/unit/                Vitest unit + property tests
 tests/golden/              fixtures extracted from the ORIGINAL notebooks + parity tests

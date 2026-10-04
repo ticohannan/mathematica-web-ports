@@ -276,6 +276,14 @@ Expected: identical pictures.
 Result: [ ] PASS  [ ] FAIL  [ ] UNSURE
 Notes:
 
+### M-EA-08  Reset during the bookmark animation (K-EA-01)
+Steps: start the bookmark animation; while it runs choose ⊕ → Initial Settings (original) / press "Initial settings" (port); then move a slider while it runs.
+Expected: both behave the same. Write down whether the animation stops and whether the angles stay at 0.
+Original: 
+Port: 
+Result: [ ] PASS  [ ] FAIL  [ ] UNSURE
+Notes:
+
 ### M-EA-07  Caption and credits
 Result: [ ] PASS  [ ] FAIL  [ ] UNSURE
 Notes:

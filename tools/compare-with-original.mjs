@@ -62,6 +62,21 @@ const PROBE_FORMULAS = {
   EuclideanDistance: ['Norm[#1 - #2] &', 'Sqrt[Total[(#1 - #2)^2]] &'],
   Det: ['Det[Transpose[#1]] &', 'Det[SetPrecision[#1, Infinity]] &'],
 };
+/**
+ * Free-form Wolfram Language checks (trace mode), reported verbatim in section 1d. Current question
+ * (motion-planning DESIGN.md K-MP-03): getClockwiseAngle returns N[2 Pi, 3], a 3-digit number, when the
+ * angle is forced to 0 and the cross product is negative — how does Greater compare it with machine numbers?
+ */
+const WL_CHECKS = {
+  'getClockwiseAngle forced-0, cross < 0': 'getClockwiseAngle[{1., 1.}, {0., 0.}, {-1., 1.}]',
+  'getClockwiseAngle forced-0, cross > 0': 'getClockwiseAngle[{-1., 1.}, {0., 0.}, {1., 1.}]',
+  'N[2 Pi, 3]: value, precision, accuracy': 'With[{t = N[2 Pi, 3]}, {SetPrecision[t, Infinity], Precision[t], Accuracy[t]}]',
+  'N[2 Pi, 3] > 2.Pi - 2^-k': 'Table[{k, N[2 Pi, 3] > N[2 Pi] - 2.^-k}, {k, 1, 40}]',
+  '2.Pi + 2^-k > N[2 Pi, 3]': 'Table[{k, N[2 Pi] + 2.^-k > N[2 Pi, 3]}, {k, 1, 40}]',
+  'N[2 Pi, 3] == 2.Pi - 2^-k': 'Table[{k, N[2 Pi, 3] == N[2 Pi] - 2.^-k}, {k, 1, 40}]',
+  'samples x: {x, N[2 Pi, 3] > x, x > N[2 Pi, 3]}': 'Table[{x, N[2 Pi, 3] > x, x > N[2 Pi, 3]}, {x, {6.2, 6.25, 6.27, 6.275, 6.278, 6.28, 6.2825, 6.283, 6.2835, 6.285, 6.29, 6.3, 6.35}}]',
+  'N[2 Pi, 3] > N[2 Pi, 3]': 'N[2 Pi, 3] > N[2 Pi, 3]',
+};
 import {
   clampScene, sceneForWolfram, sceneUrl, randomScenes, withHistory, portRecord, compareScene,
   referenceFor, referenceFlags, goldenSelfCheck, pathLen,
@@ -160,7 +175,7 @@ if (traceIds) {
     const t0 = Date.now();
     const r = await runWolfram(traced.map((s) => ({ ...sceneForWolfram(s), trace: true })), path.join(outDir, 'trace-scenes.json'), traceFile,
       { traceFunctions: DEFAULT_TRACE_FUNCTIONS, traceSystemFunctions: DEFAULT_TRACE_SYSTEM, probes, timeLimit: Math.max(timeLimit, 900),
-        probeFormulas: PROBE_FORMULAS, inspectDefinitions: DEFAULT_TRACE_SYSTEM });
+        probeFormulas: PROBE_FORMULAS, inspectDefinitions: DEFAULT_TRACE_SYSTEM, wlChecks: WL_CHECKS });
     if (wolframFailed(r)) process.exit(2);
     console.log(`Mathematica finished in ${((Date.now() - t0) / 1000).toFixed(1)} s`);
   }
@@ -188,6 +203,11 @@ if (traceIds) {
   if (tr.builtinDefinitions && Object.keys(tr.builtinDefinitions).length) {
     md.push('## 1c. Readable definitions of the built-ins', '');
     for (const [fn, def] of Object.entries(tr.builtinDefinitions)) md.push(`#### ${fn}`, '', '```', String(def).slice(0, 3000), '```', '');
+  }
+  if (tr.wlChecks && Object.keys(tr.wlChecks).length) {
+    md.push('## 1d. Wolfram Language checks', '', '| check | Mathematica result (InputForm) |', '|---|---|');
+    for (const [name, res] of Object.entries(tr.wlChecks)) md.push(`| ${name} | \`${String(res).replace(/\|/g, '\\|')}\` |`);
+    md.push('');
   }
   md.push('## 2. Traced scenes', '');
   for (const sc of tr.scenes) {

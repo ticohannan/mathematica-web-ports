@@ -47,7 +47,7 @@ describe.each(APPS)('design document of $dir', ({ dir, prefix, spec }) => {
     expect(md).toMatch(new RegExp(`\\| Code version: \\| ${version.replace(/\./g, '\\.')} \\|`));
   });
   it('has the required sections', () => {
-    for (const s of ['1. Purpose', '2. Scope', '3. Users and use cases', '4. Features', '5. UI inventory', '6. Design', '7. Deviations', '8. Proposed changes', '9. Revision history']) {
+    for (const s of ['1. Purpose', '2. Scope', '3. Users and use cases', '4. Features', '5. UI inventory', '6. Design', '7. Deviations', '8. Proposed changes', '9. Revision history', '10. Improvements to consider']) {
       expect(md, s).toContain(`## ${s}`);
     }
   });
@@ -87,6 +87,20 @@ describe.each(APPS)('design document of $dir', ({ dir, prefix, spec }) => {
       expect(pattern, 'inventory pattern must be in backticks').toMatch(/^`[^`]+`$/);
       for (const f of features.split(',').map((x) => x.trim())) expect(ids.has(f), `${pattern} → ${f}`).toBe(true);
     }
+  });
+  it('improvements to consider have unique IDs, a benefit and a cost/risk, and are not features', () => {
+    const rows = tableRows(section(md, '10. Improvements to consider'));
+    expect(rows.length).toBeGreaterThan(2);
+    const ids = rows.map((r) => r[0]);
+    for (const [id, what, benefit, cost] of rows) {
+      expect(id).toMatch(new RegExp(`^I-${prefix}-\\d+$`));
+      expect(what, id).toMatch(/\w{3}/);
+      expect(benefit, `${id}: Benefit`).toMatch(/\w{3}/);
+      expect(cost, `${id}: Cost / risk`).toMatch(/\w{3}/);
+    }
+    expect(new Set(ids).size).toBe(ids.length);
+    const featureIds = new Set(featureRows.map((r) => r[0]));
+    for (const id of ids) expect(featureIds.has(id), id).toBe(false);
   });
   it('the revision history has a row for the current code version', () => {
     const rows = tableRows(section(md, '9. Revision history'));

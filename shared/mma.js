@@ -183,3 +183,12 @@ export function canonicalCompare(a, b) {
 }
 /** Exact structural key for points / segments (SameQ-style matching). */
 export const key = (x) => JSON.stringify(x);
+/** Same result as `key(a) === key(b)` for nested arrays of finite numbers, without building strings. */
+export function sameKey(a, b) {
+  if (Array.isArray(a)) {
+    if (!Array.isArray(b) || a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) if (!sameKey(a[i], b[i])) return false;
+    return true;
+  }
+  return a === b;
+}

@@ -23,10 +23,18 @@
 // original exactly are marked "PORT DEVIATION".
 
 import {
-  mEqual, mUnequal, mLess, mGreater, mLessEq, chop, arcTan, mod, roundHalfEven,
-  circlePoints, sortMma, add, sub, scale, neg, dot, norm, dist, normalize, det2,
-  mean, canonicalCompare, key, total, euclid,
+  mEqual, mUnequal, mLess, mGreater, mLessEq, chop, mod, roundHalfEven,
+  circlePoints, sortMma, add, sub, scale, neg, dot, dist,
+  mean, canonicalCompare, key, sameKey, total, euclid,
 } from '../../shared/mma.js';
+// Bit-exact Det, Norm, ArcTan and (best known) VectorAngle of Mathematica — design P-MP-01, v0.1.7.
+import { det, norm as normMma, arcTan, vectorAngle as vectorAngleMma } from '../../shared/mma-exact.js';
+
+/** Normalize[v]: Mathematica multiplies by the reciprocal of Norm[v] (matches the traced normals,
+ *  e.g. Normalize[{0., a}] can give 0.9999999999999999). */
+const normalize = (v) => { const n = normMma(v); if (n === 0) return v.slice(); const r = 1 / n; return v.map((x) => x * r); };
+/** Det[{u, v}] for 2-vectors, as Mathematica computes it. */
+const det2 = (u, v) => det([u, v]);
 
 const TWO_PI = 2 * Math.PI;
 
@@ -187,7 +195,7 @@ export function configBoundaryFunc(borderpoly, robotPoly, r1) {
 
 /** reflex[p1, p2, p3] := Chop[Det[{{1,x1,y1},{1,x2,y2},{1,x3,y3}}]] > 0 (counter-clockwise turn). */
 export function reflex([x1, y1], [x2, y2], [x3, y3]) {
-  const d = (x2 - x1) * (y3 - y1) - (x3 - x1) * (y2 - y1);
+  const d = det([[1.0, x1, y1], [1.0, x2, y2], [1.0, x3, y3]]);
   return chop(d) > 0.0;
 }
 
@@ -246,10 +254,8 @@ export function pointOnSegmentQ([[x1, y1], [x2, y2]], [x3, y3]) {
   return mLess(0.0, Kac) && mLess(Kac, Kab);
 }
 
-function vectorAngle(a, b) {
-  const c = dot(a, b) / (norm(a) * norm(b));
-  return Math.acos(Math.max(-1, Math.min(1, c)));
-}
+/** VectorAngle[a, b] (the original appends a 0 z-component; that does not change the result). */
+const vectorAngle = (a, b) => vectorAngleMma(a, b);
 
 /** getClockwiseAngle[p1, p2, p3] — angle from (p3 - p2) to (p1 - p2), in [0, 2π). */
 export function getClockwiseAngle(p1, p2, p3) {
@@ -269,7 +275,7 @@ export function intersectInteriorQRev2(p, [w1, w2, w3]) {
 /** angleSortCond[point, l1, l2] — sweep order of vertex triples around `point`. */
 export function angleSortCond(point, l1, l2) {
   const a = getAngle([point, l1[1]]), b = getAngle([point, l2[1]]);
-  const c = norm(sub(point, l1[1]));
+  const c = normMma(sub(point, l1[1]));
   // ORIGINAL QUIRK: the tie-break compares the distance c with the ANGLE b
   // (`c < b`); the evident intent was `c < d` (distance vs distance).
   return mLess(a, b) || (mEqual(a, b) && mLess(c, b));
@@ -277,12 +283,12 @@ export function angleSortCond(point, l1, l2) {
 
 /** distSortCond — distance along the sweep ray (only reorders jList; has no effect on results). */
 export function distSortCond(line, l1, l2, point) {
-  const a = dist(LineIntersectionPoint(chop([line, l1])), point);
-  const b = dist(LineIntersectionPoint(chop([line, l2])), point);
+  const a = euclid(LineIntersectionPoint(chop([line, l1])), point);
+  const b = euclid(LineIntersectionPoint(chop([line, l2])), point);
   return a < b;
 }
 
-const sameSeg = (s, t) => key(s) === key(t);
+const sameSeg = (s, t) => sameKey(s, t);
 
 /**
  * visiblePolys[polys, p] — rotational-sweep visibility (after D.-T. Lee):

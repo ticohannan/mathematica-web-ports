@@ -4,7 +4,7 @@
 // mode) through the port's functions and through candidate implementations of built-ins, to find
 // the lowest-level function whose results differ. Used by compare-with-original.mjs --trace.
 import * as P from '../../demos/motion-planning/planner.js';
-import { arcTan } from '../../shared/mma.js';
+import { arcTan as arcTanExact } from '../../shared/mma-exact.js';
 import { CANDIDATES } from './numerics-candidates.mjs';
 
 /** Original function name → port function (same argument structure as the Wolfram call). */
@@ -18,7 +18,7 @@ export const PORT_FUNCTIONS = {
   ConvexMinkowskiSumRev3: P.ConvexMinkowskiSumRev3, centroidOfPoly: P.centroidOfPoly,
   areaOfPoly: P.areaOfPoly, linelineInt: P.linelineInt, discretizeLineRev1: P.discretizeLineRev1,
   // built-ins as the port computes them
-  ArcTan: (x, y) => arcTan(x, y),
+  ArcTan: (x, y) => arcTanExact(x, y),
 };
 export const DEFAULT_TRACE_FUNCTIONS = ['reflex', 'biTangent', 'glancingBlow', 'LineIntersectionPoint',
   'SegmentIntersectionQ', 'getAngle', 'pointOnSegmentQ', 'getClockwiseAngle', 'intersectInteriorQRev2',

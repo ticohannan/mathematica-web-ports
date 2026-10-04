@@ -77,3 +77,12 @@ describe('tolerant comparisons (Equal / Less on machine reals)', () => {
     expect(chop([1e-11, -1e-11, 1e-9])).toEqual([0, 0, 1e-9]);
   });
 });
+
+describe('sameKey (structural SameQ for nested numeric arrays)', () => {
+  it('agrees with comparing key() strings', async () => {
+    const { key, sameKey } = await import('../../shared/mma.js');
+    const cases = [[[[1, 2], [3, 4]], [[1, 2], [3, 4]]], [[[1, 2], [3, 4]], [[1, 2], [4, 3]]], [[0, 1], [-0, 1]],
+      [[0.1 + 0.2, 1], [0.3, 1]], [[1, [2]], [1, 2]], [[1, 2], [1, 2, 3]], [5, 5]];
+    for (const [a, b] of cases) expect(sameKey(a, b), JSON.stringify([a, b])).toBe(key(a) === key(b));
+  });
+});

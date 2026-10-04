@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.6 |
-| Document revision | 2 (2026-10-03) — first full design document (rev. 1 was a feature list) |
+| Code version: | 0.1.7 |
+| Document revision | 3 (2026-10-03) — P-MP-01 implemented; improvements to consider (§10) added |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Motion Planning for Robot Path around Obstacles" by Shreyas Poyrekar, Aaron T. Becker and Arifa Sultana (CC BY-NC-SA 3.0); author notebook made with Mathematica 10.2. Readable source: [`docs/original-source/motion-planning.txt`](../../docs/original-source/motion-planning.txt) |
 | Port files | `planner.js` (computation, pure), `main.js` (SVG drawing and interaction), `index.html` (page) |
@@ -27,7 +27,9 @@ Every visual element exists to show one of these steps; the controls exist so a 
 things and watch the steps react. The port's purpose is to make this Demonstration run in any modern
 browser without Wolfram software, **faithfully**: same controls, same pictures, same numbers
 (see `compare`). It is also the subject of a course assignment that evaluates an AI-assisted
-conversion, which is why faithfulness is preferred over "improvements" (deviations are recorded in §7).
+conversion, which is why faithfulness is preferred over "improvements": the delivered code reproduces
+the original's behaviour, quirks included (§7), and ideas for improving the app are collected,
+unimplemented, in §10 (owner decision, 2026-10-03).
 
 ## 2. Scope
 
@@ -36,7 +38,7 @@ port additions for testing, accessibility and sharing (§4.5), each labelled `A-
 
 Out of scope (would each need a design entry first): other planning algorithms, robot rotation, more
 or fewer obstacles, other obstacle shapes, saving scenes, touch-specific gestures beyond pointer
-events, fixing the original algorithm's quirks (§7).
+events, fixing the original algorithm's quirks (§7) — candidates are listed in §10.
 
 ## 3. Users and use cases
 
@@ -81,6 +83,7 @@ Columns: **Why** = the reason the feature exists; **Since** = first code version
 | F-MP-19 | Straight path when the start–goal line crosses no C-obstacle edge | shortest possible path; no graph needed | v0.1.0 | unit "direct line when nothing is in the way" |
 | F-MP-20 | Shortest path through the graph (`myAstarRev2`); "no path" when the goal is unreachable | step 4 | v0.1.0 | unit "finds the shorter of two routes"; unit "returns -1 when the goal is unreachable"; unit "default scene: path is the hand-checkable"; compare |
 | F-MP-21 | Path discretised every 0.09 units, goal appended (`discretizeLineRev1`) → the progress positions | smooth robot animation | v0.1.0 | unit "discretises a segment every 0.09 units"; golden "discretised path (robot trajectory)" |
+| F-MP-22 | Mathematica's own floating-point results for `Det`, `Norm`, `Normalize` and `ArcTan` (bit for bit) and for `VectorAngle` (as closely as known, K-MP-02), in `shared/mma-exact.js` (from P-MP-01) | near-degenerate scenes then take the same decisions as the original (visibility, intersections, validity) and give the same picture and path | v0.1.7 | unit "results recorded from Mathematica"; unit "matches exact BigInt arithmetic"; unit "the unrolled 2x2 path follows the general algorithm"; compare |
 
 ### 4.3 Graphics (drawn in the order of the original `Graphics[…]`, plot range ±4.65, image size 425)
 
@@ -144,7 +147,15 @@ document" fails if the page has an element not listed here, or a row here matche
 - **Numbers.** Wolfram Language semantics the original depends on are reproduced in `shared/mma.js`
   (argument order of `ArcTan`, tolerant `Equal`/`Less`, `Chop`, `Mod`, exact `CirclePoints`, `Sort`
   tie order, compensated `Total`, `EuclideanDistance`). Last-bit agreement matters: it decides
-  near-degenerate visibility and validity questions.
+  near-degenerate visibility and validity questions. Since v0.1.7 (F-MP-22) `shared/mma-exact.js`
+  computes `Det`, `Norm`, `ArcTan` and `VectorAngle` the way Mathematica 15.0.1 was measured to
+  (`npm run compare:original -- --trace`): `Det` = LU factorisation of the transposed matrix with
+  partial pivoting and fused multiply-add updates; `Norm` = BLAS `dnrm2` scaling; `ArcTan` =
+  correctly rounded `atan2`; `Normalize` = multiplication by `1/Norm`. JavaScript has no fused
+  multiply-add and its `Math.atan2` is not correctly rounded, so both are computed with double-double
+  arithmetic, with an exact BigInt fallback for the rare cases the fast path cannot prove.
+  Cost: none measurable — the same version replaced a string-based comparison in `visiblePolys`
+  with a structural one, and a whole scene computes in about 35 ms in Node (41 ms in v0.1.6).
 - **Drawing.** SVG in the original's coordinates (y up); Mathematica sizes (`Thin`, `Thick`,
   `Thickness`, `PointSize`, "Large" text) converted for the 425-pixel image size.
 - **Verification.** Golden tests compare with results stored in the original notebook; the
@@ -170,15 +181,18 @@ document" fails if the page has an element not listed here, or a row here matche
 | Q-MP-07 | quirk kept | Minkowski sum keeps collinear intermediate vertices for parallel edges, in Mathematica's tie order. |
 | Q-MP-08 | quirk kept | C-obstacles are built from the robot START polygon; overlapping obstacles are not merged — edges that cross another C-obstacle edge are dropped from the graph instead. |
 | Q-MP-09 | quirk kept | Obstacles are not checked against the boundary or each other. |
-| K-MP-01 | known issue | In v0.1.4 the comparison with the original (Mathematica 15.0.1) matched in 52 of 65 freshly computed scenes; in the others some visibility/bitangent lines differ and in 3 scenes the path differs. Likely cause (built-ins shown to differ, link to each scene not yet proven): last-bit differences in built-in functions (`ArcTan`, `Norm`, `Det`, `VectorAngle`) between Mathematica and JavaScript; under investigation with `npm run compare:original -- --trace=…`; fix proposed as P-MP-01. |
+| K-MP-01 | known issue (fixed in v0.1.7, confirmation pending) | In v0.1.4 the comparison with the original (Mathematica 15.0.1) matched in 52 of 65 freshly computed scenes; in the others some visibility/bitangent lines differ and in 3 scenes the path differs. Cause found with the v0.1.6 trace: `Det` rounding in `LineIntersectionPoint` → `SegmentIntersectionQ` endpoint tests → `visiblePolys`. Fixed by P-MP-01 / F-MP-22: replaying the traced scenes C2, C3 and R016, every function of the original now gives the original's result except `getClockwiseAngle` (K-MP-02, K-MP-03). Closed when `npm run compare:original` reports no DIFFERENT fresh scene. |
+| K-MP-02 | known issue | `VectorAngle`: the best formula found matches Mathematica bit for bit in about 87 % of calls; the rest differ by one unit in the last place. It enters only `getClockwiseAngle`, whose results are compared with other angles; in the traced scenes this never changed a decision. |
+| K-MP-03 | known issue | `getClockwiseAngle` returns `N[2 Pi, 3]` — a 3-digit arbitrary-precision number — when its angle is forced to 0 (Q-MP-04) and the cross product is negative; the port returns the machine number 2π. Mathematica compares such a number with a machine number at 3-digit precision, so `intersectInteriorQRev2` can differ when the other angle is within about 0.01 of 2π. Not seen to change a result yet; `compare:original --trace` now asks Mathematica how it compares them (report section 1d) so it can be reproduced. |
+| K-MP-04 | known issue | In some fresh scenes (e.g. R016, pentagon robot) a few C-obstacle coordinates differ from the original in the last bit; present before v0.1.7, source not yet found, no effect on the path in the traced scene. |
 
 ## 8. Proposed changes
 
-One open proposal. Template for a request: copy a row (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)).
+No open proposal. Template for a request: copy a row (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)).
 
 | ID | Status | Requested by / date | Change | Reason | Acceptance criteria |
 |----|--------|---------------------|--------|--------|---------------------|
-| P-MP-01 | proposed | comparison with the original / 2026-10-03 | compute `Norm`, `ArcTan`, `Det` and `VectorAngle` exactly as Mathematica does (formulas identified with `compare:original --trace`) | fixes K-MP-01: the port should give the original's result in every scene | `npm run compare:original` reports no DIFFERENT scene among fresh computations; golden and unit tests still pass; no change to controls or drawing |
+| P-MP-01 | implemented in v0.1.7 as F-MP-22 (approved by the owner 2026-10-03) | comparison with the original / 2026-10-03 | compute `Norm`, `ArcTan`, `Det` and `VectorAngle` exactly as Mathematica does (formulas identified with `compare:original --trace`) | fixes K-MP-01: the port should give the original's result in every scene | `npm run compare:original` reports no DIFFERENT scene among fresh computations; golden and unit tests still pass; no change to controls or drawing |
 
 ## 9. Revision history
 
@@ -188,3 +202,22 @@ One open proposal. Template for a request: copy a row (see [`docs/DESIGN_PROCESS
 | 1 | v0.1.1 | 2026-10-03 | credit footer added (A-MP-07) |
 | 1 | v0.1.3 | 2026-10-03 | D-MP-06 corrected |
 | 2 | v0.1.6 | 2026-10-03 | full design document: purpose, scope, use cases, reasons, versions, UI inventory, design, known issues, change process; no feature changes |
+| 3 | v0.1.7 | 2026-10-03 | P-MP-01 implemented (F-MP-22); K-MP-01 cause found; K-MP-02…04 recorded; §10 *Improvements to consider* added; no change to controls or drawing |
+
+## 10. Improvements to consider (not implemented)
+
+Ideas for making the app better than the original. **None of them is implemented**: for the course
+assignment the port reproduces the original's behaviour. An idea becomes work only when the owner
+turns it into a proposal in §8 and approves it; its I- ID is then referenced there.
+
+| ID | Improvement | Benefit | Cost / risk | Related |
+|----|-------------|---------|-------------|---------|
+| I-MP-01 | Robust geometric predicates (exact orientation and intersection tests instead of `Chop` and tolerant comparisons) | removes the near-degenerate failures: detours, missing visibility lines and false "No path exists." when vertices are almost aligned | results then differ from the original in exactly those scenes; moderate code change in `planner.js` | Q-MP-05, K-MP-01 |
+| I-MP-02 | Do not let the path pass between two C-obstacles that only touch at a corner, and merge overlapping C-obstacles into one region | paths never squeeze through a point where the robot would touch two obstacles | needs polygon union; changes the graph the page shows | Q-MP-05, Q-MP-08 |
+| I-MP-03 | Real A* heuristic (distance to the goal, `EuclideanDistance[verts[[nbr]], verts[[fi]]]`) | faster search on large graphs; matches the intent of the code | no visible change on these small graphs; tie-breaking between equally short paths could change | Q-MP-01 |
+| I-MP-04 | `angleSortCond` tie-break by distance (`c < d`) | the rotational sweep orders collinear vertices correctly | may change visibility lines in collinear scenes | Q-MP-02 |
+| I-MP-05 | When the start or goal is invalid, say why (outside the workspace / inside obstacle n), draw no visibility lines from it, and keep the "No path exists." text inside the picture | clearer feedback for learners | page layout and text change; adds a control-free output (needs F- entry) | F-MP-30, F-MP-36 |
+| I-MP-06 | Warn when an obstacle sticks out of the workspace or overlaps another obstacle | learners see why the free space looks odd | one more output (needs an F- entry); no change to the planning | Q-MP-09 |
+| I-MP-07 | Incremental recomputation or a Web Worker for the planner | smoother dragging on slow devices | more code; no benefit visible on desktop (about 35 ms per scene) | §6 |
+| I-MP-08 | Robot rotation (a third degree of freedom) | closer to real motion planning | large change: 3-D configuration space; out of scope of the original | §2 |
+

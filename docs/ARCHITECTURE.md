@@ -47,6 +47,10 @@ The ports reproduce Wolfram Language numeric behaviour that the originals depend
 `Round` half-to-even, exact `CirclePoints` radicals, and `Sort[list, p]` tie order. Several of these
 were *required* to reproduce the original's cached results bit-for-bit (see tests/golden).
 
+`shared/mma-exact.js` (since v0.1.7) goes one step further for the motion-planning port: `Det`, `Norm`
+and `ArcTan` give Mathematica's results bit for bit (LU with fused multiply-add, BLAS `dnrm2`, correctly
+rounded `atan2`), measured against Mathematica 15.0.1 with the comparison tool's trace mode.
+
 ## Rendering choices
 
 - **Motion planning → SVG.** Flat 2D; locators are DOM elements (native pointer events, testable

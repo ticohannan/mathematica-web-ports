@@ -9,7 +9,10 @@ import path from 'node:path';
 export async function openDemo(page, url) {
   const problems = [];
   page.on('pageerror', (e) => problems.push(`pageerror: ${e.message}`));
-  page.on('console', (m) => { if (m.type() === 'error') problems.push(`console.error: ${m.text()}`); });
+  // The site has no favicon (none is specified); some browser builds request /favicon.ico anyway.
+  page.on('console', (m) => {
+    if (m.type() === 'error' && !/\/favicon\.ico$/.test(m.location()?.url ?? '')) problems.push(`console.error: ${m.text()}`);
+  });
   await page.goto(url);
   await page.waitForFunction(() => window.__demo && window.__demo.ready === true);
   return problems;

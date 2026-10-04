@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.6 |
-| Document revision | 2 (2026-10-03) — first full design document (rev. 1 was a feature list) |
+| Code version: | 0.1.7 |
+| Document revision | 3 (2026-10-03) — improvements to consider (§10) added |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Three Parametrizations of Rotations" by Aaron T. Becker and Benedict Isichei (CC BY-NC-SA 3.0). Readable source: [`docs/original-source/three-parametrizations.txt`](../../docs/original-source/three-parametrizations.txt) |
 | Port files | `rotations.js` (rotation matrices, conversions, progress; pure), `teapot-data.js` (the original's teapot mesh), `main.js` (three.js scene and controls), `index.html` |
@@ -156,3 +156,20 @@ None yet. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)
 | 1 | v0.1.0 | 2026-10-02 | feature list written with the first port |
 | 1 | v0.1.1 | 2026-10-03 | credit footer added (A-TP-05) |
 | 2 | v0.1.6 | 2026-10-03 | full design document: purpose, scope, use cases, reasons, versions, UI inventory, design, change process; page content F-TP-30 listed; no feature changes |
+| 3 | v0.1.7 | 2026-10-03 | §10 *Improvements to consider* added; no feature changes |
+
+## 10. Improvements to consider (not implemented)
+
+Ideas for making the app better than the original. **None of them is implemented**: the port
+reproduces the original's behaviour. An idea becomes work only when the owner turns it into a
+proposal in §8 and approves it.
+
+| ID | Improvement | Benefit | Cost / risk | Related |
+|----|-------------|---------|-------------|---------|
+| I-TP-01 | Treat rotations within a small tolerance of the identity explicitly (show "no rotation, axis undefined" instead of an arbitrary k) | no misleading axis near θ = 0 | differs from the original near the identity | D-TP-01, Q-TP-03 |
+| I-TP-02 | In the degenerate (gimbal-lock) branches show that a family of solutions exists, or pick the one closest to the current slider values | learners see why roll/pitch/yaw and ZYZ Euler angles break down | text or extra output on the page (needs an F- entry) | Q-TP-01, Q-TP-02 |
+| I-TP-03 | Keep the exact rotation when switching method instead of writing rounded values back into the sliders | switching method and back no longer drifts by up to 0.001 rad | slider values then show more digits or differ from the stored rotation | Q-TP-04 |
+| I-TP-04 | Arrow-key control for the 2D axis pad | keyboard accessibility | small; new interaction (needs an A- entry) | D-TP-05 |
+| I-TP-05 | Fourth parametrization: unit quaternion | links the axis/angle form to quaternions, used in graphics and robotics | new controls and text; out of scope of the original | §2 |
+| I-TP-06 | Centre the teapot on the origin | the teapot turns in place instead of swinging around the origin | changes the picture compared with the original | Q-TP-05 |
+
