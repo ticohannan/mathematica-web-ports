@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.10 |
-| Document revision | 3 (2026-10-03) — improvements to consider (§10) added |
+| Code version: | 0.1.11 |
+| Document revision | 4 (2026-10-05) — P-TP-01 (WebGL context-loss recovery) implemented as A-TP-06 |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Three Parametrizations of Rotations" by Aaron T. Becker and Benedict Isichei (CC BY-NC-SA 3.0). Readable source: [`docs/original-source/three-parametrizations.txt`](../../docs/original-source/three-parametrizations.txt) |
 | Port files | `rotations.js` (rotation matrices, conversions, progress; pure), `teapot-data.js` (the original's teapot mesh), `main.js` (three.js scene and controls), `index.html` |
@@ -89,6 +89,7 @@ quaternions), other models, numeric matrix display.
 | A-TP-03 | `window.__demo` automation hook (state, matrices, rendered matrices, enabled controls) | automated browser tests | v0.1.0 | e2e "teapots in the scene use exactly the computed R and Rprog" |
 | A-TP-04 | "All demos" link back to the landing page | site navigation | v0.1.0 | inventory; M-GEN-01 |
 | A-TP-05 | Credit footer: original title, authors, licence, adaptation notice, links | required by the CC BY-NC-SA 3.0 licence | v0.1.1 | e2e "attribution on" |
+| A-TP-06 | Recovers by itself after the browser restores a lost WebGL context (GPU reset, driver update, sleep): redraws the same view on the white background | without it the scene vanished and came back on black only after the next interaction | v0.1.11 | e2e "redraws by itself after the WebGL context is lost and restored" |
 
 ## 5. UI inventory
 
@@ -143,11 +144,11 @@ its design document".
 
 ## 8. Proposed changes
 
-None yet. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
+No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
 
 | ID | Status | Requested by / date | Change | Reason | Acceptance criteria |
 |----|--------|---------------------|--------|--------|---------------------|
-| P-TP-01 | — | — | — | — | — |
+| P-TP-01 | implemented in v0.1.11 as A-TP-06 (approved by the owner 2026-10-05) | browser-compatibility investigation / 2026-10-05 | after the browser restores a lost WebGL context, redraw the scene with the white background | after a simulated loss and restore, three.js reset the clear colour to black and nothing redrew until the next interaction (scene missing, then on black); reload was the only recovery | after `WEBGL_lose_context` loss + restore, without any interaction the canvas shows the same picture as before (ink within 10 %) on white; existing tests pass |
 
 ## 9. Revision history
 
@@ -160,6 +161,7 @@ None yet. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)
 | 3 | v0.1.8 | 2026-10-03 | no change (motion-planning numerics and comparison tooling only) |
 | 3 | v0.1.9 | 2026-10-03 | no change (WebKit browser tests added, test tooling only) |
 | 3 | v0.1.10 | 2026-10-03 | no change (WebKit browser tests now required to publish; test tooling only) |
+| 4 | v0.1.11 | 2026-10-05 | P-TP-01 approved and implemented as A-TP-06: redraw after a WebGL context is restored (shared viewer code) |
 
 ## 10. Improvements to consider (not implemented)
 

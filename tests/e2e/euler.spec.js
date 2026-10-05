@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // tests/e2e/euler.spec.js — Euler Angles: Precession, Nutation, and Spin (browser tests)
 import { test, expect } from '@playwright/test';
-import { openDemo, reviewShot } from './helpers.js';
+import { openDemo, reviewShot, inkAfterContextRestore } from './helpers.js';
 
 const URL = '/demos/euler-angles/';
 const DEG = Math.PI / 180;
@@ -106,5 +106,16 @@ test.describe('Euler angles demo', () => {
     await page.mouse.up();
     await page.waitForTimeout(200);
     expect(await page.evaluate(() => window.__demo.frames())).toBeGreaterThan(before);
+  });
+
+  test('redraws by itself after the WebGL context is lost and restored', async ({ page }) => {
+    const problems = await openDemo(page, URL);
+    await page.waitForTimeout(300);
+    const before = await page.evaluate(() => { window.__demo.renderNow(); return window.__demo.inkFraction(); });
+    const r = await inkAfterContextRestore(page);
+    test.skip(!r.supported, 'this browser does not offer WEBGL_lose_context');
+    // same picture as before the loss, on the white background (not empty, not black)
+    expect(Math.abs(r.ink - before)).toBeLessThan(0.1 * before);
+    expect(problems).toEqual([]);
   });
 });

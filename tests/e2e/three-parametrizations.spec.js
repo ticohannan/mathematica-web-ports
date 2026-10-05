@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // tests/e2e/three-parametrizations.spec.js — Three Parametrizations of Rotations (browser tests)
 import { test, expect } from '@playwright/test';
-import { openDemo, reviewShot } from './helpers.js';
+import { openDemo, reviewShot, inkAfterContextRestore } from './helpers.js';
 import fs from 'node:fs';
 
 const URL = '/demos/three-parametrizations/';
@@ -95,5 +95,16 @@ test.describe('Three parametrizations demo', () => {
       await page.waitForTimeout(150);
       await reviewShot(page, testInfo, `three-method-${typeRot}-progress-0.5`);
     }
+  });
+
+  test('redraws by itself after the WebGL context is lost and restored', async ({ page }) => {
+    const problems = await openDemo(page, URL);
+    await page.waitForTimeout(300);
+    const before = await page.evaluate(() => { window.__demo.renderNow(); return window.__demo.inkFraction(); });
+    const r = await inkAfterContextRestore(page);
+    test.skip(!r.supported, 'this browser does not offer WEBGL_lose_context');
+    // same picture as before the loss, on the white background (not empty, not black)
+    expect(Math.abs(r.ink - before)).toBeLessThan(0.1 * before);
+    expect(problems).toEqual([]);
   });
 });

@@ -81,6 +81,10 @@ export function createViewer(container, opts) {
     render();
   };
   window.addEventListener('resize', resize);
+  // A-EA-06 / A-TP-06: after a WebGL context loss (GPU reset, driver update, sleep) the browser may
+  // restore the context. three.js then rebuilds its GL state but resets the clear colour to black, and
+  // this viewer only draws on demand — so re-apply the colour and redraw.
+  renderer.domElement.addEventListener('webglcontextrestored', () => { renderer.setClearColor(0xffffff, 1); render(); });
   const initial = { position: camPos.clone(), target: center.clone() };
   const resetView = () => {
     camera.position.copy(initial.position);
