@@ -1,0 +1,230 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Private reference (R-04). Extracted 2026-10-05 with a tolerant copy of tools/nbextract.py; cached outputs skipped.
+
+### [Title]
+Unit Balls for Different p-Norms in 2D and 3D
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+This Demonstration shows the set of points within distance 1 from the origin in 2D and in 3D. The distance is measured using different p-norms, which are standard norms for finite-dimensional spaces. This set of points is called the unit ball.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+myNorm[{x_,y_,z_},p_]:=(Abs[x]^p+Abs[y]^p+Abs[z]^p)^1/p
+
+### [Input] (init)
+myNorm2[{x_,y_},p_]:=(Abs[x]^p+Abs[y]^p)^1/p
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+If[
+dimension=="\<2D\>",
+Plot3D[{If[p<100,myNorm2[{x,y},p],Max[Abs[x],Abs[y]]],1},{x,-1.5,1.5},{y,-1.5,1.5},MaxRecursion->5,PlotStyle->{Automatic,Opacity[0.5]},PerformanceGoal->"\<Quality\>",
+AxesLabel->{Style["\<x\>",Italic],Style["\<y\>",Italic],"\<distance\>"},Exclusions->None,
+ Mesh->None,Ticks->None,PlotLabel->Row[{p,"\<\[Hyphen]norm\>"}]Invisible[(1)/(2)],
+ImageSize->{400,400}],
+
+RegionPlot3D[If[p<100,myNorm[{x,y,z},p]<=1,-1<=x<=1 &&-1<=y<=1 &&-1<=z<=1 ],{x,-1.1,1.1},{y,-1.1,1.1},{z,-1.1,1.1},PerformanceGoal->"\<Quality\>",PlotPoints->If[p<100,25,23],
+AxesLabel->{Style["\<x\>",Italic],Style["\<y\>",Italic],Style["\<z\>",Italic]},
+PlotLabel->Row[{p,"\<\[Hyphen]norm\>"}]Invisible[(1)/(2)],
+ ImageSize->{400,400}]],
+Column[{
+Control@{{dimension,"\<3D\>","\<dimension\>"},{"\<2D\>","\<3D\>"}},
+Dynamic[If[dimension=="\<2D\>",
+"\<\!\(TraditionalForm\`\*SubscriptBox[\(\[LeftDoubleBracketingBar]\((x, y)\)\[RightDoubleBracketingBar]\), \(p\)] = \*SuperscriptBox[\((\*SuperscriptBox[\(\[LeftBracketingBar]x\[RightBracketingBar]\), \(p\)] + \*SuperscriptBox[\(\[LeftBracketingBar]y\[RightBracketingBar]\), \(p\)])\), \(1/p\)]\)\>","\<\!\(TraditionalForm\`\*SubscriptBox[\(\[LeftDoubleBracketingBar]\((x, y, z)\)\[RightDoubleBracketingBar]\), \(p\)] = \*SuperscriptBox[\((\*SuperscriptBox[\(\[LeftBracketingBar]x\[RightBracketingBar]\), \(p\)] + \*SuperscriptBox[\(\[LeftBracketingBar]y\[RightBracketingBar]\), \(p\)] + \*SuperscriptBox[\(\[LeftBracketingBar]z\[RightBracketingBar]\), \(p\)])\), \(1/p\)]\)\>"
+]],
+"\<\>",
+Row[{"\<discrete \>",Style["\<p\>",Italic,10]}],
+Control@{{p,0.5,"\<\>"},{1/4,1/2,1,2,3,4,9,16,Infinity},ControlType->SetterBar},
+"\<\>",
+Row[{"\<continuous \>",Style["\<p\>",Italic,10]}],
+Control@{{p,1,"\<\>"},0.1,16,.01,Appearance->"\<Labeled\>", ImageSize->150}
+}],
+SaveDefinitions->True,ControlPlacement->Left]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Aaron T. Becker
+
+### [Text]
+Ravi Patel
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+In mathematics, a norm is the length (or size) of a vector. A p-norm is a norm on a finite-dimensional space of dimension N defined as
+
+### [Text]
+Subscript[\[LeftDoubleBracketingBar]u\[RightDoubleBracketingBar], p]=(<<UnderoverscriptBox>>\[LeftBracketingBar]Subscript[u, n]\[RightBracketingBar]^p)^1/p.
+
+### [Text]
+This Demonstration shows sets of unit-norm vectors u for different p-norms.
+
+### [Text]
+The norm for p=1 is the sum of the distances a 3D computer numerical control (CNC) mill would have to move in the x, y and z directions. In 3D the unit ball is an octahedron, and in 2D it is a square with corners at (1,0),(0,1),(-1,0),(0,-1);
+
+### [Text]
+Subscript[\[LeftDoubleBracketingBar]u\[RightDoubleBracketingBar], 1]=\[LeftBracketingBar]x\[RightBracketingBar]+\[LeftBracketingBar]y\[RightBracketingBar]+\[LeftBracketingBar]z\[RightBracketingBar].
+
+### [Text]
+The norm for p=2 is the usual Euclidean square norm obtained using the Pythagorean theorem. In 3D the unit ball is a sphere, and in 2D it is a circle with radius 1;
+
+### [Text]
+||uSubscript[||, 2]=Sqrt[|x|^2+|y|^2+|z|^2].
+
+### [Text]
+The norm for p=∞ is simply the maximum over x, y and z. This is proportional to the time a CNC mill would take to reach a goal if all axes can move simultaneously with the same top speed. In 3D the unit ball is a unit cube, and in 2D it is a square with corners at (1,1),(-1,1),(-1,-1),(1,-1);
+
+### [Text]
+Subscript[\[LeftDoubleBracketingBar]u\[RightDoubleBracketingBar], ∞]=max(\[LeftBracketingBar]x\[RightBracketingBar],\[LeftBracketingBar]y\[RightBracketingBar],\[LeftBracketingBar]z\[RightBracketingBar]).
+
+### [Text]
+The norms for p<1 are uncommon, but represent where there is a penalty for moving in more than one cardinal direction. This often occurs when trying to accomplish multiple objectives with a fixed budget. For example, flying cars have existed since 1935, but car-airplane hybrids are usually both poorly performing automobiles and ungainly fliers. In 3D and 2D the unit balls are star shapes with points along the coordinate axes. The following metric might represent these tradeoffs if x represents ability as a car, y ability as an airplane and z ability as a boat;
+
+### [Text]
+Subscript[\[LeftDoubleBracketingBar]u\[RightDoubleBracketingBar], 1/2]=(Sqrt[\[LeftBracketingBar]x\[RightBracketingBar]]+Sqrt[\[LeftBracketingBar]y\[RightBracketingBar]]+Sqrt[\[LeftBracketingBar]z\[RightBracketingBar]])^2.	
+
+### [Text]
+\<In 2D, this Demonstration shows the norm functions as orange 3D shapes filled with blue water up to distance 1 from the origin. When this is viewed from above, the area filled with water is the 2D unit ball.\>
+
+### [Text]
+In 3D, this Demonstration shows unit balls for the selected norm value. The unit ball is distance 1 from the origin, according to the selected p-norm.
+
+### [Text]
+The built-in Wolfram Language function Norm can be used to build similar plots, but it requires that p\[GreaterSlantEqual]1.
+
+### [Text]
+For vectors, Norm[v,p] is Total[Abs[v]^p]^(1/p).
+
+### [Text]
+For vectors, Norm[v,Infinity] is the ∞\[Hyphen]norm given by Max[Abs[v]].
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+norm
+
+### [Item]
+unit-ball
+
+### [Item]
+L1
+
+### [Item]
+L2
+
+### [Item]
+L∞
+
+### [Item]
+2-norm
+
+### [Item]
+∞-norm
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Distance Norms in Robot Workspace and Phase Space
+
+### [Text]
+Norm
+
+### [Text]
+Norm
+
+### [Text]
+Unit-Norm Vectors under Different p-Norms
+
+### [Text]
+Vector Norm
+
+### [Text]
+Taxicab Metric
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2020-12-29
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

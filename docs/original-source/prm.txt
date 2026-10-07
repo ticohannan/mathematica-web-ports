@@ -1,0 +1,431 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Private reference (R-04). Extracted 2026-10-05 with a tolerant copy of tools/nbextract.py; cached outputs skipped.
+
+### [Title]
+Probabilistic Roadmap Method
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+\<This Demonstration uses the probabilistic roadmap method (PRM) to connect configurations from an initial configuration (shown by a Locator) to a goal configuration. First, click the button "add 50 vertices" to randomly sample configurations and calculate if they collide with obstacles (red) or are safe (green). Next, select a "radius" value to try and connect safe vertices less than the radius distance into a roadmap. If a path from the initial to the goal configuration is found, it can be traversed using the "progress" slider. Although the PRM does not need to calculate the configuration space obstacles, you can make them visible by clicking the checkbox.\>
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+angtest[p1:{x1_,y1_},p2:{x2_,y2_}]:=p1.{{0,-1},{1,0}}.p2>0
+
+### [Input] (init)
+(* test if point pt is inside convex polygon poly *)
+ptInPoly[poly_,pt_]:=
+			(* translate poly such that pt becomes the origin *)
+			poly//#-pt&/@#&//
+			(* pt is inside if adjacent vertex vector pair angles are all positive or all negative *)
+			{#,RotateLeft@#}&//Transpose//angtest@@#&/@#&//Equal@@#&
+ptInPolys[polys_,pt_]:=Or@@(ptInPoly[#,pt]&/@polys) 
+
+### [Input] (init)
+(*Is point pt inside list of polygons polys?*)
+pathOK[ps_,pe_,polys_,delta_]:=Module[{dist,n,pt},
+dist = Norm[ps-pe]; (*Primitive collision checking that checks every delta distance along a line from ps to pe for collisions with polygons. *)
+If[dist<= delta,
+True,
+n=Ceiling[dist/delta];
+!Or@@Table[pt = ps+ (pe-ps)*(i)/(n+1);
+ptInPolys[polys,pt],{i,1,n}]]
+]
+
+### [Input] (init)
+pathOKT[ps_,pe_,polys_,delta_]:=Module[{dist,n,pt,dx,dx2,dy,dy2},
+(*Primitive collision checking that checks every delta distance along a line from ps to pe for collisions with polygons, uses toriod assumption. *)
+(*toroid assumption*)
+dx = Abs[pe[[1]]-ps[[1]]];
+dx2 =2π- dx;
+dy = Abs[pe[[2]]-ps[[2]]];
+dy2 =2π-dy ; 
+
+dx=pe[[1]]-ps[[1]]+If[dx<dx2,0, If[pe[[1]]>ps[[1]],-2π,+2π]];
+dy=pe[[2]]-ps[[2]]+If[dy<dy2,0, If[pe[[2]]>ps[[2]],-2π,+2π]];
+
+dist = Sqrt[dx^2+dy^2];
+If[dist<= delta,
+True,
+n=Ceiling[dist/delta];
+!Or@@Table[pt = ps+ {dx,dy}*(i)/(n+1);
+If[pt[[1]]<0,pt[[1]]=pt[[1]]+2π];
+If[pt[[1]]>2π,pt[[1]]=pt[[1]]-2π];
+If[pt[[2]]<0,pt[[2]]=pt[[2]]+2π];
+If[pt[[2]]>2π,pt[[2]]=pt[[2]]-2π];
+ptInPolys[polys,pt],{i,1,n}]]
+]
+
+### [Input] (init)
+toroidDist :=(* Toroid assumption, wraps from 2π to 0. *) (\[Sqrt](Min[(#1[[1]]-#2[[1]])^2,(2π-Abs[#1[[1]]-#2[[1]]])^2]+Min[(#1[[2]]-#2[[2]])^2,(2π-Abs[#1[[2]]-#2[[2]]])^2] )&)
+
+### [Input] (init)
+myAstar[adjL_,verts_,si_,fi_]:=Module[{openSet,cameFrom,gScore,fScore,current,currentfscore,path,tentativegScore},
+(*Computes A-star shortest path from start node si to final node fi. The set of discovered nodes that may need to be (re-)expanded.
+Initially, only the start node is known.*)
+openSet={si};
+cameFrom= ConstantArray[-1, Length[verts]]; 
+(*For node n, cameFrom[n] is the node immediately preceding it on the cheapest path from start to n currently known.*)
+gScore = ConstantArray[∞, Length[verts]]; (*For node n,gScore[n] is the cost of the cheapest path from start to n currently known.*)
+gScore[[si]] = 0;
+(*For node n, fScore[n]:=gScore[n]+h(n).*)
+fScore= ConstantArray[∞, Length[verts]]; (*Map with default value of infinity.*)
+fScore[[si]]=toroidDist[verts[[si]] , verts[[fi]]];
+While[Length[openSet]>0 (*&& ctr<10*),
+(*current:=the node in openSet having the lowest fScore[] value*)
+currentfscore = Min[fScore[[openSet]]];
+current =openSet[[ First@@Position[fScore[[openSet]],currentfscore]]];
+
+If[ current == fi,
+path = {fi};While[First@path!=si,PrependTo[path,cameFrom[[First@path]]]];
+Return[path]
+];
+openSet = DeleteCases[openSet,current];
+Table[
+tentativegScore = gScore[[current]]+toroidDist[verts[[current]],verts[[nbr]]];
+If[tentativegScore< gScore[[nbr]],
+                (*This path to neighbor is better than any previous one. Record it!*)
+cameFrom[[nbr]]=current;
+gScore[[nbr]]=tentativegScore;fScore[[nbr]]=gScore[[nbr]]+toroidDist[verts[[nbr]] , verts[[nbr]]];
+If[ FreeQ[openSet,nbr],AppendTo[openSet,nbr]]];
+,{nbr,adjL[[current]]}];
+];	
+Return[-1] (*Failure*)
+]
+
+### [Input] (init)
+toroidLines[pts_,color1_:Blue,color2_:-1]:=
+Table[toroidLine[e,color1,color2], {e,pts}]
+
+### [Input] (init)
+toroidLine[e_,color1_:Blue,color2_:-1]:=Module[{dx,dx2,dy,dy2},
+dx = Abs[e[[2,1]]-e[[1,1]]];
+dx2 =2π- dx;
+dy = Abs[e[[2,2]]-e[[1,2]]];
+dy2 =2π- dy ;
+If[dx>dx2 || dy>dy2,
+dx =e[[2,1]]-e[[1,1]]+If[dx<dx2,0, If[e[[2,1]]>e[[1,1]],-2π,+2π]];
+dy =e[[2,2]]-e[[1,2]]+If[dy<dy2,0, If[e[[2,2]]>e[[1,2]],-2π,+2π]]; {color1,Line[{e[[1]],e[[1]]+{dx,dy}}],Line[{e[[2]],e[[2]]-{dx,dy}}]},{If[-1===color2,color1,color2], Line[e]}]
+]
+
+### [Input] (init)
+toroidPt[e_,frac_]:=Module[{dx,dy,dx2,dy2,dist,pt},
+dx = Abs[e[[2,1]]-e[[1,1]]];
+dy = Abs[e[[2,2]]-e[[1,2]]];
+dx2 =e[[2,1]]-e[[1,1]]+If[dx<2π- dx,0, If[e[[2,1]]>e[[1,1]],-2π,+2π]];
+dy2 =e[[2,2]]-e[[1,2]]+If[dy<2π- dy ,0, If[e[[2,2]]>e[[1,2]],-2π,+2π]];
+dist =Sqrt[dx2^2+dy2^2];
+If[dist==0,pt=e[[1]],
+pt=e[[1]]+frac{dx2,dy2};
+pt[[1]] =pt[[1]]+If[pt[[1]]>2π,-2π,If[pt[[1]]<0,2π,0]];
+pt[[2]] =pt[[2]]+If[pt[[2]]>2π,-2π,If[pt[[2]]<0,2π,0]];
+];
+pt
+]
+
+### [Input] (init)
+loc[col_]:=(* a colored locator icon*)ToExpression@GraphicsBox[{col,{AbsoluteThickness[1],Antialiasing->False,LineBox[{{{0,-10},{0,-2}},{{0,2},{0,10}},{{-10,0},{-2,0}},{{2,0},{10,0}}}],Antialiasing->True,CircleBox[{-0.5,0.5},5]},{AbsoluteThickness[3],Opacity[0.3],CircleBox[{-0.5,0.5},3]}},ImageSize->17,PlotRange->{{-8,8},{-8,8}}]
+
+### [Input] (init)
+(*augments the list of edges in a graph of points*)
+connectPoints[goodPts_,edgesNNadjin_,polys_,delta_,edgesNNin_, point2start_,r_]:=
+Module[{ps,pe,pei,
+edgesNNadj,
+edgesNN
+},
+edgesNNadj=edgesNNadjin;
+edgesNN=edgesNNin;
+Table[
+ps = goodPts[[i]];
+Table[
+pei = Position[goodPts,pe,1,1][[1,1]];
+(*if pei is not in edgesNNadj[[i]] *)
+If[ Count[edgesNNadj[[i]],pei]<1,
+If[pathOKT[ps,pe,polys,delta], 
+AppendTo[edgesNN,{ps,pe}];
+AppendTo[edgesNNadj[[i]],pei];
+AppendTo[edgesNNadj[[pei]],i];]
+] ,{pe,Quiet[Nearest[Drop[goodPts,{i}],ps,{10,r},DistanceFunction->toroidDist]]}],
+ {i,point2start,Length[goodPts]}];
+{edgesNNadj,edgesNN}
+]
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[Module[{qsni,qfni,qsn={},qfn = {},delta = .1,totdist},
+If[restart,
+restart=False;
+polyN = 4;
+polySides = RandomInteger[{3,7},polyN];
+polys = CirclePoints/@polySides;(*some regular polygons*)
+polyXY = RandomReal[{0,2π},{polyN,2}];(*shift polygons to random coordinates*)
+polys = Table[(polyXY[[i]]+#)&/@polys[[i]],{i,1,polyN}];
+badPts={};
+goodPts={};
+pts = {};
+edgesNN = {};
+edgesNNadj ={};
+];
+(*Toroid assumption wraps locators across boundary.*)
+If[qs[[1]]<0, qs[[1]]=2π];If[qs[[1]]>2π,qs[[1]]=0];
+If[qs[[2]]<0, qs[[2]]=2π];If[qs[[2]]>2π,qs[[2]]=0];
+If[qf[[1]]<0, qf[[1]]=2π];If[qf[[1]]>2π,qf[[1]]=0];
+If[qf[[2]]<0, qf[[2]]=2π];If[qf[[2]]>2π,qf[[2]]=0];
+
+If[addPoints,
+addPoints = False;
+Module[{newpts,point2start},
+point2start = Length[goodPts]+1;
+(* generate random points *)
+newpts=RandomReal[{0,2π},{50,2}];
+pts = Join[pts,newpts];
+ Table[
+If[ptInPolys[polys,newpts[[i]]],
+AppendTo[badPts,newpts[[i]]],
+AppendTo[goodPts,newpts[[i]]]],
+{i,1,Length[newpts]}];
+(* update the connected points *)
+If[ Length[goodPts] > point2start-1,
+edgesNNadj =Join[edgesNNadj,ConstantArray[{},Length[goodPts]-point2start+1]];
+If[r>0,{edgesNNadj,edgesNN}=connectPoints[goodPts,edgesNNadj,polys,delta,edgesNN,point2start ,r]]];
+]];
+
+If[r!= rold && Length[goodPts]>5 ,
+rold = r;
+edgesNN = {};
+edgesNNadj =ConstantArray[{},Length[goodPts]];
+(* Build an adjacency list: *)
+If[r>0,
+{edgesNNadj,edgesNN}=connectPoints[goodPts,edgesNNadj,polys,delta,edgesNN, 1,r];
+]];
+(* Check if we can go straight from qs to qf: *)
+path=-1;
+If[toroidDist[qs,qf]<r&& pathOKT[qs,qf,polys,delta],
+path=-2,
+If[!ptInPolys[polys,qs]&&Length[goodPts]>5,
+(* Connect qs to the map: *)
+Do[If[pathOKT[qs,pe,polys,delta],qsn = pe;Break[] ],
+{pe, Quiet[Nearest[goodPts,qs,1,DistanceFunction->toroidDist]]}]];
+
+If[!ptInPolys[polys,qf]&&Length[goodPts]>5,
+(* Connect qf to the map: *)
+Do[If[pathOKT[qf,pe,polys,delta],qfn = pe;Break[] ],
+{pe, Quiet[Nearest[goodPts,qf,1,DistanceFunction->toroidDist]]}]];
+];
+If[qfn!={} && qsn!={} && Length[edgesNNadj]>1,
+qsni = Position[goodPts,qsn,1,1][[1,1]];
+qfni = Position[goodPts,qfn,1,1][[1,1]];
+path = myAstar[edgesNNadj,goodPts,qsni,qfni];
+];
+
+Graphics[{If[showConfigObs,{Pink,Polygon[polys]}],
+toroidLines[edgesNN,LightBlue,Blue],
+If[Length[path]==0&&path==-2,
+{Thickness[0.02],toroidLine[{qs,qf},Magenta] ,
+totdist = toroidDist[qs,qf];
+Purple,PointSize[0.04], Point[toroidPt[{qs,qf},progress]]
+},
+If[Length[path]>0,{Thickness[0.02],
+toroidLine[{qs,qsn},Magenta],
+toroidLine[{qf,qfn},Magenta],
+Table[toroidLine[{goodPts[[path[[i]]]],goodPts[[path[[i+1]]]]},Lighter[Green],Green],{i,1,Length[path]-1}],
+Black,Point[qs],Point[qf],
+Module[{dists,c, distT,mypath =Append[Prepend[goodPts[[path]],qs],qf] }, dists = Table[toroidDist[mypath[[i]],mypath[[i+1]]],{i,1,Length[mypath]-1}];
+totdist = Total[dists];
+distT = 0; c = 1; While[distT+dists[[c]]<progress*totdist, distT+= dists[[c]];c++];
+{Purple,PointSize[0.04], Point[toroidPt[{mypath[[c]],mypath[[c+1]]},(progress*totdist- distT)/dists[[c]]]]}]
+},{If[qsn!={},toroidLine[{qs,qsn},Magenta]],If[qfn!={},toroidLine[{qf,qfn},Magenta]]} ]],
+Darker[Green],PointSize[Medium],Point[goodPts],Red,Point[badPts],
+Locator[qs,If[ptInPolys[polys,qs],loc[Red],loc[Darker[Green]]]],
+Locator[qf,If[ptInPolys[polys,qf],loc[Red],loc[Darker[Green]]]]
+
+},PlotLabel -> If[Length[path]==0&&path==-1,"\<no path possible\>",StringForm["\<path length = ``\>",Round[totdist,.01]]],
+Axes->True,AxesOrigin->{0,0},PlotRange->{{0,2π},{0,2π}}]],
+{{qf,{5,5}},{-.1,-.1},{2.1π,2.1π},Locator,Appearance->None},
+{{qs,{1,1}},{-.1,-.1},{2.1π,2.1π},Locator,Appearance->None},
+{{pts,{}},None},
+{{addPoints,False},None},
+{{restart,True},None},
+Button["\<add 50 vertices\>",addPoints=True,ImageSize->140],{{r,0.5,"\<radius\>"},0,1,0.01,Appearance->"\<Labeled\>",ImageSize->100},
+{progress,0,1,0.01,Enabled->Length[path]>0||path==-2,Appearance-> "\<Labeled\>",ImageSize->100},
+{{showConfigObs,False,"\<show obstacles\>"},{False,True}},
+Button["\<restart\>",restart=True,ImageSize->140],
+{{path,-1},None},
+{{rold,-1},None},
+{{badPts,{}},None},
+{{goodPts,{}},None},
+{{edgesNN,{}},None},
+{{edgesNNadj,{}},None},
+{{polyN ,4},None},
+{{polySides ,{}},None},
+{{polys ,{}},None},
+{{polyXY ,{}},None},ControlPlacement->Left,
+SaveDefinitions->True
+]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Aaron T. Becker
+
+### [Text]
+Yitong Lu
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+The goal of robot motion planning is to find a continuous path from an initial configuration to a goal configuration that is collision-free. A configuration is a complete specification of every point on the robot. This Demonstration assumes the configuration of the robot is specified by two angles, each from 0 to 2π. The resulting configuration space is shaped like a toroid, and so wraps from 2π to 0 on the edges of the plot shown. Obstacles in the robot's workspace map to obstacle regions in the configuration space, but computing these regions is computationally expensive. 
+
+### [Text]
+\<Instead, the probabilistic roadmap method (PRM) attempts to solve the motion planning problem by building a graph that represents the connectivity of the configuration space. This avoids the need to explicitly compute the configuration space obstacles, and changes the motion-planning problem into a graph-search problem. It requires (a) being able to determine whether a configuration is in collision with any obstacle; and (b) a "local planner" that can quickly determine if two configurations can be joined by a collision-free path. Typically this local planner checks if a straight-line path in the configuration space is possible.\>
+
+### [Text]
+The PRM has three parts: 
+
+### [Text]
+\<(1) Generate random points in the configuration space and calculate if they are in the free configuration space (green points) or in collision with obstacles (red points). \>
+
+### [Text]
+\<(2) Attempt to connect points in the free configuration space to their nearest neighbors less than radius distance apart using the local planner. Parts (1) and (2) generate the roadmap. \>
+
+### [Text]
+\<(3) The local planner attempts to connect the initial configuration to the nearest point in the roadmap and the goal configuration to the nearest point in the roadmap. Then a graph search is used (A* search in this Demonstration) to find the shortest path in the roadmap.\>
+
+### [Text]
+\<PRM was developed in 1996 by Lydia Kavraki et al. [1]. PRMs generate a roadmap that can be reused for subsequent motion planning queries. PRM was designed for high-dimension configuration spaces (dimensions of five or more), but this Demonstration uses two dimensions for ease of visualization.\>
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] L. E. Kavraki, P. Svestka, J.-C. Latombe and M. H. Overmars, "Probabilistic Roadmaps for Path Planning in High-Dimensional Configuration Spaces," IEEE Transactions on Robotics and Automation, 12(4), 1996 pp. 566\[Dash]580. doi:10.1109/70.508439.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+motion planning
+
+### [Item]
+motion planner
+
+### [Item]
+robot
+
+### [Item]
+robotics
+
+### [Item]
+PRM
+
+### [Item]
+probabilistic roadmap
+
+### [Item]
+obstacle
+
+### [Item]
+configuration space
+
+### [Item]
+torus
+
+### [Item]
+path planner
+
+### [Item]
+path planning
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Rapidly Exploring Random Tree (RRT) and RRT*
+
+### [Text]
+Breadth-First Search Robot Motion Planning
+
+### [Text]
+Robot Motion with Obstacles
+
+### [Text]
+Joint Space and Tooling Space for Robot Motion Control
+
+### [Text]
+Torus
+
+### [Text]
+Dijkstra's and A* Search Algorithms for Pathfinding with Obstacles
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2020-01-13
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

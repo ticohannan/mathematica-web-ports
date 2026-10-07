@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.11 |
+| Code version: | 0.1.12 |
 | Document revision | 4 (2026-10-03) — first comparison after P-MP-01; division as in Mathematica; K-MP-03…05 updated |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Motion Planning for Robot Path around Obstacles" by Shreyas Poyrekar, Aaron T. Becker and Arifa Sultana (CC BY-NC-SA 3.0); author notebook made with Mathematica 10.2. Readable source: [`docs/original-source/motion-planning.txt`](../../docs/original-source/motion-planning.txt) |
@@ -210,6 +210,7 @@ No open proposal. Template for a request: copy a row (see [`docs/DESIGN_PROCESS.
 | 4 | v0.1.9 | 2026-10-03 | no change (WebKit browser tests added, test tooling only) |
 | 4 | v0.1.10 | 2026-10-03 | no change (WebKit browser tests now required to publish; test tooling only) |
 | 4 | v0.1.11 | 2026-10-05 | no change (WebGL context-loss recovery in the 3D demos only) |
+| 4 | v0.1.12 | 2026-10-06 | no change to this app (seven further apps added to the site; their additions to `shared/style.css` apply only to their own pages) |
 
 ## 10. Improvements to consider (not implemented)
 

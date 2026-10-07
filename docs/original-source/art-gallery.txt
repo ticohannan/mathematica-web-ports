@@ -1,0 +1,375 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Private reference (R-04). Extracted 2026-10-05 with a tolerant copy of tools/nbextract.py; cached outputs skipped.
+
+### [Title]
+Art Gallery Problem
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+\<How many omnidirectional cameras are needed to fully observe every part of a polygonal art gallery? Move the cameras by dragging the colored locators ("guards") to try to cover the polygon with the fewest guards.\>
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+(*This generates the visible region seen by a point at pm in an environment with the polygons in polys.*)
+visiblePolys[polys_,pm:{x_,y_}]:=Module[{p,listofAllLines,infiniteLine,length=Length@polys,orderedList,sortedList,jList={},visibleList={},wi=False,wip=False,lvLine,a,b,c,abcList,ba,bc,pb,pbaAngle,pbcAngle,startJlistInt,m,bcVisiInt,gLine,giList,giPoint,giLine,abNotGlaInt,abNotVisInt,bcNotVisInt,i=1,prevA,prevB,prevC,postA,postB,postC,tb,index,theta,gFlag=False,pprevbAngle,pbAngle
+},
+(*Check if point p lies on any of the lines in the environment, if so then shift it by a very small offset.*)
+p=pm;
+Table[If[(pointOnSegmentQ[#,pm]),p=pm-0.00001normalVector[#]]&/@(lineList@polys[[k]]),{k,1,length}];
+(*Check if point p lies on any of the vertices of the polygons in the environment, if so then shift it by a very small offset.*)
+If[Or@@Table[Or@@((index=Flatten@Position[polys[[k]],#];pm==#)&/@polys[[k]]),{k,1,length}],p=pm+ 0.00001(Flatten@polys[[1,index-1]]+Flatten@polys[[1,index+1]])];
+(*get a line parallel to x axis*)
+infiniteLine={p,{0.11,0}+{MaximalBy[Flatten[polys,1],First][[1,1]],y}};
+(*reverse the order of the list representing a polygon if point p is inside the polygon*)
+orderedList= Table[If[testpoint[polys[[i]],p],Reverse@polys[[i]],polys[[i]]],{i,1,Length@polys,1}];
+(* make a list of all lines*)
+listofAllLines=Flatten[Join[(lineList@#)&/@orderedList],1];
+(*sort the lines based on the angle w.r.t to point p*)
+sortedList=Sort[Flatten[Join[(vertexList@N@#)&/@orderedList],1],angleSortCond[p,#1,#2] &];
+(*number of vertices in the environment*)
+m=Length@sortedList;
+(*get the intersection of lines for the infiniteLine*)
+If[SegmentIntersectionQ[{infiniteLine,#}],AppendTo[jList,Reverse@#]]&/@listofAllLines;
+(*store the sorted values in jList*)
+jList=Sort[jList,distSortCond[infiniteLine,#1,#2,p]&];
+lvLine=First@jList;
+(*find the line which is closest and also visible*)
+Table[
+If[SegmentIntersectionQ[{lvLine,jList[[i]]}],
+startJlistInt=N@LineIntersectionPoint[{lvLine,jList[[i]]}];
+If[noIntersection[p,startJlistInt,listofAllLines],
+AppendTo[visibleList,startJlistInt];
+If[startJlistInt[[2]]>p[[2]],lvLine=jList[[i]]]]
+],{i,1,Length@jList}];
+(*loop around all the vertices of all the polygons*)
+For[i=1,i<= m,i++,
+(*intialize all the variables*)
+{a,b,c}=sortedList[[i,1;;3]];
+{prevA,prevB,prevC}=If[i!= 1,sortedList[[i-1,1;;3]],sortedList[[m,1;;3]]];
+{postA,postB,postC}=If[i!= m,sortedList[[i+1,1;;3]],sortedList[[1,1;;3]]];
+pbAngle=getAngle[{p,b}];pprevbAngle=getAngle[{p,prevB}];
+(*for collinearity between current vertice, next vertex and point p then make them non-collinear*)
+tb=N@If[pointOnSegmentQ[{p,postB},b],If[postB== a||pbaAngle <=Pi/3,b+0.00001normalVector[{a,p}],
+b-0.00001normalVector[{postB,p}]],b];
+(*get all the angles and the lists*)
+abcList={a,tb,c};
+ba={b,a};bc={b,c};pb={p,b};
+pbaAngle=Re@getClockwiseAngle[p,b,a];pbcAngle=Re@getClockwiseAngle[p,b,c];
+(*conditions to determine whether a vertex is visible or not*)
+If[intersectInteriorQRev2[p,abcList],wi=False,If[i==1 ||Not@pointOnSegmentQ[pb,a],If[noIntersection[p,b,jList],If[i!=1,If[pbAngle!= pprevbAngle,wi=True,If[b== prevA || b==prevC || b== postA || b==postC || gFlag,wi=True,wi=False]],wi=True],wi=False],If[wip,If[noIntersection[b,a,jList],wi=True,wi=False],wi=False]]];
+(* if the vertices are visible*)
+If[wi,
+(*Check if there is an intersection with lastest visible line with the bc line. The intersection is appended in visible list.*)
+If[SegmentIntersectionQ[{lvLine,bc}],
+bcVisiInt=N@LineIntersectionPoint[{lvLine,bc}];
+If[noIntersection[p,bcVisiInt,listofAllLines],
+AppendTo[visibleList,bcVisiInt]]
+];
+(*Glancing blow condition.*)
+If[(glancingBlow[p,abcList]),gFlag=False,gFlag=True ];
+(* If glancing blow and previous vertes does not lie on the line pb*)
+If[gFlag&&(Not@pointOnSegmentQ[pb,prevB]),
+(*extend the glancing line pb*)
+gLine=extendedLine[p,tb];
+(*check for intersection between all the lines in Jlist and the extended line. Get the intersection point nearest to p*)
+giList = Sort[(DeleteCases[
+(If[SegmentIntersectionQ[{gLine,#}]|| And[b!=#[[2]],pointOnSegmentQ[gLine,#[[2]]]]|| And[b!=#[[1]],pointOnSegmentQ[gLine,#[[1]]]],
+If[SegmentIntersectionQ[{gLine,#}],{N@LineIntersectionPoint[{gLine,#}],#},If[And[b!=#[[2]],pointOnSegmentQ[gLine,#[[2]]]],{#[[2]],#},If[And[b!=#[[1]],pointOnSegmentQ[gLine,#[[1]]]],{#[[1]],#}]
+]]]&/@DeleteCases[DeleteCases[listofAllLines,{b,_}],{_,b}]
+),Null]),EuclideanDistance[p,#1[[1]]]< EuclideanDistance[p,#2[[1]]]&];
+
+If[giList!={},
+(*giPoint is the closest point of intersection between the extended glancing line and the lines in Jlist. Where the giLine is the line for the intersection point *)
+giPoint=giList[[1,1]];giLine=giList[[1,2]];
+(*condition to decide the order of appending the vertex and the intersection point*)
+If[(pointOnSegmentQ[lvLine,giPoint]&& Chop[getAngle[pb]]!= 0)||(i==1&&pbaAngle<= Pi/2)
+|| (SegmentIntersectionQ[{gLine,lvLine}]&& (LineIntersectionPoint[{gLine,lvLine}]==giPoint))||giPoint==lvLine[[2]],
+visibleList=Join[visibleList,{giPoint,b}];lvLine=ba,
+visibleList=Join[visibleList,{b,giPoint}];lvLine=giLine]]
+,(*if not glancing blow then just append the vertex*)
+If[(pbAngle!= pprevbAngle ),AppendTo[visibleList,b]];lvLine=ba;
+(*Check if there is an intersection with any line in Jlist with line ba. The intersection is appended in visible list.*)
+Table[If[SegmentIntersectionQ[{ba,jList[[i]]}],
+abNotGlaInt=N@LineIntersectionPoint[{ba,jList[[i]]}];
+If[noIntersection[p,abNotGlaInt,listofAllLines],
+AppendTo[visibleList,abNotGlaInt];
+lvLine=jList[[i]]]],{i,1,Length@jList,1}];
+](*If it is not a visible vertex*)
+(*check if there is an intersection of lastest visible line with the pb line.*)
+,If[SegmentIntersectionQ[{pb,lvLine}],
+(*If the line ba lies on the left side of line pb then check the intersection of line ba with the lastest visible line. Append the intersection in visible list. *)
+If[pbaAngle<pbcAngle,
+If[Not@leftOrRight[p,b,a] ,If[SegmentIntersectionQ[{lvLine,ba}],abNotVisInt=N@LineIntersectionPoint[{lvLine,ba}];
+If[noIntersection[p,abNotVisInt,listofAllLines],
+AppendTo[visibleList,abNotVisInt];lvLine=ba]]]];
+(*If the line bc lies on the left side of line pb then check the intersection of line bc with the lastest visible line. Append the intersection in visible list. *)
+If[pbcAngle<pbaAngle,
+If[Not@leftOrRight[p,b,c],If[SegmentIntersectionQ[{lvLine,bc}],bcNotVisInt=N@LineIntersectionPoint[{lvLine,bc}];
+If[noIntersection[p,bcNotVisInt,listofAllLines],
+AppendTo[visibleList,bcNotVisInt];lvLine=bc]]]]
+,(*If there is no intersection of lastest visible line with the pb line then search in Jlist for a line intersecting with lastest visible line and append the intersection in visible list.*)
+If[SegmentIntersectionQ[{#,lvLine}],AppendTo[visibleList,LineIntersectionPoint[{#,lvLine}]];lvLine=#]&/@jList
+];
+];
+(*Update the Jlist & wip*)
+wip=wi;
+(*choose a line to be added in Jlist if the line is in the counterclockwise direction*)
+If[pbaAngle<Pi,AppendTo[jList,ba]];
+If[pbcAngle<Pi,AppendTo[jList,bc]];
+(*remove the line which is already in Jlist and has the ending vertex same as the current point in the loop*)
+jList=(DeleteCases[jList,{_,b}]);
+];(*return the visible list*)
+visibleList
+]
+
+### [Input] (init)
+(*true if pt is inside polygon*)
+testpoint[poly_,pt_]:=Round[(Total@Mod[(#-RotateRight[#])&@(ArcTan@@(pt-#)&/@poly),2 Pi,-Pi]/2/Pi)]!=0
+(*Returns a nested list of pair of points representing each line in polygon.*)
+lineList[list_]:=Partition[Append[list,First[list]],2,1]; 
+(*Returns a vector for a line between two points.*)
+vector[{{x1_,y1_},{x2_,y2_}}]:={x2-x1,y2-y1}
+(*Returns a list of three vertices.*)
+vertexList[list_]:=Partition[Join[list,list[[1;;2]]],3,1]
+(*Sorting condition where first sorted by angle and if equal angle then sorted based on the distance.*)
+angleSortCond[point_,l1_,l2_]:=Module[{a=getAngle[{point,l1[[2]]}],b=getAngle[{point,l2[[2]]}],c=Norm[point-l1[[2]]],d=Norm[point-l2[[2]]]},a<b||(a==b && c<d)]
+(* Returns the angle made in [o,2Pi) range.*)
+(*Reference: https://mathematica.stackexchange.com/questions/111629/calculating-the-angle-between-the-line-joining-two-points-and-the-x-axis*)
+getAngle[{{x1_,y1_},{x2_,y2_}}]:=Mod[ArcTan[x2-x1,y2-y1],2 π]
+(*The parametric equation of the line containing the points a and b is a+λ (b-a), where 0<=λ<=1 for points between a and b. The value of λ is given by*)
+λ[{a_,b_}][p_]:=((a-p).(a-b))/((a-b).(a-b))
+(*for p on the line. For p not on the line, λ gives the closest point on the line.*)
+(*Two lines, Subscript[L, 1 ]containing the points a and b with line Subscript[L, 2] containing the points c and d, intersect at a point \[DoubleLongLeftRightArrow] \[LeftBracketingBar]{a-b,c-d}\[RightBracketingBar]!=0. Compute the intersection point:*)
+LineIntersectionPoint[{{a_,b_},{c_,d_}}]:=(Det[{a,b}] (c-d)-Det[{c,d}] (a-b))/(Det[{a-b,c-d}])
+(*Use \[LeftBracketingBar]{a-b,c-d}\[RightBracketingBar]!=0 along with the condition 0<=λ<=1 to determine whether two segments intersect:*)
+SegmentIntersectionQ[{p1:{a_,b_},p2:{c_,d_}}]:=Module[{roundoff=0.0000001},
+If[Chop@Det[{a-b,c-d}]==0,False,
+Module[{p=Round[LineIntersectionPoint[{p1,p2}],roundoff]},
+((0<λ[p1][p]<1) &&(0<λ[p2][p]<1)&& Not@(p== Round[a,roundoff]|| p== Round[b ,roundoff]|| p== Round[c,roundoff]|| p==Round[d,roundoff])) ]]]
+distSortCond[line_,l1_,l2_,point_]:=Module[{a=EuclideanDistance[LineIntersectionPoint[Chop@{line,l1}],point],b=EuclideanDistance[LineIntersectionPoint[Chop@{line,l2}],point]},a<b]
+(*True if w2 is interior vertex from p. *)
+intersectInteriorQRev2[p_,{w1_,w2_,w3_}]:=Module[{a=getClockwiseAngle[w1,w2,w3],b= getClockwiseAngle[p,w2,w3]},
+If[b==0,b=6.28319];
+a>b]
+(*Clockwise angle bwtween two vectors*)
+(*https://adndevblog.typepad.com/manufacturing/2012/07/finding-the-angle-between-two-vectors-along-a-given-direction-anti-clockwise-or-clockwise.html*)
+getClockwiseAngle[p1_,p2_,p3_]:=Module[{a=(p3-p2),b=(p1-p2)},
+AppendTo[a,0];AppendTo[b,0];
+If[(Cross[a,b][[3]])< 0,Chop@(2Pi -VectorAngle[a,b]),Chop@VectorAngle[a,b]]]
+pointOnSegmentQ[{{x1_,y1_},{x2_,y2_}},{x3_,y3_}]:=Module[{ABv ={x2-x1,y2-y1,0},ACv={x3-x1,y3-y1,0},Kac,Kab},
+If[And@@((Chop@#==0)&/@Cross[ABv,ACv]),
+Kac=(ABv.ACv);
+Kab=(ABv.ABv);
+If[Kac< 0,False,
+If[Kac>Kab,False,
+If[0< Kac<Kab,True,False]
+]],False]]
+glancingBlow[a_,{p1_,p2_,p3_}]:=
+Xor[reflex[p1,p2,a], reflex[p3,p2,a]]
+(*Function gives whether a point is reflex or not, Chop is used to round off to the nearest integer. From Motion Plannning Book by Steven M.LaValle*)
+reflex[{x1_,y1_},{x2_,y2_},{x3_,y3_}]:=Chop[Det[(\[NoBreak]<<Grid:1x1y1 | 1x2y2 | 1x3y3>>\[NoBreak])]]> 0
+extendedLine[p1_,p2_]:={p1,(p1+40(Normalize@((p2-p1))))}
+(*returns True if the point p lies on the right side else False*)
+leftOrRight[a:{x1_,y1_},b:{x2_,y2_},p:{x_,y_}]:=((x\[Minus]x1)(y2\[Minus]y1)\[Minus](y\[Minus]y1)(x2\[Minus]x1))>= 0
+(*Function returns False if the line formed by points p1 and p2 intersect any of the lines in linelist else returns True.*)
+noIntersection[p1_,p2_,linelist_]:=
+Nor@@(SegmentIntersectionQ[{{p1,p2},#}]&/@linelist)
+(*Returns a normal vector for a line between two points.*)
+normalVector[{{x2_,y2_},{x1_,y1_}}]:=Normalize[{(-y2+y1),x2-x1} ]
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[Module[{poly1=(pts[[1]]+#)&/@CirclePoints[4],poly2=(pts[[2]]+#)&/@CirclePoints[3](*polyi are moveable obstacles*)
+,bound=(5*CirclePoints@4),invisiblePoly=(7*CirclePoints@4)(*boundaries of the workspace*)
+, cval = ColorData[100,"\<ColorList\>"] (*Colors for robots and the visible regions*)
+,listofPoly},
+(*Only recalculate the visible region if a point moves (or a moveable obstacle moves)
+or for a new point added*)
+listofPoly=N@(If[reg=="\<movable obstacles\>",{poly1,poly2,bound,invisiblePoly}
+,If[reg=="\<irregular\>",{irregularPoly,invisiblePoly},{cubiclePoly,invisiblePoly}]]);
+Table[If[pts[[i]]!= ptsOld[[i]]||pts[[1]]!= ptsOld[[1]]||pts[[2]]!= ptsOld[[2]]|| sOld<i-2||prevReg!=reg,
+visibleRegion[[i-2]]=visiblePolys[listofPoly,pts[[i]]];
+ptsOld[[i]]=pts[[i]]],{i,3,s+2}];
+(*update the Old variables*)
+If[ pts[[1]]!= ptsOld[[1]]||pts[[2]]!= ptsOld[[2]],
+ptsOld[[1]]=pts[[1]];ptsOld[[2]]=pts[[2]]];
+sOld=s;
+prevReg=reg;
+Graphics[{
+Table[ {cval[[i]],Opacity[0.3],Polygon@visibleRegion[[i]]}, {i,1,s}] (*visible regions*)
+,If[reg=="\<movable obstacles\>",(*Ideal Environment obstacles*){{Transparent,EdgeForm[Thin],{Polygon@bound},{Polygon@poly1,Polygon@poly2}}}] 
+,If[reg=="\<irregular\>",{{Transparent,EdgeForm[Thin],Polygon@irregularPoly},{EdgeForm[{Thin,Black}]}}](*Non-Ideal Envir*)
+,If[reg=="\<cubicle\>",{{Transparent,EdgeForm[{Opacity[0.7],Gray,Thick}],Polygon@cubiclePoly}}](*Complex Envir*)
+,Table[ {cval[[i]],EdgeForm[{Thin,Black}],Disk[pts[[i+2]],0.1]}, {i,1,s}] (*guards*)
+},PlotRange-> 4{{-1,1},{-1,1}}
+,ImageSize->{450,450}]]
+,{{s,1,"\<number of guards\>"},Range@8,ControlType->Setter}
+,{{reg,"\<cubicle\>","\<environment\>"},{"\<movable obstacles\>","\<irregular\>","\<cubicle\>"},ControlType->Setter}
+,{{prevReg,"\<\>"}, ControlType->None}
+,{{sOld,-1}, ControlType->None}
+,{{visibleRegion,ConstantArray[10,{8,2,2}]}, ControlType->None}
+,{{irregularPoly
+,Reverse@{{-1.2,-2.8},{-3.5,0.5},{-1,2.3},{-3.3,3.2},{0.75,3},{-0.9,1},{-1.3,1.35},{-1.2,-1},{0.5,0.5},{2.6,1},{2.1,-2.7}}},ControlType->None}
+,{{cubiclePoly
+,Reverse@{{-2,-3.5},{-2,-2},{-3.5,-2},{-3.5,0},{-1.5,0},{-1.5,0.5},{-3.5,0.5},{-3.5,3.5},{-1.5,3.5},{-1.5,2},{0.5,2},{0.5,2.5},{-1,2.5},{-1,3.5},{3.5,3.5},{3.5,2.5},{1.5,2.5},{1.5,2},{3.5,2},{3.5,-0.5},{1.5,-0.5},{1.5,-1.5},{2,-1.5},{2,-1},{3.5,-1},{3.5,-3.5},{2,-3.5},{2,-3},{1.5,-3},{1.5,-3.5},{-0.5,-3.5},{-0.5,-1},{0,-1},{0,-0.5},{-1,-0.5},{-1,-3.5}}},ControlType->None}
+,{{ptsOld,ConstantArray[-10,{10,2}]}, ControlType->None}
+,{{pts,{{1,0},{2,2},{0,0},{0,-1.5},{-2,-1},{-1.5,0.5},{-0.6,-1},{-2.5,0.5},{-2,1},{-1.25,3}}}
+,4{-1,-1},4{1,1},Locator,Appearance->None}
+,FrameMargins->-5,SaveDefinitions->True]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Item]
+Shreyas Poyrekar
+
+### [Item]
+Arifa Sultana
+
+### [Item]
+Aaron T. Becker
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+\<This Demonstration calculates the visible region for each guard. Up to eight guards can be used, and all are moveable.\>
+
+### [Text]
+\<Three different environments are provided. The "movable obstacles" environment contains a movable square and triangle.\>
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+\<[1] D.-T. Lee, "Proximity and Reachability in the Plane," Ph.D. dissertation, University of Illinois at Urbana-Champaign, Illinois, ProQuest Dissertations Publishing, 1978 7913526.\>
+
+### [Text]
+[2] Wikipedia. "Isovist." (Aug 22, 2019) en.wikipedia.org/wiki/Isovist.
+
+### [Text]
+[3] Wikipedia. "Visibility Polygon." (Aug 22, 2019) en.wikipedia.org/wiki/Visibility_polygon.
+
+### [Text]
+[4] Wikipedia. "Visibility Graph." (Aug 22, 2019) en.wikipedia.org/wiki/Visibility_graph.
+
+### [Text]
+[5] Wikipedia. "Art Gallery Problem." (Aug 22, 2019) en.wikipedia.org/wiki/Art_gallery_problem.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+2D polygon
+
+### [Item]
+robotics
+
+### [Item]
+motion planning
+
+### [Item]
+visibility polygon
+
+### [Item]
+visibility region
+
+### [Item]
+art gallery problem
+
+### [Item]
+polygon
+
+### [Item]
+art gallery
+
+### [Item]
+computational geometry
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Visible Points in a Polygon
+
+### [Text]
+Art Gallery Theorem
+
+### [Text]
+Illumination Problem
+
+### [Text]
+Billiards
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2019-09-13
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

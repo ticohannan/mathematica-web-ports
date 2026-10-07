@@ -13,15 +13,17 @@
     .card { border: 1px solid var(--line); border-radius: 6px; padding: 14px; background: var(--panel); }
     .card h2 { font-size: 1.05rem; margin: 0 0 6px; }
     .card p { margin: 0 0 8px; font-size: 0.9rem; color: var(--muted); }
+    .section-title { font-size: 1.1rem; margin: 22px 0 0; }
     .tag { display: inline-block; font-size: 0.72rem; border: 1px solid var(--line); border-radius: 10px; padding: 1px 8px; margin-right: 4px; background: #fff; }
   </style>
 </head>
 <body>
   <main class="page">
     <h1 class="demo-title">Wolfram Demonstrations — Browser Ports</h1>
-    <p>Re-implementations of three Mathematica <i>Manipulate</i> demonstrations as static web pages. Everything is computed
-      and drawn in your browser; the server only delivers files.</p>
+    <p>Re-implementations of ten Mathematica <i>Manipulate</i> demonstrations from the Wolfram Demonstrations Project as
+      static web pages. Everything is computed and drawn in your browser; the server only delivers files.</p>
 
+    <h2 class="section-title">Motion planning and rotations</h2>
     <div class="cards">
       <article class="card">
         <h2><a href="demos/motion-planning/index.html" data-testid="demo-link-motion">Motion Planning for Robot Path around Obstacles</a></h2>
@@ -37,6 +39,45 @@
         <h2><a href="demos/euler-angles/index.html" data-testid="demo-link-euler">Euler Angles: Precession, Nutation, and Spin</a></h2>
         <p>A gyroscope with nested gimbals illustrating a 3-2-3 Euler rotation.</p>
         <span class="tag">3D</span><span class="tag">WebGL</span>
+      </article>
+    </div>
+
+    <h2 class="section-title">Further robotics demonstrations</h2>
+    <div class="cards">
+      <article class="card">
+        <h2><a href="demos/prm-seven-link/index.html" data-testid="demo-link-prm-seven-link">Probabilistic Roadmap Method with Seven-Link Articulated Robot</a></h2>
+        <p>Steer a seven-link arm through obstacles to a goal configuration with as few collisions as possible.</p>
+        <span class="tag">2D</span><span class="tag">SVG</span><span class="tag">drag locators</span>
+      </article>
+      <article class="card">
+        <h2><a href="demos/car-paths/index.html" data-testid="demo-link-car-paths">Shortest Path for Forward and Reverse Motion of a Car</a></h2>
+        <p>Reeds–Shepp and Dubins shortest paths between two car poses with a minimum turning radius.</p>
+        <span class="tag">2D</span><span class="tag">SVG</span><span class="tag">drag locators</span>
+      </article>
+      <article class="card">
+        <h2><a href="demos/unit-balls/index.html" data-testid="demo-link-unit-balls">Unit Balls for Different p-Norms in 2D and 3D</a></h2>
+        <p>The set of points within distance 1 of the origin for p-norms from ¼ to ∞.</p>
+        <span class="tag">3D</span><span class="tag">WebGL 2</span>
+      </article>
+      <article class="card">
+        <h2><a href="demos/art-gallery/index.html" data-testid="demo-link-art-gallery">Art Gallery Problem</a></h2>
+        <p>Visibility regions of up to eight guards in three polygonal galleries.</p>
+        <span class="tag">2D</span><span class="tag">SVG</span><span class="tag">drag locators</span>
+      </article>
+      <article class="card">
+        <h2><a href="demos/prm/index.html" data-testid="demo-link-prm">Probabilistic Roadmap Method</a></h2>
+        <p>Random samples, a roadmap and A* search on a toroidal two-angle configuration space.</p>
+        <span class="tag">2D</span><span class="tag">SVG</span><span class="tag">random</span>
+      </article>
+      <article class="card">
+        <h2><a href="demos/prm-robot-arm/index.html" data-testid="demo-link-prm-robot-arm">Probabilistic Roadmap Method for Robot Arm</a></h2>
+        <p>A PRM for a two-link spatial arm avoiding two spheres; configuration space and 3D workspace.</p>
+        <span class="tag">2D + 3D</span><span class="tag">SVG + WebGL 2</span><span class="tag">random</span>
+      </article>
+      <article class="card">
+        <h2><a href="demos/robot-singularities/index.html" data-testid="demo-link-robot-singularities">Robot Singularities in Three-Link Manipulators</a></h2>
+        <p>Singular configurations and the manipulability ellipsoid of sixteen three-joint robot types.</p>
+        <span class="tag">3D</span><span class="tag">WebGL 2</span>
       </article>
     </div>
 

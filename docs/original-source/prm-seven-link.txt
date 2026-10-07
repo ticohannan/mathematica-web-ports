@@ -1,0 +1,302 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Private reference (R-04). Extracted 2026-10-05 with a tolerant copy of tools/nbextract.py; cached outputs skipped.
+
+### [Title]
+\<Probabilistic Roadmap Method with Seven-Link Articulated Robot\>
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+\<This Demonstration challenges you to move the seven-link robot (in brown) to match a goal configuration (in green) with the minimum number of collisions. Drag the locators to move the robot while avoiding collisions with the blue obstacles. This example was used in 1995 to introduce the probabilistic roadmap method (PRM), a robot motion-planning technique. Selecting "relative" movement changes the angle of one robot link at a time, and "absolute" rotates all subsequent links.\>
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+(*The parametric equation of the line containing the points a and b is a+Gamma (b-a), where 0<=Gamma<=1 for points between a and b. The value of Gamma is given by*)
+Gamma[{a_,b_}][p_]:=((a-p).(a-b))/((a-b).(a-b))
+(*for p on the line. For p not on the line, Gamma gives the closest point on the line.*)
+
+### [Input] (init)
+(* Two lines, Subscript[L, 1 ]containing the points a and b with line Subscript[L, 2] containing the points c and d, intersect at a point \[DoubleLongLeftRightArrow] \[LeftBracketingBar]{a-b,c-d}\[RightBracketingBar]!=0. Compute the intersection point:*)
+lineIntersectionPoint[{{a_,b_},{c_,d_}}]:=(Det[{a,b}] (c-d)-Det[{c,d}] (a-b))/(Det[{a-b,c-d}])
+
+### [Input] (init)
+(*Use \[LeftBracketingBar]{a-b,c-d}\[RightBracketingBar]!=0 along with the condition 0<=λ<=1 to determine whether two segments intersect:*)
+segmentIntersectionQ[{p1:{a_,b_},p2:{c_,d_}}]:=
+If[Det[{a-b,c-d}]==0,False,
+Module[{p=lineIntersectionPoint[{p1,p2}]},0<=Gamma[p1][p]<=1&&0<=Gamma[p2][p]<=1]]
+
+### [Input] (init)
+lineIntersectionPoint[{a_,b_},{c_,d_}]:=(Det[{a,b}] (c-d)-Det[{c,d}] (a-b))/Det[{a-b,c-d}]
+
+### [Input] (init)
+angDiff[a_,b_] := If[a==b,0,ArcTan[Cos[a-b],Sin[a-b]]]
+
+### [Input] (init)
+(*These polygonal obstacles are taken from Figure 2, in [1].*)
+ obs = {
+{{153,500},{153,570},{88,570},{88,620},{272,620},{272,570},{202,570},{202,500}},
+{{327,570},{327,620},{480,620},{480,570},{410,570},{410,500},{362,500},{362,570}},
+{{532,570},{532,620},{825,620},{825,570},{688,570},{688,500},{636,500},{636,570}},
+{{16,218},{100,218},{100,263},{16,263}},
+{{200,218},{200,263},{362,263},{362,340},{410,340},{410,218}},
+{{546,218},{546,263},{688,263},{688,218}},
+{{820,218},{820,264},{884,263},{884,218}}};
+
+### [Input] (init)
+(* make a list of all lines*)
+lineList[list_]:=Partition[Append[list,First[list]],2,1]
+
+### [Input] (init)
+listofAllLines=Flatten[lineList[#]&/@obs,1];
+
+### [Input] (init)
+(* Robot initial position*)
+locstart ={{321,780},{181,785},{104,668},{42,542},{144,446},{144,306},{133,167}};
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{Theta,Thetaold,linklen = 140,prev,i=1,
+minX = 18,
+minY=7,
+maxX=884,
+maxY=884,
+origin={445,846},(*c1 { 3.63, 5.76,1.02, 0.13, 1.27, 5.47, 6.20}*)
+goals = {{ 5.12,5.90,-0.08,6.01,0.93,0.97,0.42}(*c2*),
+{3.35, 1.3,0.16,0.55,-0.01,5.34,5.57}(*c3*),
+{5.23,5.76, 6.08,5.22,4.78,5.94,0.22}(*c4*),
+{3.37,1.26, 0.22,5.22,0.62,0.22,5.61}(*c5*),
+{ 5.8,0.5,5.75,5.4,5.5 ,0.6,6.3}(*c6*),
+{ 5.1,5.89,6.23,6.29,5.78,5.4,5.73}(*c7*),
+{ 3.79,0.67,0.10,5.63, 0.6, 0.45,1.31}(*c8*),{ 3.63, 5.76,1.02, 0.13, 1.27, 5.47, 6.20} (*initial position of robot*)},
+Thetad ,success=False,
+Thetastep =0.05,(*1 degree = 0.017453292519943295`*)
+tg,og,angs,worstError
+},
+tg=Accumulate[goals[[goal]]];
+og=Accumulate[Prepend[Table[linklen{Cos[tg[[i]]],Sin[tg[[i]]]},{i,1,7}],origin]];
+worstError = Max[Norm/@(og-Prepend[locOld,origin])];
+If[worstError<20 && !isCollide,success=True];
+For[i==1,i<= 7,i++,
+If[locOld[[i]]!=loc[[i]],
+prev =If[i==1,origin, loc[[i-1]]];
+Theta = ArcTan[ loc[[i,1]]- prev[[1]],loc[[i,2]]- prev[[2]]];
+Thetaold = ArcTan[ locOld[[i,1]]- prev[[1]],locOld[[i,2]]- prev[[2]]];
+Thetad = Clip[angDiff[Theta,Thetaold],Thetastep{-1,1}] ;
+Theta = Thetaold+Thetad;
+loc[[i]] = prev+ linklen{Cos[Theta],Sin[Theta]};
+If[movement == "\<relative\>",
+loc[[i+1;;]] = (loc[[i]]-locOld[[i]] +#)&/@locOld[[i+1;;]];,
+angs = Table[ ArcTan[ locOld[[j,1]]- locOld[[j-1,1]],locOld[[j,2]]- locOld[[j-1,2]]],{j,i+1,7}];
+Table[loc[[i+j]] = loc[[i+j-1]]+ linklen{Cos[Thetad +angs[[j]]],Sin[Thetad +angs[[j]]]},{j,1,Length[angs]}];
+(*Rotate succeeding joints: first learn their angles, then apply*)
+];Break[]
+]];
+
+isCollide=If[(*first 4 parts check if the robot is out of the workspace*)
+Or@@((#<minX)&/@loc[[;;,1]]) ||Or@@((#>maxX)&/@loc[[;;,1]]) || Or@@((#<minY)&/@loc[[;;,2]]) ||Or@@((#>maxY)&/@loc[[;;,2]]) ,True,
+Or@@Table[Or@@(segmentIntersectionQ[{{loc[[i]],loc[[i+1]]},#}]&/@listofAllLines),{i,1,Length[loc]-1}]];
+
+If[ !isCollide, (locOld=loc; collideState =0),
+If[collideState==0,
+collisions=collisions+1;Beep[];collideState = 1;,
+loc =locOld
+]
+];
+
+Show[Graphics[{
+Black,Style[Text[StringForm["\<`` collisions, worst error = ``\>",collisions,Round[worstError,.1]],{Mean[{minX,maxX}],maxY+50}],Medium],
+If[success,Style[Text[StringForm["\<Congratulations! You solved goal `` in only `` collisions!\>",goal,collisions],{Mean[{minX,maxX}],maxY+20}],Medium]],
+White, EdgeForm[Directive[Thick,Black]],
+Rectangle[{minX,minY},{maxX,maxY}],
+Blue,Polygon[obs],
+PointSize[Large],
+{Opacity[6],Darker[Green],Line[og],Point[og]},
+Thickness[0.005],If[isCollide,Red,Brown],Line[Prepend[locOld,origin]],
+Locator/@locOld
+}],ImageSize->400]
+], 
+ Button["\<restart\>",collisions=0;isCollide=False;loc=locstart ;locOld=locstart;],
+{isCollide,False,ControlType->None},
+{movement,{"\<relative\>","\<absolute\>"},Enabled->Dynamic[!isCollide]},
+{{locOld,locstart} ,None},
+{{loc,locstart},{18,7},{884,884},Locator,Appearance->None},
+{goal,{1,2,3,4,5,6,7},ControlType->Setter},
+{collideState,-1,ControlType->None},
+{collisions,0,ControlType->None}, SaveDefinitions->True,ControlPlacement->Left
+]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Aaron T. Becker
+
+### [Text]
+Yitong Lu
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+The goal of robot motion planning is to find a continuous path from an initial configuration to a goal configuration that is collision free. A configuration is a complete specification of every point of the robot. This Demonstration uses a seven-link robot with seven rotational joints that can each rotate from 0 to 2π. The resulting configuration space can be represented as a seven-dimensional torus. Obstacles in the robot's workspace map to obstacle regions in the configuration space, but computing these regions is computationally expensive. Planning for robots in high-dimensional spaces is difficult because representing the connected parts of high-dimensional spaces requires a number of samples that grows exponentially with the dimensionality of the space. This is commonly called "the curse of dimensionality."
+
+### [Text]
+\<The probabilistic roadmap method (PRM) was developed in 1996 by Lydia Kavraki et al.[1] as a general-purpose technique to solve such problems. Indeed, this Demonstration reproduces Figure 2 from[1]. PRMs generate a random roadmap that can be reused for subsequent motion-planning queries.\>
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] L. E. Kavraki, P. Svestka, J-C. Latombe and M. H. Overmars. "Probabilistic Roadmaps for Path Planning in High-Dimensional Configuration Spaces." IEEE Transactions on Robotics and Automation, 12(4), 1996 pp. 566\[Dash]580. doi:10.1109/70.508439.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+curse of dimensionality
+
+### [Item]
+PRM
+
+### [Item]
+motion planning
+
+### [Item]
+robot
+
+### [Item]
+robotics
+
+### [Item]
+probabilistic roadmap
+
+### [Item]
+roadmap
+
+### [Item]
+motion planning
+
+### [Item]
+motion planner
+
+### [Item]
+robot arm
+
+### [Item]
+obstacle
+
+### [Item]
+configuration space
+
+### [Item]
+path planning
+
+### [Item]
+path planner
+
+### [Item]
+planar robot
+
+### [Item]
+articulated robot
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Rapidly Exploring Random Tree (RRT) and RRT*
+
+### [Text]
+Breadth-First Search Robot Motion Planning
+
+### [Text]
+Robot Motion with Obstacles
+
+### [Text]
+Joint Space and Tooling Space for Robot Motion Control
+
+### [Text]
+Dijkstra's and A* Search Algorithms for Pathfinding with Obstacles
+
+### [Text]
+Probabilistic Roadmap Method
+
+### [Text]
+Probabilistic Roadmap Method for Robot Arm
+
+### [Text]
+Probabilistic Roadmap Method in 3D
+
+### [Text]
+Dimension
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2020-04-29
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

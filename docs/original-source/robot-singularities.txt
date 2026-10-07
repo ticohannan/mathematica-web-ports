@@ -1,0 +1,418 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Private reference (R-04). Extracted 2026-10-05 with a tolerant copy of tools/nbextract.py; cached outputs skipped.
+
+### [Title]
+Robot Singularities in Three-Link Manipulators
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+A singular configuration for a robot is a configuration in which the robot cannot move in at least one direction. This Demonstration draws the singular configurations, in red, for the robot workspace (left) and the phase space (right). The manipulability ellipsoid includes all possible end effector velocities normalized for a 1/2-unit input at a given robot configuration. These velocities are calculated using the robot's velocity Jacobian. You can adjust a three-link robot's configuration to see how the joint configuration affects the manipulability. For singular configurations, the Jacobian loses rank, causing the manipulability ellipsoid to collapse into either a two-dimensional ellipse or a one-dimensional line.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+drawZArrow[jr_]:=Line[{{{0,0,0},{0,0,2jr}}, (* function for drawing arrows *)
+{{0,0,2jr},{1/32,0,3/2jr}},
+{{0,0,2jr},{-1/32,0,3/2jr}},
+{{0,0,2jr},{0,1/32,3/2jr}},
+{{0,0,2jr},{0,-1/32,3/2jr}}}]
+
+### [Input] (init)
+drawCoordAxes[jr_]:= {Thick,{Red,drawZArrow[jr]},
+{Blue,Rotate[drawZArrow[jr],π/2,{0,1,0}]},
+{Green,Rotate[drawZArrow[jr],-π/2,{1,0,0}]}}
+
+### [Input] (init)
+drawJoint[ j_,d_,r_,Theta_]:=Module[{jr = 1/5,ar = 1/20,pr=1/7,vr=1/6},{
+(* draw coordinate axis *)
+drawCoordAxes[jr],
+(* draw z-axis *)
+{Gray,If["\<p\>"==j,Cuboid[{-ar,-ar,-jr-.01},{ar,ar,d+.01}],Cylinder[{{0,0,Min[-ar,d-jr]-.01},{0,0,Max[ar,d]+.01}},ar]]},
+(* draw joint *)
+{LightBlue,If[j=="\<p\>",
+{Cuboid[{-jr,-jr,-jr},{jr,jr,+jr-.1}],
+Cuboid[{-jr,-jr,+jr},{jr,jr,+jr+.05}]
+},
+{Cylinder[{{0,0,-jr-.05},{0,0,+jr+.05}},.7*jr]
+}]},
+(*draw x(i+1) *)
+If[r!=0, Rotate[{Gray,Cuboid[{-ar,-ar,d-ar},{r,ar,d+ar}]},Theta,{0,0,1}]]
+}]
+
+### [Input] (init)
+drawWristCenter[r_]:= Module[{jr = 1/5,ar = 1/20},{
+(* draw z-axis *) drawCoordAxes[jr],
+{PointSize[.02],Orange,Point[{0,0,0}]}}]
+
+### [Input] (init)
+(* function to create a T matrix *)
+dhTransform[d_,r_,Theta_,Alpha_]:=RotationTransform[Theta,{0,0,1}].TranslationTransform[{0,0,d}].TranslationTransform[{r,0,0}].RotationTransform[Alpha,{1,0,0}]
+
+### [Input] (init)
+splineCircle[m_List,r_,angles_List: {0,2 π}]:=
+(* link to efficient 3D circle 
+ https://mathematica.stackexchange.com/questions/10957/an-efficient-circular-arc-primitive-for-graphics3d *)
+Module[{seg,Phi,start,end,pts,w,k},{start,end}=Mod[angles//N,2 π];
+If[end<=start,end+=2 π];
+seg=Quotient[end-start//N,π/2];
+Phi=Mod[end-start//N,π/2];
+If[seg==4,seg=3;Phi=π/2];
+pts=r RotationMatrix[start].#&/@Join[Take[{{1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1}},2 seg+1],RotationMatrix[seg π/2].#&/@{{1,Tan[Phi/2]},{Cos[Phi],Sin[Phi]}}];
+If[Length[m]==2,pts=m+#&/@pts,pts=m+#&/@Transpose[Append[Transpose[pts],ConstantArray[0,Length[pts]]]]];
+w=Join[Take[{1,1/Sqrt[2],1,1/Sqrt[2],1,1/Sqrt[2],1},2 seg+1],{Cos[Phi/2],1}];
+k=Join[{0,0,0},Riffle[#,#]&@Range[seg+1],{seg+1}];
+BSplineCurve[pts,SplineDegree->2,SplineKnots->k,SplineWeights->w]]/;Length[m]==2||Length[m]==3
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{Ad,Td,a,d,theta,alpha,jointtype,phaseOpt,U,\[CapitalSigma]full,V,o0 = (\[NoBreak]<<Grid:0 | 0 | 0>>\[NoBreak]),manipEllip,o3coords,myJacob,myJacobAngular,p1,p2,p3},
+Type ={
+{{"\<r\>","\<r\>","\<r\>"},{1,1,1},{0,0,0},{0,0,0},{Subscript[q, 1],Subscript[q, 2],Subscript[q, 2]}}(*"\<planar robot arm\>"*),
+{{"\<r\>","\<r\>","\<r\>"},{0,1,1},{Pi/2,0,0},{2,0,0},{Subscript[q, 1],Subscript[q, 2],Subscript[q, 3]}}(*"\<elbow robot arm\>"*),
+{{"\<r\>","\<r\>","\<r\>"},{0,1,1},{Pi/2,0,0},{2,1/3,-1/3},{Subscript[q, 1],Subscript[q, 2],Subscript[q, 3]}}(*"\<PUMA robot arm\>"*),
+{{"\<r\>","\<r\>","\<r\>"},{0,1,1},{Pi/2,0,0},{2,1/3,1/3},{Subscript[q, 1],Subscript[q, 2],Subscript[q, 3]}}(*"\<offset PUMA arm\>"*),{{"\<r\>","\<r\>","\<p\>"},{0,0,0},{-Pi/2,+Pi/2,0},{1,1,Subscript[q, 3]},{Subscript[q, 1],Subscript[q, 2],0}}(*"\<Stanford robot arm\>"*),{{"\<r\>","\<p\>","\<p\>"},{0,0,0},{0,-Pi/2,0},{1,Subscript[q, 2],Subscript[q, 3]},{Subscript[q, 1],0,0}}(*"\<cylindrical robot arm\>"*),
+{{"\<r\>","\<r\>","\<p\>"},{0,0,0},{-Pi/2,Pi/2,0},{1,0,Subscript[q, 3]},{Subscript[q, 1],Subscript[q, 2],0}}(*"\<spherical robot arm\>"*),{{"\<r\>","\<r\>","\<p\>"},{0,1,0},{-Pi/2,0,0},{1,0,Subscript[q, 3]},{Subscript[q, 1],Subscript[q, 2],0}}(*"\<offset spherical arm\>"*),
+{{"\<r\>","\<r\>","\<p\>"},{0,1,0},{-Pi/2,Pi/2,0},{1,0,Subscript[q, 3]},{Subscript[q, 1],Subscript[q, 2],0}}(*"\<twisted spherical\>"*),
+{{"\<r\>","\<r\>","\<p\>"},{1.2,.6,0},{0,Pi,0},{1.5,0,Subscript[q, 3]},{Subscript[q, 1],Subscript[q, 2],0}}(*"\<SCARA robot arm\>"*),
+{{"\<r\>","\<p\>","\<r\>"},{1,1,1},{Pi/2,Pi/2,0},{0,Subscript[q, 2],0},{Subscript[q, 1],0,Subscript[q, 3]}}(*"\<planar RPR arm\>"*),
+{{"\<p\>","\<p\>","\<p\>"},{0,0,0},{-Pi/2,Pi/2,0},{Subscript[q, 1],Subscript[q, 2],Subscript[q, 3]},{-Pi/2,-Pi/2,0}}(*"\<CNC robot arm\>"*),
+{{"\<p\>","\<p\>","\<p\>"},{0,0,0},{-Pi/2,-Pi/2,-0},{Subscript[q, 1],Subscript[q, 2],Subscript[q, 3]},{0,0,0}}(*"\<Cartesian robot arm\>"*),
+{{"\<p\>","\<p\>","\<p\>"},{0,0,0},{0,0,-0},{Subscript[q, 1],Subscript[q, 2],Subscript[q, 3]},{0,0,0}}(*"\<linear robot arm\>"*),
+{{"\<r\>","\<r\>","\<r\>"},{0,0,0},{Pi/2,-Pi/2,0},{1,0,1},{Subscript[q, 1],Subscript[q, 2],Subscript[q, 3]}}(*"\<spherical wrist\>"*),
+{{"\<r\>","\<r\>","\<r\>"},{0,0,1/2},{Pi/2,-Pi/2,0},{1,1/2,1},{Subscript[q, 1],Subscript[q, 2],Subscript[q, 3]}} (*"\<offset spherical wrist\>"*)
+}[[iType]];
+If[params[[1]]<-π,params[[1]]=params[[1]]+6.28];If[params[[1]]>π,params[[1]]=params[[1]]-6.28];
+If[params[[2]]<-π,params[[2]]=params[[2]]+6.28];If[params[[2]]>π,params[[2]]=params[[2]]-6.28];
+If[params[[3]]<-π,params[[3]]=params[[3]]+6.28];If[params[[3]]>π,params[[3]]=params[[3]]-6.28];
+Table[{jointtype[i],a[i],alpha[i],d[i],theta[i]}=Type[[;;,i]],{i,1,dof}];
+
+o3coords[p1_,p2_,p3_]=Module[{p={p1,p2,p3}},(Dot@@Table[
+If["\<p\>"== jointtype[i],
+dhTransform[p[[i]],a[i],theta[i],alpha[i]],
+dhTransform[d[i],a[i],p[[i]],         alpha[i]]
+],{i,1,dof}])[[1,1;;3,4]]]; (*only grab the x,y,z coords*)
+
+(* linear velocity Jacobian matrix *)
+myJacob[q1_,q2_,q3_]:=(* precomputed linear velocity Jacobians *)\[Piecewise]<<Grid:(\[NoBreak]<<Grid:-Sin[q1]-Sin[q1+q2]-Sin[q1+q2+q3]-Sin[q1+q2]-Sin[q1+q2+q3]-Sin[q1+q2+q3] | Cos[q1]+Cos[q1+q2]+Cos[q1+q2+q3]Cos[q1+q2]+Cos[q1+q2+q3]Cos[q1+q2+q3] | 000>>\[NoBreak])iType==1(*"\<planar robot arm\>"*)  | (\[NoBreak]<<Grid:-2 Cos[q2+(q3)/(2)] Cos[(q3)/(2)] Sin[q1]-Cos[q1] (Sin[q2]+Sin[q2+q3])-Cos[q1] Sin[q2+q3] | 2 Cos[q1] Cos[q2+(q3)/(2)] Cos[(q3)/(2)]-Sin[q1] (Sin[q2]+Sin[q2+q3])-Sin[q1] Sin[q2+q3] | 0Cos[q2]+Cos[q2+q3]Cos[q2+q3]>>\[NoBreak])iType==2(*"\<elbow robot arm\>"*) | (\[NoBreak]<<Grid:-2 Cos[q2+(q3)/(2)] Cos[(q3)/(2)] Sin[q1]-Cos[q1] (Sin[q2]+Sin[q2+q3])-Cos[q1] Sin[q2+q3] | 2 Cos[q1] Cos[q2+(q3)/(2)] Cos[(q3)/(2)]-Sin[q1] (Sin[q2]+Sin[q2+q3])-Sin[q1] Sin[q2+q3] | 0Cos[q2]+Cos[q2+q3]Cos[q2+q3]>>\[NoBreak])iType==3(*"\<PUMA robot arm\>"*) | (\[NoBreak]<<Grid:(2)/(3) (Cos[q1]-3 Cos[q2+(q3)/(2)] Cos[(q3)/(2)] Sin[q1])-Cos[q1] (Sin[q2]+Sin[q2+q3])-Cos[q1] Sin[q2+q3] | (2)/(3) (3 Cos[q1] Cos[q2+(q3)/(2)] Cos[(q3)/(2)]+Sin[q1])-Sin[q1] (Sin[q2]+Sin[q2+q3])-Sin[q1] Sin[q2+q3] | 0Cos[q2]+Cos[q2+q3]Cos[q2+q3]>>\[NoBreak])iType==4(*"\<offset PUMA arm\>"*) | (\[NoBreak]<<Grid:-Cos[q1]-Sin[q1] Sin[q2] q3Cos[q1] Cos[q2] q3Cos[q1] Sin[q2] | -Sin[q1]+Cos[q1] Sin[q2] q3Cos[q2] Sin[q1]q3Sin[q1] Sin[q2] | 0-Sin[q2] q3Cos[q2]>>\[NoBreak])iType==5(*"\<Stanford robot arm\>"*) | (\[NoBreak]<<Grid:-Cos[q1] q30-Sin[q1] | -Sin[q1]q30Cos[q1] | 010>>\[NoBreak])iType==6(*"\<cylindrical robot arm\>"*) | (\[NoBreak]<<Grid:-Sin[q1] Sin[q2] q3Cos[q1] Cos[q2] q3Cos[q1] Sin[q2] | Cos[q1] Sin[q2]q3Cos[q2] Sin[q1] q3Sin[q1] Sin[q2] | 0-Sin[q2] q3Cos[q2]>>\[NoBreak])iType==7(*"\<spherical robot arm\>"*) | (\[NoBreak]<<Grid:-Cos[q2] Sin[q1]-Cos[q1] q3-Cos[q1] Sin[q2]-Sin[q1] | Cos[q1] Cos[q2]-Sin[q1] q3-Sin[q1] Sin[q2]Cos[q1] | 0-Cos[q2]0>>\[NoBreak])iType==8(*"\<offset spherical arm\>"*) | (\[NoBreak]<<Grid:-Sin[q1] (Cos[q2]+Sin[q2]q3)Cos[q1] (-Sin[q2]+Cos[q2] q3)Cos[q1] Sin[q2] | Cos[q1] (Cos[q2]+Sin[q2] q3)Sin[q1] (-Sin[q2]+Cos[q2] q3)Sin[q1] Sin[q2] | 0-Cos[q2]-Sin[q2] q3Cos[q2]>>\[NoBreak])iType==9(*"\<twisted spherical\>"*) | (\[NoBreak]<<Grid:-1.2 Sin[q1]-0.6 Sin[q1+q2]-0.6 Sin[q1+q2]0 | 1.2 Cos[q1]+0.6 Cos[q1+q2]0.6 Cos[q1+q2]0 | 00-1>>\[NoBreak])iType==10(*"\<SCARA robot arm\>"*) | (\[NoBreak]<<Grid:-2 Sin[q1]-Sin[q1-q3]+Cos[q1] q2Sin[q1]Sin[q1-q3] | 2 Cos[q1]+Cos[q1-q3]+Sin[q1] q2-Cos[q1]-Cos[q1-q3] | 000>>\[NoBreak])iType==11(*"\<planar RPR arm\>"*) | (\[NoBreak]<<Grid:010 | 001 | 100>>\[NoBreak])iType==12(*"\<CNC robot arm\>"*) | (\[NoBreak]<<Grid:000 | 010 | 10-1>>\[NoBreak])iType==13(*"\<Cartesian robot arm\>"*) | (\[NoBreak]<<Grid:000 | 000 | 111>>\[NoBreak])iType==14(*"\<linear robot arm\>"*) | (\[NoBreak]<<Grid:Sin[q1] Sin[q2]-Cos[q1] Cos[q2]0 | -Cos[q1] Sin[q2]-Cos[q2] Sin[q1]0 | 0-Sin[q2]0>>\[NoBreak])iType==15(*"\<spherical wrist\>"*) | (\[NoBreak]<<Grid:(1)/(2) (Cos[q1]-Cos[q2] Cos[q3] Sin[q1]+2 Sin[q1] Sin[q2]-Cos[q1] Sin[q3])-(1)/(2) Cos[q1] (2 Cos[q2]+Cos[q3] Sin[q2])(1)/(2) (-Cos[q3] Sin[q1]-Cos[q1] Cos[q2] Sin[q3]) | (1)/(2) (Cos[q1] Cos[q2] Cos[q3]+Sin[q1]-2 Cos[q1] Sin[q2]-Sin[q1] Sin[q3])-(1)/(2) Sin[q1] (2 Cos[q2]+Cos[q3] Sin[q2])(1)/(2) (Cos[q1] Cos[q3]-Cos[q2] Sin[q1] Sin[q3]) | 0(1)/(2) Cos[q2] Cos[q3]-Sin[q2]-(1)/(2) Sin[q2] Sin[q3]>>\[NoBreak])iType==16(*"\<offset spherical wrist\>"*)>>;
+;
+(* angular velocity Jacobian Mmatrix *)
+
+myJacobAngular[q1_,q2_,q3_]:=(* precomputed angular velocity Jacobians*)
+\[Piecewise]<<Grid:(\[NoBreak]<<Grid:000 | 000 | 111>>\[NoBreak])iType==1(*"\<planar robot arm\>"*)  | (\[NoBreak]<<Grid:0Sin[q1]Sin[q1] | 0-Cos[q1]-Cos[q1] | 100>>\[NoBreak])iType==2(*"\<elbow robot arm\>"*) | (\[NoBreak]<<Grid:0Sin[q1]Sin[q1] | 0-Cos[q1]-Cos[q1] | 100>>\[NoBreak])iType==3(*"\<PUMA robot arm\>"*) | (\[NoBreak]<<Grid:0Sin[q1]Sin[q1] | 0-Cos[q1]-Cos[q1] | 100>>\[NoBreak])iType==4(*"\<offset PUMA arm\>"*) | (\[NoBreak]<<Grid:0-Sin[q1]0 | 0Cos[q1]0 | 100>>\[NoBreak])iType==5(*"\<Stanford robot arm\>"*) | (\[NoBreak]<<Grid:000 | 000 | 100>>\[NoBreak])iType==6(*"\<cylindrical robot arm\>"*) | (\[NoBreak]<<Grid:0-Sin[q1]0 | 0Cos[q1]0 | 100>>\[NoBreak])iType==7(*"\<spherical robot arm\>"*) | (\[NoBreak]<<Grid:0-Sin[q1]0 | 0Cos[q1]0 | 100>>\[NoBreak])iType==8(*"\<offset spherical arm\>"*) | (\[NoBreak]<<Grid:0-Sin[q1]0 | 0Cos[q1]0 | 100>>\[NoBreak])iType==9(*"\<twisted spherical\>"*) | (\[NoBreak]<<Grid:000 | 000 | 110>>)iType==10(*"\<SCARA robot arm\>"*) | (\[NoBreak]<<Grid:000 | 000 | 10-1>>\[NoBreak])iType==11(*"\<planar RPR arm\>"*) | (\[NoBreak]<<Grid:000 | 000 | 000>>\[NoBreak])iType==12(*"\<CNC robot arm\>"*) | (\[NoBreak]<<Grid:000 | 000 | 000>>\[NoBreak])iType==13(*"\<Cartesian robot arm\>"*) | (\[NoBreak]<<Grid:000 | 000 | 000>>\[NoBreak])iType==14(*"\<linear robot arm\>"*) | (\[NoBreak]<<Grid:0Sin[q1]-Cos[q1] Sin[q2] | 0-Cos[q1]-Sin[q1] Sin[q2] | 10-Cos[q2]>>\[NoBreak])iType==15(*"\<spherical wrist\>"*) | (\[NoBreak]<<Grid:0Sin[q1]-Cos[q1] Sin[q2] | 0-Cos[q1]-Sin[q1] Sin[q2] | 10Cos[q2]>>\[NoBreak])iType==16(*"\<offset spherical wrist\>"*)>>;
+
+(* draw linear and angular velocity singularities for the workspace and phase space *)
+If[iTypeOld!=iType || isJLinearVelOld!= isJLinearVel, (* recalculate singularities only when needed *)
+iTypeOld=iType;isJLinearVelOld= isJLinearVel;
+
+singularspace3D=(* precomputed workspace singularities *)
+
+If[isJLinearVel=="\<Linear\>",(* linear workspace singularities *)
+\[Piecewise]<<Grid:Show[ParametricPlot3D[{ 
+o3coords[a,0,0],o3coords[a,0,π]},{a,-π,π},PlotStyle->{Red}],
+ParametricPlot3D[{ z Cos[a],z Sin[a],0},{a,-π,π},{z,0,3},Mesh->None,PlotStyle->Directive[{Red,Opacity[0.2]}]]]iType==1(*"\<planar robot arm\>"*)  | Graphics3D[{Red,Sphere[{{0,0,0},{0,0,2},{0,0,4}},0.15],Thick,Opacity[0.4],Line[{{0,0,0},{0,0,4}}],{Opacity[0.3],Sphere[{0,0,2},2]}}]iType==2(*"\<elbow robot arm\>"*) | Graphics3D[{Red,Sphere[{{0,0,0},{0,0,2},{0,0,4}},0.15],Thick,Opacity[0.4],Line[{{0,0,0},{0,0,4}}],
+{Opacity[0.3],Sphere[{0,0,2},2]}}]iType==3(*"\<PUMA robot arm\>"*) | Show[
+Graphics3D[{Red,Thick,
+Line[Table[{2/3Cos[t],2/3Sin[t],0},{t,0,6.5,.25}]],
+Line[Table[{2/3Cos[t],2/3Sin[t],2},{t,0,6.5,.25}]],
+Line[Table[{2/3Cos[t],2/3Sin[t],4},{t,0,6.5,.25}]]}],
+ParametricPlot3D[{o3coords[a,b,0],{2/3Cos[a],2/3Sin[a],2b/π+2}},{a,-π,π},{b,-π,π},Mesh->None,PlotStyle->Directive[{Red,Opacity[0.2]}]]]iType==4(*"\<offset PUMA arm\>"*) | Show[ParametricPlot3D[{Cos[Theta],Sin[Theta],1},{Theta,0,2π},PlotStyle->Red],ParametricPlot3D[{Cos[Theta],Sin[Theta],z},{Theta,0,2π},{z,0,2},Mesh->None,PlotStyle->Directive[{Red,Opacity[0.3]}]]]iType==5(*"\<Stanford robot arm\>"*) | Graphics3D[{Red,Thick,Opacity[0.4],Line[{{0,0,1},{0,0,2}}]}]iType==6(*"\<cylindrical robot arm\>"*) | Graphics3D[{Red,Sphere[{{0,0,1}},0.2],Thick,Opacity[0.4],Line[{{0,0,0},{0,0,1},{0,0,2}}]}]iType==7(*"\<spherical robot arm\>"*) | Show[ParametricPlot3D[{{r Cos[Theta],r Sin[Theta],0},{r Cos[Theta],r Sin[Theta],2}},{Theta,0,2π},{r,0,1},Mesh->None,PlotStyle->Directive[{Red,Opacity[0.3]}]],Graphics3D[{Red,Sphere[{{0,0,0},{0,0,2}},0.2],
+{Opacity[0.3],Sphere[{0,0,1},1]}}]]iType==8(*"\<offset spherical arm\>"*) | Graphics3D[{Red,Sphere[{{0,0,2},{0,0,0}},0.2],Thick,Opacity[0.4],Line[{{0,0,2},{0,0,1+Sqrt[2]}}],
+Line[{{0,0,0},{0,0,1-Sqrt[2]}}],
+{Opacity[0.3],Sphere[{0,0,1},1]}}]iType==9(*"\<twisted spherical\>"*) | ParametricPlot3D[{{0.6 Cos[Theta],0.6 Sin[Theta],z},{1.8 Cos[Theta],1.8Sin[Theta],z}},{Theta,0,2π},{z,0.5,1.5},Mesh->None,PlotStyle->Directive[{Red,Opacity[0.3]}]]iType==10(*"\<SCARA robot arm\>"*) | Show[ParametricPlot3D[{b Cos[a],b Sin[a],0},{a,-π,π},{b,0,Sqrt[10]},Mesh->None,PlotStyle->Directive[{Red,Opacity[0.2]}]],ParametricPlot3D[{3 Cos[a],3 Sin[a],0},{a,-π,π},PlotStyle->Red]]iType==11(*"\<planar RPR arm\>"*) | ParametricPlot3D[{ },{a,-π,π},{b,-π,π}]iType==12(*"\<CNC robot arm\>"*) | Graphics3D[{Red,Opacity[0.3],Polygon[{{0,0,-1},{0,1,-1},{0,1,1},{0,0,1}}]}]iType==13(*"\<Cartesian robot arm\>"*) | Graphics3D[{Red,Thick,Line[{{0,0,0},{0,0,3}}]}]iType==14(*"\<linear robot arm\>"*) | Graphics3D[{Red,Sphere[{{0,0,0},{0,0,2}},0.2],Line[{{0,0,0},{0,0,2}}],{Opacity[0.3],Sphere[{0,0,1},0.2]}}]iType==15(*"\<spherical wrist\>"*) | Show[ParametricPlot3D[{o3coords[a,b,π/2],o3coords[a,b,-π/2],o3coords[a,ArcTan[(Cos[b])/(2)],b],o3coords[a,ArcTan[(Cos[b])/(2)]+π,b]},{a,-π,π},{b,-π,π},Mesh->None,PlotStyle->Directive[{Red,Opacity[0.2]}]],
+ParametricPlot3D[{o3coords[a,0,-π/2],o3coords[a,π,-π/2]},{a,-π,π},PlotStyle->Directive[{Red,Thick}]],Graphics3D[{Red,Opacity[1],Sphere[{{0,0,2},{0,0,0}},0.2]}]]iType==16(*"\<offset spherical wrist\>"*)>>,(* angular workspace singularities *)
+\[Piecewise]<<Grid:ParametricPlot3D[{ z Cos[a],z Sin[a],0},{a,-π,π},{z,0,3},Mesh->None,PlotStyle->Directive[{Red,Opacity[0.5]}]]iType==1(*"\<planar robot arm\>"*)  | Graphics3D[{Red,{Opacity[0.4],Sphere[{0,0,2},2]}}]iType==2(*"\<elbow robot arm\>"*) | Graphics3D[{Red,{Opacity[0.4],Sphere[{0,0,2},2]}}]iType==3(*"\<PUMA robot arm\>"*) | ParametricPlot3D[{o3coords[a,b,0],{2/3Cos[a],2/3Sin[a],2b/π+2}},{a,-π,π},{b,-π,π},Mesh->None,PlotStyle->Directive[{Red,Opacity[0.2]}]]iType==4(*"\<offset PUMA arm\>"*) | ParametricPlot3D[{o3coords[a,b,1],{Cos[a],Sin[a],b/π + 1}},{a,-π,π},{b,-π,π},Mesh->None,PlotStyle->Directive[{Red,Opacity[0.2]}]]iType==5(*"\<Stanford robot arm\>"*) | Graphics3D[{Red,Opacity[0.6],Cylinder[{{0,0,1},{0,0,2}},1]}]iType==6(*"\<cylindrical robot arm\>"*) | Graphics3D[{Red,{Opacity[0.4],Sphere[{0,0,1},1]}}]iType==7(*"\<spherical robot arm\>"*) | Show[{Graphics3D[{Red,{Opacity[0.3],Sphere[{0,0,1},1]}}],
+ParametricPlot3D[{{r Cos[Theta],r Sin[Theta],0},{r Cos[Theta],r Sin[Theta],2}},{Theta,0,2π},{r,0,1},Mesh->None,PlotStyle->Directive[{Red,Opacity[0.3]}]],
+ParametricPlot3D[{o3coords[a,b,0],o3coords[a,b,1]},{a,-π,π},{b,-π,π},Mesh->None,PlotStyle->Directive[{Red,Opacity[0.3]}]]}]iType==8(*"\<offset spherical arm\>"*) | Graphics3D[{Red,Opacity[0.3],Sphere[{0,0,1},1],Sphere[{0,0,1},Sqrt[2]]}]iType==9(*"\<twisted spherical\>"*) | ParametricPlot3D[{{0.6 Cos[Theta],0.6 Sin[Theta],z},{1.8 Cos[Theta],1.8Sin[Theta],z},{1.2 z Cos[Theta],1.2z Sin[Theta],1.5},{1.2 z Cos[Theta],1.2z Sin[Theta],0.5}},{Theta,0,2π},{z,0.5,1.5},Mesh->None,PlotStyle->Directive[{Red,Opacity[0.5]}]]iType==10(*"\<SCARA robot arm\>"*) | ParametricPlot3D[{b Cos[a],b Sin[a],0},{a,-π,π},{b,0,Sqrt[10]},Mesh->None,PlotStyle->Directive[{Red,Opacity[0.5]}]]iType==11(*"\<planar RPR arm\>"*) | Graphics3D[{Opacity[0.8],Red,Cuboid[{0,0,0},{1,1,1}]}]iType==12(*"\<CNC robot arm\>"*) | Graphics3D[{Opacity[0.8],Red,Polygon[{{0,0,-1},{0,1,-1},{0,1,1},{0,0,1}}]}]iType==13(*"\<Cartesian robot arm\>"*) | Graphics3D[{Red,Thick,Line[{{0,0,0},{0,0,3}}]}]iType==14(*"\<linear robot arm\>"*) | Graphics3D[{Red,Line[{{0,0,0},{0,0,2}}]}]iType==15(*"\<spherical wrist\>"*) | ParametricPlot3D[{ {b Cos[a],b Sin[a],2},{b Cos[a],b Sin[a],0}},{a,-π,π},{b,0,1},Mesh->None,PlotStyle->Directive[{Red,Opacity[0.3]}]]iType==16(*"\<offset spherical wrist\>"*)>>];
+singularphasespace3D = (* precomputed phase space singularities *)
+If[isJLinearVel=="\<Linear\>",(* phase space linear velocity singularities *)
+\[Piecewise]<<Grid:Graphics3D[{Red,Thick,
+Line[{{-π,0,0},{π,0,0}}],Line[{{-π,-π,0},{π,-π,0}}],Line[{{-π,π,0},{π,π,0}}],
+Line[{{-π,0,-π},{π,0,-π}}],Line[{{-π,-π,-π},{π,-π,-π}}],Line[{{-π,π,-π},{π,π,-π}}],
+Line[{{-π,0,π},{π,0,π}}],Line[{{-π,-π,π},{π,-π,π}}],Line[{{-π,π,π},{π,π,π}}],
+Opacity[0.3],
+Cuboid[-π{1,1,1},π{1,1,1}]},phaseOpt]iType==1(*"\<planar robot arm\>"*)  | Graphics3D[{Red,Thick,
+Line[{{-π,-π/2,π},{π,-π/2,π}}],Line[{{-π,π/2,π},{π,π/2,π}}],
+Line[{{-π,-π/2,0},{π,-π/2,0}}],Line[{{-π,π/2,0},{π,π/2,0}}],
+Line[{{-π,-π/2,-π},{π,-π/2,-π}}],Line[{{-π,π/2,-π},{π,π/2,-π}}],Opacity[0.5],
+InfinitePlane[{{1,0,0},{0,1,0},{0,0,0}}],
+InfinitePlane[{{1,0,π},{0,1,π},{0,0,π}}],
+InfinitePlane[{{1,0,-π},{0,1,-π},{0,0,-π}}],
+InfinitePlane[{{1,0,π},{0,π 3/2,-2π},{0,π /2,0}}],
+InfinitePlane[{{1,0,-π},{0,π /2,-2π},{0,-π/2,0}}]
+},phaseOpt]iType==2(*"\<elbow robot arm\>"*) | Graphics3D[{Red,Thick,
+Line[{{-π,-π/2,π},{π,-π/2,π}}],Line[{{-π,π/2,π},{π,π/2,π}}],
+Line[{{-π,-π/2,0},{π,-π/2,0}}],Line[{{-π,π/2,0},{π,π/2,0}}],
+Line[{{-π,-π/2,-π},{π,-π/2,-π}}],Line[{{-π,π/2,-π},{π,π/2,-π}}],Opacity[0.5],
+InfinitePlane[{{1,0,0},{0,1,0},{0,0,0}}],
+InfinitePlane[{{1,0,π},{0,1,π},{0,0,π}}],
+InfinitePlane[{{1,0,-π},{0,1,-π},{0,0,-π}}],
+InfinitePlane[{{1,0,π},{0,π 3/2,-2π},{0,π /2,0}}],
+InfinitePlane[{{1,0,-π},{0,π /2,-2π},{0,-π/2,0}}]
+},phaseOpt]iType==3(*"\<PUMA robot arm\>"*) | Graphics3D[{Red,Thick,
+Line[{{-π,-π/2,π},{π,-π/2,π}}],Line[{{-π,π/2,π},{π,π/2,π}}],
+Line[{{-π,-π/2,0},{π,-π/2,0}}],Line[{{-π,π/2,0},{π,π/2,0}}],
+Line[{{-π,-π/2,-π},{π,-π/2,-π}}],Line[{{-π,π/2,-π},{π,π/2,-π}}],Opacity[0.5],
+InfinitePlane[{{1,0,0},{0,1,0},{0,0,0}}],
+InfinitePlane[{{1,0,π},{0,1,π},{0,0,π}}],
+InfinitePlane[{{1,0,-π},{0,1,-π},{0,0,-π}}],
+InfinitePlane[{{1,0,π},{0,π 3/2,-2π},{0,π /2,0}}],
+InfinitePlane[{{1,0,-π},{0,π /2,-2π},{0,-π/2,0}}]
+},phaseOpt]iType==4(*"\<offset PUMA arm\>"*) | Graphics3D[{Red,Thick,Line[{{-π,π/2,0},{π,π/2,0}}],Line[{{-π,-π/2,0},{π,-π/2,0}}],Opacity[0.5],InfinitePlane[{{1,0,0},{1,0,π},{0,0,π}}],
+InfinitePlane[{{1,-π,0},{1,-π,π},{0,-π,π}}],
+InfinitePlane[{{1,π,0},{1,π,1},{0,π,1}}],
+InfinitePlane[{{1,0,0},{1,1,0},{0,1,0}}]
+},phaseOpt]iType==5(*"\<Stanford robot arm\>"*) | Graphics3D[{Opacity[0.5],Red,
+InfinitePlane[{{1,0,0},{1,1,0},{0,1,0}}]
+},phaseOpt]iType==6(*"\<cylindrical robot arm\>"*) | Graphics3D[{Red,Opacity[0.5],
+InfinitePlane[{{1,-π,0},{1,-π,π},{0,-π,π}}],
+InfinitePlane[{{1,π,0},{1,π,1},{0,π,1}}],
+InfinitePlane[{{1,0,0},{1,0,1},{0,0,1}}],
+Opacity[1],InfinitePlane[{{1,0,0},{1,1,0},{0,1,0}}]
+},phaseOpt]iType==7(*"\<spherical robot arm\>"*) | Graphics3D[{Red,Thick, Line[{{-π,-π/2,0},{π,-π/2,0}}], Line[{{-π,π/2,0},{π,π/2,0}}],Opacity[0.5],
+InfinitePlane[{{1,-π/2,0},{1,-π/2,π},{0,-π/2,π}}],
+InfinitePlane[{{1,π/2,0},{1,π/2,1},{0,π/2,1}}],
+InfinitePlane[{{1,0,0},{1,1,0},{0,1,0}}]
+},phaseOpt]iType==8(*"\<offset spherical arm\>"*) | Show[Graphics3D[{Red,Thick, Line[{{-π,-π/2,0},{π,-π/2,0}}], Line[{{-π,π/2,0},{π,π/2,0}}],Opacity[0.5],Red,
+InfinitePlane[{{1,0,0},{1,1,0},{0,1,0}}]
+},phaseOpt],ParametricPlot3D[{{a,ArcTan[-b,1],b},{a,ArcTan[-b,1]-π,b}},{a,-π,π},{b,0,1},PlotStyle->Directive[{Opacity[0.5],Red}]]]iType==9(*"\<twisted spherical\>"*) | Graphics3D[{Opacity[0.5],Red,InfinitePlane[{{1,0,0},{1,0,π},{0,0,π}}],
+InfinitePlane[{{1,-π,0},{1,-π,π},{0,-π,π}}],
+InfinitePlane[{{1,π,0},{1,π,1},{0,π,1}}]},phaseOpt]iType==10(*"\<SCARA robot arm\>"*) | Graphics3D[{Red,Thick,Line[{{-π,0,0},{π,0,0}}],Opacity[0.3],Cuboid[{-π,0,-π},{π,1,π}]},phaseOpt]iType==11(*"\<planar RPR arm\>"*) | Graphics3D[{},phaseOpt]iType==12(*"\<CNC robot arm\>"*) | Graphics3D[{Opacity[0.3],Red,Cuboid[{0,0,0},{1,1,1}]},phaseOpt]iType==13(*"\<Cartesian robot arm\>"*) | Graphics3D[{Opacity[0.5],Red,Cuboid[{0,0,0},{1,1,1}]},phaseOpt]iType==14(*"\<linear robot arm\>"*) | Graphics3D[{Red,Opacity[0.6],Polygon[{{-π,0,-π},{-π,0,π},{π,0,π},{π,0,-π}}],Polygon[{{-π,π,-π},{-π,π,π},{π,π,π},{π,π,-π}}],Polygon[{{-π,-π,-π},{-π,-π,π},{π,-π,π},{π,-π,-π}}],Opacity[0.3],Cuboid[{-π,-π,-π},{π,π,π}]},phaseOpt]iType==15(*"\<spherical wrist\>"*) | Show[Graphics3D[{Red, Thick,Line[{{-π,0,π/2},{π,0,π/2}}],Line[{{-π,0,-π/2},{π,0,-π/2}}],Line[{{-π,-π,π/2},{π,-π,π/2}}],Line[{{-π,-π,-π/2},{π,-π,-π/2}}],Line[{{-π,π,π/2},{π,π,π/2}}],Line[{{-π,π,-π/2},{π,π,-π/2}}]},phaseOpt],ParametricPlot3D[{{a,b,π/2},{a,b,-π/2},{a,ArcTan[(Cos[b])/(2)],b},{a,ArcTan[(Cos[b])/(2)]+π,b},{a,ArcTan[(Cos[b])/(2)]-π,b}},{a,-π,π},{b,-π,π},Mesh->None,PlotStyle->Directive[{Red,Opacity[0.4]}]]]iType==16(*"\<offset spherical wrist\>"*)>>,(* phase space angular velocity singularities *)
+\[Piecewise]<<Grid:Graphics3D[{Red,Opacity[0.6],Cuboid[-π{1,1,1},π{1,1,1}]},phaseOpt]iType==1(*"\<planar robot arm\>"*)  | Graphics3D[{Red,Opacity[0.4],Cuboid[-π{1,1,1},π{1,1,1}]},phaseOpt]iType==2(*"\<elbow robot arm\>"*) | Graphics3D[{Red,Opacity[0.4],Cuboid[-π{1,1,1},π{1,1,1}]},phaseOpt]iType==3(*"\<PUMA robot arm\>"*) | Graphics3D[{Red,Opacity[0.4],Cuboid[-π{1,1,1},π{1,1,1}]},phaseOpt]iType==4(*"\<offset PUMA arm\>"*) | Graphics3D[{Red,Opacity[0.4],Cuboid[-{π,π,0},{π,π,1}]},phaseOpt]iType==5(*"\<Stanford robot arm\>"*) | Graphics3D[{Red,Opacity[0.6],Cuboid[-{π,0,0},{π,1,1}]},phaseOpt]iType==6(*"\<cylindrical robot arm\>"*) | Graphics3D[{Red,Opacity[0.4],Cuboid[-{π,π,0},{π,π,1}]},phaseOpt]iType==7(*"\<spherical robot arm\>"*) | Graphics3D[{Red,Opacity[0.4],Cuboid[-{π,π,0},{π,π,1}]},phaseOpt]iType==8(*"\<offset spherical arm\>"*) | Graphics3D[{Red,Opacity[0.4],Cuboid[-{π,π,0},{π,π,1}]},phaseOpt]iType==9(*"\<twisted spherical\>"*) | Graphics3D[{Red,Opacity[0.6],Cuboid[-{π,π,0},{π,π,1}]},phaseOpt]iType==10(*"\<SCARA robot arm\>"*) | Graphics3D[{Red,Opacity[0.6],Cuboid[{-π,0,-π},{π,1,π}]},phaseOpt]iType==11(*"\<planar RPR arm\>"*) | Graphics3D[{Opacity[0.8],Red,Cuboid[{0,0,0},{1,1,1}]},phaseOpt]iType==12(*"\<CNC robot arm\>"*) | Graphics3D[{Opacity[0.8],Red,Cuboid[{0,0,0},{1,1,1}]},phaseOpt]iType==13(*"\<Cartesian robot arm\>"*) | Graphics3D[{Opacity[0.8],Red,Cuboid[{0,0,0},{1,1,1}]},phaseOpt]iType==14(*"\<linear robot arm\>"*) | Graphics3D[{Red,Opacity[0.4],Polygon[{{-π,0,-π},{-π,0,π},{π,0,π},{π,0,-π}}],Polygon[{{-π,π,-π},{-π,π,π},{π,π,π},{π,π,-π}}],Polygon[{{-π,-π,-π},{-π,-π,π},{π,-π,π},{π,-π,-π}}]},phaseOpt]iType==15(*"\<spherical wrist\>"*) | Graphics3D[{Red,Opacity[0.4],Polygon[{{-π,0,-π},{-π,0,π},{π,0,π},{π,0,-π}}],Polygon[{{-π,π,-π},{-π,π,π},{π,π,π},{π,π,-π}}],Polygon[{{-π,-π,-π},{-π,-π,π},{π,-π,π},{π,-π,-π}}]},phaseOpt]iType==16(*"\<offset spherical wrist\>"*)>>];
+];
+(* draw manipulability ellipse *)
+manipEllip=If[showManipulability,
+{U,\[CapitalSigma]full,V} =SingularValueDecomposition[ N[  If[isJLinearVel=="\<Linear\>",
+myJacob[params[[1]],params[[2]],params[[3]]],
+myJacobAngular[params[[1]],params[[2]],params[[3]]]
+]]];
+\[CapitalSigma]full =\[CapitalSigma]full/2;
+Graphics3D[{
+GeometricTransformation[
+{Arrowheads[.02],
+If[\[CapitalSigma]full[[1,1]]>0.1,{Blue,Arrow[{o0 ,\[CapitalSigma]full[[1]]}],Arrow[{o0,-\[CapitalSigma]full[[1]]}],
+Blue,GeometricTransformation[splineCircle[{0,0,0},1,{0,2π}],
+DiagonalMatrix[{\[CapitalSigma]full[[1,1]],\[CapitalSigma]full[[2,2]],1}]]}],
+If[\[CapitalSigma]full[[2,2]]>0.1,{Red,Arrow[{o0,\[CapitalSigma]full[[2]]}],Arrow[{o0,-\[CapitalSigma]full[[2]]}],
+Red,GeometricTransformation[splineCircle[{0,0,0},1,{0,2π}],DiagonalMatrix[{1,\[CapitalSigma]full[[2,2]],\[CapitalSigma]full[[3,3]]}].RotationMatrix[π/2,{0,1,0}]]}],
+If[\[CapitalSigma]full[[3,3]]>0.1,{Green,Arrow[{o0,\[CapitalSigma]full[[3]]}],Arrow[{o0,-\[CapitalSigma]full[[3]]}],
+Darker[Green],GeometricTransformation[splineCircle[{0,0,0},1,{0,2π}],DiagonalMatrix[{\[CapitalSigma]full[[1,1]],1,\[CapitalSigma]full[[3,3]]}].RotationMatrix[π/2,{1,0,0}]]
+}],
+If[MatrixRank[\[CapitalSigma]full]>2,{Opacity[0.5],LightBlue,Ellipsoid[{0,0,0},\[CapitalSigma]full^2]}]},
+{U,o3coords[params[[1]],params[[2]],params[[3]]]}]}],{}];
+
+Ad =Table[ If["\<p\>"== jointtype[i],
+dhTransform[params[[i]],a[i],theta[i],alpha[i]],
+dhTransform[d[i],a[i],params[[i]],alpha[i]]],{i,1,dof}];
+Td[1] = Ad[[1]];
+Table[Td[i] = Chop[Td[i-1].Ad[[i]]],{i,2,dof}];
+Row[{Show[{
+Graphics3D[{
+(*ground*){LightBrown,Cylinder[{{0,0,-2/5},{0,0,-1/5-1/20}},2.2]},
+If[showRobot,{
+If["\<r\>"==jointtype[1],drawJoint[jointtype[1],d[1],a[1],params[[1]]],drawJoint[jointtype[1],params[[1]],a[1],theta[1]]],
+Table[   If["\<r\>"==jointtype[i],
+GeometricTransformation[drawJoint[jointtype[i],d[i],a[i],params[[i]]],Td[i-1]],GeometricTransformation[drawJoint[jointtype[i],params[[i]],a[i],theta[i]],Td[i-1]]],{i,2,dof}],
+GeometricTransformation[drawWristCenter[0],Chop[Td[dof]]]}]
+},SphericalRegion->True,ImageSize->325,Boxed->False,PlotLabel->"\<Workspace\>"],singularspace3D,manipEllip
+}],
+phaseOpt = { PlotRange->Table[If["\<p\>"== Type[[1,i]],{0,1},{-3.15,3.15}],{i,dof}],Axes->True,PlotLabel->"\<Phase Space\>",BoxRatios->{1,1,1}, AxesLabel->Table[
+If["\<p\>"== Type[[1,i]],Subscript[Style["\<d\>",Italic],i],Subscript["\<Theta\>",i]],{i,dof}],ImageSize->280};
+
+Show[singularphasespace3D,
+Graphics3D[{Blue,Sphere[params,0.2],If[showManipulability,{Opacity[0.5],LightBlue,Sphere[params,1/2]}]}]]}]],
+{{dof,3},1,3,1,ControlType->None},
+{singularspace3D, Graphics3D[Sphere[{0,0,0}]],None},
+{singularphasespace3D, Graphics3D[Sphere[{0,0,0}]],None},
+{{iTypeOld,-1},None},
+{{Type,{{"\<r\>","\<r\>","\<r\>"},{0,1,1},{Pi/2,0,0},{2,0,0},{Subscript[q, 1],Subscript[q, 2],Subscript[q, 3]}}},ControlType->None},
+{{params,ConstantArray[0,3]},ControlType->None},
+Column[{Control@{{iType,2,"\<\>"},
+{1->"\<planar robot arm\>",2->"\<elbow robot arm\>",3->"\<PUMA robot arm\>",
+4->"\<offset PUMA arm\>",5->"\<Stanford robot arm\>",6->"\<cylindrical robot arm\>",
+7->"\<spherical robot arm\>",8->"\<offset spherical arm\>",9->"\<twisted spherical\>",
+10->"\<SCARA robot arm\>",11->"\<planar RPR arm\>",12->"\<CNC robot arm\>",
+13->"\<Cartesian robot arm\>",14->"\<linear robot arm\>",15-> "\<spherical wrist\>",16-> "\<offset spherical wrist\>"},PopupMenu},
+"\<\>",
+Row[{Column[{Dynamic[Grid[Table[With[{i=i},
+If["\<p\>"== Type[[1,i]],
+{Subscript[Style["\<d\>",Italic],i],Slider[params[[i]]=0.5;Dynamic[params[[i]]],{0,1,0.01},Appearance->"\<Labeled\>"]},
+{Subscript["\<Theta\>",i],Slider[params[[i]]=0;Dynamic[params[[i]]],{-π 1.01,π 1.01,0.01π},Appearance->"\<Labeled\>"]}
+]],{i,dof}](*End Table*)]]},ItemSize->{36,Automatic}],
+Spacer[5],
+Column[{Control@{{showRobot,False,"\<show robot\>"},{True,False}},
+Control@{{showManipulability,False,"\<show manipulability ellipsoid\>"},{True,False}},
+Control@{{isJLinearVel,"\<Linear\>","\<velocity singularities\>"},{"\<Linear\>","\<Angular\>"}}
+}]}]
+}],
+{isJLinearVelOld,"\<\>",ControlType->None },
+(*End Dynamic*)
+ControlPlacement->Top,
+SaveDefinitions-> True, SynchronousInitialization->False]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Aaron T. Becker
+
+### [Text]
+Yitong Lu
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+This Demonstration creates a serial-link robot arm with three joints (giving three degrees of freedom). You can select from a variety of robot types and manipulate each joint using the sliders. The position of the robot end effector is determined by the forward kinematics equations. A three-dimensional ball of vectors in the phase space (shown with diameter 1) maps to an ellipsoid in the robot workspace. If the configuration is singular, the ellipsoid loses a dimension and collapses into either a two-dimensional ellipse or a one-dimensional vector. Rotational joints rotate infinitely in either direction (the slider jumps by 2π when pushed to the limit). Linear joints move from 0 to 1. Regions where the Jacobian has 1 degree of freedom are shown with solid red lines (or dark red tinted regions), and regions with 2 degrees of freedom with lightly tinted red regions.
+
+### [Text]
+The time derivative of the kinematics equations yields the Jacobian of the robot, which relates the joint velocity to the linear and angular velocity of the end effector. This Demonstration separately examines the linear and angular velocity of the end effector. The singularities are discovered by computing the determinate of the robot Jacobian. Any configurations where this determinate is 0 are plotted in red in both the workspace and the phase space. Rotate the three-dimensional plots to better see the singular sets. At singularities the Jacobian is not invertible.
+
+### [Text]
+\<As an example, consider the "elbow robot arm". For the elbow robot arm, the linear velocity Jacobian is given by:\>
+
+### [Text]
+(\[NoBreak]<<Grid:-2 sin(Subscript[Theta, 1])cos(Subscript[Theta, 2]+(Subscript[Theta, 3])/(2)) cos((Subscript[Theta, 3])/(2))-cos(Subscript[Theta, 1]) (sin(Subscript[Theta, 2])+sin(Subscript[Theta, 2]+Subscript[Theta, 3]))-cos(Subscript[Theta, 1]) sin(Subscript[Theta, 2]+Subscript[Theta, 3]) | 2 cos(Subscript[Theta, 1]) cos(Subscript[Theta, 2]+(Subscript[Theta, 3])/(2)) cos((Subscript[Theta, 3])/(2))-sin(Subscript[Theta, 1]) (sin(Subscript[Theta, 2])+sin(Subscript[Theta, 2]+Subscript[Theta, 3]))-sin(Subscript[Theta, 1]) sin(Subscript[Theta, 2]+Subscript[Theta, 3]) | 0cos(Subscript[Theta, 2])+cos(Subscript[Theta, 2]+Subscript[Theta, 3])cos(Subscript[Theta, 2]+Subscript[Theta, 3])>>\[NoBreak]).
+
+### [Text]
+The determinant of this is -4cos(Subscript[Theta, 2]+(Subscript[Theta, 3])/(2))cos ((Subscript[Theta, 3])/(2))^2 sin ((Subscript[Theta, 3])/(2)), which is zero if Subscript[Theta, 3] is -π, 0 or π, or when Subscript[Theta, 2]+(Subscript[Theta, 3])/(2)=\[PlusMinus](π)/(2). These singularities correspond to the five red planes shown in the right plot of the Thumbnail. The singularities map to a sphere in the robot's workspace and the vertical line above the robot's second joint. If you move the robot's end effector to any of these regions, the ellipsoid collapses to an ellipse. At (Subscript[Theta, 1],Subscript[Theta, 2],Subscript[Theta, 3])=(Subscript[Theta, 1],π/2 ,0), this ellipsoid collapses to a vector.
+
+### [Text]
+\<For the elbow robot arm, the angular velocity Jacobian is given by:\>
+
+### [Text]
+(\[NoBreak]<<Grid:0sin(Subscript[Theta, 1])sin(Subscript[Theta, 1]) | 0-cos(Subscript[Theta, 1])-cos(Subscript[Theta, 1]) | 100>>\[NoBreak]).
+
+### [Text]
+\<The determinant for this is always zero and the manipulability ellipse is a two-dimensional ellipse everywhere in the workspace. Therefore the entire phase space is colored red, and this maps to the red spherical workspace.\>
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] M. W. Spong, S. Hutchinson and M. Vidyasagar, Robot Modeling and Control, Hoboken, NJ: John Wiley and Sons, 2006.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+manipulability
+
+### [Item]
+elbow manipulator
+
+### [Item]
+anthropomorphic arm
+
+### [Item]
+anthropomorphic manipulator
+
+### [Item]
+robot
+
+### [Item]
+robot arm
+
+### [Item]
+manipulator
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Denavit\[Dash]Hartenberg Parameters for a Three-Link Robot
+
+### [Text]
+Forward and Inverse Kinematics for Two-Link Arm
+
+### [Text]
+Forward and Inverse Kinematics of the SCARA Robot
+
+### [Text]
+Inverse Kinematics for a Robot Manipulator with Six Degrees of Freedom
+
+### [Text]
+Jacobian
+
+### [Text]
+Rotation Matrix
+
+### [Text]
+Singular Value Decomposition
+
+### [Text]
+Singular Value
+
+### [Text]
+Determinant
+
+### [Text]
+Matrix Rank
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2021-01-11
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

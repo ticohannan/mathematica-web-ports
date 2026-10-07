@@ -1,0 +1,67 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstration by Shreyas Poyrekar, Arifa Sultana and Aaron T. Becker
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Art Gallery Problem</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <script src="../../shared/requirements.js"></script>
+  <style>
+    /* Manipulate with the controls on top: each setter bar on one row, its label to the left (as in the original) */
+    .manipulate.controls-top .ctl-setter { flex-direction: row; align-items: center; gap: 8px; }
+    .manipulate.controls-top .ctl-setter .ctl-label { min-width: 8.5em; text-align: right; }
+    .manipulate.controls-top .graphic { flex: 0 0 auto; width: 100%; max-width: 564px; min-width: 0; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Art gallery</div>
+    <h1 class="demo-title">Art Gallery Problem</h1>
+
+    <section class="manipulate controls-top" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="graphic" id="graphic" data-testid="graphic">
+        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser.</div></noscript>
+      </div>
+    </section>
+
+    <p class="caption">How many omnidirectional cameras are needed to fully observe every part of a polygonal art gallery?
+      Move the cameras by dragging the colored locators ("guards") to try to cover the polygon with the fewest guards.</p>
+
+    <details class="details" data-testid="details">
+      <summary>Details</summary>
+      <p>This Demonstration calculates the visible region for each guard. Up to eight guards can be used, and all are
+        moveable.</p>
+      <p>Three different environments are provided. The "movable obstacles" environment contains a movable square and
+        triangle.</p>
+      <p>References</p>
+      <p>[1] D.-T. Lee, "Proximity and Reachability in the Plane," Ph.D. dissertation, University of Illinois at
+        Urbana-Champaign, Illinois, ProQuest Dissertations Publishing, 1978 7913526.</p>
+      <p>[2] Wikipedia. "Isovist." (Aug 22, 2019) en.wikipedia.org/wiki/Isovist.</p>
+      <p>[3] Wikipedia. "Visibility Polygon." (Aug 22, 2019) en.wikipedia.org/wiki/Visibility_polygon.</p>
+      <p>[4] Wikipedia. "Visibility Graph." (Aug 22, 2019) en.wikipedia.org/wiki/Visibility_graph.</p>
+      <p>[5] Wikipedia. "Art Gallery Problem." (Aug 22, 2019) en.wikipedia.org/wiki/Art_gallery_problem.</p>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. Drag a guard (colored disk) to move it; in "movable
+      obstacles", drag the center of the square or of the triangle to move the obstacle. As in the original, the
+      locators of unused guards and of the obstacles are invisible but can still be dragged. Arrow keys move a focused
+      locator. All computation runs in your browser.</p>
+    <div class="credits" data-testid="credits">
+      Adapted from <a href="https://demonstrations.wolfram.com/ArtGalleryProblem/">"Art Gallery Problem"</a>
+      by Shreyas Poyrekar, Arifa Sultana and Aaron T. Becker, Wolfram Demonstrations Project (published September 13,
+      2019), licensed <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+      This JavaScript/SVG translation by Tico Hannan (© 2026; produced with an AI code-generation tool) is released under the
+      same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

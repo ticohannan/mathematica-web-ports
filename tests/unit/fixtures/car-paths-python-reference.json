@@ -1,0 +1,856 @@
+{
+ "source": "upstream Python reeds_shepp.py (MIT licence, github.com/nathanlct/reeds-shepp-curves, commit 3a111c6), the code the original Demonstration was converted from",
+ "note": "Independent oracle for tests/unit/car-paths.test.js (R-16). Produced 2026-10-06 by running the generator below with python3 -I against a clone of that repository. The Python uses turning radius 1 and angles in degrees, so positions are divided by minRadius, angles converted with math.degrees, and the length multiplied by minRadius. word = [steering, gear] per element (Python drops zero-length elements). length = path_length * minRadius.",
+ "generator": "# Generates tests/unit/fixtures/car-paths-python-reference.json from the upstream MIT Python library\n# (github.com/nathanlct/reeds-shepp-curves, reeds_shepp.py + utils.py) that the original Demonstration was converted from.\n# Usage: python3 -I rs_fixture.py <dir of reeds_shepp.py> <out.json>\nimport sys, json, math, random\nsys.path.insert(0, sys.argv[1])\nimport reeds_shepp as rs\n\ndef case(start, goal, r):\n    # The Python works with turning radius 1 and angles in DEGREES: scale positions by 1/r, convert angles.\n    s = (start[0] / r, start[1] / r, math.degrees(start[2]))\n    g = (goal[0] / r, goal[1] / r, math.degrees(goal[2]))\n    p = rs.get_optimal_path(s, g)\n    return {\n        'start': start, 'goal': goal, 'minRadius': r,\n        'length': rs.path_length(p) * r,\n        'word': [[e.steering.value, e.gear.value] for e in p],\n        'params': [e.param for e in p],\n    }\n\ncases = [\n    ([-10, -5, -math.pi / 2], [8, 5, math.atan2(-1, 2)], 3),   # the original's initial settings\n    ([8, 5, math.atan2(-1, 2)], [-10, -5, -math.pi / 2], 3),   # ... after \"swap start and goal\"\n    ([-10, -5, math.pi / 2], [8, 5, math.atan2(1, -2)], 3),    # snapshot 2 poses (read off the picture)\n    ([0, 0, 0], [5, 0, 0], 1),                                  # straight ahead\n    ([0, 0, 0], [-5, 0, 0], 2),                                 # straight behind\n    ([0, 0, 0], [0, 1, 0], 1),                                  # sideways shift (parallel parking)\n    ([0, 0, 0], [0, 0, math.pi / 2], 1),                        # turn on the spot\n    ([0, 0, 0], [0, 6, 3.0], 3),                                # nearly a U-turn\n]\nrnd = random.Random(20261006)\nfor k in range(16):\n    s = [round(rnd.uniform(-13, 13), 3), round(rnd.uniform(-8, 8), 3), round(rnd.uniform(-math.pi, math.pi), 6)]\n    g = [round(rnd.uniform(-13, 13), 3), round(rnd.uniform(-8, 8), 3), round(rnd.uniform(-math.pi, math.pi), 6)]\n    r = rnd.choice([0.5, 1, 2, 3, 5, 8.142, 10])\n    cases.append((s, g, r))\n\nout = {\n    'source': 'upstream Python reeds_shepp.py (MIT licence, github.com/nathanlct/reeds-shepp-curves, commit 3a111c6), the code the original Demonstration was converted from',\n    'note': 'Independent oracle for tests/unit/car-paths.test.js (R-16). Produced 2026-10-06 by running the generator below with python3 -I against a clone of that repository. The Python uses turning radius 1 and angles in degrees, so positions are divided by minRadius, angles converted with math.degrees, and the length multiplied by minRadius. word = [steering, gear] per element (Python drops zero-length elements). length = path_length * minRadius.',\n    'generator': open(__file__).read(),\n    'cases': [case(*c) for c in cases],\n}\njson.dump(out, open(sys.argv[2], 'w'), indent=1)\nprint(len(out['cases']), 'cases')\n",
+ "cases": [
+  {
+   "start": [
+    -10,
+    -5,
+    -1.5707963267948966
+   ],
+   "goal": [
+    8,
+    5,
+    -0.4636476090008061
+   ],
+   "minRadius": 3,
+   "length": 24.081141562328455,
+   "word": [
+    [
+     1,
+     -1
+    ],
+    [
+     -1,
+     1
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "params": [
+    0.6464033872903241,
+    1.5707963267948966,
+    4.699796477066468,
+    1.1100509962911302
+   ]
+  },
+  {
+   "start": [
+    8,
+    5,
+    -0.4636476090008061
+   ],
+   "goal": [
+    -10,
+    -5,
+    -1.5707963267948966
+   ],
+   "minRadius": 3,
+   "length": 24.08114156232846,
+   "word": [
+    [
+     1,
+     -1
+    ],
+    [
+     0,
+     -1
+    ],
+    [
+     -1,
+     -1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "params": [
+    1.1100509962911302,
+    4.699796477066469,
+    1.5707963267948966,
+    0.6464033872903241
+   ]
+  },
+  {
+   "start": [
+    -10,
+    -5,
+    1.5707963267948966
+   ],
+   "goal": [
+    8,
+    5,
+    2.677945044588987
+   ],
+   "minRadius": 3,
+   "length": 24.08114156232846,
+   "word": [
+    [
+     -1,
+     1
+    ],
+    [
+     1,
+     -1
+    ],
+    [
+     0,
+     -1
+    ],
+    [
+     -1,
+     -1
+    ]
+   ],
+   "params": [
+    0.6464033872903241,
+    1.5707963267948966,
+    4.699796477066468,
+    1.1100509962911305
+   ]
+  },
+  {
+   "start": [
+    0,
+    0,
+    0
+   ],
+   "goal": [
+    5,
+    0,
+    0
+   ],
+   "minRadius": 1,
+   "length": 5.0,
+   "word": [
+    [
+     0,
+     1
+    ]
+   ],
+   "params": [
+    5.0
+   ]
+  },
+  {
+   "start": [
+    0,
+    0,
+    0
+   ],
+   "goal": [
+    -5,
+    0,
+    0
+   ],
+   "minRadius": 2,
+   "length": 5.0,
+   "word": [
+    [
+     0,
+     -1
+    ]
+   ],
+   "params": [
+    2.5
+   ]
+  },
+  {
+   "start": [
+    0,
+    0,
+    0
+   ],
+   "goal": [
+    0,
+    1,
+    0
+   ],
+   "minRadius": 1,
+   "length": 2.636232143305636,
+   "word": [
+    [
+     1,
+     1
+    ],
+    [
+     -1,
+     -1
+    ],
+    [
+     1,
+     -1
+    ],
+    [
+     -1,
+     1
+    ]
+   ],
+   "params": [
+    0.5053605102841573,
+    0.8127555613686607,
+    0.8127555613686607,
+    0.5053605102841573
+   ]
+  },
+  {
+   "start": [
+    0,
+    0,
+    0
+   ],
+   "goal": [
+    0,
+    0,
+    1.5707963267948966
+   ],
+   "minRadius": 1,
+   "length": 1.5707963267948966,
+   "word": [
+    [
+     -1,
+     1
+    ],
+    [
+     1,
+     -1
+    ],
+    [
+     -1,
+     1
+    ]
+   ],
+   "params": [
+    0.4240310394907405,
+    0.7227342478134156,
+    0.4240310394907405
+   ]
+  },
+  {
+   "start": [
+    0,
+    0,
+    0
+   ],
+   "goal": [
+    0,
+    6,
+    3.0
+   ],
+   "minRadius": 3,
+   "length": 9.044866018662113,
+   "word": [
+    [
+     1,
+     -1
+    ],
+    [
+     -1,
+     1
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     -1,
+     1
+    ]
+   ],
+   "params": [
+    0.07009367812520284,
+    1.5707963267948966,
+    0.014955339554038272,
+    1.3591099950799004
+   ]
+  },
+  {
+   "start": [
+    -0.135,
+    2.784,
+    2.621144
+   ],
+   "goal": [
+    0.255,
+    4.527,
+    -1.676395
+   ],
+   "minRadius": 8.142,
+   "length": 16.167132233056183,
+   "word": [
+    [
+     -1,
+     1
+    ],
+    [
+     1,
+     -1
+    ],
+    [
+     -1,
+     1
+    ]
+   ],
+   "params": [
+    0.6123441547933637,
+    0.946450271568259,
+    0.42685188081796266
+   ]
+  },
+  {
+   "start": [
+    0.643,
+    0.719,
+    1.60641
+   ],
+   "goal": [
+    -12.165,
+    -7.816,
+    -2.40963
+   ],
+   "minRadius": 8.142,
+   "length": 23.664946827659982,
+   "word": [
+    [
+     1,
+     -1
+    ],
+    [
+     -1,
+     1
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "params": [
+    0.7297443034317797,
+    1.5707963267948966,
+    0.5725915372273374,
+    0.03339532304709003
+   ]
+  },
+  {
+   "start": [
+    -6.309,
+    1.208,
+    -0.825866
+   ],
+   "goal": [
+    -7.339,
+    -6.626,
+    -0.00848
+   ],
+   "minRadius": 1,
+   "length": 8.789576690844154,
+   "word": [
+    [
+     1,
+     1
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     -1,
+     1
+    ],
+    [
+     1,
+     -1
+    ]
+   ],
+   "params": [
+    1.0296745248656263,
+    5.912841641112901,
+    1.5707963267948966,
+    0.2762641980707299
+   ]
+  },
+  {
+   "start": [
+    -9.67,
+    7.129,
+    0.932025
+   ],
+   "goal": [
+    -11.441,
+    2.67,
+    1.326755
+   ],
+   "minRadius": 0.5,
+   "length": 4.799513474973272,
+   "word": [
+    [
+     1,
+     -1
+    ],
+    [
+     0,
+     -1
+    ],
+    [
+     1,
+     -1
+    ]
+   ],
+   "params": [
+    0.2634001963928557,
+    9.204296949946546,
+    0.13132980360714402
+   ]
+  },
+  {
+   "start": [
+    -8.252,
+    -3.631,
+    -0.708926
+   ],
+   "goal": [
+    -7.074,
+    6.746,
+    -1.716084
+   ],
+   "minRadius": 5,
+   "length": 11.647739532283092,
+   "word": [
+    [
+     -1,
+     -1
+    ],
+    [
+     0,
+     -1
+    ],
+    [
+     1,
+     -1
+    ]
+   ],
+   "params": [
+    1.503614105990008,
+    0.3294776944766023,
+    0.4964561059900081
+   ]
+  },
+  {
+   "start": [
+    9.975,
+    -7.999,
+    1.176332
+   ],
+   "goal": [
+    4.027,
+    5.621,
+    -2.36805
+   ],
+   "minRadius": 0.5,
+   "length": 15.339290219533545,
+   "word": [
+    [
+     -1,
+     1
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     -1,
+     1
+    ],
+    [
+     1,
+     -1
+    ]
+   ],
+   "params": [
+    0.7949130591309587,
+    27.939777131887507,
+    1.5707963267948966,
+    0.3730939212537301
+   ]
+  },
+  {
+   "start": [
+    11.386,
+    -0.062,
+    1.760111
+   ],
+   "goal": [
+    11.308,
+    -7.353,
+    1.338945
+   ],
+   "minRadius": 5,
+   "length": 7.307110363854629,
+   "word": [
+    [
+     -1,
+     -1
+    ],
+    [
+     0,
+     -1
+    ],
+    [
+     -1,
+     -1
+    ]
+   ],
+   "params": [
+    0.19576431373534542,
+    1.0402560727709258,
+    0.22540168626465457
+   ]
+  },
+  {
+   "start": [
+    7.453,
+    2.858,
+    0.192513
+   ],
+   "goal": [
+    8.129,
+    1.28,
+    -1.203118
+   ],
+   "minRadius": 3,
+   "length": 4.186892999999998,
+   "word": [
+    [
+     -1,
+     -1
+    ],
+    [
+     1,
+     1
+    ],
+    [
+     -1,
+     -1
+    ]
+   ],
+   "params": [
+    0.438367762879849,
+    0.9179032865648988,
+    0.039359950555251544
+   ]
+  },
+  {
+   "start": [
+    -8.19,
+    -0.046,
+    -2.173077
+   ],
+   "goal": [
+    10.235,
+    -5.926,
+    -2.4395
+   ],
+   "minRadius": 0.5,
+   "length": 19.591839443808162,
+   "word": [
+    [
+     -1,
+     -1
+    ],
+    [
+     0,
+     -1
+    ],
+    [
+     1,
+     -1
+    ]
+   ],
+   "params": [
+    1.30944139897623,
+    36.83121908966386,
+    1.04301839897623
+   ]
+  },
+  {
+   "start": [
+    0.723,
+    -0.096,
+    -1.699692
+   ],
+   "goal": [
+    -5.172,
+    5.655,
+    2.458173
+   ],
+   "minRadius": 0.5,
+   "length": 8.7453019973094,
+   "word": [
+    [
+     -1,
+     -1
+    ],
+    [
+     1,
+     1
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     -1,
+     1
+    ]
+   ],
+   "params": [
+    0.6676512029643797,
+    1.5707963267948966,
+    15.139029242279836,
+    0.11312722257968932
+   ]
+  },
+  {
+   "start": [
+    10.567,
+    3.978,
+    2.365506
+   ],
+   "goal": [
+    2.433,
+    6.701,
+    -0.211651
+   ],
+   "minRadius": 10,
+   "length": 25.77156999999999,
+   "word": [
+    [
+     1,
+     1
+    ],
+    [
+     -1,
+     -1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "params": [
+    1.084581897907773,
+    1.18447740949732,
+    0.30809769259490594
+   ]
+  },
+  {
+   "start": [
+    8.976,
+    -4.517,
+    -1.542997
+   ],
+   "goal": [
+    3.153,
+    0.145,
+    2.671363
+   ],
+   "minRadius": 3,
+   "length": 10.644384032699579,
+   "word": [
+    [
+     -1,
+     -1
+    ],
+    [
+     1,
+     1
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     -1,
+     1
+    ]
+   ],
+   "params": [
+    0.8305444018609331,
+    1.5707963267948966,
+    0.8142718607677866,
+    0.33251542147624313
+   ]
+  },
+  {
+   "start": [
+    5.468,
+    -7.634,
+    -0.611117
+   ],
+   "goal": [
+    -1.082,
+    -2.052,
+    -0.175581
+   ],
+   "minRadius": 0.5,
+   "length": 8.618503172666758,
+   "word": [
+    [
+     -1,
+     -1
+    ],
+    [
+     0,
+     -1
+    ],
+    [
+     1,
+     -1
+    ]
+   ],
+   "params": [
+    0.10319942695694796,
+    16.59507149141962,
+    0.5387354269569479
+   ]
+  },
+  {
+   "start": [
+    11.3,
+    -1.083,
+    -1.107725
+   ],
+   "goal": [
+    -0.226,
+    0.789,
+    -2.671095
+   ],
+   "minRadius": 3,
+   "length": 14.957239706022449,
+   "word": [
+    [
+     -1,
+     -1
+    ],
+    [
+     1,
+     1
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     -1,
+     1
+    ]
+   ],
+   "params": [
+    0.776524097449445,
+    1.5707963267948966,
+    1.8544757201854662,
+    0.7839504242443414
+   ]
+  },
+  {
+   "start": [
+    2.407,
+    0.6,
+    0.820535
+   ],
+   "goal": [
+    -3.669,
+    6.428,
+    -1.318885
+   ],
+   "minRadius": 3,
+   "length": 10.572649649523793,
+   "word": [
+    [
+     1,
+     1
+    ],
+    [
+     -1,
+     -1
+    ],
+    [
+     0,
+     -1
+    ],
+    [
+     -1,
+     -1
+    ]
+   ],
+   "params": [
+    0.26386196100773995,
+    1.5707963267948966,
+    1.3847965498412638,
+    0.3047617121973638
+   ]
+  },
+  {
+   "start": [
+    -11.331,
+    -0.881,
+    0.550331
+   ],
+   "goal": [
+    0.19,
+    1.984,
+    2.506957
+   ],
+   "minRadius": 3,
+   "length": 15.042168841149651,
+   "word": [
+    [
+     1,
+     1
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     -1,
+     1
+    ],
+    [
+     1,
+     -1
+    ]
+   ],
+   "params": [
+    0.4005748760800778,
+    2.256280528223062,
+    1.5707963267948966,
+    0.786404549285181
+   ]
+  }
+ ],
+ "exactDefault": {
+  "note": "mpmath 1.4.1 at 300 bits: the optimal path of the initial settings (reflect[timeflip[path8[-x,-y,Theta]]]) evaluated exactly and rounded once. Equal to the original notebook's saved optPath, element for element; machine arithmetic (the port, the Python) gives 0.6464033872903241 for the first parameter.",
+  "script": "# 300-bit evaluation of the original's formulas for its saved (EXACT, integer) initial settings, rounded once to\n# machine numbers: what Mathematica's symbolic evaluation + N[path] gives when it rounds the exact value correctly.\n# Usage: python3 -I exact_default.py <dir containing mpmath> <fixture.json>   (adds the key \"exactDefault\")\nimport sys, json\nsys.path.insert(0, sys.argv[1])\nfrom mpmath import mp, mpf, sin, cos, atan2, sqrt, pi, floor\nmp.prec = 300\nx0, y0, th0 = mpf(-10), mpf(-5), atan2(mpf(-2), mpf(0))          # start: locs[[1]] = {-10,-5}, heading to {-10,-7}\nx1, y1, th1 = mpf(8), mpf(5), atan2(mpf(-1), mpf(2))             # goal: locs[[3]] = {8,5}, heading to {10,4}\nr = mpf(3)                                                       # minRadius = 3 (exact)\ndx, dy = (x1 - x0) / r, (y1 - y0) / r                            # changeOfBasisR\nX, Y, T = dx * cos(th0) + dy * sin(th0), -dx * sin(th0) + dy * cos(th0), th1 - th0\ndef modpi(a):\n    p = a - 2 * pi * floor(a / (2 * pi))\n    return p - 2 * pi if p > pi else p\nx, y, Phi = -X, -Y, T                                            # reflect[timeflip[path8[-x, -y, Theta]]]\nxi, eta = x - sin(Phi), y - 1 + cos(Phi)\nrho, Th = sqrt(xi ** 2 + eta ** 2), atan2(eta, xi)\nu = sqrt(rho ** 2 - 4) - 2\na = atan2(mpf(2), u + 2)\nt = modpi(Th + pi / 2 + a)\nv = modpi(t - Phi + pi / 2)\nf = json.load(open(sys.argv[2]))\nf['exactDefault'] = {\n    'note': 'mpmath 1.4.1 at 300 bits: the optimal path of the initial settings (reflect[timeflip[path8[-x,-y,Theta]]]) evaluated exactly and rounded once. Equal to the original notebook\\'s saved optPath, element for element; machine arithmetic (the port, the Python) gives 0.6464033872903241 for the first parameter.',\n    'script': open(__file__).read(),\n    'params': [float(t), float(pi / 2), float(u), float(v)],\n    'pathLengthTimesRadius': float((t + pi / 2 + u + v) * r),\n    'distance': float(sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2 + (th1 - th0) ** 2)),\n}\njson.dump(f, open(sys.argv[2], 'w'), indent=1)\nprint(f['exactDefault']['params'], f['exactDefault']['pathLengthTimesRadius'], f['exactDefault']['distance'])\n",
+  "params": [
+   0.6464033872903242,
+   1.5707963267948966,
+   4.699796477066468,
+   1.1100509962911302
+  ],
+  "pathLengthTimesRadius": 24.081141562328458,
+  "distance": 20.62100332872562
+ }
+}

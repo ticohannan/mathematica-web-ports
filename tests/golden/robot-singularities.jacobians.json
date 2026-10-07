@@ -1,0 +1,552 @@
+{
+ "source": "Robot-Singularities-in-Three-Link-Manipulators.nb, Manipulate input cell (CellID 365636567): the Piecewise matrices of myJacob and myJacobAngular, linearised from the box structure (GridBox rows/columns) by the porting session; checked against an independent extraction by the reviewer.",
+ "licence": "CC BY-NC-SA 3.0 (from the original Wolfram Demonstration by Aaron T. Becker and Yitong Lu)",
+ "myJacob": [
+  [
+   [
+    "-Sin[q1]-Sin[q1+q2]-Sin[q1+q2+q3]",
+    "-Sin[q1+q2]-Sin[q1+q2+q3]",
+    "-Sin[q1+q2+q3]"
+   ],
+   [
+    "Cos[q1]+Cos[q1+q2]+Cos[q1+q2+q3]",
+    "Cos[q1+q2]+Cos[q1+q2+q3]",
+    "Cos[q1+q2+q3]"
+   ],
+   [
+    "0",
+    "0",
+    "0"
+   ]
+  ],
+  [
+   [
+    "-2 Cos[q2+((q3)/(2))] Cos[((q3)/(2))] Sin[q1]",
+    "-Cos[q1] (Sin[q2]+Sin[q2+q3])",
+    "-Cos[q1] Sin[q2+q3]"
+   ],
+   [
+    "2 Cos[q1] Cos[q2+((q3)/(2))] Cos[((q3)/(2))]",
+    "-Sin[q1] (Sin[q2]+Sin[q2+q3])",
+    "-Sin[q1] Sin[q2+q3]"
+   ],
+   [
+    "0",
+    "Cos[q2]+Cos[q2+q3]",
+    "Cos[q2+q3]"
+   ]
+  ],
+  [
+   [
+    "-2 Cos[q2+((q3)/(2))] Cos[((q3)/(2))] Sin[q1]",
+    "-Cos[q1] (Sin[q2]+Sin[q2+q3])",
+    "-Cos[q1] Sin[q2+q3]"
+   ],
+   [
+    "2 Cos[q1] Cos[q2+((q3)/(2))] Cos[((q3)/(2))]",
+    "-Sin[q1] (Sin[q2]+Sin[q2+q3])",
+    "-Sin[q1] Sin[q2+q3]"
+   ],
+   [
+    "0",
+    "Cos[q2]+Cos[q2+q3]",
+    "Cos[q2+q3]"
+   ]
+  ],
+  [
+   [
+    "((2)/(3)) (Cos[q1]-3 Cos[q2+((q3)/(2))] Cos[((q3)/(2))] Sin[q1])",
+    "-Cos[q1] (Sin[q2]+Sin[q2+q3])",
+    "-Cos[q1] Sin[q2+q3]"
+   ],
+   [
+    "((2)/(3)) (3 Cos[q1] Cos[q2+((q3)/(2))] Cos[((q3)/(2))]+Sin[q1])",
+    "-Sin[q1] (Sin[q2]+Sin[q2+q3])",
+    "-Sin[q1] Sin[q2+q3]"
+   ],
+   [
+    "0",
+    "Cos[q2]+Cos[q2+q3]",
+    "Cos[q2+q3]"
+   ]
+  ],
+  [
+   [
+    "-Cos[q1]-Sin[q1] Sin[q2] q3",
+    "Cos[q1] Cos[q2] q3",
+    "Cos[q1] Sin[q2]"
+   ],
+   [
+    "-Sin[q1]+Cos[q1] Sin[q2] q3",
+    "Cos[q2] Sin[q1]q3",
+    "Sin[q1] Sin[q2]"
+   ],
+   [
+    "0",
+    "-Sin[q2] q3",
+    "Cos[q2]"
+   ]
+  ],
+  [
+   [
+    "-Cos[q1] q3",
+    "0",
+    "-Sin[q1]"
+   ],
+   [
+    "-Sin[q1]q3",
+    "0",
+    "Cos[q1]"
+   ],
+   [
+    "0",
+    "1",
+    "0"
+   ]
+  ],
+  [
+   [
+    "-Sin[q1] Sin[q2] q3",
+    "Cos[q1] Cos[q2] q3",
+    "Cos[q1] Sin[q2]"
+   ],
+   [
+    "Cos[q1] Sin[q2]q3",
+    "Cos[q2] Sin[q1] q3",
+    "Sin[q1] Sin[q2]"
+   ],
+   [
+    "0",
+    "-Sin[q2] q3",
+    "Cos[q2]"
+   ]
+  ],
+  [
+   [
+    "-Cos[q2] Sin[q1]-Cos[q1] q3",
+    "-Cos[q1] Sin[q2]",
+    "-Sin[q1]"
+   ],
+   [
+    "Cos[q1] Cos[q2]-Sin[q1] q3",
+    "-Sin[q1] Sin[q2]",
+    "Cos[q1]"
+   ],
+   [
+    "0",
+    "-Cos[q2]",
+    "0"
+   ]
+  ],
+  [
+   [
+    "-Sin[q1] (Cos[q2]+Sin[q2]q3)",
+    "Cos[q1] (-Sin[q2]+Cos[q2] q3)",
+    "Cos[q1] Sin[q2]"
+   ],
+   [
+    "Cos[q1] (Cos[q2]+Sin[q2] q3)",
+    "Sin[q1] (-Sin[q2]+Cos[q2] q3)",
+    "Sin[q1] Sin[q2]"
+   ],
+   [
+    "0",
+    "-Cos[q2]-Sin[q2] q3",
+    "Cos[q2]"
+   ]
+  ],
+  [
+   [
+    "-1.2 Sin[q1]-0.6 Sin[q1+q2]",
+    "-0.6 Sin[q1+q2]",
+    "0"
+   ],
+   [
+    "1.2 Cos[q1]+0.6 Cos[q1+q2]",
+    "0.6 Cos[q1+q2]",
+    "0"
+   ],
+   [
+    "0",
+    "0",
+    "-1"
+   ]
+  ],
+  [
+   [
+    "-2 Sin[q1]-Sin[q1-q3]+Cos[q1] q2",
+    "Sin[q1]",
+    "Sin[q1-q3]"
+   ],
+   [
+    "2 Cos[q1]+Cos[q1-q3]+Sin[q1] q2",
+    "-Cos[q1]",
+    "-Cos[q1-q3]"
+   ],
+   [
+    "0",
+    "0",
+    "0"
+   ]
+  ],
+  [
+   [
+    "0",
+    "1",
+    "0"
+   ],
+   [
+    "0",
+    "0",
+    "1"
+   ],
+   [
+    "1",
+    "0",
+    "0"
+   ]
+  ],
+  [
+   [
+    "0",
+    "0",
+    "0"
+   ],
+   [
+    "0",
+    "1",
+    "0"
+   ],
+   [
+    "1",
+    "0",
+    "-1"
+   ]
+  ],
+  [
+   [
+    "0",
+    "0",
+    "0"
+   ],
+   [
+    "0",
+    "0",
+    "0"
+   ],
+   [
+    "1",
+    "1",
+    "1"
+   ]
+  ],
+  [
+   [
+    "Sin[q1] Sin[q2]",
+    "-Cos[q1] Cos[q2]",
+    "0"
+   ],
+   [
+    "-Cos[q1] Sin[q2]",
+    "-Cos[q2] Sin[q1]",
+    "0"
+   ],
+   [
+    "0",
+    "-Sin[q2]",
+    "0"
+   ]
+  ],
+  [
+   [
+    "((1)/(2)) (Cos[q1]-Cos[q2] Cos[q3] Sin[q1]+2 Sin[q1] Sin[q2]-Cos[q1] Sin[q3])",
+    "-((1)/(2)) Cos[q1] (2 Cos[q2]+Cos[q3] Sin[q2])",
+    "((1)/(2)) (-Cos[q3] Sin[q1]-Cos[q1] Cos[q2] Sin[q3])"
+   ],
+   [
+    "((1)/(2)) (Cos[q1] Cos[q2] Cos[q3]+Sin[q1]-2 Cos[q1] Sin[q2]-Sin[q1] Sin[q3])",
+    "-((1)/(2)) Sin[q1] (2 Cos[q2]+Cos[q3] Sin[q2])",
+    "((1)/(2)) (Cos[q1] Cos[q3]-Cos[q2] Sin[q1] Sin[q3])"
+   ],
+   [
+    "0",
+    "((1)/(2)) Cos[q2] Cos[q3]-Sin[q2]",
+    "-((1)/(2)) Sin[q2] Sin[q3]"
+   ]
+  ]
+ ],
+ "myJacobAngular": [
+  [
+   [
+    "0",
+    "0",
+    "0"
+   ],
+   [
+    "0",
+    "0",
+    "0"
+   ],
+   [
+    "1",
+    "1",
+    "1"
+   ]
+  ],
+  [
+   [
+    "0",
+    "Sin[q1]",
+    "Sin[q1]"
+   ],
+   [
+    "0",
+    "-Cos[q1]",
+    "-Cos[q1]"
+   ],
+   [
+    "1",
+    "0",
+    "0"
+   ]
+  ],
+  [
+   [
+    "0",
+    "Sin[q1]",
+    "Sin[q1]"
+   ],
+   [
+    "0",
+    "-Cos[q1]",
+    "-Cos[q1]"
+   ],
+   [
+    "1",
+    "0",
+    "0"
+   ]
+  ],
+  [
+   [
+    "0",
+    "Sin[q1]",
+    "Sin[q1]"
+   ],
+   [
+    "0",
+    "-Cos[q1]",
+    "-Cos[q1]"
+   ],
+   [
+    "1",
+    "0",
+    "0"
+   ]
+  ],
+  [
+   [
+    "0",
+    "-Sin[q1]",
+    "0"
+   ],
+   [
+    "0",
+    "Cos[q1]",
+    "0"
+   ],
+   [
+    "1",
+    "0",
+    "0"
+   ]
+  ],
+  [
+   [
+    "0",
+    "0",
+    "0"
+   ],
+   [
+    "0",
+    "0",
+    "0"
+   ],
+   [
+    "1",
+    "0",
+    "0"
+   ]
+  ],
+  [
+   [
+    "0",
+    "-Sin[q1]",
+    "0"
+   ],
+   [
+    "0",
+    "Cos[q1]",
+    "0"
+   ],
+   [
+    "1",
+    "0",
+    "0"
+   ]
+  ],
+  [
+   [
+    "0",
+    "-Sin[q1]",
+    "0"
+   ],
+   [
+    "0",
+    "Cos[q1]",
+    "0"
+   ],
+   [
+    "1",
+    "0",
+    "0"
+   ]
+  ],
+  [
+   [
+    "0",
+    "-Sin[q1]",
+    "0"
+   ],
+   [
+    "0",
+    "Cos[q1]",
+    "0"
+   ],
+   [
+    "1",
+    "0",
+    "0"
+   ]
+  ],
+  [
+   [
+    "0",
+    "0",
+    "0"
+   ],
+   [
+    "0",
+    "0",
+    "0"
+   ],
+   [
+    "1",
+    "1",
+    "0"
+   ]
+  ],
+  [
+   [
+    "0",
+    "0",
+    "0"
+   ],
+   [
+    "0",
+    "0",
+    "0"
+   ],
+   [
+    "1",
+    "0",
+    "-1"
+   ]
+  ],
+  [
+   [
+    "0",
+    "0",
+    "0"
+   ],
+   [
+    "0",
+    "0",
+    "0"
+   ],
+   [
+    "0",
+    "0",
+    "0"
+   ]
+  ],
+  [
+   [
+    "0",
+    "0",
+    "0"
+   ],
+   [
+    "0",
+    "0",
+    "0"
+   ],
+   [
+    "0",
+    "0",
+    "0"
+   ]
+  ],
+  [
+   [
+    "0",
+    "0",
+    "0"
+   ],
+   [
+    "0",
+    "0",
+    "0"
+   ],
+   [
+    "0",
+    "0",
+    "0"
+   ]
+  ],
+  [
+   [
+    "0",
+    "Sin[q1]",
+    "-Cos[q1] Sin[q2]"
+   ],
+   [
+    "0",
+    "-Cos[q1]",
+    "-Sin[q1] Sin[q2]"
+   ],
+   [
+    "1",
+    "0",
+    "-Cos[q2]"
+   ]
+  ],
+  [
+   [
+    "0",
+    "Sin[q1]",
+    "-Cos[q1] Sin[q2]"
+   ],
+   [
+    "0",
+    "-Cos[q1]",
+    "-Sin[q1] Sin[q2]"
+   ],
+   [
+    "1",
+    "0",
+    "Cos[q2]"
+   ]
+  ]
+ ]
+}

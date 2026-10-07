@@ -1,0 +1,797 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Private reference (R-04). Extracted 2026-10-05 with a tolerant copy of tools/nbextract.py; cached outputs skipped.
+
+### [Title]
+Shortest Path for Forward and Reverse Motion of a Car
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+This Demonstration shows the shortest paths for a car in forward and reverse motion, with a minimum turning radius Subscript[r, min]. Use the locators to change the start and goal positions and orientations. A car with both forward and reverse gears is often called a Reeds\[Dash]Shepp car, while one with only a forward gear is a Dubins car, in honor of the mathematicians who first studied these problems.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+(*
+Implementation of the optimal path formulas given in the following paper:
+"\<OPTIMAL PATHS FOR A CAR THAT GOES BOTH FORWARDS AND BACKWARDS\>"
+J. A. REEDS AND L. A. SHEPP
+notes: there are some typos in the formulas given in the paper;
+some formulas have been adapted (cf http://msl.cs.uiuc.edu/~lavalle/cs326a/rs.c)
+Each of the 12 functions (each representing 4 of the 48 possible words)
+have 3 arguments x, y and Phi, the goal position and angle (in degrees) of the
+object given it starts at position (0, 0) and angle 0, and returns the
+corresponding path (if it exists) as a list of PathElements (or an empty list).
+(Actually there are less than 48 possible words but this code is not optimized.)
+Converted from the Python at:
+https://github.com/nathanlct/reeds-shepp-curves/blob/master/reeds_shepp.py
+*)
+{sLEFT,sSTRAIGHT,sRIGHT}={-1,0,1}; (*Constants for turning*)
+
+### [Input] (init)
+{gFORWARD,gBACKWARD} = {1,-1}; (*Constants for movement direction*)
+
+### [Input] (init)
+getPos[path_,pose_, minRadius_:1, progress_:0]:=
+(*Extracts the pose of a car that started at position & orientation pose, and followed progress % of path (with minimum turning radius minRadius) *)
+(*also returns Alpha, the wheel angle for the front wheels *)
+Module[{i,gear,steer,param,pos,Theta,angS,angE,distTrav,distSoFar,breakHere,sectionParam,Alpha},
+distTrav = progress*pathLength[path];
+distSoFar=0;
+pos = pose[[1;;2]];Theta = pose[[3]];
+breakHere = False;
+Alpha=0;
+i=0;
+While[i<Length[path],i=i+1;
+param = path[[i,1]];steer = path[[i,2]]; gear =path[[i,3]];
+If[distTrav<distSoFar+param, breakHere = True; sectionParam = distTrav-distSoFar,sectionParam = param];
+If[steer==-1,(*Left*)
+angS = Theta-π/2;
+Alpha=minRadius;
+angE = angS+gear*sectionParam;
+pos = pos+minRadius*{Cos[angE]-Cos[angS],Sin[angE]-Sin[angS]};
+ Theta=Theta+gear*sectionParam;
+,
+If[steer==1,(*Right*)
+angS = Theta+π/2; 
+Alpha=-minRadius;
+angE = angS-gear*sectionParam;
+pos = pos+minRadius*{Cos[angE]-Cos[angS],Sin[angE]-Sin[angS]};
+ Theta=Theta-gear*sectionParam;
+,
+If[steer==0,(*Straight*)
+Alpha=0;
+pos = pos+gear*minRadius*sectionParam{Cos[Theta],Sin[Theta]};
+]]];
+If[breakHere, Break[]];
+distSoFar = distSoFar+param;
+];(*End while loop*)
+{pos,Theta,Alpha}
+]
+
+### [Input] (init)
+drawCar[xy_,Theta_,Alpha_,opac_]:= (* draws a car icon, centered at middle of rear axle, with opacity opac, turing around a circle center Alpha to the left.*)
+{Opacity[opac],EdgeForm[Directive[Opacity[opac],Black]],Translate[Rotate[
+Translate[{Rectangle[{-1,-1/2},{1,1/2}],
+Darker[Gray],
+{Yellow,Opacity[0.8*opac],EdgeForm[{Thin,Black}],Polygon[{{1,.35},{4,.05},{4,.55}}],Polygon[{{1,-.35},{4,-.05},{4,-.55}}]},
+Line[{{-.7,.35},{-.7,-.35}}],Line[{{.7,.35},{.7,-.35}}],
+Rotate[Rectangle[{.5,.35},{.9,.4}],If[Alpha==0,0,ArcTan[Alpha-.375,1.4]],{.7,.375}],(*front left tire*)
+Rectangle[{-.5,.35},{-.9,.4}],(*back tires*)
+Rectangle[{-.5,-.35},{-.9,-.4}],
+Rotate[Rectangle[{.5,-.35},{.9,-.4}],If[Alpha==0,0,ArcTan[Alpha+.375,1.4]],{.7,-.375}],(*front right tire*)
+Black,Arrowheads[.02],Arrow[{{0,0},{1.0,0}}]
+},{0.7,0}],Theta,{0,0}],xy]}
+
+### [Input] (init)
+drawPath[color_,path_,pose_, minRadius_:1, showConstruction_:False]:=Module[{gear,steer,param,pos,Theta,posOld,Thetaold,angS,angE, center},
+(* Draw the path (list of rs.PathElements). Pose is assumed to be in {m,m,rad}*)
+pos = pose[[1;;2]];
+Theta = pose[[3]];
+{color,
+Table[
+param = e[[1]];steer =e[[2]]; gear = e[[3]];posOld = pos;Thetaold = Theta;
+If[steer==-1,(*Left*)
+center = pos+minRadius*{Cos[Theta+π/2],Sin[Theta+π/2]};
+angS = Theta-π/2; angE = angS+gear*param;
+pos = pos+minRadius*{Cos[angE]-Cos[angS],Sin[angE]-Sin[angS]};
+ Theta=Theta+gear*param;
+{If[showConstruction,{Gray,PointSize[0.01], Point[center],Thin, Gray, Circle[center,minRadius]},Null],Circle[center,minRadius,{angS,angE} ]}
+,
+If[steer==1,(*Right*)
+center = pos+minRadius*{Cos[Theta-π/2],Sin[Theta-π/2]};
+angS = Theta+π/2; angE = angS-gear*param;
+pos = pos+minRadius*{Cos[angE]-Cos[angS],Sin[angE]-Sin[angS]};
+ Theta=Theta-gear*param;
+{If[showConstruction,{Gray,PointSize[0.01], Point[center],Thin, Gray, Circle[center,minRadius]},Null],Circle[center,minRadius,{angS,angE} ]}
+,
+If[steer==0,(*Straight*)
+pos = posOld+gear*minRadius*param{Cos[Theta],Sin[Theta]}; { Line[{posOld,pos}]}
+]]]
+,{e,path}]}]
+
+### [Input] (init)
+changeOfBasisR[p1_,p2_,minRadius_:1]:=Module[{xn,yn,Thetan, Theta1, dx,dy},
+(*Given p1 = {x1,y1,Theta1} and p2 = {x2,y2,Theta2} represented in a coordinate system with origin {0,0} and rotation 0 (in radians) with minimum turning radiusminRadius, return the position and orientation of p2 in the coordinate system in which origin is {x1,y1} and rotation Theta2-Theta1 in radians, and minRadius is 1.*)
+Theta1 =p1[[3]];
+dx = (p2[[1]]-p1[[1]])/(minRadius);
+dy =( p2[[2]]-p1[[2]])/(minRadius);
+xn = dx*Cos[Theta1]+dy*Sin[Theta1];
+yn = -dx*Sin[Theta1]+dy*Cos[Theta1];
+Thetan = p2[[3]]-p1[[3]];
+{xn,yn,Thetan}
+]
+
+### [Input] (init)
+modπ[Theta_]:=Module[{Phi}, (*Returns the angle Phi = Theta mod (2π) such that -π <=Phi<= π. *)
+Phi=Mod[Theta,2π];
+If[ Phi<-π, Phi=Phi+2π];
+If[ Phi> π, Phi=Phi-2π];
+Phi
+]
+
+### [Input] (init)
+mod2π[Theta_]:=Module[{Phi}, (*Returns the angle Phi = Theta mod (2π) such that 0 <=Phi<= 2π. *)
+Phi=Mod[Theta,2π];
+If[ Phi<0, Phi=Phi+2π];
+Phi
+]
+
+### [Input] (init)
+angfrom1to2[p1_,p2_]:=Last@cart2Polar[p2[[1]]-p1[[1]],p2[[2]]-p1[[2]]](*Angle in radians from x-axis of vector from p1 to p2.*)
+
+### [Input] (init)
+cart2Polar[x_,y_]:=Module[{r,Theta},(*Returns the polar coordinates (r,Theta) of the point (x,y).*)
+r = Sqrt[x^2+y^2];
+Theta = If[r>0,ArcTan[x,y],0];
+{r,Theta}]
+
+### [Input] (init)
+createPathElement[{param_,steer_,gear_}]:=If[param<0, reverseGear[{-param,steer,gear}],{param,steer,gear}];
+(*Path element: {parameter, steering, gear} *)
+
+### [Input] (init)
+reverseSteering[pathElement_]:= {pathElement[[1]],-pathElement[[2]],pathElement[[3]] }
+
+### [Input] (init)
+reverseGear[pathElement_]:={pathElement[[1]],pathElement[[2]],-pathElement[[3]] }
+
+### [Input] (init)
+pathLength[path_]:=Total[path[[;;,1]] ]
+
+### [Input] (init)
+getOptimalPath[start_,end_,minRadius_:1]:=Module[{paths},
+(* Return the shortest path from start to end among those that exist. Start and end (m,m,radians).*)
+paths=getAllPaths[start,end,minRadius];
+{First@MinimalBy[paths,pathLength],paths}
+]
+
+### [Input] (init)
+getOptimalDubinsPath[start_,end_,minRadius_:1]:=Module[{paths},
+(* Return the shortest path from start to end among those that exist. Start and end (m,m,radians).*)
+paths=getAllDubinsPaths[start,end,minRadius];
+{First@MinimalBy[paths,pathLength],paths}
+]
+
+### [Input] (init)
+getAllDubinsPaths[start_,end_,minRadius_:1]:=Module[{pathFns,paths,x,y,Theta},
+(*    Return a list of all the paths from start to end generated by the
+    6 functions *)
+pathFns = {dLSL,dLSR,dRSR,dRSL,dLRL,dRLR};
+paths={};
+(* get coordinates of end in the set of axis where start is (0,0,0) *)
+{x,y,Theta}=changeOfBasisR[start,end,minRadius];
+(* get the four variants for each path type, cf article*)
+Table[AppendTo[paths,getPath[x,y,Theta]];,{getPath,pathFns}];
+(*remove path elements that have parameter 0*)
+paths=DeleteCases[paths,{0,_,_},2];
+(* remove empty paths*)
+paths = DeleteCases[paths,{},2];
+paths (*Return*) 
+]
+
+### [Input] (init)
+getAllPaths[start_,end_,minRadius_:1]:=Module[{pathFns,paths,x,y,Theta},
+(* Return a list of all the paths from start to end generated by the 12 functions and their variants *)
+pathFns = {path1,path2,path3,path4,path5,path6,path7,path8,path9,path10,path11,path12};
+paths={};
+(* get coordinates of end in the set of axis where start is (0,0,0) *)
+{x,y,Theta}=changeOfBasisR[start,end,minRadius];
+(* get the four variants for each path type, cf article*)
+Table[
+AppendTo[paths,getPath[x,y,Theta]];
+AppendTo[paths,timeflip[getPath[-x,y,-Theta]]];
+AppendTo[paths,reflect[getPath[x,-y,-Theta]]];
+AppendTo[paths,reflect[timeflip[getPath[-x,-y,Theta]]]];
+,{getPath,pathFns}];
+(*remove path elements that have parameter 0*)
+paths=DeleteCases[paths,{0,_,_},2];
+(* remove empty paths*)
+paths = DeleteCases[paths,{},2];
+paths (*Return*) 
+]
+
+### [Input] (init)
+dLSL[x_,y_,Phi_]:=Module[{path,u,t,v},(*Formula: Dubins LSL *)
+path={};
+{u,t}=cart2Polar[x-Sin[Phi],y-1+Cos[Phi]];
+t=mod2π[t];
+v=mod2π[Phi-t];
+AppendTo[path,createPathElement[{t,sLEFT,gFORWARD}]];
+AppendTo[path,createPathElement[{u,sSTRAIGHT,gFORWARD}]];
+AppendTo[path,createPathElement[{v,sLEFT,gFORWARD}]];
+(*return*) N[ path]
+]
+
+### [Input] (init)
+dRSR[x_,y_,Phi_]:=Module[{path,u,t,v},(*Formula: Dubins RSR *)
+path={};
+{u,t}=cart2Polar[x+Sin[Phi],-y+Cos[Phi]-1];
+t = mod2π[t];
+v=mod2π[-t-Phi];(*mod2π[ (t+π/2)-Phi];mod2π[Phi-t];*)
+AppendTo[path,createPathElement[{t,sRIGHT,gFORWARD}]];
+AppendTo[path,createPathElement[{u,sSTRAIGHT,gFORWARD}]];
+AppendTo[path,createPathElement[{v,sRIGHT,gFORWARD}]];
+(*return*) N[ path]
+]
+
+### [Input] (init)
+dLSR[x_,y_,Phi_]:=Module[{path,u,t,v,ρ,t1},(*Formula: Dubins LSR *)
+path={};
+{ρ,t1}=cart2Polar[x+Sin[Phi],y-1-Cos[Phi]];
+If[ ρ>=2,
+u=Sqrt[ρ^2-4];
+t=mod2π[t1+ArcTan[u,2]];
+v=mod2π[t-Phi];
+AppendTo[path,createPathElement[{t,sLEFT,gFORWARD}]];
+AppendTo[path,createPathElement[{u,sSTRAIGHT,gFORWARD}]];
+AppendTo[path,createPathElement[{v,sRIGHT,gFORWARD}]];];
+(*return*) N[ path]]
+
+### [Input] (init)
+dRSL[x_,y_,Phi_]:=Module[{path,u,t,v,ρ,t1},(*Formula: Dubins RSL *)
+path={};
+{ρ,t1}=cart2Polar[x-Sin[Phi],-y-1-Cos[Phi]];
+If[ ρ>=2,
+u=Sqrt[ρ^2-4];
+t=mod2π[t1+ArcTan[u,2]];
+v=mod2π[t+Phi];
+AppendTo[path,createPathElement[{t,sRIGHT,gFORWARD}]];
+AppendTo[path,createPathElement[{u,sSTRAIGHT,gFORWARD}]];
+AppendTo[path,createPathElement[{v,sLEFT,gFORWARD}]];];
+(*return*) N[ path]]
+
+### [Input] (init)
+dLRL[x_,y_,Phi_]:=Module[{path,ξ,η,ρ,Theta,u,t,v,a},
+    (*Dubins LRL is like Formula 8.3: CCC *)
+path={};
+ξ=x-Sin[Phi];
+η=y-1+Cos[Phi];
+{ρ,Theta}=cart2Polar[ξ,η];
+If[ ρ<=4,a=ArcCos[ρ/4];
+	t=mod2π[Theta+π/2+a];
+	u=mod2π[(π+2*a)];
+	v=mod2π[Phi-t+u];
+AppendTo[path,createPathElement[{t,sLEFT,gFORWARD}]];
+	AppendTo[path,createPathElement[{u,sRIGHT,gFORWARD}]];
+	AppendTo[path,createPathElement[{v,sLEFT,gFORWARD}]];];
+(*return*) N[ path]]
+
+### [Input] (init)
+dRLR[x_,y_,Phi_]:=Module[{path,ξ,η,ρ,Theta,u,t,v,a},
+    (*Dubins RLR is like Formula 8.3: CCC *)
+path={};
+ξ=x+Sin[Phi];
+η=-y-1+Cos[Phi];
+{ρ,Theta}=cart2Polar[ξ,η];
+If[ ρ<=4,a=ArcCos[ρ/4];
+t=mod2π[Theta+π/2+a];
+u=mod2π[(π+2*a)];
+v=mod2π[-Phi-t+u];
+AppendTo[path,createPathElement[{t,sRIGHT,gFORWARD}]];
+AppendTo[path,createPathElement[{u,sLEFT,gFORWARD}]];
+AppendTo[path,createPathElement[{v,sRIGHT,gFORWARD}]];];
+(*return*) N[ path]]
+
+### [Input] (init)
+timeflip[path_]:=(*timeflip transform described around the end of the article*) Map[reverseGear, path]
+
+### [Input] (init)
+reflect[path_]:=(* reflect transform described around the end of the article*) Map[reverseSteering,path]
+
+### [Input] (init)
+ path1[x_,y_,Phi_]:=Module[{path,u,t,v},(*Formula 8.1: CSC (same turns)*)
+path={};
+{u,t}=cart2Polar[x-Sin[Phi],y-1+Cos[Phi]];
+v=modπ[Phi-t];
+AppendTo[path,createPathElement[{t,sLEFT,gFORWARD}]];
+AppendTo[path,createPathElement[{u,sSTRAIGHT,gFORWARD}]];
+AppendTo[path,createPathElement[{v,sLEFT,gFORWARD}]];
+(*return*) N[ path]
+]
+
+### [Input] (init)
+path2[x_,y_,Phi_]:=Module[{path,ρ,t1,u,t,v},(*   Formula 8.2: CSC (opposite turns)*)
+path={};
+{ρ,t1}=cart2Polar[x+Sin[Phi],y-1-Cos[Phi]];
+If[ ρ>=2,
+u=Sqrt[ρ^2-4];
+t=modπ[t1+ArcTan[u,2]];
+v=modπ[t-Phi];
+AppendTo[path,createPathElement[{t,sLEFT,gFORWARD}]];
+AppendTo[path,createPathElement[{u,sSTRAIGHT,gFORWARD}]];
+AppendTo[path,createPathElement[{v,sRIGHT,gFORWARD}]];];
+(*return*) N[ path]]
+
+### [Input] (init)
+path3[x_,y_,Phi_]:=Module[{path,ξ,η,ρ,Theta,u,t,v,a}, (*Formula 8.3: C|C|C *)
+path={};
+ξ=x-Sin[Phi];
+η=y-1+Cos[Phi];
+{ρ,Theta}=cart2Polar[ξ,η];
+If[ ρ<=4,a=ArcCos[ρ/4];
+t=modπ[Theta+π/2+a];
+u=modπ[π-2*a];
+v=modπ[Phi-t-u];
+AppendTo[path,createPathElement[{t,sLEFT,gFORWARD}]];
+AppendTo[path,createPathElement[{u,sRIGHT,gBACKWARD}]];
+AppendTo[path,createPathElement[{v,sLEFT,gFORWARD}]];];
+(*return*) N[ path]]
+
+### [Input] (init)
+path4[x_,y_,Phi_]:=Module[{path,ξ,η,ρ,Theta,a,t,u,v}, (* Formula 8.4 (1): C|CC *)
+path={};
+ξ=x-Sin[Phi];
+η=y-1+Cos[Phi];
+{ρ,Theta}=cart2Polar[ξ,η];
+If[ ρ<=4,a=ArcCos[ρ/4];
+t=modπ[Theta+π/2+a];
+u=modπ[π-2*a];
+v=modπ[t+u-Phi];
+AppendTo[path,createPathElement[{t,sLEFT,gFORWARD}]];
+AppendTo[path,createPathElement[{u,sRIGHT,gBACKWARD}]];
+AppendTo[path,createPathElement[{v,sLEFT,gBACKWARD}]];
+];
+(*return*) N[ path]]
+
+### [Input] (init)
+path5[x_,y_,Phi_]:=Module[{path,ξ,η,ρ,Theta,a,t,u,v}, (*Formula 8.4 (2): CC|C*)
+path={};
+ξ=x-Sin[Phi];
+η=y-1+Cos[Phi];
+{ρ,Theta}=cart2Polar[ξ,η];
+If[ ρ<=4&&ρ>0,
+u=ArcCos[1-ρ^2/8];
+a=ArcSin[2*Sin[u]/ρ];
+t=modπ[Theta+π/2-a];
+v=modπ[t-u-Phi];
+AppendTo[path,createPathElement[{t,sLEFT,gFORWARD}]];
+AppendTo[path,createPathElement[{u,sRIGHT,gFORWARD}]];
+AppendTo[path,createPathElement[{v,sLEFT,gBACKWARD}]];
+];
+If[ ρ==0,
+u=ArcCos[1-ρ^2/8];
+a=0;
+t=modπ[Theta+π/2-a];
+v=modπ[t-u-Phi];
+AppendTo[path,createPathElement[{t,sLEFT,gFORWARD}]];
+AppendTo[path,createPathElement[{u,sRIGHT,gFORWARD}]];
+AppendTo[path,createPathElement[{v,sLEFT,gBACKWARD}]];
+];
+
+(*return*) N[ path]]
+
+### [Input] (init)
+path6[x_,y_,Phi_]:=Module[{path,ξ,η,ρ,Theta,a,t,u,v}, (* Formula 8.7: CCu|CuC *)
+path={};
+ξ=x+Sin[Phi];
+η=y-1-Cos[Phi];
+{ρ,Theta}=cart2Polar[ξ,η];
+If[ ρ<=4,
+If[ρ<=2,
+	a=ArcCos[(ρ+2)/4];
+		t=modπ[Theta+π/2+a];
+		u=modπ[a];
+		v=modπ[Phi-t+2*u];,
+		(*else*)a=ArcCos[(ρ-2)/4];
+	t=modπ[Theta+π/2-a];
+	u=modπ[π-a];
+	v=modπ[Phi-t+2*u];];
+AppendTo[path,createPathElement[{t,sLEFT,gFORWARD}]];
+AppendTo[path,createPathElement[{u,sRIGHT,gFORWARD}]];
+AppendTo[path,createPathElement[{u,sLEFT,gBACKWARD}]];
+AppendTo[path,createPathElement[{v,sRIGHT,gBACKWARD}]];];
+(*return*) N[ path]]
+
+### [Input] (init)
+path7[x_,y_,Phi_]:=Module[{path,ξ,η,ρ,Theta,u1,a,t,u,v},(* Formula 8.8: C|CuCu|C *)  
+path={};
+ξ=x+Sin[Phi];
+η=y-1-Cos[Phi];
+{ρ,Theta}=cart2Polar[ξ,η];
+u1=(20-ρ^2)/16;
+If[ ρ<=6 && ρ>0&& 0<=u1<=1,
+u=ArcCos[u1];
+a=ArcSin[2*Sin[u]/ρ];
+t=modπ[Theta+π/2+a];
+v=modπ[t-Phi];
+AppendTo[path,createPathElement[{t,sLEFT,gFORWARD}]];
+AppendTo[path,createPathElement[{u,sRIGHT,gBACKWARD}]];
+AppendTo[path,createPathElement[{u,sLEFT,gBACKWARD}]];
+AppendTo[path,createPathElement[{v,sRIGHT,gFORWARD}]];];
+
+If[ ρ==0&& 0<=u1<=1,
+u=ArcCos[u1];
+a=0;
+t=modπ[Theta+π/2+a];
+v=modπ[t-Phi];
+AppendTo[path,createPathElement[{t,sLEFT,gFORWARD}]];
+AppendTo[path,createPathElement[{u,sRIGHT,gBACKWARD}]];
+AppendTo[path,createPathElement[{u,sLEFT,gBACKWARD}]];
+AppendTo[path,createPathElement[{v,sRIGHT,gFORWARD}]];];
+(*return*) N[ path]];
+
+### [Input] (init)
+path8[x_,y_,Phi_]:=Module[{path,ξ,η,ρ,Theta,a,t,u,v},(* Formula 8.9 (1): C|C[pi/2]SC *)
+path={};
+ξ=x-Sin[Phi];
+η=y-1+Cos[Phi];
+{ρ,Theta}=cart2Polar[ξ,η];
+If[ ρ>=2 ,
+u=Sqrt[ρ^2-4]-2;
+a=ArcTan[u+2,2];
+t=modπ[Theta+π/2+a];
+v=modπ[t-Phi+π/2];
+AppendTo[path,createPathElement[{t,sLEFT,gFORWARD}]];
+AppendTo[path,createPathElement[{π/2,sRIGHT,gBACKWARD}]];
+AppendTo[path,createPathElement[{u,sSTRAIGHT,gBACKWARD}]];
+AppendTo[path,createPathElement[{v,sLEFT,gBACKWARD}]];];
+(*return*) N[ path]]
+
+### [Input] (init)
+path9[x_,y_,Phi_]:=Module[{path,ξ,η,ρ,Theta,a,t,u,v},(* Formula 8.9 (2): CSC[pi/2]|C *)
+path={};
+ξ=x-Sin[Phi];
+η=y-1+Cos[Phi];
+{ρ,Theta}=cart2Polar[ξ,η];
+If[ ρ>=2,
+u=Sqrt[ρ^2-4]-2;
+a=ArcTan[2,u+2];
+t=modπ[Theta+π/2-a];
+v=modπ[t-Phi-π/2];
+AppendTo[path,createPathElement[{t,sLEFT,gFORWARD}]];
+AppendTo[path,createPathElement[{u,sSTRAIGHT,gFORWARD}]];
+AppendTo[path,createPathElement[{π/2,sRIGHT,gFORWARD}]];
+AppendTo[path,createPathElement[{v,sLEFT,gBACKWARD}]];];
+(*return*) N[ path]]
+
+### [Input] (init)
+path10[x_,y_,Phi_]:=Module[{path,ξ,η,ρ,Theta,a,t,u,v},(* Formula 8.10 (1): C|C[pi/2]SC *) 
+path={};
+ξ=x+Sin[Phi];
+η=y-1-Cos[Phi];
+{ρ,Theta}=cart2Polar[ξ,η];
+If[ ρ>=2,
+t=modπ[Theta+π/2];
+u=ρ-2;
+v=modπ[Phi-t-π/2];
+AppendTo[path,createPathElement[{t,sLEFT,gFORWARD}]];
+AppendTo[path,createPathElement[{π/2,sRIGHT,gBACKWARD}]];
+AppendTo[path,createPathElement[{u,sSTRAIGHT,gBACKWARD}]];
+AppendTo[path,createPathElement[{v,sRIGHT,gBACKWARD}]];];
+(*return*) N[ path]]
+
+### [Input] (init)
+path11[x_,y_,Phi_]:=Module[{path,ξ,η,ρ,Theta,a,t,u,v}, (* Formula 8.10 (2): CSC[pi/2]|C*)
+path={};
+ξ=x+Sin[Phi];
+η=y-1-Cos[Phi];
+{ρ,Theta}=cart2Polar[ξ,η]; 
+If[ ρ>=2,
+t=modπ[Theta];
+	u=ρ-2;
+v=modπ[Phi-t-π/2];
+AppendTo[path,createPathElement[{t,sLEFT,gFORWARD}]];
+AppendTo[path,createPathElement[{u,sSTRAIGHT,gFORWARD}]];
+AppendTo[path,createPathElement[{π/2,sLEFT,gFORWARD}]];
+AppendTo[path,createPathElement[{v,sRIGHT,gBACKWARD}]];];
+(*return*) N[ path]]
+
+### [Input] (init)
+path12[x_,y_,Phi_]:=Module[{path,ξ,η,ρ,Theta,a,t,u,v},(* Formula 8.11: C|C[pi/2]SC[pi/2]|C *)
+path={};
+ξ=x+Sin[Phi];
+η=y-1-Cos[Phi];
+{ρ,Theta}=cart2Polar[ξ,η];
+If[ ρ>=4,
+u=Sqrt[ρ^2-4]-4;
+a=ArcTan[u+4,2];
+t=modπ[Theta+π/2+a];
+v=modπ[t-Phi];
+AppendTo[path,createPathElement[{t,sLEFT,gFORWARD}]];
+AppendTo[path,createPathElement[{π/2,sRIGHT,gBACKWARD}]];
+AppendTo[path,createPathElement[{u,sSTRAIGHT,gBACKWARD}]];
+AppendTo[path,createPathElement[{π/2,sLEFT,gBACKWARD}]];
+AppendTo[path,createPathElement[{v,sRIGHT,gFORWARD}]];];
+(*return*)N[ path]]
+
+### [Input] (init)
+colorLocatorOrient[color_:Black]:= (*Draws a locator with only vertical reticles*)
+Graphics[{color,{AbsoluteThickness[0.8],Antialiasing->False,LineBox[{{{0,-10},{0,-2}},{{0,2},{0,10}}(*,{{-10,0},{-2,0}},{{2,0},{10,0}}*)}],Antialiasing->True,CircleBox[{-0.5,0.5},5]},{AbsoluteThickness[3],Opacity[0.3],CircleBox[{-0.5,0.5},3]}},ImageSize->17,PlotRange->{{-8,8},{-8,8}}]
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[Module[{goal,start,p,paths,distTrav,ppos,sTheta,dTheta,pTheta,gTheta,palpha},
+If[locsOld[[1]]!= locs[[1]],(*update the position of the orientation of start if start position changes*)
+(*Tighter constraints on positions than on orientations so you can orient the car in any direction.*)
+If[locs[[1,1]]>13,locs[[1,1]]=13];If[locs[[1,1]]<-13,locs[[1,1]]=-13];(*{-13,-8},{13,8}*)
+If[locs[[1,2]]>8, locs[[1,2]]=8]; If[locs[[1,2]]<-8,  locs[[1,2]]=-8];
+sTheta =angfrom1to2[locsOld[[1]],locsOld[[2]]];
+locs[[2]] = locs[[1]]+2{Cos[sTheta],Sin[sTheta]};
+locsOld[[1;;2]]=locs[[1;;2]];,
+sTheta =angfrom1to2[locs[[1]],locs[[2]]];
+];
+If[locsOld[[2]]!= locs[[2]],
+locs[[2]] = locs[[1]]+2{Cos[sTheta],Sin[sTheta]}; (*force orientation marker to be 2 units away*)
+locsOld[[2]]=locs[[2]];
+];
+If[locsOld[[3]]!= locs[[3]],(*update the position of the orientation of end if end position changes*)
+(*Tighter constraints on positions than on orientations so you can orient the car in any direction.*)
+If[locs[[3,1]]>13,locs[[3,1]]=13];If[locs[[3,1]]<-13,locs[[3,1]]=-13];(*{-13,-8},{13,8}*)
+If[locs[[3,2]]>8, locs[[3,2]]=8]; If[locs[[3,2]]<-8,  locs[[3,2]]=-8];
+gTheta =angfrom1to2[locsOld[[3]],locsOld[[4]]];
+locs[[4]] = locs[[3]]+2{Cos[gTheta],Sin[gTheta]};
+locsOld[[3;;4]]=locs[[3;;4]];,
+gTheta =angfrom1to2[locs[[3]],locs[[4]]];
+];
+If[locsOld[[4]]!= locs[[4]],
+locs[[4]] = locs[[3]]+2{Cos[gTheta],Sin[gTheta]};(*force orientation marker to be 2 units away*)
+locsOld[[4]]=locs[[4]];
+];
+
+start={locs[[1,1]],locs[[1,2]],sTheta};
+goal ={locs[[3,1]],locs[[3,2]],gTheta}; (*m,m,Radians*)
+(*Input error correction*)
+If[\[Not]NumericQ[minRadius],minRadius=3];
+If[minRadius<0.001,minRadius = 0.001];If[minRadius>10 ,minRadius = 10];
+If[\[Not]NumericQ[progress],progress=0];
+If[progress<0,progress = 0];If[progress>1 ,progress = 1];
+
+If[ progress == progressOld || progressOld == -1, (*Only recompute path if something besides progress changes*)
+{optPath,paths} =If[type == "\<Reeds-Shepp\>",
+ getOptimalPath[start,goal,minRadius],
+getOptimalDubinsPath[start,goal,minRadius]];,
+progressOld = progress;
+];
+
+{ppos,pTheta,palpha} = getPos[optPath,start, minRadius, progress];(*car state along the path *)
+
+Graphics[{
+{Thickness[0.005],drawPath[Orange,optPath,start,minRadius,True]},
+{Green,drawCar[{start[[1]],start[[2]]},sTheta,0,0.2]},(*start position of car*)
+{Red,drawCar[{goal[[1]],goal[[2]]},gTheta,0,0.2]},(*end position of car*)
+{Blue,drawCar[ppos,pTheta,palpha,0.6]},
+(*{Thin,Table[drawPath[Pink,path,start,minRadius,False],{path,paths}]},(*This draws far too many lines*)*)
+
+Locator[locsOld[[1]]],(*user can change starting location of car*)
+Locator[locsOld[[2]],Rotate[colorLocatorOrient[Darker[Green]],sTheta]],(*user can change starting orientation of car*)
+Locator[locsOld[[3]]],(*user can change ending location of car*)
+Locator[locsOld[[4]],Rotate[colorLocatorOrient[Red],gTheta]](*user can change ending orientation of car*)
+
+},
+PlotRange->{{-15,15},{-10,10}},ImageSize->{620,Automatic},PlotLabel->
+
+Style[Row[{"\<path length: \>",Round[N[ pathLength[optPath]*minRadius ],0.01],"\<   distance: \>",N[Round[Norm[goal-start],0.01]]}],14,Black]
+]],
+{{locs,{{-10,-5},{-10,-7},{8,5},{10,4}}},{-14,-9},{14,9},Locator,Appearance->None},
+{{locsOld,{{-10,-5},{-10,-7},{8,5},{10,4}}},None},
+{{progress,0.0},0,1,0.001,Appearance->"\<Labeled\>",ImageSize->500},
+{{progressOld,-1},None},
+{{optPath,{{0,0,1}}},None},
+Row[{Control@{{minRadius,3,Subscript[Style["\<r\>",Italic], min]},0.001,10,0.001,Appearance->"\<Labeled\>",ImageSize->150},Spacer[15],
+Control@{type,{"\<Reeds-Shepp\>","\<Dubins\>"}},Spacer[15],Button[Style["\<swap start and goal\>",Smaller],
+locs = Join[ locs[[3;;4]], locs[[1;;2]]];locsOld=locs,ImageSize->160]
+}],SaveDefinitions->True,FrameMargins->0
+]
+
+### [Output] (skipped cached output)
+
+### [Input]
+
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Francesco Bernardini
+
+### [Text]
+Aaron T. Becker
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+This Demonstration is based on a simplified mathematical model of a car that can move in the x-y plane[1]. The car's coordinates are the center of the rear axle (x,y) and its orientation Theta. The car cannot move sideways because the rear wheels would have to slide instead of roll. The model stipulates that the car has a maximum steering angle that translates into a minimum turning radius Subscript[r, min]. Circles showing the minimum turning radius are drawn as thin gray lines tangent to the curved sections of the path.
+
+### [Text]
+The changes of coordinates with velocity v are given by
+
+### [Text]
+dx=v cos Theta,
+
+### [Text]
+dy=v sin Theta,
+
+### [Text]
+dTheta=u,
+
+### [Text]
+with the steering constraint limits u∈[-1/Subscript[r, min],1/Subscript[r, min]]. The task is to minimize the length of the curve traced out by the center of the rear axle as it moves from the start to the goal[2]. That path is the bounded-curvature shortest path. Reeds and Shepp proved that the shortest path consists of no more than five segments, where in each segment u is either -1/Subscript[r, min], 0 or 1/Subscript[r, min] and the car is moving either forward or backward[3]. The optimal path is one of 48 different path types. The Reeds\[Dash]Shepp path can be used as a metric for the (x,y,Theta) configuration of a car. The distance does not change if you swap the start and goal positions.
+
+### [Text]
+\<The Dubins car has only six possible path types[3]. Because it can only move forward, the Dubins path is never shorter than the Reeds\[Dash]Shepp path. The Dubins path is not a metric, and often the distance changes if the start and goal positions are swapped[4].\>
+
+### [Text]
+\<This Reeds\[Dash]Shepp implementation is based on the Python code[5].\>
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] K. M. Lynch and F. C. Park, Modern Robotics: Mechanics, Planning, and Control, Cambridge, UK: Cambridge University Press, 2017.
+
+### [Text]
+[2] L. E. Dubins, "On Curves of Minimal Length with a Constraint on Average Curvature, and with Prescribed Initial and Terminal Positions and Tangents," American Journal of Mathematics, 79(3), 1957 pp. 497\[Dash]516. doi:10.2307/2372560.
+
+### [Text]
+[3] J. A. Reeds, III and L. A. Shepp. "Optimal Paths for a Car That Goes Both Forwards and Backwards," Pacific Journal of Mathematics, 145(2), 1990 pp. 367\[Dash]393. doi:10.2140/pjm.1990.145.367.
+
+### [Text]
+[4] P. Sou\[EGrave]res and J.-P. Laumond, "Shortest Paths Synthesis for a Car-Like Robot," IEEE Transactions on Automatic Control, 41(5), 1996 pp. 672-688. doi:10.1109/9.489204.
+
+### [Text]
+[5] nathanlct and benjaminbecker. "reeds-shepp_curves." (Dec 23, 2022) github.com/nathanlct/reeds-shepp-curves/blob/master/reeds_shepp.py.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+Reeds Shepp
+
+### [Item]
+Reed-Shepp
+
+### [Item]
+Dubins car
+
+### [Item]
+Dubins
+
+### [Item]
+Dubbin
+
+### [Item]
+shortest path
+
+### [Item]
+motion planning
+
+### [Item]
+robot
+
+### [Item]
+mobile robot
+
+### [Item]
+optimal path
+
+### [Item]
+robotics
+
+### [Item]
+Ackermann steering
+
+### [Item]
+small time locally controllable
+
+### [Item]
+STLC
+
+### [Item]
+metric space
+
+### [Item]
+quasi metric
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+3D Reachability Set for a Dubins Car
+
+### [Text]
+The Homicidal Chauffeur Problem
+
+### [Text]
+Isochrons for a Dubins Car
+
+### [Text]
+Shortest Path for the Dubins Car
+
+### [Text]
+Parking a Car
+
+### [Text]
+Driving out of a Parking Space
+
+### [Text]
+Paths inside a Polygon
+
+### [Text]
+Shortest Path between Two Points in the Unit Disk Reflecting off the Circumference
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2023-01-04
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

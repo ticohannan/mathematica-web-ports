@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.11 |
+| Code version: | 0.1.12 |
 | Document revision | 4 (2026-10-05) — P-TP-01 (WebGL context-loss recovery) implemented as A-TP-06 |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Three Parametrizations of Rotations" by Aaron T. Becker and Benedict Isichei (CC BY-NC-SA 3.0). Readable source: [`docs/original-source/three-parametrizations.txt`](../../docs/original-source/three-parametrizations.txt) |
@@ -136,6 +136,7 @@ its design document".
 | D-TP-03 | deviation | Lighting, colours of the solid teapot and line widths approximate Mathematica's defaults; axis tick placement is simplified (fixed box edges). |
 | D-TP-04 | deviation | Details text: the original writes R_ZYZ = R_z,φ R_y,θ R_z,φ (φ twice) and gives k with latitude/longitude swapped relative to its code; the port's text follows the code (noted on the page). |
 | D-TP-05 | deviation | The 3D picture is as wide as its column, at most 520 px (original `ImageSize -> {375, 375}`); the progress slider is full width (original `ImageSize -> 480`); slider animation speed (6 s per sweep) is a guess. The 2D axis pad can be focused but has no keyboard control. |
+| K-TP-01 | known issue (lead) | Lighting lead (found with K-RS-10 of the robot-singularities app, whose `shared/mma-lighting.js` reproduces Mathematica's documented default `Lighting`, confirmed in Mathematica 15.0.1): `shared/three-helpers.js` places the default lights with the colours of directional lights 1 and 3 swapped, the 4th light RGBColor[0, 0.18, 0.5] instead of RGBColor[0, 0, 0.18] and the green light at z = 2 instead of 3. Not changed (it is part of D-TP-03); to be compared with the original's snapshots before any change, which would go through §8. |
 | Q-TP-01 | quirk kept | `findRollPitchYaw` degenerate branch always returns β = +π/2 (−π/2 also possible). |
 | Q-TP-02 | quirk kept | `findZYZEuler` degenerate branch always returns θ = 0 (θ = π also degenerate). |
 | Q-TP-03 | quirk kept | `findAxisAngle` returns θ in [0, π] (comment says −π…π); k is numerically ill-conditioned at exactly θ = π. |
@@ -162,6 +163,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 3 | v0.1.9 | 2026-10-03 | no change (WebKit browser tests added, test tooling only) |
 | 3 | v0.1.10 | 2026-10-03 | no change (WebKit browser tests now required to publish; test tooling only) |
 | 4 | v0.1.11 | 2026-10-05 | P-TP-01 approved and implemented as A-TP-06: redraw after a WebGL context is restored (shared viewer code) |
+| 4 | v0.1.12 | 2026-10-06 | no behaviour change (seven further apps added to the site; their additions to `shared/style.css` apply only to their own pages); lighting lead K-TP-01 recorded |
 
 ## 10. Improvements to consider (not implemented)
 

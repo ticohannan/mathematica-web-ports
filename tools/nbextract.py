@@ -40,6 +40,20 @@ class P:
                 d -= 1
                 if d == 0: s.i += 1; return
             s.i += 1
+    def skip_elem(s, close):
+        d = 0
+        while True:
+            c = s.t[s.i]
+            if c == '"':
+                s.i += 1
+                while s.t[s.i] != '"':
+                    s.i += 2 if s.t[s.i] == '\\' else 1
+            elif c in '[{(': d += 1
+            elif c in ']})':
+                if d == 0: return
+                d -= 1
+            elif c == ',' and d == 0: return
+            s.i += 1
     def expr(s):
         s.ws(); e = s.prim()
         while True:
@@ -51,8 +65,15 @@ class P:
         out = []; s.ws()
         if s.t[s.i] == close: s.i += 1; return out
         while True:
-            out.append(s.expr()); s.ws()
-            c = s.t[s.i]; s.i += 1
+            st = s.i
+            try:
+                out.append(s.expr()); s.ws()
+                c = s.t[s.i]
+                if c not in ',' + close: raise ValueError('infix')
+            except (ValueError, AssertionError, AttributeError, IndexError):
+                s.i = st; s.skip_elem(close); out.append(('Str', '')); s.ws()
+                c = s.t[s.i]
+            s.i += 1
             if c == ',': continue
             if c == close: return out
             raise ValueError(f'unexpected {c!r} at {s.i}: {s.t[s.i-40:s.i+40]!r}')

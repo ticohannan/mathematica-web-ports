@@ -1,0 +1,76 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstration by Aaron T. Becker and Yitong Lu
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Probabilistic Roadmap Method for Robot Arm</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <!-- no data-needs-webgl2 here (owner's choice for this page): only the 3D inset needs WebGL 2 and shows its own notice -->
+  <script src="../../shared/requirements.js"></script>
+  <script type="importmap">{ "imports": { "three": "../../vendor/three/three.module.js", "three/addons/": "../../vendor/three/addons/" } }</script>
+  <style>
+    .manipulate.controls-top .graphic.wide { max-width: 752px; flex-basis: auto; width: 100%; }
+    .ctl-row .ctl-check { flex-direction: row-reverse; justify-content: flex-end; }
+    .ctl-row .ctl-label sub { font-size: 0.75em; }
+    .workspace-3d .requirements-notice { margin: 4px; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › PRM for robot arm</div>
+    <h1 class="demo-title">Probabilistic Roadmap Method for Robot Arm</h1>
+
+    <section class="manipulate controls-top" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="graphic wide" id="graphic" data-testid="graphic">
+        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser.</div></noscript>
+      </div>
+    </section>
+
+    <p class="caption">This Demonstration uses the Probabilistic Roadmap Method (PRM) to plan a motion path for a two-link robot
+      that avoids collisions with a blue sphere and an orange sphere. First, click "add 100 vertices" to randomly sample
+      configurations and calculate if they collide with obstacles (red points) or are safe (green points). Next, select
+      "radius" value to try to connect safe vertices less than radius distance apart into a roadmap. If a path from the
+      initial to goal configuration is found, it can be traversed with the "progress" slider. Although the PRM does not need to
+      calculate the configuration space obstacles, you can make them visible with a checkbox.</p>
+
+    <details class="details" data-testid="details">
+      <summary>Details</summary>
+      <p>The goal of robot motion planning is to find a continuous path from an initial configuration to a goal configuration
+        that is collision free. A configuration is a complete specification of every point of the robot. This Demonstration
+        uses a two-link robot with two rotational joints that can each rotate from 0 to 2π. The resulting configuration space
+        can be represented as a toroid, and so wraps from 2π to 0 on the edges of the plot shown. Obstacles in the robot's
+        workspace map to obstacle regions in the configuration space, but computing these regions is computationally
+        expensive.</p>
+      <p>Changing the obstacle positions requires rebuilding the roadmap. Longer radius values require more computation but
+        result in a denser roadmap and shorter paths.</p>
+      <p>PRM was developed in 1996 by Lydia Kavraki et al.[1]. PRMs generate a roadmap that can be reused for subsequent
+        motion-planning queries. PRM was designed for high-dimension configuration spaces (dimensions of 5 or more), but this
+        Demonstration uses two dimensions for ease of visualization.</p>
+      <p>[1] L. E. Kavraki, P. Svestka, J-C. Latombe and Mark H. Overmars. "Probabilistic Roadmaps for Path Planning in
+        High-Dimensional Configuration Spaces." <i>IEEE Transactions on Robotics and Automation</i>, 12(4), 1996
+        pp. 566–580. doi:10.1109/70.508439.</p>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. Drag the two locators in the phase-space plot (start and goal
+      configuration); arrow keys move a focused locator. Drag in the 3D view to rotate it. The random samples differ from run
+      to run, as in the original; add <code>?seed=1</code> (any whole number) to the address for a reproducible run. The 3D
+      view needs WebGL 2; the rest of the page works without it. All computation runs in your browser.</p>
+    <div class="credits" data-testid="credits">
+      Adapted from <a href="https://demonstrations.wolfram.com/ProbabilisticRoadmapMethodForRobotArm/">"Probabilistic Roadmap Method for Robot Arm"</a>
+      by Aaron T. Becker and Yitong Lu, Wolfram Demonstrations Project (published January 29, 2020), licensed
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+      This JavaScript/SVG/three.js translation by Tico Hannan (© 2026; produced with an AI code-generation tool) is released
+      under the same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

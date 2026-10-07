@@ -1,0 +1,88 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstration by Francesco Bernardini and Aaron T. Becker
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shortest Path for Forward and Reverse Motion of a Car</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <script src="../../shared/requirements.js"></script>
+  <style>
+    /* ControlPlacement -> Top: labels left of the controls, as in the original; graphic at ImageSize 620 */
+    #controls .ctl-slider, #controls .ctl-setter { flex-direction: row; align-items: center; gap: 8px; }
+    #controls .ctl-row { align-items: center !important; gap: 22px !important; }
+    #graphic { width: 100%; max-width: 660px; flex: none; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Car paths</div>
+    <h1 class="demo-title">Shortest Path for Forward and Reverse Motion of a Car</h1>
+
+    <section class="manipulate controls-top" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="graphic wide" id="graphic" data-testid="graphic">
+        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser.</div></noscript>
+      </div>
+    </section>
+
+    <p class="caption">This Demonstration shows the shortest paths for a car in forward and reverse motion, with a minimum
+      turning radius <i>r</i><sub>min</sub>. Use the locators to change the start and goal positions and orientations. A car
+      with both forward and reverse gears is often called a Reeds–Shepp car, while one with only a forward gear is a Dubins
+      car, in honor of the mathematicians who first studied these problems.</p>
+
+    <details class="details" data-testid="details">
+      <summary>Details</summary>
+      <p>This Demonstration is based on a simplified mathematical model of a car that can move in the <i>x</i>-<i>y</i>
+        plane [1]. The car's coordinates are the center of the rear axle (<i>x</i>, <i>y</i>) and its orientation θ. The car
+        cannot move sideways because the rear wheels would have to slide instead of roll. The model stipulates that the car
+        has a maximum steering angle that translates into a minimum turning radius <i>r</i><sub>min</sub>. Circles showing the
+        minimum turning radius are drawn as thin gray lines tangent to the curved sections of the path.</p>
+      <p>The changes of coordinates with velocity <i>v</i> are given by</p>
+      <p class="formula"><i>dx</i> = <i>v</i> cos θ,<br><i>dy</i> = <i>v</i> sin θ,<br><i>d</i>θ = <i>u</i>,</p>
+      <p>with the steering constraint limits <i>u</i> ∈ [−1/<i>r</i><sub>min</sub>, 1/<i>r</i><sub>min</sub>]. The task is to
+        minimize the length of the curve traced out by the center of the rear axle as it moves from the start to the goal [2].
+        That path is the bounded-curvature shortest path. Reeds and Shepp proved that the shortest path consists of no more
+        than five segments, where in each segment <i>u</i> is either −1/<i>r</i><sub>min</sub>, 0 or
+        1/<i>r</i><sub>min</sub> and the car is moving either forward or backward [3]. The optimal path is one of 48 different
+        path types. The Reeds–Shepp path can be used as a metric for the (<i>x</i>, <i>y</i>, θ) configuration of a car. The
+        distance does not change if you swap the start and goal positions.</p>
+      <p>The Dubins car has only six possible path types [3]. Because it can only move forward, the Dubins path is never
+        shorter than the Reeds–Shepp path. The Dubins path is not a metric, and often the distance changes if the start and
+        goal positions are swapped [4].</p>
+      <p>This Reeds–Shepp implementation is based on the Python code [5].</p>
+      <p>References:<br>
+        [1] K. M. Lynch and F. C. Park, <i>Modern Robotics: Mechanics, Planning, and Control</i>, Cambridge, UK: Cambridge
+        University Press, 2017.<br>
+        [2] L. E. Dubins, "On Curves of Minimal Length with a Constraint on Average Curvature, and with Prescribed Initial
+        and Terminal Positions and Tangents," <i>American Journal of Mathematics</i>, 79(3), 1957 pp. 497–516.
+        doi:10.2307/2372560.<br>
+        [3] J. A. Reeds, III and L. A. Shepp. "Optimal Paths for a Car That Goes Both Forwards and Backwards," <i>Pacific
+        Journal of Mathematics</i>, 145(2), 1990 pp. 367–393. doi:10.2140/pjm.1990.145.367.<br>
+        [4] P. Souères and J.-P. Laumond, "Shortest Paths Synthesis for a Car-Like Robot," <i>IEEE Transactions on Automatic
+        Control</i>, 41(5), 1996 pp. 672–688. doi:10.1109/9.489204.<br>
+        [5] nathanlct and benjaminbecker. "reeds-shepp_curves." (Dec 23, 2022)
+        github.com/nathanlct/reeds-shepp-curves/blob/master/reeds_shepp.py.</p>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. Drag the black locators to move the start and goal cars and
+      the coloured ones to turn them (they stay 2 units from the car); positions are kept within ±13 × ±8, as in the
+      original. "distance" is the original's norm of the (<i>x</i>, <i>y</i>, θ) difference. Arrow keys move a focused
+      locator. All computation runs in your browser.</p>
+    <div class="credits" data-testid="credits">
+      Adapted from <a href="https://demonstrations.wolfram.com/ShortestPathForForwardAndReverseMotionOfACar/">"Shortest Path for Forward and Reverse Motion of a Car"</a>
+      by Francesco Bernardini and Aaron T. Becker, Wolfram Demonstrations Project (published January 4, 2023), licensed
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+      This JavaScript/SVG translation by Tico Hannan (© 2026; produced with an AI code-generation tool) is released under the
+      same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

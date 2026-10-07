@@ -1,0 +1,121 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstration by Aaron T. Becker and Ravi Patel
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Unit Balls for Different p-Norms in 2D and 3D</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <script src="../../shared/requirements.js" data-needs-webgl2></script>
+  <script type="importmap">{ "imports": { "three": "../../vendor/three/three.module.js", "three/addons/": "../../vendor/three/addons/" } }</script>
+  <style>
+    /* page-specific: the Manipulate's Column of controls and the plot's labels (sizes in px = Mathematica pt) */
+    #graphic { max-width: 402px; flex-basis: 402px; overflow: hidden; }
+    .ub-inline { flex-direction: row; align-items: center; gap: 8px; }
+    .ub-formula { min-height: 1.7em; color: var(--ink); }
+    .ub-formula math { font-size: 16px; }
+    .ub-gap { height: 0.5em; }
+    .ub-ctl-text i { font-size: 0.95em; }
+    .ctl-setter-btn .ub-frac, .ub-plotlabel .ub-frac { display: inline-flex; flex-direction: column; vertical-align: middle; line-height: 1.05; text-align: center; font-size: 0.85em; }
+    .ctl-setter-btn .ub-frac > span:first-child, .ub-plotlabel .ub-frac > span:first-child { border-bottom: 1px solid currentColor; padding: 0 1px; }
+    .ub-invisible { visibility: hidden; }
+    .ctl-slider .ctl-line input[type=range] { flex: 0 0 150px; width: 150px; min-width: 0; }
+    .ub-value { width: 4.6em; }
+    .ub-plotlabel { position: absolute; top: 4px; transform: translateX(-50%); white-space: nowrap; pointer-events: none; user-select: none;
+      font: 12px "Helvetica Neue", Helvetica, Arial, sans-serif; color: rgb(89, 89, 89); }
+    .lbl.ub-anchor { width: 0; height: 0; overflow: visible; font: 10px "Helvetica Neue", Helvetica, Arial, sans-serif; font-style: normal; }
+    .ub-anchored { position: absolute; white-space: nowrap; line-height: 1; }
+    .ub-tick .ub-anchored { color: #000; }
+    .ub-axislabel .ub-anchored { color: rgb(89, 89, 89); font-size: 10px; transform: translate(-50%, -50%); }
+    .ub-axislabel i { font-style: italic; }
+    /* offsets of the labels from their points on the box (in pt), measured in the original's snapshots */
+    .ub-tick-x .ub-anchored { right: 1.5px; top: 4.5px; }
+    .ub-tick-y .ub-anchored { left: -1.3px; bottom: 5px; transform: translateX(-50%); }
+    .ub-tick-z .ub-anchored { right: 4.5px; top: -7.5px; }
+    .ub-ax3-x .ub-anchored { left: -16.6px; top: 24.2px; }
+    .ub-ax3-y .ub-anchored { left: -2px; top: -27.1px; }
+    .ub-ax3-z .ub-anchored { left: -23.9px; top: -8.9px; }
+    .ub-ax2-x .ub-anchored { left: -2.8px; top: 5.8px; }
+    .ub-ax2-y .ub-anchored { left: 0.8px; top: -6.8px; }
+    .ub-ax2-z .ub-anchored { left: -21.2px; top: -3.2px; }
+    .details math { font-size: 1.05em; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Unit balls</div>
+    <h1 class="demo-title">Unit Balls for Different p-Norms in 2D and 3D</h1>
+
+    <section class="manipulate" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="graphic" id="graphic" data-testid="graphic">
+        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser.</div></noscript>
+      </div>
+    </section>
+
+    <p class="caption">This Demonstration shows the set of points within distance 1 from the origin in 2D and in 3D. The
+      distance is measured using different <i>p</i>-norms, which are standard norms for finite-dimensional spaces. This
+      set of points is called the unit ball.</p>
+
+    <details class="details" data-testid="details">
+      <summary>Details</summary>
+      <p>In mathematics, a norm is the length (or size) of a vector. A <i>p</i>-norm is a norm on a finite-dimensional
+        space of dimension <i>N</i> defined as</p>
+      <p><math><msub><mrow><mo stretchy="false">‖</mo><mi>u</mi><mo stretchy="false">‖</mo></mrow><mi>p</mi></msub><mo>=</mo><msup><mrow><mo>(</mo><munderover><mo>∑</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></munderover><msup><mrow><mo stretchy="false">|</mo><msub><mi>u</mi><mi>n</mi></msub><mo stretchy="false">|</mo></mrow><mi>p</mi></msup><mo>)</mo></mrow><mrow><mn>1</mn><mo>/</mo><mi>p</mi></mrow></msup></math>.</p>
+      <p>This Demonstration shows sets of unit-norm vectors <i>u</i> for different <i>p</i>-norms.</p>
+      <p>The norm for <i>p</i> = 1 is the sum of the distances a 3D computer numerical control (CNC) mill would have to
+        move in the <i>x</i>, <i>y</i> and <i>z</i> directions. In 3D the unit ball is an octahedron, and in 2D it is a
+        square with corners at (1, 0), (0, 1), (−1, 0), (0, −1);</p>
+      <p><math><msub><mrow><mo stretchy="false">‖</mo><mi>u</mi><mo stretchy="false">‖</mo></mrow><mn>1</mn></msub><mo>=</mo><mo stretchy="false">|</mo><mi>x</mi><mo stretchy="false">|</mo><mo>+</mo><mo stretchy="false">|</mo><mi>y</mi><mo stretchy="false">|</mo><mo>+</mo><mo stretchy="false">|</mo><mi>z</mi><mo stretchy="false">|</mo></math>.</p>
+      <p>The norm for <i>p</i> = 2 is the usual Euclidean square norm obtained using the Pythagorean theorem. In 3D the
+        unit ball is a sphere, and in 2D it is a circle with radius 1;</p>
+      <p><math><msub><mrow><mo stretchy="false">‖</mo><mi>u</mi><mo stretchy="false">‖</mo></mrow><mn>2</mn></msub><mo>=</mo><msqrt><msup><mrow><mo stretchy="false">|</mo><mi>x</mi><mo stretchy="false">|</mo></mrow><mn>2</mn></msup><mo>+</mo><msup><mrow><mo stretchy="false">|</mo><mi>y</mi><mo stretchy="false">|</mo></mrow><mn>2</mn></msup><mo>+</mo><msup><mrow><mo stretchy="false">|</mo><mi>z</mi><mo stretchy="false">|</mo></mrow><mn>2</mn></msup></msqrt></math>.</p>
+      <p>The norm for <i>p</i> = ∞ is simply the maximum over <i>x</i>, <i>y</i> and <i>z</i>. This is proportional to
+        the time a CNC mill would take to reach a goal if all axes can move simultaneously with the same top speed. In 3D
+        the unit ball is a unit cube, and in 2D it is a square with corners at (1, 1), (−1, 1), (−1, −1), (1, −1);</p>
+      <p><math><msub><mrow><mo stretchy="false">‖</mo><mi>u</mi><mo stretchy="false">‖</mo></mrow><mi mathvariant="normal">∞</mi></msub><mo>=</mo><mi>max</mi><mo>(</mo><mo stretchy="false">|</mo><mi>x</mi><mo stretchy="false">|</mo><mo>,</mo><mo stretchy="false">|</mo><mi>y</mi><mo stretchy="false">|</mo><mo>,</mo><mo stretchy="false">|</mo><mi>z</mi><mo stretchy="false">|</mo><mo>)</mo></math>.</p>
+      <p>The norms for <i>p</i> &lt; 1 are uncommon, but represent where there is a penalty for moving in more than one
+        cardinal direction. This often occurs when trying to accomplish multiple objectives with a fixed budget. For
+        example, flying cars have existed since 1935, but car-airplane hybrids are usually both poorly performing
+        automobiles and ungainly fliers. In 3D and 2D the unit balls are star shapes with points along the coordinate
+        axes. The following metric might represent these tradeoffs if <i>x</i> represents ability as a car, <i>y</i>
+        ability as an airplane and <i>z</i> ability as a boat;</p>
+      <p><math><msub><mrow><mo stretchy="false">‖</mo><mi>u</mi><mo stretchy="false">‖</mo></mrow><mrow><mn>1</mn><mo>/</mo><mn>2</mn></mrow></msub><mo>=</mo><msup><mrow><mo>(</mo><msqrt><mo stretchy="false">|</mo><mi>x</mi><mo stretchy="false">|</mo></msqrt><mo>+</mo><msqrt><mo stretchy="false">|</mo><mi>y</mi><mo stretchy="false">|</mo></msqrt><mo>+</mo><msqrt><mo stretchy="false">|</mo><mi>z</mi><mo stretchy="false">|</mo></msqrt><mo>)</mo></mrow><mn>2</mn></msup></math>.</p>
+      <p>In 2D, this Demonstration shows the norm functions as orange 3D shapes filled with blue water up to distance 1
+        from the origin. When this is viewed from above, the area filled with water is the 2D unit ball.</p>
+      <p>In 3D, this Demonstration shows unit balls for the selected norm value. The unit ball is distance 1 from the
+        origin, according to the selected <i>p</i>-norm.</p>
+      <p>The built-in Wolfram Language function <code>Norm</code> can be used to build similar plots, but it requires
+        that <i>p</i> ⩾ 1.</p>
+      <p>For vectors, <code>Norm[v,p]</code> is <code>Total[Abs[v]^p]^(1/p)</code>.</p>
+      <p>For vectors, <code>Norm[v,Infinity]</code> is the ∞‐norm given by <code>Max[Abs[v]]</code>.</p>
+      <p>Related links (from the original):
+        <a href="https://demonstrations.wolfram.com/DistanceNormsInRobotWorkspaceAndPhaseSpace/">Distance Norms in Robot Workspace and Phase Space</a>;
+        <a href="https://reference.wolfram.com/language/ref/Norm.html">Norm</a> (Wolfram Language);
+        <a href="https://mathworld.wolfram.com/Norm.html">Norm</a> (MathWorld);
+        <a href="https://demonstrations.wolfram.com/UnitNormVectorsUnderDifferentPNorms/#more">Unit-Norm Vectors under Different p-Norms</a>;
+        <a href="http://mathworld.wolfram.com/VectorNorm.html">Vector Norm</a>;
+        <a href="http://mathworld.wolfram.com/TaxicabMetric.html">Taxicab Metric</a>.</p>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. Choose 2D or 3D and a value of <i>p</i> with the
+      buttons, the slider or by typing into the value field; drag the plot to rotate it (each change of a control shows
+      the default view again, as in the original). The 3D unit ball is drawn as the exact surface, not a sampled
+      region. All computation runs in your browser.</p>
+    <div class="credits" data-testid="credits">
+      Adapted from <a href="https://demonstrations.wolfram.com/UnitBallsForDifferentPNormsIn2DAnd3D/">"Unit Balls for Different p-Norms in 2D and 3D"</a>
+      by Aaron T. Becker and Ravi Patel, Wolfram Demonstrations Project (published December 29, 2020), licensed
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+      This JavaScript/three.js translation by Tico Hannan (© 2026; produced with an AI code-generation tool) is released
+      under the same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

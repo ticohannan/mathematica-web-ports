@@ -1,0 +1,124 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstration by Aaron T. Becker and Yitong Lu
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Robot Singularities in Three-Link Manipulators</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <script src="../../shared/requirements.js" data-needs-webgl2></script>
+  <script type="importmap">{ "imports": { "three": "../../vendor/three/three.module.js", "three/addons/": "../../vendor/three/addons/" } }</script>
+  <style>
+    /* page-specific layout: two graphics side by side (Row[{Show[...], Show[...]}]) and the original's control layout */
+    .graphic.rs-graphic { max-width: none; flex-basis: 100%; display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-end; gap: 10px; padding: 8px 6px 10px; }
+    .rs-pane { display: flex; flex-direction: column; align-items: center; }
+    .rs-plotlabel { font: 15px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #6b6b6b; margin: 2px 0 4px; }
+    .rs-view { position: relative; max-width: 100%; }
+    .rs-view.ws { width: 325px; }
+    .rs-view.ph { width: 280px; }
+    #controls .ctl-popuprow { align-items: flex-start; }
+    .rs-row { display: flex; flex-wrap: wrap; gap: 14px 40px; align-items: flex-start; }
+    .rs-sliders { display: grid; grid-template-columns: auto minmax(160px, 260px) auto; gap: 6px 8px; align-items: center; }
+    .rs-sliders .rs-sym { font: italic 16px "Times New Roman", serif; }
+    .rs-sliders .rs-sym sub { font-style: normal; font-size: 11px; }
+    .rs-sliders input[type=range] { width: 100%; accent-color: #5a6b80; }
+    .rs-options { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+    .rs-options .ctl-check { flex-direction: row-reverse; gap: 8px; }
+    .rs-options .ctl-setter { flex-direction: row; align-items: center; gap: 8px; }
+    .lbl.rs-axis { font: italic 14px "Times New Roman", serif; color: #555; }
+    .lbl.rs-axis sub { font-style: normal; font-size: 10px; }
+    .lbl.rs-tick { font: 11px system-ui, sans-serif; color: #555; }
+    .rs-matrix { border-collapse: collapse; margin: 6px 0; font-family: "Cambria Math", "STIX Two Math", serif; }
+    .rs-matrix td { padding: 2px 10px; text-align: center; border-left: 0; }
+    .rs-matrix tr td:first-child { border-left: 1.5px solid #555; }
+    .rs-matrix tr td:last-child { border-right: 1.5px solid #555; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Robot singularities</div>
+    <h1 class="demo-title">Robot Singularities in Three-Link Manipulators</h1>
+
+    <section class="manipulate controls-top" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="graphic rs-graphic" id="graphic" data-testid="graphic">
+        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser with WebGL 2.</div></noscript>
+        <div class="rs-pane" data-testid="pane-workspace">
+          <div class="rs-plotlabel" data-testid="plotlabel-workspace">Workspace</div>
+          <div class="rs-view ws" id="view-workspace"></div>
+        </div>
+        <div class="rs-pane" data-testid="pane-phase">
+          <div class="rs-plotlabel" data-testid="plotlabel-phase">Phase Space</div>
+          <div class="rs-view ph" id="view-phase"></div>
+        </div>
+      </div>
+    </section>
+
+    <p class="caption">A singular configuration for a robot is a configuration in which the robot cannot move in at least one
+      direction. This Demonstration draws the singular configurations, in red, for the robot workspace (left) and the phase
+      space (right). The manipulability ellipsoid includes all possible end effector velocities normalized for a 1/2-unit
+      input at a given robot configuration. These velocities are calculated using the robot's velocity Jacobian. You can
+      adjust a three-link robot's configuration to see how the joint configuration affects the manipulability. For singular
+      configurations, the Jacobian loses rank, causing the manipulability ellipsoid to collapse into either a
+      two-dimensional ellipse or a one-dimensional line.</p>
+
+    <details class="details" data-testid="details">
+      <summary>Details</summary>
+      <p>This Demonstration creates a serial-link robot arm with three joints (giving three degrees of freedom). You can
+        select from a variety of robot types and manipulate each joint using the sliders. The position of the robot end
+        effector is determined by the forward kinematics equations. A three-dimensional ball of vectors in the phase space
+        (shown with diameter 1) maps to an ellipsoid in the robot workspace. If the configuration is singular, the ellipsoid
+        loses a dimension and collapses into either a two-dimensional ellipse or a one-dimensional vector. Rotational joints
+        rotate infinitely in either direction (the slider jumps by 2π when pushed to the limit). Linear joints move from 0
+        to 1. Regions where the Jacobian has 1 degree of freedom are shown with solid red lines (or dark red tinted
+        regions), and regions with 2 degrees of freedom with lightly tinted red regions.</p>
+      <p>The time derivative of the kinematics equations yields the Jacobian of the robot, which relates the joint velocity
+        to the linear and angular velocity of the end effector. This Demonstration separately examines the linear and
+        angular velocity of the end effector. The singularities are discovered by computing the determinate of the robot
+        Jacobian. Any configurations where this determinate is 0 are plotted in red in both the workspace and the phase
+        space. Rotate the three-dimensional plots to better see the singular sets. At singularities the Jacobian is not
+        invertible.</p>
+      <p>As an example, consider the "elbow robot arm". For the elbow robot arm, the linear velocity Jacobian is given by:</p>
+      <table class="rs-matrix" aria-label="linear velocity Jacobian of the elbow robot arm">
+        <tr><td>−2 sin(θ<sub>1</sub>) cos(θ<sub>2</sub> + θ<sub>3</sub>/2) cos(θ<sub>3</sub>/2)</td><td>−cos(θ<sub>1</sub>) (sin(θ<sub>2</sub>) + sin(θ<sub>2</sub> + θ<sub>3</sub>))</td><td>−cos(θ<sub>1</sub>) sin(θ<sub>2</sub> + θ<sub>3</sub>)</td></tr>
+        <tr><td>2 cos(θ<sub>1</sub>) cos(θ<sub>2</sub> + θ<sub>3</sub>/2) cos(θ<sub>3</sub>/2)</td><td>−sin(θ<sub>1</sub>) (sin(θ<sub>2</sub>) + sin(θ<sub>2</sub> + θ<sub>3</sub>))</td><td>−sin(θ<sub>1</sub>) sin(θ<sub>2</sub> + θ<sub>3</sub>)</td></tr>
+        <tr><td>0</td><td>cos(θ<sub>2</sub>) + cos(θ<sub>2</sub> + θ<sub>3</sub>)</td><td>cos(θ<sub>2</sub> + θ<sub>3</sub>)</td></tr>
+      </table>
+      <p>The determinant of this is −4 cos(θ<sub>2</sub> + θ<sub>3</sub>/2) cos<sup>2</sup>(θ<sub>3</sub>/2) sin(θ<sub>3</sub>/2),
+        which is zero if θ<sub>3</sub> is −π, 0 or π, or when θ<sub>2</sub> + θ<sub>3</sub>/2 = ±π/2. These singularities
+        correspond to the five red planes shown in the right plot of the Thumbnail. The singularities map to a sphere in the
+        robot's workspace and the vertical line above the robot's second joint. If you move the robot's end effector to any
+        of these regions, the ellipsoid collapses to an ellipse. At (θ<sub>1</sub>, θ<sub>2</sub>, θ<sub>3</sub>) =
+        (θ<sub>1</sub>, π/2, 0), this ellipsoid collapses to a vector.</p>
+      <p>For the elbow robot arm, the angular velocity Jacobian is given by:</p>
+      <table class="rs-matrix" aria-label="angular velocity Jacobian of the elbow robot arm">
+        <tr><td>0</td><td>sin(θ<sub>1</sub>)</td><td>sin(θ<sub>1</sub>)</td></tr>
+        <tr><td>0</td><td>−cos(θ<sub>1</sub>)</td><td>−cos(θ<sub>1</sub>)</td></tr>
+        <tr><td>1</td><td>0</td><td>0</td></tr>
+      </table>
+      <p>The determinant for this is always zero and the manipulability ellipse is a two-dimensional ellipse everywhere in
+        the workspace. Therefore the entire phase space is colored red, and this maps to the red spherical workspace.</p>
+      <p>Reference: [1] M. W. Spong, S. Hutchinson and M. Vidyasagar, <i>Robot Modeling and Control</i>, Hoboken, NJ: John
+        Wiley and Sons, 2006.</p>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. Drag in either picture to rotate it. The singular sets
+      are drawn from the original's hand-written lists; the robot, the Jacobians and the manipulability ellipsoid are
+      computed as in the original. All computation runs in your browser.</p>
+    <div class="credits" data-testid="credits">
+      Adapted from <a href="https://demonstrations.wolfram.com/RobotSingularitiesInThreeLinkManipulators/">"Robot Singularities in Three-Link Manipulators"</a>
+      by Aaron T. Becker and Yitong Lu, Wolfram Demonstrations Project (published January 11, 2021), licensed
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+      This JavaScript/WebGL translation by Tico Hannan (© 2026; produced with an AI code-generation tool) is released under the
+      same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

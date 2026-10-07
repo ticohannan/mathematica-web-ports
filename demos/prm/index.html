@@ -1,0 +1,82 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstration by Aaron T. Becker and Yitong Lu
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Probabilistic Roadmap Method</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <script src="../../shared/requirements.js"></script>
+  <style>
+    .ctl-check { flex-direction: row-reverse; justify-content: flex-end; }
+    #graphic svg.scene { margin: 0 auto; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Probabilistic roadmap</div>
+    <h1 class="demo-title">Probabilistic Roadmap Method</h1>
+
+    <section class="manipulate" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="graphic" id="graphic" data-testid="graphic">
+        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser.</div></noscript>
+      </div>
+    </section>
+
+    <p class="caption">This Demonstration uses the probabilistic roadmap method (PRM) to connect configurations from an initial
+      configuration (shown by a Locator) to a goal configuration. First, click the button "add 50 vertices" to randomly sample
+      configurations and calculate if they collide with obstacles (red) or are safe (green). Next, select a "radius" value to
+      try and connect safe vertices less than the radius distance into a roadmap. If a path from the initial to the goal
+      configuration is found, it can be traversed using the "progress" slider. Although the PRM does not need to calculate the
+      configuration space obstacles, you can make them visible by clicking the checkbox.</p>
+
+    <details class="details" data-testid="details">
+      <summary>Details</summary>
+      <p>The goal of robot motion planning is to find a continuous path from an initial configuration to a goal configuration
+        that is collision-free. A configuration is a complete specification of every point on the robot. This Demonstration
+        assumes the configuration of the robot is specified by two angles, each from 0 to 2π. The resulting configuration space
+        is shaped like a toroid, and so wraps from 2π to 0 on the edges of the plot shown. Obstacles in the robot's workspace
+        map to obstacle regions in the configuration space, but computing these regions is computationally expensive.</p>
+      <p>Instead, the probabilistic roadmap method (PRM) attempts to solve the motion planning problem by building a graph that
+        represents the connectivity of the configuration space. This avoids the need to explicitly compute the configuration
+        space obstacles, and changes the motion-planning problem into a graph-search problem. It requires (a) being able to
+        determine whether a configuration is in collision with any obstacle; and (b) a "local planner" that can quickly
+        determine if two configurations can be joined by a collision-free path. Typically this local planner checks if a
+        straight-line path in the configuration space is possible.</p>
+      <p>The PRM has three parts:</p>
+      <p>(1) Generate random points in the configuration space and calculate if they are in the free configuration space
+        (green points) or in collision with obstacles (red points).</p>
+      <p>(2) Attempt to connect points in the free configuration space to their nearest neighbors less than radius distance
+        apart using the local planner. Parts (1) and (2) generate the roadmap.</p>
+      <p>(3) The local planner attempts to connect the initial configuration to the nearest point in the roadmap and the goal
+        configuration to the nearest point in the roadmap. Then a graph search is used (A* search in this Demonstration) to
+        find the shortest path in the roadmap.</p>
+      <p>PRM was developed in 1996 by Lydia Kavraki et al. [1]. PRMs generate a roadmap that can be reused for subsequent motion
+        planning queries. PRM was designed for high-dimension configuration spaces (dimensions of five or more), but this
+        Demonstration uses two dimensions for ease of visualization.</p>
+      <p>Reference: [1] L. E. Kavraki, P. Svestka, J.-C. Latombe and M. H. Overmars, "Probabilistic Roadmaps for Path Planning
+        in High-Dimensional Configuration Spaces," <i>IEEE Transactions on Robotics and Automation</i>, 12(4), 1996
+        pp. 566–580. doi:10.1109/70.508439.</p>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. Drag the two locators (start and goal configuration); arrow keys
+      move a focused locator. The random obstacles and samples differ from run to run, as in the original; add
+      <code>?seed=1</code> (any whole number) to the address for a reproducible run. All computation runs in your browser.</p>
+    <div class="credits" data-testid="credits">
+      Adapted from <a href="https://demonstrations.wolfram.com/ProbabilisticRoadmapMethod/">"Probabilistic Roadmap Method"</a>
+      by Aaron T. Becker and Yitong Lu, Wolfram Demonstrations Project (published January 13, 2020), licensed
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+      This JavaScript/SVG translation by Tico Hannan (© 2026; produced with an AI code-generation tool) is released under the
+      same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

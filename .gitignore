@@ -8,6 +8,8 @@ test-results/
 playwright-report/
 blob-report/
 *.log
+__pycache__/
+*.pyc
 
 # ---- OS / editor clutter ----
 Thumbs.db

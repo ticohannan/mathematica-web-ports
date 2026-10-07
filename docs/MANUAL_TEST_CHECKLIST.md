@@ -24,8 +24,9 @@ Original used for comparison (Player / Cloud / site / none):
 ## GEN — general (do once per browser)
 
 ### M-GEN-01  Landing page and links
-Steps: open the site root. Click each of the three demo links, use "All demos" to come back.
-Expected: three cards; each link opens its demo; no broken page.
+Steps: open the site root. Click each of the ten demo links, use "All demos" to come back.
+Expected: ten cards in two groups (three, then seven "further robotics demonstrations"); each link opens its demo;
+no broken page.
 Result: [ ] PASS  [ ] FAIL  [ ] UNSURE
 Notes:
 
@@ -50,6 +51,21 @@ Notes:
 ### M-GEN-05  Responsiveness / load
 Steps: drag sliders and locators quickly for ~10 s. Watch for stutter, freezing, or delayed updates.
 Expected: picture follows the mouse without noticeable lag (note your computer's speed).
+Result: [ ] PASS  [ ] FAIL  [ ] UNSURE
+Notes:
+
+### M-GEN-06  Credits (all ten pages)
+Steps: scroll to the end of each page.
+Expected: a credit footer naming the original authors, the title (linked to the Wolfram Demonstrations page), the
+CC BY-NC-SA 3.0 licence, the words "Adapted from" and "Not affiliated with or endorsed".
+Result: [ ] PASS  [ ] FAIL  [ ] UNSURE
+Notes:
+
+### M-GEN-07  Start-up notice (the seven newer pages)
+Steps: switch JavaScript off (Firefox: `about:config` → `javascript.enabled` = false), open each of the seven newer
+pages, then switch it back on.
+Expected: "This demonstration needs JavaScript." in the picture area instead of an empty box. (The first three pages
+do not have this notice yet.)
 Result: [ ] PASS  [ ] FAIL  [ ] UNSURE
 Notes:
 
@@ -287,6 +303,13 @@ Notes:
 ### M-EA-07  Caption and credits
 Result: [ ] PASS  [ ] FAIL  [ ] UNSURE
 Notes:
+
+---------------------------------------------------------------------------------------------------
+## Further robotics demonstrations (added in v0.1.12)
+
+Each of the seven newer apps has its own checklist in [`docs/checklists/`](checklists/) (items `M-SL-…`, `M-CP-…`,
+`M-UB-…`, `M-AG-…`, `M-PR-…`, `M-PA-…`, `M-RS-…`): prm-seven-link, car-paths, unit-balls, art-gallery, prm,
+prm-robot-arm, robot-singularities. Use them the same way as this file (copy, fill in, keep the filled copy private).
 
 ---------------------------------------------------------------------------------------------------
 ## Anything else you noticed

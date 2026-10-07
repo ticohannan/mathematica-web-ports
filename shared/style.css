@@ -75,3 +75,18 @@ details.details summary { cursor: pointer; font-weight: 600; }
   .controls { max-width: none; width: 100%; }
   .graphic { min-width: 0; }
 }
+
+/* ---- used by the seven apps added in v0.1.12 (developed first in a separate repository); the locator rules
+   apply only to pictures made by shared/svg-plot.js (class svg-plot), not to the motion-planning page ---- */
+.requirements-notice { margin: 8px; padding: 10px 12px; border: 1px solid #d9a441; background: #fff8e6; color: #3d2c00; border-radius: 4px; font-size: 0.9rem; }
+.requirements-notice .requirements-reason { color: #6b5a2f; font-size: 0.8rem; }
+noscript .requirements-notice { display: block; }
+svg.svg-plot .locator { cursor: grab; outline: none; }
+svg.svg-plot .locator.dragging { cursor: grabbing; }
+svg.svg-plot .locator:focus-visible .locator-glyph circle, svg.svg-plot .locator:focus-visible .locator-invisible { stroke: var(--focus); stroke-width: 2px; vector-effect: non-scaling-stroke; }
+.ctl-button { font: inherit; font-size: 0.85rem; border: 1px solid var(--line); background: var(--btn); border-radius: 4px; padding: 4px 10px; cursor: pointer; }
+.ctl-button:active { background: var(--btn-on); }
+.ctl-check { display: flex; align-items: center; gap: 6px; }
+.ctl-popup { font: inherit; font-size: 0.85rem; padding: 2px 4px; }
+.graphic.wide { max-width: 760px; flex-basis: 600px; }
+.vslider { writing-mode: vertical-lr; direction: rtl; height: 80px; width: 22px; }

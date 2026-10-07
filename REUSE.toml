@@ -17,7 +17,7 @@ SPDX-License-Identifier = "MIT"
 # Everything adapted from, or derived from, the Wolfram Demonstrations: CC BY-NC-SA 3.0
 [[annotations]]
 path = ["demos/**", "index.html", "README.md", "LICENSE.md", "tests/**",
-        "docs/original-source/**", "docs/MANUAL_TEST_CHECKLIST.md"]
+        "docs/original-source/**", "docs/original-snapshots/**", "docs/MANUAL_TEST_CHECKLIST.md", "docs/checklists/**"]
 precedence = "closest"
 SPDX-FileCopyrightText = ["2026 Tico Hannan", "Original Wolfram Demonstrations by their authors, see LICENSE.md"]
 SPDX-License-Identifier = "CC-BY-NC-SA-3.0"
@@ -27,4 +27,11 @@ SPDX-License-Identifier = "CC-BY-NC-SA-3.0"
 path = "vendor/three/**"
 precedence = "closest"
 SPDX-FileCopyrightText = "2010-2026 three.js authors"
+SPDX-License-Identifier = "MIT"
+
+# Upstream licence notice kept for the car-path port (code converted by the original's authors from this library)
+[[annotations]]
+path = "docs/third-party/reeds-shepp-curves-LICENSE.txt"
+precedence = "override"
+SPDX-FileCopyrightText = "2019 Nathan Lichtlé"
 SPDX-License-Identifier = "MIT"

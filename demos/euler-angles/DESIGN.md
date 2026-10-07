@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.11 |
+| Code version: | 0.1.12 |
 | Document revision | 4 (2026-10-05) — P-EA-02 (WebGL context-loss recovery) implemented as A-EA-06 |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Euler Angles: Precession, Nutation, and Spin", contributed by Kevin Hernandez, based on a program by Sándor Kabai (CC BY-NC-SA 3.0). Readable source: [`docs/original-source/euler-angles.txt`](../../docs/original-source/euler-angles.txt) |
@@ -114,6 +114,7 @@ its design document".
 | D-EA-03 | deviation | Labels are HTML overlays: always on top, never hidden behind geometry. |
 | D-EA-04 | deviation | The 3D picture is as wide as its column, at most 520 px (original `ImageSize -> 400`). |
 | K-EA-01 | known issue | While "Animate bookmarks" runs, "Initial settings" and slider moves are overwritten by the next animation frame (the animation is not stopped). Found by design review, v0.1.6. What the original does in the same situation (⊕ menu → Initial Settings during the bookmark animation) is to be checked (M-EA-08); the port is to behave like the original. A possible improvement is I-EA-01. |
+| K-EA-02 | known issue (lead) | Lighting lead (found with K-RS-10 of the robot-singularities app, whose `shared/mma-lighting.js` reproduces Mathematica's documented default `Lighting`, confirmed in Mathematica 15.0.1): `shared/three-helpers.js` places the default lights with the colours of directional lights 1 and 3 swapped, the 4th light RGBColor[0, 0.18, 0.5] instead of RGBColor[0, 0, 0.18] and the green light at z = 2 instead of 3. Not changed (it is part of D-EA-01); to be compared with the original's snapshots before any change, which would go through §8. |
 | N-EA-01 | note | `s1 = a1/1°` in the extracted source is `(a1/1)°` = a1 degrees in radians (box grouping), not a bug. |
 | N-EA-02 | note | Sliders go 0 … 360; the original has no negative angles. |
 
@@ -138,6 +139,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 3 | v0.1.9 | 2026-10-03 | no change (WebKit browser tests added, test tooling only) |
 | 3 | v0.1.10 | 2026-10-03 | no change (WebKit browser tests now required to publish; test tooling only) |
 | 4 | v0.1.11 | 2026-10-05 | P-EA-02 approved and implemented as A-EA-06: redraw after a WebGL context is restored (shared viewer code) |
+| 4 | v0.1.12 | 2026-10-06 | no behaviour change (seven further apps added to the site; their additions to `shared/style.css` apply only to their own pages); lighting lead K-EA-02 recorded |
 
 ## 10. Improvements to consider (not implemented)
 

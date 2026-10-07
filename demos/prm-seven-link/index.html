@@ -1,0 +1,66 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstration by Aaron T. Becker and Yitong Lu
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Probabilistic Roadmap Method with Seven-Link Articulated Robot</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <script src="../../shared/requirements.js"></script>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Seven-link robot</div>
+    <h1 class="demo-title">Probabilistic Roadmap Method with Seven-Link Articulated Robot</h1>
+
+    <section class="manipulate" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="graphic" id="graphic" data-testid="graphic">
+        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser.</div></noscript>
+      </div>
+    </section>
+
+    <p class="caption">This Demonstration challenges you to move the seven-link robot (in brown) to match a goal configuration
+      (in green) with the minimum number of collisions. Drag the locators to move the robot while avoiding collisions with the
+      blue obstacles. This example was used in 1995 to introduce the probabilistic roadmap method (PRM), a robot motion-planning
+      technique. Selecting "relative" movement changes the angle of one robot link at a time, and "absolute" rotates all
+      subsequent links.</p>
+
+    <details class="details" data-testid="details">
+      <summary>Details</summary>
+      <p>The goal of robot motion planning is to find a continuous path from an initial configuration to a goal configuration
+        that is collision free. A configuration is a complete specification of every point of the robot. This Demonstration
+        uses a seven-link robot with seven rotational joints that can each rotate from 0 to 2π. The resulting configuration
+        space can be represented as a seven-dimensional torus. Obstacles in the robot's workspace map to obstacle regions in
+        the configuration space, but computing these regions is computationally expensive. Planning for robots in
+        high-dimensional spaces is difficult because representing the connected parts of high-dimensional spaces requires a
+        number of samples that grows exponentially with the dimensionality of the space. This is commonly called "the curse of
+        dimensionality."</p>
+      <p>The probabilistic roadmap method (PRM) was developed in 1996 by Lydia Kavraki et al. [1] as a general-purpose
+        technique to solve such problems. Indeed, this Demonstration reproduces Figure 2 from [1]. PRMs generate a random
+        roadmap that can be reused for subsequent motion-planning queries.</p>
+      <p>Reference: [1] L. E. Kavraki, P. Svestka, J-C. Latombe and M. H. Overmars, "Probabilistic Roadmaps for Path Planning
+        in High-Dimensional Configuration Spaces," <i>IEEE Transactions on Robotics and Automation</i>, 12(4), 1996
+        pp. 566–580. doi:10.1109/70.508439.</p>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. Drag a joint of the brown robot; each update turns the dragged
+      link by at most 0.05 rad toward the pointer, as in the original. Arrow keys move a focused joint locator. All computation
+      runs in your browser.</p>
+    <div class="credits" data-testid="credits">
+      Adapted from <a href="https://demonstrations.wolfram.com/ProbabilisticRoadmapMethodWithSevenLinkArticulatedRobot/">"Probabilistic Roadmap Method with Seven-Link Articulated Robot"</a>
+      by Aaron T. Becker and Yitong Lu, Wolfram Demonstrations Project (published April 29, 2020), licensed
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+      This JavaScript/SVG translation by Tico Hannan (© 2026; produced with an AI code-generation tool) is released under the
+      same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

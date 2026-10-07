@@ -33,7 +33,7 @@ Each demo is split into
 
 | File | May use DOM / WebGL? | Purpose | Tested by |
 |------|---------------------|---------|-----------|
-| `planner.js`, `rotations.js`, `model.js` | **No** | line-by-line ports of the Wolfram code | Vitest (Node) + golden parity |
+| `planner.js`, `rotations.js`, `model.js` (and the newer apps' model files, e.g. `carpaths.js`, `visibility.js`, `norms.js`, `demos/common/prm-core.js`) | **No** | line-by-line ports of the Wolfram code | Vitest (Node) + golden parity |
 | `main.js` | Yes | builds controls, draws, handles input, exposes `window.__demo` | Playwright + manual checklist |
 
 `window.__demo` is a small automation hook (get/set state, read computed results, read what was
@@ -51,13 +51,29 @@ were *required* to reproduce the original's cached results bit-for-bit (see test
 and `ArcTan` give Mathematica's results bit for bit (LU with fused multiply-add, BLAS `dnrm2`, correctly
 rounded `atan2`), measured against Mathematica 15.0.1 with the comparison tool's trace mode.
 
+The seven apps added in v0.1.12 add MIT helpers: `shared/mma-extra.js` (list semantics such as `Nearest`,
+`MinimalBy`, `Position`, `Accumulate`, number formatting), `mma-colors.js` (named colours, `Lighter`/`Darker`),
+`mma-lighting.js` (Mathematica's documented default lights), `random.js` (seeded or replayed random numbers, so
+saved states of the originals can be replayed) and `requirements.js` (start-up watchdog and WebGL 2 notice, DEC-22).
+
 ## Rendering choices
 
 - **Motion planning → SVG.** Flat 2D; locators are DOM elements (native pointer events, testable
   `data-testid`s, crisp at any zoom).
+- **Newer 2D apps → SVG through `shared/svg-plot.js`**: Mathematica `Graphics` (plot range, absolute line widths
+  and point sizes, text) mapped to SVG, and Manipulate locators with LocatorPane semantics (a press goes to the
+  nearest locator; arrow keys move a focused locator).
+- **Newer 3D apps (unit balls, robot singularities, the PRM robot-arm inset) → three.js** with Mathematica's
+  documented default lights (`shared/mma-lighting.js`) and the surfaces/regions computed in the model files.
 - **Rotation demos → three.js.** Mathematica conventions emulated: z-up camera from `ViewPoint`
   (scaled box coordinates), `ViewAngle`, approximate default lighting, `Thick` lines as screen-space
   lines, labels as HTML overlays.
+
+## Browser requirements (decision DEC-22)
+
+The WebGL apps require WebGL 2; there is no fallback renderer. Instead of an empty page, a browser that cannot run an
+app gets a clear notice: the seven apps added in v0.1.12 load `shared/requirements.js` (a start-up watchdog, a WebGL 2
+check, and a `<noscript>` message). The first three apps do not have the notice yet.
 
 ## No build step
 

@@ -7,7 +7,7 @@ Five layers. Run them in this order; each one catches problems the others cannot
 | 1. Unit & property tests | `npm test` | Node | the math functions behave correctly on hand-derived cases and random cases checked by an independent oracle |
 | 2. Golden parity tests | `npm test` (same run) | Node | the port reproduces numbers **computed by the original Mathematica code** (cached in the .nb files) |
 | 3. Browser tests | `npm run test:e2e` | Firefox, Chromium and WebKit (Playwright builds) | controls exist and work, the screen shows what the math computed, drag/keyboard interaction, error-free load |
-| 4. Manual / exploratory | `docs/MANUAL_TEST_CHECKLIST.md` | a person, a browser, ideally the original running in Wolfram software | look & feel, behaviour compared with the original, things no script can judge |
+| 4. Manual / exploratory | `docs/MANUAL_TEST_CHECKLIST.md`, `docs/checklists/` | a person, a browser, ideally the original running in Wolfram software | look & feel, behaviour compared with the original, things no script can judge |
 | 5. Automated comparison with the original (motion planning) | `npm run compare:original` | local Mathematica / Wolfram Engine (`wolframscript`) | the port computes the same validity, C-obstacles, lines, path and trajectory as the **original code run live**, on many scenes, not only the 5 saved ones |
 
 Plus an investigation tool: `node tools/explore-motion.mjs` (randomized differential testing).
@@ -31,7 +31,7 @@ Plus an investigation tool: `node tools/explore-motion.mjs` (randomized differen
 
 ## Layer 1 + 2: `npm test`
 
-Runs `tests/unit/*.test.js` and `tests/golden/parity.test.js` with Vitest. Takes a few seconds.
+Runs `tests/unit/*.test.js` and `tests/golden/*.test.js` with Vitest. Takes a few seconds.
 
 - **mma.test.js** — Mathematica-semantics helpers.
 - **mma-exact.test.js** — bit-exact `Det`, `Norm`, `ArcTan`, `VectorAngle` and the fused multiply-add
@@ -61,6 +61,23 @@ python tools\extract_golden.py _internal\originals\MotionPlanningForRobotPathAro
 ```
 Limits: only 3 distinct motion-planning scenes (boundary 3/4, robot 3/4 sides) and 4 rotation
 states are cached. Boundary 5 and robot 5 have **no** golden data — test those manually.
+
+### The seven newer apps (added in v0.1.12)
+Their unit tests are `tests/unit/<app>.test.js` (plus `prm-core.test.js` for the code the two PRM apps share), their
+golden tests `tests/golden/<app>.golden.test.js`. Their originals are Wolfram "definition" notebooks, which store their
+snapshots as pictures only (`docs/original-snapshots/`) and **one** live Manipulate state each
+(`tests/golden/<app>.original-state.json`). More states come from saving the original after moving its controls
+(`tests/golden/<app>.owner-state-1.json`, saved in Mathematica 15.0.1) and extracting them:
+```bat
+python tools\extract_state.py path\to\Notebook.nb tests\golden\<app>.owner-state-2.json
+```
+The extractor writes every state it finds in the notebook; the golden tests use `states[0]` unless told otherwise.
+Questions only Mathematica can answer are collected as `K-` leads in each DESIGN.md and checked with plain Wolfram
+Language scripts: `wolframscript -file tools\wolfram\extra-checks.wls` and `extra-checks-2.wls` (they write
+`test-output\extra-checks*.txt`). An automated `compare:original` (layer 5) exists only for motion planning.
+
+Numbers across engines: bit-exact comparisons only where the arithmetic is exact; elsewhere decisions are compared
+exactly (collision yes/no, chosen path word, graph edges) and coordinates with a tolerance.
 
 ## Layer 3: `npm run test:e2e`
 

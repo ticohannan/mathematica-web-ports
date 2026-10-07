@@ -1,6 +1,6 @@
 # Design process: features are specified before they are built
 
-This repository holds browser ports of three Wolfram Demonstrations. Each app has a **design
+This repository holds browser ports of ten Wolfram Demonstrations. Each app has a **design
 document** that lists every feature the app implements, why it exists, since which version, and how
 it is verified:
 
@@ -9,11 +9,20 @@ it is verified:
 | Motion Planning for Robot Path around Obstacles | [`demos/motion-planning/DESIGN.md`](../demos/motion-planning/DESIGN.md) | `demos/motion-planning/` |
 | Three Parametrizations of Rotations | [`demos/three-parametrizations/DESIGN.md`](../demos/three-parametrizations/DESIGN.md) | `demos/three-parametrizations/` |
 | Euler Angles: Precession, Nutation, and Spin | [`demos/euler-angles/DESIGN.md`](../demos/euler-angles/DESIGN.md) | `demos/euler-angles/` |
+| Probabilistic Roadmap Method with Seven-Link Articulated Robot | [`demos/prm-seven-link/DESIGN.md`](../demos/prm-seven-link/DESIGN.md) | `demos/prm-seven-link/` |
+| Shortest Path for Forward and Reverse Motion of a Car | [`demos/car-paths/DESIGN.md`](../demos/car-paths/DESIGN.md) | `demos/car-paths/` |
+| Unit Balls for Different p-Norms in 2D and 3D | [`demos/unit-balls/DESIGN.md`](../demos/unit-balls/DESIGN.md) | `demos/unit-balls/` |
+| Art Gallery Problem | [`demos/art-gallery/DESIGN.md`](../demos/art-gallery/DESIGN.md) | `demos/art-gallery/` |
+| Probabilistic Roadmap Method | [`demos/prm/DESIGN.md`](../demos/prm/DESIGN.md) | `demos/prm/` |
+| Probabilistic Roadmap Method for Robot Arm | [`demos/prm-robot-arm/DESIGN.md`](../demos/prm-robot-arm/DESIGN.md) | `demos/prm-robot-arm/` |
+| Robot Singularities in Three-Link Manipulators | [`demos/robot-singularities/DESIGN.md`](../demos/robot-singularities/DESIGN.md) | `demos/robot-singularities/` |
 
 The originals came without design documents. Version 0.1.6 added best-effort design documents
 reconstructed from the original notebooks (their code, captions and details text) and from the
 port as built. From 0.1.6 on, the design document is the specification: **the code implements the
-design document, not the other way round.**
+design document, not the other way round.** The seven apps added in v0.1.12 were written together with
+their design documents from their first conversion on (in a companion repository; their *Since* versions v0.1.0 and
+v0.1.1 refer to that repository).
 
 ## Rules
 
@@ -26,7 +35,7 @@ design document, not the other way round.**
    never reused; a removed feature keeps its row with status *removed in vX*.
 3. **Every feature is verified.** The *Verified by* column names automated tests (`unit "…"`,
    `golden "…"`, `e2e "…"` — the quoted text is part of a test title), manual checklist items
-   (`M-xx-nn` in [`MANUAL_TEST_CHECKLIST.md`](MANUAL_TEST_CHECKLIST.md)), `inventory` (the UI
+   (`M-xx-nn` in [`MANUAL_TEST_CHECKLIST.md`](MANUAL_TEST_CHECKLIST.md) or [`checklists/`](checklists/)), `inventory` (the UI
    inventory test) or `compare` (the automated comparison with the original, `npm run compare:original`).
 4. **Deviations and quirks are recorded.** Where the port behaves differently from the original it
    gets a `D-xx-nn` entry; where it deliberately keeps an oddity of the original it gets a `Q-xx-nn`

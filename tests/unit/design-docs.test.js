@@ -7,14 +7,13 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const APPS = [
-  { dir: 'motion-planning', prefix: 'MP', spec: 'motion-planning.spec.js' },
-  { dir: 'three-parametrizations', prefix: 'TP', spec: 'three-parametrizations.spec.js' },
-  { dir: 'euler-angles', prefix: 'EA', spec: 'euler.spec.js' },
-];
+import { APPS as ALL_APPS } from '../e2e/apps.js';
+// Apps whose DESIGN.md exists; the test 'every app has a design document' requires all of them.
+const APPS = ALL_APPS.filter((a) => fs.existsSync(`demos/${a.dir}/DESIGN.md`)).map((a) => ({ dir: a.dir, prefix: a.prefix, spec: a.spec }));
 const version = JSON.parse(fs.readFileSync('package.json', 'utf8')).version;
 const read = (f) => fs.readFileSync(f, 'utf8');
-const checklist = read('docs/MANUAL_TEST_CHECKLIST.md');
+// general checklist + one checklist file per app (docs/checklists/<dir>.md)
+const checklist = [read('docs/MANUAL_TEST_CHECKLIST.md'), ...fs.readdirSync('docs/checklists').filter((f) => f.endsWith('.md')).map((f) => read(path.join('docs/checklists', f)))].join('\n');
 const unitText = ['tests/unit', 'tests/golden'].flatMap((d) => fs.readdirSync(d).filter((f) => f.endsWith('.js')).map((f) => read(path.join(d, f)))).join('\n');
 
 /** Rows of all markdown tables: arrays of trimmed cells (header and separator rows excluded). */
@@ -108,9 +107,15 @@ describe.each(APPS)('design document of $dir', ({ dir, prefix, spec }) => {
   });
 });
 
+describe('design documents present', () => {
+  it('every app has a design document', () => {
+    for (const a of ALL_APPS) expect(fs.existsSync(`demos/${a.dir}/DESIGN.md`), a.dir).toBe(true);
+  });
+});
+
 describe('design process document', () => {
-  it('exists and links all three design documents', () => {
+  it('exists and links all design documents', () => {
     const p = read('docs/DESIGN_PROCESS.md');
-    for (const { dir } of APPS) expect(p).toContain(`demos/${dir}/DESIGN.md`);
+    for (const { dir } of ALL_APPS) expect(p).toContain(`demos/${dir}/DESIGN.md`);
   });
 });
