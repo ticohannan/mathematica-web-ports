@@ -1,0 +1,150 @@
+{
+  "schema": "manipulate-harness/scenarios-1",
+  "app": "four-bar-linkage",
+  "notebook": "Demonstration-Configuration-Space-for-Four-Bar-Linkage-1-0-0-definition.nb",
+  "notebookSha256": "cc11b2422e9416afd5d3b9e3b8e398e3943a6c01d33f94d615970624ac20b5bc",
+  "source": "_internal/batch-ab/design/four-bar-linkage/TESTPLAN.md",
+  "generatedBy": "tools/harness/extract-scenarios.mjs",
+  "scenarios": [
+    {
+      "id": "H-FB-01",
+      "steps": [{"set":{"spacingOld":-1,"linksOld":[-1,-1]}}],
+      "capture": ["lenlengths","impossibleLinks","pvals","plot","pnear","θv","φv","α","spacingOld","linksOld","wl:Module[{l = {links[[1]], links[[2]] - links[[1]], 2.5 - links[[2]], spacing}, log = {}}, Plot[{(AppendTo[log, θ]; φpos[θ, l]), φneg[θ, l]}, {θ, -Pi, Pi}]; log]"],
+      "why": "fresh Plot at the defaults (the initial settings alone never resample): compare with the saved 2018 records (K-FB-02), evaluations outside the domain (K-FB-01)",
+      "source": "{\"id\":\"H-FB-01\",\"steps\":[{\"set\":{\"spacingOld\":-1,\"linksOld\":[-1,-1]}}],\"capture\":[\"lenlengths\",\"impossibleLinks\",\"pvals\",\"plot\",\"pnear\",\"θv\",\"φv\",\"α\",\"spacingOld\",\"linksOld\",\"wl:Module[{l = {links[[1]], links[[2]] - links[[1]], 2.5 - links[[2]], spacing}, log = {}}, Plot[{(AppendTo[log, θ]; φpos[θ, l]), φneg[θ, l]}, {θ, -Pi, Pi}]; log]\"],\"why\":\"fresh Plot at the defaults (the initial settings alone never resample): compare with the saved 2018 records (K-FB-02), evaluations outside the domain (K-FB-01)\"}"
+    },
+    {
+      "id": "H-FB-02",
+      "steps": [{"set":{"spacing":0.5,"links":[1.0,2.0],"p":[0.9100000000000001,1.0899999999999999]}}],
+      "capture": ["pvals","plot","pnear","θv","φv","α","%messages"],
+      "why": "snapshot 2: Grashof kite, phi = pi branch with exact Pi, bifurcations at 0 and pi, spurious vertical lines, exclusions; fresh Plot (lengths differ from the stored spacingOld/linksOld) compared with the snapshot's stored records and pnear (K-FB-02)",
+      "source": "{\"id\":\"H-FB-02\",\"steps\":[{\"set\":{\"spacing\":0.5,\"links\":[1.0,2.0],\"p\":[0.9100000000000001,1.0899999999999999]}}],\"capture\":[\"pvals\",\"plot\",\"pnear\",\"θv\",\"φv\",\"α\",\"%messages\"],\"why\":\"snapshot 2: Grashof kite, phi = pi branch with exact Pi, bifurcations at 0 and pi, spurious vertical lines, exclusions; fresh Plot (lengths differ from the stored spacingOld/linksOld) compared with the snapshot's stored records and pnear (K-FB-02)\"}"
+    },
+    {
+      "id": "H-FB-03",
+      "steps": [{"set":{"spacing":1.35,"links":[1.55,2.1],"p":[0.9100000000000001,1.0899999999999999]}}],
+      "capture": ["pvals","plot","pnear","θv","φv","α"],
+      "why": "snapshot 3: narrow domain |theta| < 0.6536; fresh Plot (lengths differ from the stored spacingOld/linksOld) compared with the snapshot's stored records and pnear (K-FB-02)",
+      "source": "{\"id\":\"H-FB-03\",\"steps\":[{\"set\":{\"spacing\":1.35,\"links\":[1.55,2.1],\"p\":[0.9100000000000001,1.0899999999999999]}}],\"capture\":[\"pvals\",\"plot\",\"pnear\",\"θv\",\"φv\",\"α\"],\"why\":\"snapshot 3: narrow domain |theta| < 0.6536; fresh Plot (lengths differ from the stored spacingOld/linksOld) compared with the snapshot's stored records and pnear (K-FB-02)\"}"
+    },
+    {
+      "id": "H-FB-04",
+      "steps": [{"set":{"spacing":0.9,"links":[1.2000000000000002,1.7000000000000002],"p":[0.9100000000000001,1.0899999999999999]}}],
+      "capture": ["pvals","plot","pnear","θv","φv","α"],
+      "why": "snapshot 4: change point at (0, 0) inside the domain; fresh Plot (lengths differ from the stored spacingOld/linksOld) compared with the snapshot's stored records and pnear (K-FB-02)",
+      "source": "{\"id\":\"H-FB-04\",\"steps\":[{\"set\":{\"spacing\":0.9,\"links\":[1.2000000000000002,1.7000000000000002],\"p\":[0.9100000000000001,1.0899999999999999]}}],\"capture\":[\"pvals\",\"plot\",\"pnear\",\"θv\",\"φv\",\"α\"],\"why\":\"snapshot 4: change point at (0, 0) inside the domain; fresh Plot (lengths differ from the stored spacingOld/linksOld) compared with the snapshot's stored records and pnear (K-FB-02)\"}"
+    },
+    {
+      "id": "H-FB-05",
+      "steps": [{"set":{"spacing":0.0,"links":[1.25,2.0]}}],
+      "capture": ["lenlengths","impossibleLinks","pnear","θv","φv","α","plot"],
+      "why": "only one configuration: L1 == L2 + L3 + L4, Piecewise {0, 0}",
+      "source": "{\"id\":\"H-FB-05\",\"steps\":[{\"set\":{\"spacing\":0.0,\"links\":[1.25,2.0]}}],\"capture\":[\"lenlengths\",\"impossibleLinks\",\"pnear\",\"θv\",\"φv\",\"α\",\"plot\"],\"why\":\"only one configuration: L1 == L2 + L3 + L4, Piecewise {0, 0}\"}"
+    },
+    {
+      "id": "H-FB-06",
+      "steps": [{"set":{"spacing":0.5,"links":[0.5,2.0]}}],
+      "capture": ["impossibleLinks","pnear","α","plot"],
+      "why": "only one configuration: L2 == L1 + L3 + L4, Piecewise {Pi, 0}, alpha with exact Pi",
+      "source": "{\"id\":\"H-FB-06\",\"steps\":[{\"set\":{\"spacing\":0.5,\"links\":[0.5,2.0]}}],\"capture\":[\"impossibleLinks\",\"pnear\",\"α\",\"plot\"],\"why\":\"only one configuration: L2 == L1 + L3 + L4, Piecewise {Pi, 0}, alpha with exact Pi\"}"
+    },
+    {
+      "id": "H-FB-07",
+      "steps": [{"set":{"spacing":1.5,"links":[2.0,2.25]}}],
+      "capture": ["impossibleLinks","pnear","α"],
+      "why": "one configuration at the largest separation",
+      "source": "{\"id\":\"H-FB-07\",\"steps\":[{\"set\":{\"spacing\":1.5,\"links\":[2.0,2.25]}}],\"capture\":[\"impossibleLinks\",\"pnear\",\"α\"],\"why\":\"one configuration at the largest separation\"}"
+    },
+    {
+      "id": "H-FB-08",
+      "steps": [{"set":{"spacing":0.1,"links":[2.3000000000000003,2.45]}}],
+      "capture": ["impossibleLinks","pnear","θv","φv","α","plot"],
+      "why": "invalid lengths: Piecewise default {Pi/2, Pi/2}, alpha 0, two-line red text",
+      "source": "{\"id\":\"H-FB-08\",\"steps\":[{\"set\":{\"spacing\":0.1,\"links\":[2.3000000000000003,2.45]}}],\"capture\":[\"impossibleLinks\",\"pnear\",\"θv\",\"φv\",\"α\",\"plot\"],\"why\":\"invalid lengths: Piecewise default {Pi/2, Pi/2}, alpha 0, two-line red text\"}"
+    },
+    {
+      "id": "H-FB-09",
+      "steps": [{"set":{}},{"set":{"links":[0.05,0.15000000000000002]}}],
+      "capture": ["lenlengths","impossibleLinks","plot","pvals","pnear","θv","φv","α","spacingOld","linksOld","%messages","wl:Module[{l = {links[[1]], links[[2]] - links[[1]], 2.5 - links[[2]], spacing}, log = {}}, Plot[{(AppendTo[log, θ]; φpos[θ, l]), φneg[θ, l]}, {θ, -Pi, Pi}]; log]"],
+      "why": "too-long L3 not detected (typo Q-FB-01): stale plot and pvals or Null records (K-FB-03)",
+      "source": "{\"id\":\"H-FB-09\",\"steps\":[{\"set\":{}},{\"set\":{\"links\":[0.05,0.15000000000000002]}}],\"capture\":[\"lenlengths\",\"impossibleLinks\",\"plot\",\"pvals\",\"pnear\",\"θv\",\"φv\",\"α\",\"spacingOld\",\"linksOld\",\"%messages\",\"wl:Module[{l = {links[[1]], links[[2]] - links[[1]], 2.5 - links[[2]], spacing}, log = {}}, Plot[{(AppendTo[log, θ]; φpos[θ, l]), φneg[θ, l]}, {θ, -Pi, Pi}]; log]\"],\"why\":\"too-long L3 not detected (typo Q-FB-01): stale plot and pvals or Null records (K-FB-03)\"}"
+    },
+    {
+      "id": "H-FB-10",
+      "steps": [{"set":{}},{"set":{"links":[0.05,0.15000000000000002]}},{"set":{"links":[1.35,2]}}],
+      "capture": ["pvals","plot","pnear"],
+      "why": "recovery after the too-long L3: resampled at the default lengths, compare with H-FB-01",
+      "source": "{\"id\":\"H-FB-10\",\"steps\":[{\"set\":{}},{\"set\":{\"links\":[0.05,0.15000000000000002]}},{\"set\":{\"links\":[1.35,2]}}],\"capture\":[\"pvals\",\"plot\",\"pnear\"],\"why\":\"recovery after the too-long L3: resampled at the default lengths, compare with H-FB-01\"}"
+    },
+    {
+      "id": "H-FB-11",
+      "steps": [{"set":{"spacing":0.75,"links":[0.0,1.0]}}],
+      "capture": ["lenlengths","pvals","plot","wl:Module[{l = {links[[1]], links[[2]] - links[[1]], 2.5 - links[[2]], spacing}, log = {}}, Plot[{(AppendTo[log, θ]; φpos[θ, l]), φneg[θ, l]}, {θ, -Pi, Pi}]; log]"],
+      "why": "L1 = 0: phi constant, Plot evaluates only its initial grid; compare with snapshot 2's first 25 records (grid offsets in 15.0.1)",
+      "source": "{\"id\":\"H-FB-11\",\"steps\":[{\"set\":{\"spacing\":0.75,\"links\":[0.0,1.0]}}],\"capture\":[\"lenlengths\",\"pvals\",\"plot\",\"wl:Module[{l = {links[[1]], links[[2]] - links[[1]], 2.5 - links[[2]], spacing}, log = {}}, Plot[{(AppendTo[log, θ]; φpos[θ, l]), φneg[θ, l]}, {θ, -Pi, Pi}]; log]\"],\"why\":\"L1 = 0: phi constant, Plot evaluates only its initial grid; compare with snapshot 2's first 25 records (grid offsets in 15.0.1)\"}"
+    },
+    {
+      "id": "H-FB-12",
+      "steps": [{"set":{"spacing":0.0,"links":[0.0,0.1]}}],
+      "capture": ["pvals","plot","pnear","θv","φv","α","%messages"],
+      "why": "alpha = beta = 0 for every theta: ArcTan[0, 0] before the Null test (K-FB-11)",
+      "source": "{\"id\":\"H-FB-12\",\"steps\":[{\"set\":{\"spacing\":0.0,\"links\":[0.0,0.1]}}],\"capture\":[\"pvals\",\"plot\",\"pnear\",\"θv\",\"φv\",\"α\",\"%messages\"],\"why\":\"alpha = beta = 0 for every theta: ArcTan[0, 0] before the Null test (K-FB-11)\"}"
+    },
+    {
+      "id": "H-FB-13",
+      "steps": [{"set":{"spacing":1.4500000000000002,"links":[0.55,0.7000000000000001]}}],
+      "capture": ["pvals","plot","pnear"],
+      "why": "two separate loops: line splitting at gaps, edge search on four edges",
+      "source": "{\"id\":\"H-FB-13\",\"steps\":[{\"set\":{\"spacing\":1.4500000000000002,\"links\":[0.55,0.7000000000000001]}}],\"capture\":[\"pvals\",\"plot\",\"pnear\"],\"why\":\"two separate loops: line splitting at gaps, edge search on four edges\"}"
+    },
+    {
+      "id": "H-FB-14",
+      "steps": [{"set":{"spacing":0.9,"links":[0.4,1.5]}}],
+      "capture": ["pvals","plot","pnear","wl:Module[{l = {links[[1]], links[[2]] - links[[1]], 2.5 - links[[2]], spacing}, log = {}}, Plot[{(AppendTo[log, θ]; φpos[θ, l]), φneg[θ, l]}, {θ, -Pi, Pi}]; log]"],
+      "why": "Grashof crank-rocker: full theta range, refinement pattern to tune the port's threshold",
+      "source": "{\"id\":\"H-FB-14\",\"steps\":[{\"set\":{\"spacing\":0.9,\"links\":[0.4,1.5]}}],\"capture\":[\"pvals\",\"plot\",\"pnear\",\"wl:Module[{l = {links[[1]], links[[2]] - links[[1]], 2.5 - links[[2]], spacing}, log = {}}, Plot[{(AppendTo[log, θ]; φpos[θ, l]), φneg[θ, l]}, {θ, -Pi, Pi}]; log]\"],\"why\":\"Grashof crank-rocker: full theta range, refinement pattern to tune the port's threshold\"}"
+    },
+    {
+      "id": "H-FB-15",
+      "steps": [{"set":{"spacing":0.5,"links":[1.0,2.0],"p":[3.1,-3.1]}}],
+      "capture": ["pnear","θv","φv"],
+      "why": "Nearest near the seam without wrap-around (Q-FB-04)",
+      "source": "{\"id\":\"H-FB-15\",\"steps\":[{\"set\":{\"spacing\":0.5,\"links\":[1.0,2.0],\"p\":[3.1,-3.1]}}],\"capture\":[\"pnear\",\"θv\",\"φv\"],\"why\":\"Nearest near the seam without wrap-around (Q-FB-04)\"}"
+    },
+    {
+      "id": "H-FB-16",
+      "steps": [{"set":{}},{"set":{"p":[-1.0179884220375017,-1.6065914498986138]}}],
+      "capture": ["pnear"],
+      "why": "exact tie: p equidistant (0.02778051000585058) from record 49's two values, next sample 0.089 away: tie order of First@Nearest (K-FB-04)",
+      "source": "{\"id\":\"H-FB-16\",\"steps\":[{\"set\":{}},{\"set\":{\"p\":[-1.0179884220375017,-1.6065914498986138]}}],\"capture\":[\"pnear\"],\"why\":\"exact tie: p equidistant (0.02778051000585058) from record 49's two values, next sample 0.089 away: tie order of First@Nearest (K-FB-04)\"}"
+    },
+    {
+      "id": "H-FB-17",
+      "steps": [{"set":{}},{"set":{"p":[0.5,1.0]}}],
+      "capture": ["pvals","pnear","spacingOld","linksOld"],
+      "why": "moving only p keeps the cached (stored, saved) samples",
+      "source": "{\"id\":\"H-FB-17\",\"steps\":[{\"set\":{}},{\"set\":{\"p\":[0.5,1.0]}}],\"capture\":[\"pvals\",\"pnear\",\"spacingOld\",\"linksOld\"],\"why\":\"moving only p keeps the cached (stored, saved) samples\"}"
+    },
+    {
+      "id": "H-FB-18",
+      "steps": [{"set":{"spacing":0.75,"links":[1.35,2.49]}}],
+      "capture": ["lenlengths","pvals","pnear"],
+      "why": "right end of the interval slider: L3 = 0.01",
+      "source": "{\"id\":\"H-FB-18\",\"steps\":[{\"set\":{\"spacing\":0.75,\"links\":[1.35,2.49]}}],\"capture\":[\"lenlengths\",\"pvals\",\"pnear\"],\"why\":\"right end of the interval slider: L3 = 0.01\"}"
+    },
+    {
+      "id": "H-FB-19",
+      "steps": [{"set":{}},{"set":{"p":[4.0,-4.0]}}],
+      "capture": ["pnear"],
+      "why": "locator outside the plot range: mod2pi of both coordinates (K-FB-07)",
+      "source": "{\"id\":\"H-FB-19\",\"steps\":[{\"set\":{}},{\"set\":{\"p\":[4.0,-4.0]}}],\"capture\":[\"pnear\"],\"why\":\"locator outside the plot range: mod2pi of both coordinates (K-FB-07)\"}"
+    },
+    {
+      "id": "H-FB-20",
+      "steps": [{"setFrom":"snapshot:2"},{"set":{}}],
+      "capture": ["pvals","plot","pnear","spacingOld","linksOld","%messages"],
+      "why": "snapshot 2's Settings are a fixed point: no new Plot (spacingOld = spacing), pnear and the 103 stored records unchanged",
+      "source": "{\"id\":\"H-FB-20\",\"steps\":[{\"setFrom\":\"snapshot:2\"},{\"set\":{}}],\"capture\":[\"pvals\",\"plot\",\"pnear\",\"spacingOld\",\"linksOld\",\"%messages\"],\"why\":\"snapshot 2's Settings are a fixed point: no new Plot (spacingOld = spacing), pnear and the 103 stored records unchanged\"}"
+    }
+  ]
+}

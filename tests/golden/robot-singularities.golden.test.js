@@ -11,6 +11,7 @@ import { typeOf, makeO3coords, phaseOpt, jacobianFor, myJacob, myJacobAngular } 
 import { singularspace3D, singularphasespace3D } from '../../demos/robot-singularities/singular-sets.js';
 import { flatten, Graphics3D, RGBColor, Sphere, Line, InfinitePlane, Opacity, Thick, Cuboid, Polygon, Cylinder } from '../../demos/robot-singularities/g3d.js';
 import { manipEllip, svd3, matrixRank } from '../../demos/robot-singularities/svd3.js';
+import { loadStates, plain } from '../../tools/lib/wl-json.mjs';
 
 const saved = JSON.parse(fs.readFileSync('tests/golden/robot-singularities.original-state.json', 'utf8')).state;
 // the 32 Piecewise matrices of the input cell as Wolfram expressions (tests/golden/robot-singularities.jacobians.json)
@@ -211,6 +212,133 @@ describe('robot singularities golden (saved state of the original)', () => {
   it('robot singularities: MatrixRank of DiagonalMatrix {1, 1e-13, 0.5} is 3 and of {1, 1e-17, 0.5} is 2 as in Mathematica', () => {
     expect(matrixRank([1, 1e-13, 0.5])).toBe(3);
     expect(matrixRank([1, 1e-17, 0.5])).toBe(2);
+  });
+});
+// ---- snapshot Settings (tests/golden/robot-singularities.original-states.json, tools/extract_state.py --snapshots):
+// the four snapshot cells store the Manipulate variables behind docs/original-snapshots/robot-singularities-<k>.png,
+// including the singular sets the original computed (singularspace3D, singularphasespace3D) and the Type table.
+const snapFx = loadStates('tests/golden/robot-singularities.original-states.json');
+const snapState = (k) => plain(snapFx.snapshots[k - 1]);
+const ITYPES = { 1: 2, 2: 2, 3: 16, 4: 10 };
+const portState = (st) => ({ iType: st.iType, params: st.params, showRobot: st.showRobot, showManipulability: st.showManipulability, isJLinearVel: st.isJLinearVel, iTypeOld: st.iTypeOld, isJLinearVelOld: st.isJLinearVelOld, singularLabel: 'Phase Space' });
+/** all primitives with head h anywhere in a stored expression */
+const findHeads = (e, h, out = []) => {
+  if (Array.isArray(e)) e.forEach((x) => findHeads(x, h, out));
+  else if (e && e.head) { if (e.head === h) out.push(e); e.args.forEach((x) => findHeads(x, h, out)); }
+  return out;
+};
+/** largest distance from the points to the nearest of the parametric curves (dense samples + golden-section refinement) */
+function maxDistanceToCurves(points, curves) {
+  const N = 2000;
+  const samples = curves.map((c) => Array.from({ length: N + 1 }, (_, i) => { const t = c.u[0] + ((c.u[1] - c.u[0]) * i) / N; return [t, c.f(t)]; }));
+  let worst = 0;
+  for (const q of points) {
+    let best = Infinity;
+    curves.forEach((c, ci) => {
+      const d2 = (p) => (p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2 + (p[2] - q[2]) ** 2;
+      let ib = 0, db = Infinity;
+      samples[ci].forEach(([, p], i) => { const d = d2(p); if (d < db) { db = d; ib = i; } });
+      const h = (c.u[1] - c.u[0]) / N;
+      let a = Math.max(c.u[0], samples[ci][ib][0] - h), b = Math.min(c.u[1], samples[ci][ib][0] + h);
+      for (let it = 0; it < 80; it++) { const m1 = a + (b - a) * 0.382, m2 = a + (b - a) * 0.618; if (d2(c.f(m1)) < d2(c.f(m2))) b = m2; else a = m1; }
+      best = Math.min(best, Math.sqrt(Math.min(db, d2(c.f((a + b) / 2)))));
+    });
+    worst = Math.max(worst, best);
+  }
+  return worst;
+}
+
+describe('robot singularities golden: the four snapshot states', () => {
+  it('robot singularities: snapshot 1: the Settings are the saved live state (elbow arm, label phase space)', () => {
+    expect(snapFx.count).toBe(4);
+    expect(snapState(1)).toEqual(plain(snapFx.live));
+    expect(snapState(1).singularphasespace3D.args[1].find((r) => r.args[0].sym === 'PlotLabel').args[1]).toBe('phase space');
+  });
+  it('robot singularities: snapshots 1 to 4: the stored Type table holds the numbers of the port robot table (elbow, elbow, offset spherical wrist, SCARA)', () => {
+    for (const k of [1, 2, 3, 4]) {
+      const st = snapState(k);
+      expect(st.iType).toBe(ITYPES[k]);
+      const T = typeOf(st.iType);
+      for (let row = 0; row < 4; row++) for (let j = 0; j < 3; j++) {
+        if (typeof T[row][j] === 'number' || row === 0) expect(st.Type[row][j], `snapshot ${k} row ${row} joint ${j}`).toBe(T[row][j]);
+      }
+    }
+  });
+  for (const [k, title] of [
+    [2, 'robot singularities: snapshot 2: evaluating the stored variables recomputes nothing and keeps them'],
+    [3, 'robot singularities: snapshot 3: evaluating the stored variables recomputes nothing and keeps them'],
+    [4, 'robot singularities: snapshot 4: evaluating the stored variables recomputes nothing and keeps them'],
+  ]) {
+    it(title, () => {
+      const st = portState(snapState(k));
+      const { state, view } = evaluate(st);
+      expect(state).toEqual(st);
+      expect(view.recomputed).toBe(false);
+      expect(view.manip.rank).toBe(k === 3 ? 3 : 2); // flat ellipse in snapshots 2 and 4, full ellipsoid in snapshot 3
+    });
+  }
+  it('robot singularities: snapshot 2: the stored phase-space set equals the elbow Linear recipe exactly, label Phase Space', () => {
+    const orig = fromSaved(snapState(2).singularphasespace3D);
+    expect(flatten(orig)).toEqual(flatten(singularphasespace3D(2, 'Linear', {})));
+    const mine = phaseOpt(typeOf(2));
+    expect(orig.options.PlotLabel).toBe('Phase Space');
+    expect(orig.options.PlotRange).toEqual(mine.PlotRange);
+    expect(orig.options.AxesLabel).toEqual(mine.AxesLabel.map((l) => ({ sym: l.sym, sub: l.sub })));
+  });
+  it('robot singularities: snapshot 2: the stored workspace set is the older Point version (N-RS-06), its translucent sphere equals the port one', () => {
+    const g = snapState(2).singularspace3D.args[0];
+    expect(findHeads(g, 'Point').map((p) => p.args[0])).toEqual([[[0, 0, 2], [0, 0, 4]]]); // port: Sphere[{0,0,0},{0,0,2},{0,0,4}}, 0.15]
+    expect(findHeads(g, 'Line').map((p) => p.args[0])).toEqual([[[0, 0, 2], [0, 0, 4]]]); // port: from {0,0,0}, opacity 0.4
+    const mine = flatten(singularspace3D(2, 'Linear', makeO3coords(typeOf(2))));
+    const sphere = mine.find((p) => p.type === 'sphere' && p.radius === 2);
+    expect(findHeads(g, 'Sphere').map((p) => [p.args[0], p.args[1]])).toEqual([[sphere.centers[0], sphere.radius]]);
+    expect(sphere.opacity).toBe(0.3);
+  });
+  it('robot singularities: snapshot 3: the stored workspace surfaces are the 3837 vertices of the snapshot 3 fixture', () => {
+    const gc = findHeads(snapState(3).singularspace3D.args[0], 'GraphicsComplex');
+    expect(gc).toHaveLength(1);
+    expect(gc[0].args[0]).toEqual(snap3.vertices); // their distance to the port surfaces is tested above
+  });
+  it('robot singularities: snapshot 3: the two stored workspace curves lie on the port curves of the offset spherical wrist (within 1e-12)', { timeout: 30000 }, () => {
+    const lines = findHeads(snapState(3).singularspace3D.args[0], 'Line').map((l) => l.args[0]);
+    expect(lines.map((l) => l.length)).toEqual([69, 336]);
+    const curves = flatten(singularspace3D(16, 'Linear', makeO3coords(typeOf(16)))).filter((p) => p.type === 'parametricCurve');
+    expect(curves).toHaveLength(2);
+    expect(maxDistanceToCurves(lines.flat(), curves)).toBeLessThan(1e-12);
+  });
+  it('robot singularities: snapshot 3: the singular points are the older Point version (N-RS-06) at the centres of the port spheres', () => {
+    const pts = findHeads(snapState(3).singularspace3D.args[0], 'Point').map((p) => p.args[0]);
+    expect(pts).toEqual([[[0, 0, 2], [0, 0, 0]]]);
+    const sph = flatten(singularspace3D(16, 'Linear', makeO3coords(typeOf(16)))).filter((p) => p.type === 'sphere');
+    expect(sph.map((p) => p.centers)).toEqual([[[0, 0, 2], [0, 0, 0]]]); // Sphere[{{0, 0, 2}, {0, 0, 0}}, 0.2]
+  });
+  it('robot singularities: snapshot 3: the stored phase-space set has the six lines of the port exactly and 1419 surface vertices on the port surfaces (within 1e-7)', { timeout: 30000 }, () => {
+    const g = snapState(3).singularphasespace3D.args[0];
+    const mine = flatten(singularphasespace3D(16, 'Linear', {}));
+    const myLines = mine.filter((p) => p.type === 'line').map((p) => p.points);
+    expect(findHeads(g, 'Line').map((l) => l.args[0])).toEqual(myLines);
+    const gc = findHeads(g, 'GraphicsComplex');
+    expect(gc).toHaveLength(1);
+    expect(gc[0].args[0]).toHaveLength(1419);
+    const surfs = mine.filter((p) => p.type === 'parametricSurface');
+    expect(surfs).toHaveLength(5);
+    expect(maxDistanceToSurfaces(gc[0].args[0], surfs)).toBeLessThan(1e-7);
+  });
+  it('robot singularities: snapshot 4: the stored phase-space set of the SCARA arm equals the port three InfinitePlanes exactly, d3 from 0 to 1', () => {
+    const orig = fromSaved(snapState(4).singularphasespace3D);
+    expect(flatten(orig)).toEqual(flatten(singularphasespace3D(10, 'Linear', {})));
+    const mine = phaseOpt(typeOf(10));
+    expect(orig.options.PlotRange).toEqual(mine.PlotRange);
+    expect(orig.options.PlotRange[2]).toEqual([0, 1]);
+    expect(orig.options.AxesLabel).toEqual(mine.AxesLabel.map((l) => ({ sym: l.sym, sub: l.sub })));
+  });
+  it('robot singularities: snapshot 4: the 3162 stored workspace surface vertices of the SCARA arm lie on the port surfaces (within 1e-7)', { timeout: 30000 }, () => {
+    const gc = findHeads(snapState(4).singularspace3D.args[0], 'GraphicsComplex');
+    expect(gc).toHaveLength(1);
+    expect(gc[0].args[0]).toHaveLength(3162);
+    const surfs = flatten(singularspace3D(10, 'Linear', makeO3coords(typeOf(10)))).filter((p) => p.type === 'parametricSurface');
+    expect(surfs.map((p) => p.opacity)).toEqual([0.3, 0.3]);
+    expect(maxDistanceToSurfaces(gc[0].args[0], surfs)).toBeLessThan(1e-7);
   });
 });
 /** largest distance from the vertices to the nearest of the parametric surfaces (grid start + damped Gauss-Newton) */

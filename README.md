@@ -72,7 +72,10 @@ tests/golden/              fixtures extracted from the ORIGINAL notebooks (saved
 tests/e2e/                 Playwright browser tests
 tests/support/             independent reference implementation used as a test oracle
 tools/                     serve.mjs (local server), explore-motion.mjs, compare-with-original.mjs (+ wolfram/,
-                           lib/, data/), notebook extraction scripts, publish-tested.mjs
+                           lib/, data/), notebook extraction scripts, publish-tested.mjs; run-harness.mjs and
+                           harness/ (Mathematica harness: wolfram/manipulate-harness.wls runs an original's stored
+                           Manipulate code headless for scripted control changes; scenario extractor and checkers)
+tests/harness/             Mathematica-harness scenario files (inputs; results become tests/golden/<dir>.harness.json)
 docs/                      architecture, testing, checklists, readable original source, original snapshot pictures
 _internal/                 PRIVATE (git-ignored): notes, assignment material, original .nb files
 ```

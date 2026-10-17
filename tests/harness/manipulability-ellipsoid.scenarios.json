@@ -1,0 +1,125 @@
+{
+  "schema": "manipulate-harness/scenarios-1",
+  "app": "manipulability-ellipsoid",
+  "notebook": "Demonstration-Manipulability-Ellipsoid-of-a-Robot-Arm-1-0-0-definition.nb",
+  "notebookSha256": "fab444f502b7c33f7f52ccbf6218b7b47014d3074e92cad44ab5eddac96af7e9",
+  "source": "_internal/batch-ab/design/manipulability-ellipsoid/TESTPLAN.md",
+  "generatedBy": "tools/harness/extract-scenarios.mjs",
+  "scenarios": [
+    {
+      "id": "H-ME-01",
+      "steps": [{"set":{}}],
+      "capture": ["θ1","θ1prev","θ2","θ2prev","θ3","θ3prev","p1","p2","p3","U","Σfull","V","Σ","o2","oc","z1","wl:MatrixRank[Σ]","wl:Det[Σfull]","%text","%messages"],
+      "why": "initial settings (= live state): SVD order and signs, μ value and text, and whether each update emits Det::matsq because the Column evaluates Det[Σfull] before the SVD (K-ME-04)",
+      "source": "{\"id\":\"H-ME-01\",\"steps\":[{\"set\":{}}],\"capture\":[\"θ1\",\"θ1prev\",\"θ2\",\"θ2prev\",\"θ3\",\"θ3prev\",\"p1\",\"p2\",\"p3\",\"U\",\"Σfull\",\"V\",\"Σ\",\"o2\",\"oc\",\"z1\",\"wl:MatrixRank[Σ]\",\"wl:Det[Σfull]\",\"%text\",\"%messages\"],\"why\":\"initial settings (= live state): SVD order and signs, μ value and text, and whether each update emits Det::matsq because the Column evaluates Det[Σfull] before the SVD (K-ME-04)\"}"
+    },
+    {
+      "id": "H-ME-02",
+      "steps": [{"set":{"θ1":0,"θ1prev":0,"θ2":0,"θ2prev":"wl:-Pi/4","θ3":"wl:Pi/4","θ3prev":"wl:-3 Pi/4","p1":"wl:{1,0}","p2":"wl:{1,0}","p3":"wl:{1/Sqrt[2],1/Sqrt[2]}"}}],
+      "capture": ["θ1","θ1prev","θ2","θ2prev","θ3","θ3prev","p1","p2","p3","Σfull","wl:Det[Σfull]"],
+      "why": "first evaluation of the Input cell's defaults (not the initial settings): prev mechanism, μ = 1.20711",
+      "source": "{\"id\":\"H-ME-02\",\"steps\":[{\"set\":{\"θ1\":0,\"θ1prev\":0,\"θ2\":0,\"θ2prev\":\"wl:-Pi/4\",\"θ3\":\"wl:Pi/4\",\"θ3prev\":\"wl:-3 Pi/4\",\"p1\":\"wl:{1,0}\",\"p2\":\"wl:{1,0}\",\"p3\":\"wl:{1/Sqrt[2],1/Sqrt[2]}\"}}],\"capture\":[\"θ1\",\"θ1prev\",\"θ2\",\"θ2prev\",\"θ3\",\"θ3prev\",\"p1\",\"p2\",\"p3\",\"Σfull\",\"wl:Det[Σfull]\"],\"why\":\"first evaluation of the Input cell's defaults (not the initial settings): prev mechanism, μ = 1.20711\"}"
+    },
+    {
+      "id": "H-ME-03",
+      "captureEachStep": true,
+      "steps": [{"set":{"p1":"wl:Nearest[Table[{Cos[a],Sin[a]},{a,-Pi,Pi,Pi/32}],{0.3,0.95}][[1]]"}},{"set":{}}],
+      "capture": ["p1","θ1","θ1prev","oc"],
+      "why": "a dial press from the initial settings (θ1prev = 19π/32): snapping to 13π/32, stale θ1prev after step 1, synchronised after step 2 (Q-ME-06)",
+      "source": "{\"id\":\"H-ME-03\",\"captureEachStep\":true,\"steps\":[{\"set\":{\"p1\":\"wl:Nearest[Table[{Cos[a],Sin[a]},{a,-Pi,Pi,Pi/32}],{0.3,0.95}][[1]]\"}},{\"set\":{}}],\"capture\":[\"p1\",\"θ1\",\"θ1prev\",\"oc\"],\"why\":\"a dial press from the initial settings (θ1prev = 19π/32): snapping to 13π/32, stale θ1prev after step 1, synchronised after step 2 (Q-ME-06)\"}"
+    },
+    {
+      "id": "H-ME-04",
+      "steps": [{"set":{"p1":"wl:Nearest[Table[{Cos[a],Sin[a]},{a,-Pi,Pi,Pi/32}],{Cos[-Pi/8],Sin[-Pi/8]}][[1]]"}}],
+      "capture": ["p1","θ1","%primitives"],
+      "why": "negative dial angle: θ1 = 15π/8, the floor arc and points (Q-ME-04)",
+      "source": "{\"id\":\"H-ME-04\",\"steps\":[{\"set\":{\"p1\":\"wl:Nearest[Table[{Cos[a],Sin[a]},{a,-Pi,Pi,Pi/32}],{Cos[-Pi/8],Sin[-Pi/8]}][[1]]\"}}],\"capture\":[\"p1\",\"θ1\",\"%primitives\"],\"why\":\"negative dial angle: θ1 = 15π/8, the floor arc and points (Q-ME-04)\"}"
+    },
+    {
+      "id": "H-ME-05",
+      "steps": [{"set":{"p3":"wl:{-1,0}"}}],
+      "capture": ["θ3","wl:N[JvRRRanthro[θ1,θ2,θ3,r2,r3]]","Σfull","U","wl:MatrixRank[Σ]","wl:Det[Σfull]","%text"],
+      "why": "θ3 = π: two exact zero columns, rank 1; zero singular values exactly 0. by the SVD tolerance? (K-ME-01)",
+      "source": "{\"id\":\"H-ME-05\",\"steps\":[{\"set\":{\"p3\":\"wl:{-1,0}\"}}],\"capture\":[\"θ3\",\"wl:N[JvRRRanthro[θ1,θ2,θ3,r2,r3]]\",\"Σfull\",\"U\",\"wl:MatrixRank[Σ]\",\"wl:Det[Σfull]\",\"%text\"],\"why\":\"θ3 = π: two exact zero columns, rank 1; zero singular values exactly 0. by the SVD tolerance? (K-ME-01)\"}"
+    },
+    {
+      "id": "H-ME-06",
+      "steps": [{"set":{"p2":"wl:{1/Sqrt[2],1/Sqrt[2]}","p3":"wl:{1,0}"}}],
+      "capture": ["θ2","θ3","wl:N[JvRRRanthro[θ1,θ2,θ3,r2,r3]]","Σfull","wl:MatrixRank[Σ]","%text"],
+      "why": "θ3 = 0: proportional columns; σ3 0. by the documented tolerance, μ text \"0.\" (K-ME-01)",
+      "source": "{\"id\":\"H-ME-06\",\"steps\":[{\"set\":{\"p2\":\"wl:{1/Sqrt[2],1/Sqrt[2]}\",\"p3\":\"wl:{1,0}\"}}],\"capture\":[\"θ2\",\"θ3\",\"wl:N[JvRRRanthro[θ1,θ2,θ3,r2,r3]]\",\"Σfull\",\"wl:MatrixRank[Σ]\",\"%text\"],\"why\":\"θ3 = 0: proportional columns; σ3 0. by the documented tolerance, μ text \\\"0.\\\" (K-ME-01)\"}"
+    },
+    {
+      "id": "H-ME-07",
+      "steps": [{"set":{"p2":"wl:{Cos[3 Pi/8],Sin[3 Pi/8]}","p3":"wl:{Cos[Pi/4],Sin[Pi/4]}"}}],
+      "capture": ["θ2","θ3","wl:N[JvRRRanthro[θ1,θ2,θ3,r2,r3]]","Σfull","wl:MatrixRank[Σ]","wl:Det[Σfull]"],
+      "why": "θ2 + θ3/2 = π/2: column 1 exactly 0 by symbolic cancellation (F-ME-08); all entries bit for bit",
+      "source": "{\"id\":\"H-ME-07\",\"steps\":[{\"set\":{\"p2\":\"wl:{Cos[3 Pi/8],Sin[3 Pi/8]}\",\"p3\":\"wl:{Cos[Pi/4],Sin[Pi/4]}\"}}],\"capture\":[\"θ2\",\"θ3\",\"wl:N[JvRRRanthro[θ1,θ2,θ3,r2,r3]]\",\"Σfull\",\"wl:MatrixRank[Σ]\",\"wl:Det[Σfull]\"],\"why\":\"θ2 + θ3/2 = π/2: column 1 exactly 0 by symbolic cancellation (F-ME-08); all entries bit for bit\"}"
+    },
+    {
+      "id": "H-ME-08",
+      "steps": [{"set":{"p1":"wl:{Cos[Pi/4],Sin[Pi/4]}","p2":"wl:{0,1}","p3":"wl:{1,0}"}}],
+      "capture": ["Σfull","U","wl:MatrixRank[Σ]","wl:Det[Σfull]"],
+      "why": "rank 1 (Details: collapses to a line); U for the degenerate blue ring",
+      "source": "{\"id\":\"H-ME-08\",\"steps\":[{\"set\":{\"p1\":\"wl:{Cos[Pi/4],Sin[Pi/4]}\",\"p2\":\"wl:{0,1}\",\"p3\":\"wl:{1,0}\"}}],\"capture\":[\"Σfull\",\"U\",\"wl:MatrixRank[Σ]\",\"wl:Det[Σfull]\"],\"why\":\"rank 1 (Details: collapses to a line); U for the degenerate blue ring\"}"
+    },
+    {
+      "id": "H-ME-09",
+      "steps": [{"set":{"p1":"wl:{Cos[61 Pi/32],Sin[61 Pi/32]}","p2":"wl:{Cos[23 Pi/32],Sin[23 Pi/32]}","p3":"wl:{Cos[3 Pi/32],Sin[3 Pi/32]}"}}],
+      "capture": ["Σfull","U","oc","%plotRange"],
+      "why": "ellipsoid top at z = 5.01384, beyond the PlotRange (largest overshoot on the grid, top side)",
+      "source": "{\"id\":\"H-ME-09\",\"steps\":[{\"set\":{\"p1\":\"wl:{Cos[61 Pi/32],Sin[61 Pi/32]}\",\"p2\":\"wl:{Cos[23 Pi/32],Sin[23 Pi/32]}\",\"p3\":\"wl:{Cos[3 Pi/32],Sin[3 Pi/32]}\"}}],\"capture\":[\"Σfull\",\"U\",\"oc\",\"%plotRange\"],\"why\":\"ellipsoid top at z = 5.01384, beyond the PlotRange (largest overshoot on the grid, top side)\"}"
+    },
+    {
+      "id": "H-ME-10",
+      "steps": [{"set":{"p2":"wl:{0,-1}","p3":"wl:{Cos[-Pi/4],Sin[-Pi/4]}"}}],
+      "capture": ["θ2","θ3","wl:splineCircle[{0,0,0},1/2,{0,θ2}]","wl:splineCircle[{0,0,0},1/2,{θ2,θ2+θ3}]"],
+      "why": "negative angles drawn the long way (Q-ME-02): control points, knots, weights",
+      "source": "{\"id\":\"H-ME-10\",\"steps\":[{\"set\":{\"p2\":\"wl:{0,-1}\",\"p3\":\"wl:{Cos[-Pi/4],Sin[-Pi/4]}\"}}],\"capture\":[\"θ2\",\"θ3\",\"wl:splineCircle[{0,0,0},1/2,{0,θ2}]\",\"wl:splineCircle[{0,0,0},1/2,{θ2,θ2+θ3}]\"],\"why\":\"negative angles drawn the long way (Q-ME-02): control points, knots, weights\"}"
+    },
+    {
+      "id": "H-ME-11",
+      "captureEachStep": true,
+      "steps": [{"set":{"p1":"wl:Nearest[Table[{Cos[a],Sin[a]},{a,-Pi,Pi,Pi/32}],{Cos[Pi/64],Sin[Pi/64]}][[1]]"}},{"set":{"p2":"wl:Nearest[Table[{Cos[a],Sin[a]},{a,-Pi,Pi,Pi/32}],{0.,0.}][[1]]"}}],
+      "capture": ["p1","θ1","p2","θ2","wl:Nearest[Table[{Cos[a],Sin[a]},{a,-Pi,Pi,Pi/32}],{0.,0.}]"],
+      "why": "Nearest ties: midpoint between two table points, and the centre, where machine distances are not all equal (K-ME-05)",
+      "source": "{\"id\":\"H-ME-11\",\"captureEachStep\":true,\"steps\":[{\"set\":{\"p1\":\"wl:Nearest[Table[{Cos[a],Sin[a]},{a,-Pi,Pi,Pi/32}],{Cos[Pi/64],Sin[Pi/64]}][[1]]\"}},{\"set\":{\"p2\":\"wl:Nearest[Table[{Cos[a],Sin[a]},{a,-Pi,Pi,Pi/32}],{0.,0.}][[1]]\"}}],\"capture\":[\"p1\",\"θ1\",\"p2\",\"θ2\",\"wl:Nearest[Table[{Cos[a],Sin[a]},{a,-Pi,Pi,Pi/32}],{0.,0.}]\"],\"why\":\"Nearest ties: midpoint between two table points, and the centre, where machine distances are not all equal (K-ME-05)\"}"
+    },
+    {
+      "id": "H-ME-12",
+      "steps": [{"set":{}}],
+      "capture": ["wl:N[Table[{Cos[k Pi/32],Sin[k Pi/32]},{k,0,32}]]","wl:N[1/Sqrt[2]]","wl:N[{Cos[Pi/8],Sin[Pi/8]}]"],
+      "why": "bit pattern of Mathematica's N of the table values (octant table of shared/exact-pi.js, K-ME-02, T-ME-06)",
+      "source": "{\"id\":\"H-ME-12\",\"steps\":[{\"set\":{}}],\"capture\":[\"wl:N[Table[{Cos[k Pi/32],Sin[k Pi/32]},{k,0,32}]]\",\"wl:N[1/Sqrt[2]]\",\"wl:N[{Cos[Pi/8],Sin[Pi/8]}]\"],\"why\":\"bit pattern of Mathematica's N of the table values (octant table of shared/exact-pi.js, K-ME-02, T-ME-06)\"}"
+    },
+    {
+      "id": "H-ME-13",
+      "steps": [{"set":{"p1":"wl:{1,0}"}}],
+      "capture": ["θ1","%primitives"],
+      "why": "θ1 = 0: Sign[θ1] = 0, the three floor points coincide; red floor circle full (Q-ME-01, Q-ME-05)",
+      "source": "{\"id\":\"H-ME-13\",\"steps\":[{\"set\":{\"p1\":\"wl:{1,0}\"}}],\"capture\":[\"θ1\",\"%primitives\"],\"why\":\"θ1 = 0: Sign[θ1] = 0, the three floor points coincide; red floor circle full (Q-ME-01, Q-ME-05)\"}"
+    },
+    {
+      "id": "H-ME-14",
+      "steps": [{"set":{}}],
+      "capture": ["wl:ToBoxes[EngineeringForm[0.6718917273402976]]","wl:ToBoxes[EngineeringForm[1.2071067811865472]]","wl:ToBoxes[EngineeringForm[0.49999999999999994]]","wl:ToBoxes[EngineeringForm[0.012]]","wl:ToBoxes[EngineeringForm[0.]]","wl:ToBoxes[EngineeringForm[2.7944208223697744*^-16]]"],
+      "why": "μ label formats for the engineeringForm unit test (T-ME-18)",
+      "source": "{\"id\":\"H-ME-14\",\"steps\":[{\"set\":{}}],\"capture\":[\"wl:ToBoxes[EngineeringForm[0.6718917273402976]]\",\"wl:ToBoxes[EngineeringForm[1.2071067811865472]]\",\"wl:ToBoxes[EngineeringForm[0.49999999999999994]]\",\"wl:ToBoxes[EngineeringForm[0.012]]\",\"wl:ToBoxes[EngineeringForm[0.]]\",\"wl:ToBoxes[EngineeringForm[2.7944208223697744*^-16]]\"],\"why\":\"μ label formats for the engineeringForm unit test (T-ME-18)\"}"
+    },
+    {
+      "id": "H-ME-15",
+      "steps": [{"set":{"p1":"wl:{Cos[10 Pi/32],Sin[10 Pi/32]}","p2":"wl:{Cos[-23 Pi/32],Sin[-23 Pi/32]}","p3":"wl:{Cos[-3 Pi/32],Sin[-3 Pi/32]}"}}],
+      "capture": ["Σfull","U","oc","%plotRange"],
+      "why": "ellipsoid bottom at z = -1.01384, beyond the PlotRange (largest overshoot on the grid, bottom side; mirror of H-ME-09)",
+      "source": "{\"id\":\"H-ME-15\",\"steps\":[{\"set\":{\"p1\":\"wl:{Cos[10 Pi/32],Sin[10 Pi/32]}\",\"p2\":\"wl:{Cos[-23 Pi/32],Sin[-23 Pi/32]}\",\"p3\":\"wl:{Cos[-3 Pi/32],Sin[-3 Pi/32]}\"}}],\"capture\":[\"Σfull\",\"U\",\"oc\",\"%plotRange\"],\"why\":\"ellipsoid bottom at z = -1.01384, beyond the PlotRange (largest overshoot on the grid, bottom side; mirror of H-ME-09)\"}"
+    },
+    {
+      "id": "H-ME-16",
+      "captureEachStep": true,
+      "steps": [{"setFrom":"snapshot:2"},{"set":{}},{"setFrom":"snapshot:3"},{"set":{}}],
+      "capture": ["θ1","θ1prev","p1","Σfull","%text"],
+      "why": "machine Settings of the earlier continuous dial: tolerant != keeps snapshot 3's θ1prev one ulp below θ1; θ1 = ArcTan[p1] bit for bit (K-ME-08)",
+      "source": "{\"id\":\"H-ME-16\",\"captureEachStep\":true,\"steps\":[{\"setFrom\":\"snapshot:2\"},{\"set\":{}},{\"setFrom\":\"snapshot:3\"},{\"set\":{}}],\"capture\":[\"θ1\",\"θ1prev\",\"p1\",\"Σfull\",\"%text\"],\"why\":\"machine Settings of the earlier continuous dial: tolerant != keeps snapshot 3's θ1prev one ulp below θ1; θ1 = ArcTan[p1] bit for bit (K-ME-08)\"}"
+    }
+  ]
+}

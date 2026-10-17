@@ -1,6 +1,6 @@
 # Testing guide
 
-Five layers. Run them in this order; each one catches problems the others cannot.
+Six layers. Run them in this order; each one catches problems the others cannot.
 
 | Layer | Command | Needs | What it proves |
 |-------|---------|-------|----------------|
@@ -9,6 +9,7 @@ Five layers. Run them in this order; each one catches problems the others cannot
 | 3. Browser tests | `npm run test:e2e` | Firefox, Chromium and WebKit (Playwright builds) | controls exist and work, the screen shows what the math computed, drag/keyboard interaction, error-free load |
 | 4. Manual / exploratory | `docs/MANUAL_TEST_CHECKLIST.md`, `docs/checklists/` | a person, a browser, ideally the original running in Wolfram software | look & feel, behaviour compared with the original, things no script can judge |
 | 5. Automated comparison with the original (motion planning) | `npm run compare:original` | local Mathematica / Wolfram Engine (`wolframscript`) | the port computes the same validity, C-obstacles, lines, path and trajectory as the **original code run live**, on many scenes, not only the 5 saved ones |
+| 6. Mathematica harness (any definition notebook) | `npm run harness` | local Mathematica (`wolframscript`), the original notebooks in `_internal/originals/` | the original's stored Manipulate code, run headless for scripted control changes, produces the numbers the ports' golden tests compare with (`tests/golden/<dir>.harness.json`) |
 
 Plus an investigation tool: `node tools/explore-motion.mjs` (randomized differential testing).
 
@@ -67,14 +68,53 @@ Their unit tests are `tests/unit/<app>.test.js` (plus `prm-core.test.js` for the
 golden tests `tests/golden/<app>.golden.test.js`. Their originals are Wolfram "definition" notebooks, which store their
 snapshots as pictures (`docs/original-snapshots/`) and **one** live Manipulate state each
 (`tests/golden/<app>.original-state.json`). Each snapshot cell also stores the full Manipulate state behind its
-picture (`TaggingRules -> {"Settings" :> {…}}`, found 2026-10-12; 36 states in the seven notebooks); the extraction
-tools do not read these yet, so the tests do not use them. More states come from saving the original after moving its
+picture (`TaggingRules -> {"Settings" :> {…}}`, found 2026-10-12; 36 states in the seven notebooks). Since v0.1.14
+`tools/extract_state.py --snapshots` reads them, together with the live state and the initial settings, into
+`tests/golden/<app>.original-states.json`, and the golden tests "<app>: snapshot k: …" load each one into the port's
+model (format below). More states come from saving the original after moving its
 controls
 (`tests/golden/<app>.owner-state-1.json`, saved in Mathematica 15.0.1) and extracting them:
 ```bat
 python tools\extract_state.py path\to\Notebook.nb tests\golden\<app>.owner-state-2.json
 ```
 The extractor writes every live Manipulate state it finds in the notebook; the golden tests use `states[0]` unless told otherwise.
+
+#### Snapshot fixtures: `tests/golden/<app>.original-states.json`
+Written by `python tools\extract_state.py --snapshots path\to\Notebook.nb tests\golden\<app>.original-states.json`
+(the notebooks themselves are private and not in the repository). The default mode without `--snapshots` is unchanged
+(its output is pinned in the self-test). Keys:
+- `states[0]` — the live state of the Manipulate output cell (what the notebook shows when opened);
+- `specs` — the initial settings, i.e. the Manipulate's stored `"Variables"` (restored by ⊕ → Initial Settings);
+- `snapshots["k"]` — the `"Settings"` of snapshot cell k, k = 1, 2, … in file order = picture
+  `docs/original-snapshots/<app>-k.png`; `snapshotCellIds["k"]` — its `CellID`;
+- `source`, `note`, `format` — provenance and the number format below; `packedTypes` (only where it occurs) — the JSON
+  pointer of each decoded packed array that the notebook stored with a narrower element type, and that type
+  (e.g. `"UnsignedInteger8"` for `CompressedData` tag `b`).
+
+Values: variable names without context and `$$`, Greek letters as Unicode (`θ1`); strings, `true`/`false`, `null`, lists;
+symbols as `{"sym": name}`, other expressions as `{"head": name, "args": [...]}`; `CompressedData` decoded (incl. packed
+integer arrays stored as unsigned bytes, tag `b`, in `tools/mdecode.py`). Numbers keep their Wolfram kind, in the same
+encoding as the harness records (HW-45):
+- a JSON integer (`2`) is an exact Wolfram integer, written plainly while |x| ≤ 2^53 − 1 (`Number.isSafeInteger`);
+  larger integers are `{"wl": "<digits>"}` without a double;
+- a JSON number with a decimal point or an exponent (`2.0`, `0.34900000000000003`, `1e-05`) is a machine real, bit-exact:
+  the Wolfram text (`1.23`, ``1.23` ``, ``1.2246467991473532`*^-16``) is read with correct rounding and written as the
+  shortest text that reads back as the identical double;
+- any other exact number is `{"wl": "<a Wolfram-readable form>", "n": <its double>}`: `{"wl": "1/2", "n": 0.5}`,
+  `{"wl": "-Pi/2", "n": -1.5707963267948966}`, `{"wl": "3*Pi/2", "n": 4.71238898038469}`, arbitrary-precision reals
+  (``{"wl": "1.5`20.", "n": 1.5}``), unevaluated functions such as `Cos[5*Pi/32]`, and `{"wl": "Infinity"}` (no `n`).
+  The `wl` text reads back as the same exact value but is not necessarily Mathematica's InputForm (`3*Pi/2` where
+  InputForm writes `(3*Pi)/2`), so exact values are compared by value, not by text. `n` is the correctly rounded double
+  for a rational or a rational multiple of π (Mathematica's own `N` may differ in the last bit). Readers also accept the
+  older name `value` for `n`.
+
+`JSON.parse` gives the same double for `2` and `2.0`; `tools/lib/wl-json.mjs` has `plain()` (exact objects → doubles),
+`isIntegerLiteral()` (was this number written as an exact integer?) and `loadStates()`. Checks:
+`python tools\extract_state.py --self-test` (synthetic notebook, no private notebook needed; `npm test` runs it when a
+Python 3 interpreter is found, else skips it) and `tests/unit/extract-state.test.js` (one snapshot per picture, live state
+equal to the older `<app>.original-state.json`, nothing left unparsed). A test that finds the port disagreeing with a
+snapshot is marked `it.skip` with the `K-` lead that explains it (the port is not changed to match without a design
+decision).
 Questions only Mathematica can answer are collected as `K-` leads in each DESIGN.md and checked with plain Wolfram
 Language scripts: `wolframscript -file tools\wolfram\extra-checks.wls` and `extra-checks-2.wls` (they write
 `test-output\extra-checks*.txt`). An automated `compare:original` (layer 5) exists only for motion planning.
@@ -182,6 +222,79 @@ built-in, such as how Mathematica compares a 3-digit number with a machine numbe
 Limits: the harness evaluates the stored code in a fresh kernel, not in the front end, and it clears
 the original's change-detection caches before every scene (`--history` adds the drag variant); the
 pictures (`--images`) need the Wolfram front end and are for human review only.
+
+## Mathematica harness
+
+### What it is
+
+`tools/wolfram/manipulate-harness.wls` generalises `mp-original.wls` (layer 5) to **any** definition notebook. It
+reads the notebook without evaluating it, finds the Manipulate output cell, evaluates its stored `Initialization`
+once and then, for each scenario, assigns the Manipulate's variables the way a control would (`set`, `drag` through
+the control's own Dynamic setter, `press` of a stored button, `seed`, `settle`, `setFrom` a snapshot), evaluates the
+stored `Body` and records what it computed: the variables, the Body's local variables (copied out at the exit of their
+scope), graphics with every number, texts, messages, random draws and timings. Reals travel both ways bit for bit
+(JSON numbers read lexically by `tools/lib/json-lexical.mjs`, so `1.0` and `1` stay a real and an integer). The design
+and its requirements (HW-01…HW-77) are in the HARNESS-WL design document of batch A/B; the code cites them.
+
+The scenarios come from the apps' TESTPLANs (lines starting with `{"id":"H-`) and are committed as
+`tests/harness/<dir>.scenarios.json` (16 apps, 314 scenarios, plus `motion-planning.scenarios.json`, five scenarios
+equivalent to `mp-original.wls`'s saved states for the parity check HW-72).
+
+| File | Role |
+|---|---|
+| `tools/wolfram/manipulate-harness.wls` | the harness (runs in Mathematica) |
+| `tools/run-harness.mjs` (`npm run harness`) | finds `wolframscript` and the notebook, writes the wire file, runs, checks the input echo, prints a summary |
+| `tools/harness/extract-scenarios.mjs` | TESTPLAN lines → `tests/harness/<dir>.scenarios.json` (`--check` compares with the committed files) |
+| `tools/harness/check-scenarios.py` | static check of scenario files against the notebooks without Mathematica: names, Body scopes, labels, `ctl:` indices, snapshot numbers → `test-output/harness/<dir>.index.json` |
+| `tools/harness/check-wls.mjs` | static structure check of the `.wls` scripts (brackets, strings, escapes, argument counts, statement ends) |
+| `tools/harness/apps.mjs` | app → notebook file name (and SHA-256 of the download the scenarios were written for) |
+| `tests/support/harness-json.js` | read `tests/golden/<dir>.harness.json` in a port's golden tests (skips while there is no data, detects stale data) |
+
+### Owner commands (Windows, Command Prompt, in the repository folder)
+
+The notebooks are looked up by file name in `_internal\originals\` and `_internal\originals\batch-ab\` (or pass
+`--originals=FOLDER`). `wolframscript` is taken from PATH or the standard install folders (or pass
+`--wolframscript="C:\Program Files\Wolfram Research\WolframScript\wolframscript.exe"`).
+
+```bat
+npm run harness -- --all --smoke          :: 1. first run (a few minutes): reads every notebook, evaluates the Initialization and the initial settings once
+npm run harness -- --all --self-check     :: 2. initial settings, live state and every snapshot evaluated once; lists what changed
+npm run harness -- motion-planning --parity   :: 3. harness vs mp-original.wls on the five saved states (HW-72)
+npm run harness -- rrt                    :: 4. one app's scenarios (or --all); --only=H-RT-03 repeats one scenario
+npm run harness -- rrt --fresh-kernel --jobs=2   :: one kernel per scenario (determinism check, HW-71)
+npm run harness -- rrt --diff             :: compare a run with the accepted golden file (timings ignored)
+```
+
+Each kernel run has a wall-clock limit (smoke 15 min, self-check 30 min, scenarios: number of scenarios × time limit
++ 10 min; change it with `--app-timeout=MIN`); a run over the limit is killed and the next app starts. The stored
+Initialization has its own limit (`--init-time-limit=SEC`, default 600). The first console line shows the mode
+(`MODE: smoke`), and the harness echoes it (`HARNESS-MODE: smoke`); a mismatch fails the app. If the harness stops
+before it reads the first notebook, the other apps are not started: that is a problem of the script, so send the log.
+
+Results go to `test-output\harness\`: `<dir>.smoke.json`, `<dir>.self-check.json`, `<dir>.harness.json` (with
+`<dir>.harness.partial.jsonl` written scenario by scenario, so a crash keeps everything finished), a console log per
+run (`<dir>.<mode>.log`) and `summary.<mode>.txt`. **Zip the whole `test-output\harness` folder and send it back**,
+also (especially) when something fails. `--accept` (run by the AI in a later delivery) copies a checked run to
+`tests/golden/<dir>.harness.json` (gzipped above 10 MB) and refuses unless a self-check with the same harness, notebook
+and Mathematica version passed and every echoed input number is bit-identical to the scenario file.
+
+### What the AI checks without Mathematica
+
+`npx vitest run` covers the lexical JSON, the extractor, the schema of every scenario file, the runner's wire format,
+echo check, summaries and diffs, the golden-data helper, and the `.wls` structure check (which must pass on the harness
+and on `mp-original.wls` and fail on deliberately broken copies). With the private notebooks present
+(`HARNESS_ORIGINALS` or `_internal/originals/`) it also runs `check-scenarios.py` on all 16 apps. The end-to-end test of
+the runner (`tests/unit/harness-runner-e2e.test.js`, with a fake `wolframscript`) is **skipped on Windows** (the fake is
+a shebang script); it runs on Linux and macOS.
+
+### What stays manual
+
+Everything the front end does and the kernel cannot see (HARNESS-WL §3): which locator a press grabs, how many updates
+a drag produces, whether the front end re-evaluates after the Body changed its own variables (the `settle` step gives
+the fixed point, `{"set":{}}` one more update — which rule the front end follows is a manual check), `ControlActive`
+timing, animation, `DynamicEvaluationTimeout`, Dynamic content of the control area, rendering and fonts. These stay in
+the per-app checklists `docs/checklists/<dir>.md` (`M-…` items). Pictures (`--images`) need the front end and are for
+human review only.
 
 ## Investigation tool: `tools/explore-motion.mjs`
 

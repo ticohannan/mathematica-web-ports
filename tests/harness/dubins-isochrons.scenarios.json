@@ -1,0 +1,175 @@
+{
+  "schema": "manipulate-harness/scenarios-1",
+  "app": "dubins-isochrons",
+  "notebook": "Demonstration-Isochrons-for-a-Dubins-Car-1-0-0-definition.nb",
+  "notebookSha256": "48c6db5c4d052f6a167ef8e792fc20af36adff8f3ae030f83f4d8b52cc516034",
+  "source": "_internal/batch-ab/design/dubins-isochrons/TESTPLAN.md",
+  "generatedBy": "tools/harness/extract-scenarios.mjs",
+  "scenarios": [
+    {
+      "id": "H-DI-01",
+      "steps": [{"set":{"plotReach":1,"told":1,"rold":1,"setold":1}}],
+      "capture": ["fs","maxAlpha","cxy","cTheta","cAlpha","pathGraphics","polySteps","plotReach","told","rold","setold"],
+      "why": "forced first computation with the stored definitions at r 2, t 10 (exact): compare plotReach with the saved cached plot (K-DI-05) and the Prolog polygons bit for bit (K-DI-04)",
+      "source": "{\"id\":\"H-DI-01\",\"steps\":[{\"set\":{\"plotReach\":1,\"told\":1,\"rold\":1,\"setold\":1}}],\"capture\":[\"fs\",\"maxAlpha\",\"cxy\",\"cTheta\",\"cAlpha\",\"pathGraphics\",\"polySteps\",\"plotReach\",\"told\",\"rold\",\"setold\"],\"why\":\"forced first computation with the stored definitions at r 2, t 10 (exact): compare plotReach with the saved cached plot (K-DI-05) and the Prolog polygons bit for bit (K-DI-04)\"}"
+    },
+    {
+      "id": "H-DI-02",
+      "steps": [{"set":{"set":"wl:\"\\[LessEqual]\""}}],
+      "capture": ["plotReach","told","rold","setold"],
+      "why": "the two-parameter ParametricPlot regions (mesh, boundary lines, Method options) at r 2, t 10",
+      "source": "{\"id\":\"H-DI-02\",\"steps\":[{\"set\":{\"set\":\"wl:\\\"\\\\[LessEqual]\\\"\"}}],\"capture\":[\"plotReach\",\"told\",\"rold\",\"setold\"],\"why\":\"the two-parameter ParametricPlot regions (mesh, boundary lines, Method options) at r 2, t 10\"}"
+    },
+    {
+      "id": "H-DI-03",
+      "steps": [{"set":{"path":"wl:\"LS\"","τ":4.2700000000000005,"p":100}}],
+      "capture": ["fs","maxAlpha","cxy","cTheta","cAlpha","pathGraphics"],
+      "why": "LS branch of the Piecewise",
+      "source": "{\"id\":\"H-DI-03\",\"steps\":[{\"set\":{\"path\":\"wl:\\\"LS\\\"\",\"τ\":4.2700000000000005,\"p\":100}}],\"capture\":[\"fs\",\"maxAlpha\",\"cxy\",\"cTheta\",\"cAlpha\",\"pathGraphics\"],\"why\":\"LS branch of the Piecewise\"}"
+    },
+    {
+      "id": "H-DI-04",
+      "steps": [{"set":{"path":"wl:\"RL\"","τ":4.2700000000000005,"p":100}}],
+      "capture": ["fs","maxAlpha","cxy","cTheta","cAlpha","pathGraphics"],
+      "why": "RL branch, snapshot 3 setting",
+      "source": "{\"id\":\"H-DI-04\",\"steps\":[{\"set\":{\"path\":\"wl:\\\"RL\\\"\",\"τ\":4.2700000000000005,\"p\":100}}],\"capture\":[\"fs\",\"maxAlpha\",\"cxy\",\"cTheta\",\"cAlpha\",\"pathGraphics\"],\"why\":\"RL branch, snapshot 3 setting\"}"
+    },
+    {
+      "id": "H-DI-05",
+      "steps": [{"set":{"path":"wl:\"LR\"","τ":5.57,"p":100}}],
+      "capture": ["fs","maxAlpha","cxy","cTheta","cAlpha","pathGraphics"],
+      "why": "LR (the True branch, duplicate arc), snapshot 2 setting",
+      "source": "{\"id\":\"H-DI-05\",\"steps\":[{\"set\":{\"path\":\"wl:\\\"LR\\\"\",\"τ\":5.57,\"p\":100}}],\"capture\":[\"fs\",\"maxAlpha\",\"cxy\",\"cTheta\",\"cAlpha\",\"pathGraphics\"],\"why\":\"LR (the True branch, duplicate arc), snapshot 2 setting\"}"
+    },
+    {
+      "id": "H-DI-06",
+      "steps": [{"set":{"path":"wl:\"RS\"","τ":1.2,"p":100}}],
+      "capture": ["fs","cxy","cTheta","cAlpha","pathGraphics"],
+      "why": "RS, snapshot 5 setting",
+      "source": "{\"id\":\"H-DI-06\",\"steps\":[{\"set\":{\"path\":\"wl:\\\"RS\\\"\",\"τ\":1.2,\"p\":100}}],\"capture\":[\"fs\",\"cxy\",\"cTheta\",\"cAlpha\",\"pathGraphics\"],\"why\":\"RS, snapshot 5 setting\"}"
+    },
+    {
+      "id": "H-DI-07",
+      "steps": [{"set":{"path":"wl:\"RL\"","τ":5.0,"p":50}},{"set":{"path":"wl:\"RS\""}}],
+      "captureEachStep": true,
+      "capture": ["fs","cxy","cTheta","cAlpha"],
+      "why": "switching instant p t/100 = τ: strict < in cAlpha vs <= in fs (Q-DI-04)",
+      "source": "{\"id\":\"H-DI-07\",\"steps\":[{\"set\":{\"path\":\"wl:\\\"RL\\\"\",\"τ\":5.0,\"p\":50}},{\"set\":{\"path\":\"wl:\\\"RS\\\"\"}}],\"captureEachStep\":true,\"capture\":[\"fs\",\"cxy\",\"cTheta\",\"cAlpha\"],\"why\":\"switching instant p t/100 = τ: strict < in cAlpha vs <= in fs (Q-DI-04)\"}"
+    },
+    {
+      "id": "H-DI-08",
+      "steps": [{"set":{"path":"wl:\"LS\"","τ":12.0,"p":100}}],
+      "capture": ["fs","maxAlpha","cxy","cTheta","cAlpha","pathGraphics"],
+      "why": "τ > t: pure turn, zero-length line (Q-DI-08)",
+      "source": "{\"id\":\"H-DI-08\",\"steps\":[{\"set\":{\"path\":\"wl:\\\"LS\\\"\",\"τ\":12.0,\"p\":100}}],\"capture\":[\"fs\",\"maxAlpha\",\"cxy\",\"cTheta\",\"cAlpha\",\"pathGraphics\"],\"why\":\"τ > t: pure turn, zero-length line (Q-DI-08)\"}"
+    },
+    {
+      "id": "H-DI-09",
+      "steps": [{"set":{"path":"wl:\"RS\"","τ":0.5,"p":0}},{"set":{"τ":0.0}}],
+      "captureEachStep": true,
+      "capture": ["fs","cxy","cTheta","cAlpha"],
+      "why": "p 0: car at the origin; cAlpha -r for τ > 0, 0 for τ = 0",
+      "source": "{\"id\":\"H-DI-09\",\"steps\":[{\"set\":{\"path\":\"wl:\\\"RS\\\"\",\"τ\":0.5,\"p\":0}},{\"set\":{\"τ\":0.0}}],\"captureEachStep\":true,\"capture\":[\"fs\",\"cxy\",\"cTheta\",\"cAlpha\"],\"why\":\"p 0: car at the origin; cAlpha -r for τ > 0, 0 for τ = 0\"}"
+    },
+    {
+      "id": "H-DI-10",
+      "steps": [{"set":{"path":"wl:\"RL\"","τ":4.0,"p":30}}],
+      "capture": ["fs","cxy","cTheta","cAlpha"],
+      "why": "still in the first turn (fs = 1)",
+      "source": "{\"id\":\"H-DI-10\",\"steps\":[{\"set\":{\"path\":\"wl:\\\"RL\\\"\",\"τ\":4.0,\"p\":30}}],\"capture\":[\"fs\",\"cxy\",\"cTheta\",\"cAlpha\"],\"why\":\"still in the first turn (fs = 1)\"}"
+    },
+    {
+      "id": "H-DI-11",
+      "steps": [{"set":{"r":0.7,"t":5.0}}],
+      "capture": ["polySteps","plotReach"],
+      "why": "Table with step 0.024499999999999997: expected 41 values per chain (K-DI-01, Q-DI-03)",
+      "source": "{\"id\":\"H-DI-11\",\"steps\":[{\"set\":{\"r\":0.7,\"t\":5.0}}],\"capture\":[\"polySteps\",\"plotReach\"],\"why\":\"Table with step 0.024499999999999997: expected 41 values per chain (K-DI-01, Q-DI-03)\"}"
+    },
+    {
+      "id": "H-DI-12",
+      "steps": [{"set":{"r":0.5,"t":5.0}}],
+      "capture": ["polySteps","plotReach"],
+      "why": "step 0.0125: 81 values per chain",
+      "source": "{\"id\":\"H-DI-12\",\"steps\":[{\"set\":{\"r\":0.5,\"t\":5.0}}],\"capture\":[\"polySteps\",\"plotReach\"],\"why\":\"step 0.0125: 81 values per chain\"}"
+    },
+    {
+      "id": "H-DI-13",
+      "steps": [{"set":{"r":0.6,"t":12.0}}],
+      "capture": ["polySteps","plotReach"],
+      "why": "step 0.0072: 139 values per chain, t >= 10 branch",
+      "source": "{\"id\":\"H-DI-13\",\"steps\":[{\"set\":{\"r\":0.6,\"t\":12.0}}],\"capture\":[\"polySteps\",\"plotReach\"],\"why\":\"step 0.0072: 139 values per chain, t >= 10 branch\"}"
+    },
+    {
+      "id": "H-DI-14",
+      "steps": [{"set":{}},{"set":{"τ":3.0}},{"set":{"p":40}},{"set":{"path":"wl:\"LS\""}},{"set":{"t":12.0}},{"set":{"r":3.0}},{"set":{"set":"wl:\"\\[LessEqual]\""}}],
+      "captureEachStep": true,
+      "capture": ["told","rold","setold","plotReach"],
+      "why": "plot cache: kept for the initial settings, τ, p, path; recomputed for t, r, set (F-DI-11); records whether plotReach changed per step",
+      "source": "{\"id\":\"H-DI-14\",\"steps\":[{\"set\":{}},{\"set\":{\"τ\":3.0}},{\"set\":{\"p\":40}},{\"set\":{\"path\":\"wl:\\\"LS\\\"\"}},{\"set\":{\"t\":12.0}},{\"set\":{\"r\":3.0}},{\"set\":{\"set\":\"wl:\\\"\\\\[LessEqual]\\\"\"}}],\"captureEachStep\":true,\"capture\":[\"told\",\"rold\",\"setold\",\"plotReach\"],\"why\":\"plot cache: kept for the initial settings, τ, p, path; recomputed for t, r, set (F-DI-11); records whether plotReach changed per step\"}"
+    },
+    {
+      "id": "H-DI-15",
+      "steps": [{"set":{"plotReach":1,"told":1,"rold":1,"setold":1,"r":2.0,"t":10.0}}],
+      "capture": ["plotReach"],
+      "why": "machine r and t (as after a drag), cache forced: grey polygon last bits and the Times order (K-DI-04)",
+      "source": "{\"id\":\"H-DI-15\",\"steps\":[{\"set\":{\"plotReach\":1,\"told\":1,\"rold\":1,\"setold\":1,\"r\":2.0,\"t\":10.0}}],\"capture\":[\"plotReach\"],\"why\":\"machine r and t (as after a drag), cache forced: grey polygon last bits and the Times order (K-DI-04)\"}"
+    },
+    {
+      "id": "H-DI-16",
+      "steps": [{"set":{"r":10.0,"t":0.1}}],
+      "capture": ["polySteps","plotReach","cxy","pathGraphics"],
+      "why": "smallest set: tiny curves near the origin",
+      "source": "{\"id\":\"H-DI-16\",\"steps\":[{\"set\":{\"r\":10.0,\"t\":0.1}}],\"capture\":[\"polySteps\",\"plotReach\",\"cxy\",\"pathGraphics\"],\"why\":\"smallest set: tiny curves near the origin\"}"
+    },
+    {
+      "id": "H-DI-17",
+      "steps": [{"set":{"r":0.5,"t":14.0}}],
+      "capture": ["polySteps","plotReach"],
+      "why": "curves with many turns (alpha up to 28 rad): sampling density of ParametricPlot vs the port",
+      "source": "{\"id\":\"H-DI-17\",\"steps\":[{\"set\":{\"r\":0.5,\"t\":14.0}}],\"capture\":[\"polySteps\",\"plotReach\"],\"why\":\"curves with many turns (alpha up to 28 rad): sampling density of ParametricPlot vs the port\"}"
+    },
+    {
+      "id": "H-DI-18",
+      "steps": [{"set":{"r":0.5,"t":14.0,"set":"wl:\"\\[LessEqual]\""}}],
+      "capture": ["plotReach"],
+      "why": "regions at the extreme: folds and mesh size (K-DI-02, M-DI-06)",
+      "source": "{\"id\":\"H-DI-18\",\"steps\":[{\"set\":{\"r\":0.5,\"t\":14.0,\"set\":\"wl:\\\"\\\\[LessEqual]\\\"\"}}],\"capture\":[\"plotReach\"],\"why\":\"regions at the extreme: folds and mesh size (K-DI-02, M-DI-06)\"}"
+    },
+    {
+      "id": "H-DI-19",
+      "steps": [{"setFrom":"snapshot:4"},{"set":{"plotReach":1,"told":1,"rold":1,"setold":1}}],
+      "capture": ["plotReach","cxy","cTheta","cAlpha","pathGraphics"],
+      "why": "snapshot 4 Settings recomputed in Mathematica 15.0.1 (cache forced) and compared with the snapshot's cached region mesh",
+      "source": "{\"id\":\"H-DI-19\",\"steps\":[{\"setFrom\":\"snapshot:4\"},{\"set\":{\"plotReach\":1,\"told\":1,\"rold\":1,\"setold\":1}}],\"capture\":[\"plotReach\",\"cxy\",\"cTheta\",\"cAlpha\",\"pathGraphics\"],\"why\":\"snapshot 4 Settings recomputed in Mathematica 15.0.1 (cache forced) and compared with the snapshot's cached region mesh\"}"
+    },
+    {
+      "id": "H-DI-20",
+      "steps": [{"set":{"path":"wl:\"LR\"","τ":5.57,"p":37}}],
+      "capture": ["fs","cxy","cTheta","cAlpha"],
+      "why": "car before the switch on the LR path (p t/100 = 3.7 < τ)",
+      "source": "{\"id\":\"H-DI-20\",\"steps\":[{\"set\":{\"path\":\"wl:\\\"LR\\\"\",\"τ\":5.57,\"p\":37}}],\"capture\":[\"fs\",\"cxy\",\"cTheta\",\"cAlpha\"],\"why\":\"car before the switch on the LR path (p t/100 = 3.7 < τ)\"}"
+    },
+    {
+      "id": "H-DI-21",
+      "steps": [{"set":{"t":12.0},"controlActive":true},{"set":{"t":12.0},"controlActive":false}],
+      "captureEachStep": true,
+      "capture": ["told","rold","setold","plotReach"],
+      "why": "ControlActive: during a drag told/rold stay (plot recomputed again on the next update), on release they are set (Q-DI-07, D-DI-08)",
+      "source": "{\"id\":\"H-DI-21\",\"steps\":[{\"set\":{\"t\":12.0},\"controlActive\":true},{\"set\":{\"t\":12.0},\"controlActive\":false}],\"captureEachStep\":true,\"capture\":[\"told\",\"rold\",\"setold\",\"plotReach\"],\"why\":\"ControlActive: during a drag told/rold stay (plot recomputed again on the next update), on release they are set (Q-DI-07, D-DI-08)\"}"
+    },
+    {
+      "id": "H-DI-22",
+      "steps": [{"set":{}}],
+      "capture": ["told","rold","setold","plotReach","fs","cxy","cTheta","cAlpha"],
+      "why": "the initial settings (= live state) evaluated as the published notebook opens: the cached plot is kept (D-DI-10)",
+      "source": "{\"id\":\"H-DI-22\",\"steps\":[{\"set\":{}}],\"capture\":[\"told\",\"rold\",\"setold\",\"plotReach\",\"fs\",\"cxy\",\"cTheta\",\"cAlpha\"],\"why\":\"the initial settings (= live state) evaluated as the published notebook opens: the cached plot is kept (D-DI-10)\"}"
+    },
+    {
+      "id": "H-DI-23",
+      "steps": [{"setFrom":"snapshot:2"},{"set":{"plotReach":1,"told":1,"rold":1,"setold":1}}],
+      "capture": ["plotReach","cxy","cTheta","cAlpha","pathGraphics"],
+      "why": "snapshot 2 Settings (LR, ≤) recomputed with the cache forced; compare with the snapshot's cached mesh",
+      "source": "{\"id\":\"H-DI-23\",\"steps\":[{\"setFrom\":\"snapshot:2\"},{\"set\":{\"plotReach\":1,\"told\":1,\"rold\":1,\"setold\":1}}],\"capture\":[\"plotReach\",\"cxy\",\"cTheta\",\"cAlpha\",\"pathGraphics\"],\"why\":\"snapshot 2 Settings (LR, ≤) recomputed with the cache forced; compare with the snapshot's cached mesh\"}"
+    }
+  ]
+}

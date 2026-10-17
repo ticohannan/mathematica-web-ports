@@ -8,6 +8,8 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import { evaluate, initialState, toAngles, detCollision, OBS_RAD, WIDTHA } from '../../demos/prm-robot-arm/model.js';
 import { replayRng } from '../../shared/random.js';
+import { connectPoints, regionField, DELTA, TWO_PI } from '../../demos/prm-robot-arm/model.js';
+import { loadStates, plain } from '../../tools/lib/wl-json.mjs';
 
 const saved = JSON.parse(fs.readFileSync('tests/golden/prm-robot-arm.original-state.json', 'utf8')).state;
 
@@ -94,5 +96,96 @@ describe('robot arm golden (owner state 1, Mathematica 15.0.1)', () => {
     const { view } = evaluate({ ...owner }, replayRng({}));
     expect(Array.isArray(view.path)).toBe(true);
     expect(view.label).toEqual({ prefix: 'Path length = ', value: 3.58 });
+  });
+});
+
+// ---- snapshot Settings (tests/golden/prm-robot-arm.original-states.json, tools/extract_state.py --snapshots): the five
+// snapshot cells store the state behind docs/original-snapshots/prm-robot-arm-<k>.png, including the samples, the
+// roadmap and the stored C-obstacle picture (freeConfigSpace, a RegionPlot) of snapshots 3 and 4. Obstbz is the exact
+// 1/2 there (the port uses 0.5).
+const snapFx = loadStates('tests/golden/prm-robot-arm.original-states.json');
+const snapState = (k) => plain(snapFx.snapshots[k - 1]);
+const LABELS = { 1: 'No path possible', 2: 'No path possible', 3: 'No path possible', 4: 'Path length = 8.46', 5: 'Path length = 8.46' };
+const labelText = (l) => (typeof l === 'string' ? l : `${l.prefix}${l.value}`);
+const spheres = (st) => [[st.obstaxy[0], st.obstaxy[1], st.obstaz], [st.obstbxy[0], st.obstbxy[1], st.Obstbz]];
+const withoutPicture = ({ freeConfigSpace, ...rest }) => rest; // the port keeps its own C-obstacle data (D-PA-01)
+
+/** Vertices of the stored RegionPlot: per region colour, the polygon vertices and the boundary-line vertices. */
+function regionPlotVertices(g) {
+  const gc = g.args[0][0];
+  expect(gc.head).toBe('GraphicsComplex');
+  const pts = gc.args[0], out = [];
+  const walk = (e, color) => {
+    if (Array.isArray(e)) { let c = color; for (const x of e) { if (x && x.head === 'Directive') { const rgb = x.args.find((a) => a && a.head === 'RGBColor'); if (rgb) c = rgb.args; } walk(x, c); } return; }
+    if (e && (e.head === 'Line' || e.head === 'Polygon')) { out.push({ kind: e.head, color, vertices: e.args[0].flat(Infinity).map((i) => pts[i - 1]) }); return; }
+    if (e && e.args) e.args.forEach((a) => walk(a, color));
+  };
+  walk(gc.args[1], null);
+  return out;
+}
+
+describe('robot arm golden: the five snapshot states', () => {
+  it('robot arm: snapshot 1: the Settings are the live state (no samples), with an empty stored C-obstacle picture', () => {
+    expect(snapFx.count).toBe(5);
+    const st = snapState(1);
+    expect(withoutPicture(st)).toEqual(withoutPicture(plain(snapFx.live)));
+    expect(st.freeConfigSpace.head).toBe('Graphics');
+    expect(st.freeConfigSpace.args[0]).toEqual([[], []]); // RegionPlot of nothing (show obstacles off)
+    expect(snapFx.snapshots[0].Obstbz).toEqual({ wl: '1/2', n: 0.5 });
+  });
+  for (const [k, title] of [
+    [2, 'robot arm: snapshot 2: detCollision and a full roadmap rebuild of radius r reproduce the saved samples, edges and adjacency in order'],
+    [3, 'robot arm: snapshot 3: detCollision and a full roadmap rebuild of radius r reproduce the saved samples, edges and adjacency in order'],
+    [4, 'robot arm: snapshot 4: detCollision and a full roadmap rebuild of radius r reproduce the saved samples, edges and adjacency in order'],
+    [5, 'robot arm: snapshot 5: detCollision and a full roadmap rebuild of radius r reproduce the saved samples, edges and adjacency in order'],
+  ]) {
+    it(title, () => {
+      const st = snapState(k), pObs3 = spheres(st);
+      expect(st.pts).toHaveLength(100);
+      expect(st.pts.filter((p) => !detCollision(p[0], p[1], pObs3, OBS_RAD, WIDTHA))).toEqual(st.goodPts);
+      expect(st.pts.filter((p) => detCollision(p[0], p[1], pObs3, OBS_RAD, WIDTHA))).toEqual(st.badPts);
+      const [adj, edges] = connectPoints(st.goodPts, st.goodPts.map(() => []), pObs3, OBS_RAD, WIDTHA, DELTA, [], 1, st.r);
+      expect(edges).toEqual(st.edgesNN);
+      expect(adj).toEqual(st.edgesNNadj);
+    });
+  }
+  for (const [k, title] of [
+    [1, 'robot arm: snapshot 1: evaluating the saved state changes no variable, path stays -1 and the label reads No path possible'],
+    [2, 'robot arm: snapshot 2: evaluating the saved state changes no variable, path stays -1 and the label reads No path possible'],
+    [3, 'robot arm: snapshot 3: evaluating the saved state changes no variable, path stays -1 and the label reads No path possible'],
+    [4, 'robot arm: snapshot 4: evaluating the saved state changes no variable, path stays -1 and the label reads Path length = 8.46'],
+    [5, 'robot arm: snapshot 5: evaluating the saved state changes no variable, path stays -1 and the label reads Path length = 8.46'],
+  ]) {
+    it(title, () => {
+      const st = snapState(k);
+      const { state, view } = evaluate(JSON.parse(JSON.stringify(st)), replayRng({}));
+      expect(withoutPicture(state)).toEqual(withoutPicture(st));
+      expect(state.path).toBe(-1); // the Manipulate variable is shadowed (Q-PA-03)
+      expect(labelText(view.label)).toBe(LABELS[k]);
+      if (st.showConfigObs) expect(state.freeConfigSpace).toEqual(st.freeConfigSpace); // highRes: the stored picture is kept
+    });
+  }
+  it('robot arm: snapshots 3 and 4: every vertex of the stored C-obstacle regions lies inside or within 1e-4 of the port region of its sphere', () => {
+    // RegionPlot places its vertices by its own refinement (the port uses marching squares, D-PA-01), so only the
+    // predicate is compared: blue = sphere a, orange = sphere b. Boundary vertices not on the plot border lie on the
+    // region boundary (|field| <= 1e-4); measured worst cases 7.2e-5 (blue) and 6.6e-5 (orange).
+    const BLUE = [[0.87, 0.94, 1], [0.368417, 0.506779, 0.709798]];
+    for (const k of [3, 4]) {
+      const st = snapState(k), pObs3 = spheres(st);
+      const prims = regionPlotVertices(st.freeConfigSpace);
+      expect(prims.filter((p) => p.kind === 'Polygon')).toHaveLength(4);
+      expect(prims.filter((p) => p.kind === 'Line')).toHaveLength(3);
+      let boundary = 0;
+      for (const p of prims) {
+        const c = BLUE.some((b) => JSON.stringify(b) === JSON.stringify(p.color)) ? pObs3[0] : pObs3[1];
+        for (const v of p.vertices) {
+          const f = regionField(v[0], v[1], c);
+          expect(f).toBeLessThanOrEqual(1e-4);
+          const onBorder = Math.min(v[0], v[1], TWO_PI - v[0], TWO_PI - v[1]) < 1e-6;
+          if (p.kind === 'Line' && !onBorder && f > -0.01) { boundary++; expect(Math.abs(f)).toBeLessThanOrEqual(1e-4); }
+        }
+      }
+      expect(boundary).toBeGreaterThan(350);
+    }
   });
 });

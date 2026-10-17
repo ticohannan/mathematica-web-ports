@@ -22,6 +22,22 @@ precedence = "closest"
 SPDX-FileCopyrightText = ["2026 Tico Hannan", "Original Wolfram Demonstrations by their authors, see LICENSE.md"]
 SPDX-License-Identifier = "CC-BY-NC-SA-3.0"
 
+# Mathematica-harness scenario files (test inputs written for this project) and the generic harness test helpers: MIT.
+# Listed after the CC BY-NC-SA rule for tests/** so that they take precedence (the last matching annotation wins).
+[[annotations]]
+path = ["tests/harness/**", "tests/support/harness-json.js", "tests/unit/harness-*.test.js", "tests/unit/fixtures/fake-wolframscript.mjs"]
+precedence = "closest"
+SPDX-FileCopyrightText = "2026 Tico Hannan"
+SPDX-License-Identifier = "MIT"
+
+# prm-3d's scenario file also carries "definitions" copied from the original notebook's Input cells; the
+# motion-planning parity scenarios carry coordinates copied from the CC BY-NC-SA golden fixture
+[[annotations]]
+path = ["tests/harness/prm-3d.scenarios.json", "tests/harness/motion-planning.scenarios.json"]
+precedence = "override"
+SPDX-FileCopyrightText = ["2026 Tico Hannan", "Original Wolfram Demonstration by its authors, see LICENSE.md"]
+SPDX-License-Identifier = "MIT AND CC-BY-NC-SA-3.0"
+
 # Third-party: three.js
 [[annotations]]
 path = "vendor/three/**"

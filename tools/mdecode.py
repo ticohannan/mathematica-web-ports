@@ -1,13 +1,17 @@
 # SPDX-FileCopyrightText: 2026 Tico Hannan
 # SPDX-License-Identifier: MIT
 import re,base64,zlib,struct,sys
-def dec(b, i=0):
+# Decoder for the binary form inside CompressedData["1:..."] (zlib, header "!boR"). Tags: f expression (head + args),
+# s symbol, S string, I big integer and R arbitrary-precision real (both as text, returned as 'Big'), i int32, L int64,
+# r machine real; packed arrays: e machine reals, n int32, b unsigned bytes (byte_arrays=False: rejected as before
+# v0.1.14, used by the legacy mode of extract_state.py so that its output stays as it was).
+def dec(b, i=0, byte_arrays=True):
     tag=chr(b[i]); i+=1
     if tag=='f':
         n=struct.unpack('<i',b[i:i+4])[0]; i+=4
-        h,i=dec(b,i); args=[]
+        h,i=dec(b,i,byte_arrays); args=[]
         for _ in range(n):
-            a,i=dec(b,i); args.append(a)
+            a,i=dec(b,i,byte_arrays); args.append(a)
         return (h,args),i
     if tag in 'sSIR':
         n=struct.unpack('<i',b[i:i+4])[0]; i+=4
@@ -24,6 +28,17 @@ def dec(b, i=0):
         fmt,sz=('d',8) if tag=='e' else ('i',4)
         data=list(struct.unpack('<'+fmt*cnt,b[i:i+sz*cnt])); i+=sz*cnt
         return ('Packed',dims,data),i
+    if tag=='b' and byte_arrays:
+        # packed integer array stored one unsigned byte per element (found 2026-10-16 in snapshot Settings:
+        # Polygon vertex indices 1..249 of a GraphicsComplex, every value 1..249 used; 0/1 grids). Values above 127
+        # occur, so the bytes are unsigned. Same layout as 'e'/'n': rank, dims, then the elements (no element-type byte,
+        # unlike a RawArray: the tag itself fixes the type; HARNESS-WL §9 asked for the type to be recorded).
+        rank=struct.unpack('<i',b[i:i+4])[0]; i+=4
+        dims=struct.unpack('<'+'i'*rank,b[i:i+4*rank]); i+=4*rank
+        cnt=1
+        for d in dims: cnt*=d
+        data=list(b[i:i+cnt]); i+=cnt
+        return ('Packed',dims,data,'UnsignedInteger8'),i  # 4th item: element type as stored
     raise ValueError(f'tag {tag!r} at {i-1}: {b[i-1:i+20]}')
 def show(e):
     if isinstance(e,tuple):

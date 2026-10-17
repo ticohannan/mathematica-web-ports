@@ -1,0 +1,188 @@
+{
+  "schema": "manipulate-harness/scenarios-1",
+  "app": "dubins-path",
+  "notebook": "Demonstration-Shortest-Path-for-the-Dubins-Car-2-0-0-definition.nb",
+  "notebookSha256": "24d74ee13de24a269ef063d3c528a6fa21080e1461e2d088a59830e0400a260a",
+  "source": "_internal/batch-ab/design/dubins-path/TESTPLAN.md",
+  "generatedBy": "tools/harness/extract-scenarios.mjs",
+  "scenarios": [
+    {
+      "id": "H-DP-01",
+      "steps": [{"set":{"Theta":"wl:Pi/2","goalThetaloc":[4,0]}}],
+      "capture": ["goalXY","goalXYold","Theta","goalThetaloc","dTheta","csL","csR","ceL","ceR","dLSL","dLSR","dRSR","dRSL","dLRL","dRLR","shortestPath","distTrav","ang1","ang2","ang3","angP","xyP","Alpha","%text"],
+      "why": "the Input cell's initial values (Theta Pi/2, goalThetaloc {4,0}, exact): the first evaluation must turn the goal car to -Pi/4 and give the live state (Q-DP-03); which values stay exact (D-DP-01)",
+      "source": "{\"id\":\"H-DP-01\",\"steps\":[{\"set\":{\"Theta\":\"wl:Pi/2\",\"goalThetaloc\":[4,0]}}],\"capture\":[\"goalXY\",\"goalXYold\",\"Theta\",\"goalThetaloc\",\"dTheta\",\"csL\",\"csR\",\"ceL\",\"ceR\",\"dLSL\",\"dLSR\",\"dRSR\",\"dRSL\",\"dLRL\",\"dRLR\",\"shortestPath\",\"distTrav\",\"ang1\",\"ang2\",\"ang3\",\"angP\",\"xyP\",\"Alpha\",\"%text\"],\"why\":\"the Input cell's initial values (Theta Pi/2, goalThetaloc {4,0}, exact): the first evaluation must turn the goal car to -Pi/4 and give the live state (Q-DP-03); which values stay exact (D-DP-01)\"}"
+    },
+    {
+      "id": "H-DP-02",
+      "steps": [{"set":{"goalXY":[2.0,2.0],"goalXYold":[2.0,2.0],"goalThetaloc":[4.0,0.0],"minRadius":3.0,"progress":0.25}}],
+      "capture": ["Theta","goalThetaloc","ceL","ceR","dLSL","dLSR","dRSR","dRSL","dLRL","dRLR","shortestPath","xyP","angP","Alpha","%text"],
+      "why": "the opening state in machine numbers: the port must agree to the last bit except Sin/Cos/ArcCos (K-DP-08)",
+      "source": "{\"id\":\"H-DP-02\",\"steps\":[{\"set\":{\"goalXY\":[2.0,2.0],\"goalXYold\":[2.0,2.0],\"goalThetaloc\":[4.0,0.0],\"minRadius\":3.0,\"progress\":0.25}}],\"capture\":[\"Theta\",\"goalThetaloc\",\"ceL\",\"ceR\",\"dLSL\",\"dLSR\",\"dRSR\",\"dRSL\",\"dLRL\",\"dRLR\",\"shortestPath\",\"xyP\",\"angP\",\"Alpha\",\"%text\"],\"why\":\"the opening state in machine numbers: the port must agree to the last bit except Sin/Cos/ArcCos (K-DP-08)\"}"
+    },
+    {
+      "id": "H-DP-03",
+      "steps": [{"set":{"goalXY":[5.0,-3.0]}}],
+      "capture": ["goalXYold","Theta","goalThetaloc","shortestPath","%text"],
+      "why": "a dragged goal keeps the old heading and carries the heading locator (F-DP-05); RSR 5.93",
+      "source": "{\"id\":\"H-DP-03\",\"steps\":[{\"set\":{\"goalXY\":[5.0,-3.0]}}],\"capture\":[\"goalXYold\",\"Theta\",\"goalThetaloc\",\"shortestPath\",\"%text\"],\"why\":\"a dragged goal keeps the old heading and carries the heading locator (F-DP-05); RSR 5.93\"}"
+    },
+    {
+      "id": "H-DP-04",
+      "steps": [{"set":{"goalThetaloc":[2.0,6.0]}}],
+      "capture": ["Theta","goalThetaloc","shortestPath","%text"],
+      "why": "a dragged heading locator sets Theta = Pi/2 and is put back to {2, 4}",
+      "source": "{\"id\":\"H-DP-04\",\"steps\":[{\"set\":{\"goalThetaloc\":[2.0,6.0]}}],\"capture\":[\"Theta\",\"goalThetaloc\",\"shortestPath\",\"%text\"],\"why\":\"a dragged heading locator sets Theta = Pi/2 and is put back to {2, 4}\"}"
+    },
+    {
+      "id": "H-DP-05",
+      "steps": [{"set":{"goalThetaloc":[2.0,2.0]}}],
+      "capture": ["dTheta","Theta","goalThetaloc","dLSL","dRSR","shortestPath","%text"],
+      "why": "heading locator on the goal centre: Theta = 0 branch (Q-DP-04) and the LSL/RSR tie (Q-DP-01)",
+      "source": "{\"id\":\"H-DP-05\",\"steps\":[{\"set\":{\"goalThetaloc\":[2.0,2.0]}}],\"capture\":[\"dTheta\",\"Theta\",\"goalThetaloc\",\"dLSL\",\"dRSR\",\"shortestPath\",\"%text\"],\"why\":\"heading locator on the goal centre: Theta = 0 branch (Q-DP-04) and the LSL/RSR tie (Q-DP-01)\"}"
+    },
+    {
+      "id": "H-DP-06",
+      "steps": [{"set":{"goalXY":[8.0,0.0],"goalXYold":[8.0,0.0],"goalThetaloc":[10.0,0.0],"progress":0.0}}],
+      "capture": ["dLSL","dLSR","dRSR","dRSL","dLRL","dRLR","shortestPath","angP","xyP","Alpha"],
+      "why": "goal straight ahead with machine numbers: four-way CSC tie, which colour Sort picks (K-DP-01)",
+      "source": "{\"id\":\"H-DP-06\",\"steps\":[{\"set\":{\"goalXY\":[8.0,0.0],\"goalXYold\":[8.0,0.0],\"goalThetaloc\":[10.0,0.0],\"progress\":0.0}}],\"capture\":[\"dLSL\",\"dLSR\",\"dRSR\",\"dRSL\",\"dLRL\",\"dRLR\",\"shortestPath\",\"angP\",\"xyP\",\"Alpha\"],\"why\":\"goal straight ahead with machine numbers: four-way CSC tie, which colour Sort picks (K-DP-01)\"}"
+    },
+    {
+      "id": "H-DP-07",
+      "steps": [{"set":{"goalXY":[8,0],"goalXYold":[8,0],"goalThetaloc":[10,0],"progress":0}}],
+      "capture": ["Theta","dLSL","dLSR","dRSR","dRSL","shortestPath","angP","xyP","Alpha"],
+      "why": "the same with exact integers (lengths may become exact; Sort on exact vs machine)",
+      "source": "{\"id\":\"H-DP-07\",\"steps\":[{\"set\":{\"goalXY\":[8,0],\"goalXYold\":[8,0],\"goalThetaloc\":[10,0],\"progress\":0}}],\"capture\":[\"Theta\",\"dLSL\",\"dLSR\",\"dRSR\",\"dRSL\",\"shortestPath\",\"angP\",\"xyP\",\"Alpha\"],\"why\":\"the same with exact integers (lengths may become exact; Sort on exact vs machine)\"}"
+    },
+    {
+      "id": "H-DP-08",
+      "steps": [{"set":{"goalXY":[8.0,3.0],"goalXYold":[8.0,3.0],"goalThetaloc":[8.0,5.0],"progress":0.0}},{"set":{"progress":0.2}}],
+      "captureEachStep": true,
+      "capture": ["dLSL","dRSL","shortestPath","ang1","angP","xyP","Alpha"],
+      "why": "RSL vs LSL differ by one ulp in IEEE arithmetic; Sign[ang1+10^-6] turns the car backwards at progress 0 (Q-DP-02)",
+      "source": "{\"id\":\"H-DP-08\",\"steps\":[{\"set\":{\"goalXY\":[8.0,3.0],\"goalXYold\":[8.0,3.0],\"goalThetaloc\":[8.0,5.0],\"progress\":0.0}},{\"set\":{\"progress\":0.2}}],\"captureEachStep\":true,\"capture\":[\"dLSL\",\"dRSL\",\"shortestPath\",\"ang1\",\"angP\",\"xyP\",\"Alpha\"],\"why\":\"RSL vs LSL differ by one ulp in IEEE arithmetic; Sign[ang1+10^-6] turns the car backwards at progress 0 (Q-DP-02)\"}"
+    },
+    {
+      "id": "H-DP-09",
+      "steps": [{"set":{"goalXY":[-6.0,0.0],"goalXYold":[-6.0,0.0],"goalThetaloc":[-4.0,0.0],"progress":0.0}}],
+      "capture": ["dLSL","dRSR","dLSR","dRSL","dLRL","dRLR","shortestPath","angP","Alpha"],
+      "why": "goal behind on the x-axis: mirror-symmetric ties LSL=RSR, LSR=RSL, LRL=RLR",
+      "source": "{\"id\":\"H-DP-09\",\"steps\":[{\"set\":{\"goalXY\":[-6.0,0.0],\"goalXYold\":[-6.0,0.0],\"goalThetaloc\":[-4.0,0.0],\"progress\":0.0}}],\"capture\":[\"dLSL\",\"dRSR\",\"dLSR\",\"dRSL\",\"dLRL\",\"dRLR\",\"shortestPath\",\"angP\",\"Alpha\"],\"why\":\"goal behind on the x-axis: mirror-symmetric ties LSL=RSR, LSR=RSL, LRL=RLR\"}"
+    },
+    {
+      "id": "H-DP-10",
+      "steps": [{"set":{"goalXY":[1.5,3.0],"goalXYold":[1.5,3.0],"goalThetaloc":[1.0,5.0],"progress":0.5}}],
+      "capture": ["Theta","dLRL","dRLR","shortestPath","distTrav","ang1","ang2","ang3","angP","xyP","Alpha"],
+      "why": "LRL optimal, car on the middle (right) arc",
+      "source": "{\"id\":\"H-DP-10\",\"steps\":[{\"set\":{\"goalXY\":[1.5,3.0],\"goalXYold\":[1.5,3.0],\"goalThetaloc\":[1.0,5.0],\"progress\":0.5}}],\"capture\":[\"Theta\",\"dLRL\",\"dRLR\",\"shortestPath\",\"distTrav\",\"ang1\",\"ang2\",\"ang3\",\"angP\",\"xyP\",\"Alpha\"],\"why\":\"LRL optimal, car on the middle (right) arc\"}"
+    },
+    {
+      "id": "H-DP-11",
+      "steps": [{"set":{"goalXY":[5.0,3.0],"goalXYold":[5.0,3.0],"goalThetaloc":[3.0,4.0],"progress":0.5}}],
+      "capture": ["Theta","dLSR","dRLR","shortestPath","angP","xyP","Alpha"],
+      "why": "RLR optimal, car on the middle (left) arc",
+      "source": "{\"id\":\"H-DP-11\",\"steps\":[{\"set\":{\"goalXY\":[5.0,3.0],\"goalXYold\":[5.0,3.0],\"goalThetaloc\":[3.0,4.0],\"progress\":0.5}}],\"capture\":[\"Theta\",\"dLSR\",\"dRLR\",\"shortestPath\",\"angP\",\"xyP\",\"Alpha\"],\"why\":\"RLR optimal, car on the middle (left) arc\"}"
+    },
+    {
+      "id": "H-DP-12",
+      "steps": [{"setFrom":"snapshot:2"},{"set":{}}],
+      "capture": ["Theta","dLSL","dLSR","dRSR","dRSL","dLRL","dRLR","shortestPath","xyP","angP","Alpha","%text"],
+      "why": "snapshot 2 Settings: LSR 23.91 (inner tangent, ArcCos branch)",
+      "source": "{\"id\":\"H-DP-12\",\"steps\":[{\"setFrom\":\"snapshot:2\"},{\"set\":{}}],\"capture\":[\"Theta\",\"dLSL\",\"dLSR\",\"dRSR\",\"dRSL\",\"dLRL\",\"dRLR\",\"shortestPath\",\"xyP\",\"angP\",\"Alpha\",\"%text\"],\"why\":\"snapshot 2 Settings: LSR 23.91 (inner tangent, ArcCos branch)\"}"
+    },
+    {
+      "id": "H-DP-13",
+      "steps": [{"setFrom":"snapshot:4"},{"set":{}}],
+      "capture": ["Theta","dLSL","dLSR","dRSR","dRSL","dLRL","dRLR","shortestPath","xyP","angP","Alpha","%text"],
+      "why": "snapshot 4 Settings: RSL 17.02, first arc to the right",
+      "source": "{\"id\":\"H-DP-13\",\"steps\":[{\"setFrom\":\"snapshot:4\"},{\"set\":{}}],\"capture\":[\"Theta\",\"dLSL\",\"dLSR\",\"dRSR\",\"dRSL\",\"dLRL\",\"dRLR\",\"shortestPath\",\"xyP\",\"angP\",\"Alpha\",\"%text\"],\"why\":\"snapshot 4 Settings: RSL 17.02, first arc to the right\"}"
+    },
+    {
+      "id": "H-DP-14",
+      "steps": [{"set":{"goalXY":[2.0,2.0],"goalXYold":[2.0,2.0],"goalThetaloc":[4.0,0.0],"minRadius":0.001}}],
+      "capture": ["dLSL","dLSR","dRSR","dRSL","dLRL","dRLR","shortestPath","xyP","angP","Alpha","%text"],
+      "why": "r_min at its minimum: LSR 2.829 (almost straight), CCC words absent",
+      "source": "{\"id\":\"H-DP-14\",\"steps\":[{\"set\":{\"goalXY\":[2.0,2.0],\"goalXYold\":[2.0,2.0],\"goalThetaloc\":[4.0,0.0],\"minRadius\":0.001}}],\"capture\":[\"dLSL\",\"dLSR\",\"dRSR\",\"dRSL\",\"dLRL\",\"dRLR\",\"shortestPath\",\"xyP\",\"angP\",\"Alpha\",\"%text\"],\"why\":\"r_min at its minimum: LSR 2.829 (almost straight), CCC words absent\"}"
+    },
+    {
+      "id": "H-DP-15",
+      "steps": [{"set":{"goalXY":[2.0,2.0],"goalXYold":[2.0,2.0],"goalThetaloc":[4.0,0.0],"minRadius":5.0}}],
+      "capture": ["dLSL","dLSR","dRSR","dRSL","dLRL","dRLR","shortestPath","xyP","angP","Alpha","%text"],
+      "why": "r_min at its maximum: LSL 33.05",
+      "source": "{\"id\":\"H-DP-15\",\"steps\":[{\"set\":{\"goalXY\":[2.0,2.0],\"goalXYold\":[2.0,2.0],\"goalThetaloc\":[4.0,0.0],\"minRadius\":5.0}}],\"capture\":[\"dLSL\",\"dLSR\",\"dRSR\",\"dRSL\",\"dLRL\",\"dRLR\",\"shortestPath\",\"xyP\",\"angP\",\"Alpha\",\"%text\"],\"why\":\"r_min at its maximum: LSL 33.05\"}"
+    },
+    {
+      "id": "H-DP-16",
+      "steps": [{"set":{"goalXY":[2.0,2.0],"goalXYold":[2.0,2.0],"goalThetaloc":[4.0,0.0],"progress":1.0}}],
+      "capture": ["distTrav","angP","xyP","Alpha"],
+      "why": "progress 1: the car on the goal with the goal heading (third segment formula at its end)",
+      "source": "{\"id\":\"H-DP-16\",\"steps\":[{\"set\":{\"goalXY\":[2.0,2.0],\"goalXYold\":[2.0,2.0],\"goalThetaloc\":[4.0,0.0],\"progress\":1.0}}],\"capture\":[\"distTrav\",\"angP\",\"xyP\",\"Alpha\"],\"why\":\"progress 1: the car on the goal with the goal heading (third segment formula at its end)\"}"
+    },
+    {
+      "id": "H-DP-17",
+      "steps": [{"set":{"goalXY":[2.0,2.0],"goalXYold":[2.0,2.0],"goalThetaloc":[4.0,0.0],"progress":0.0}}],
+      "capture": ["distTrav","ang1","angP","xyP","Alpha"],
+      "why": "progress 0: first segment, the If[Abs[...] == 0] guard not taken",
+      "source": "{\"id\":\"H-DP-17\",\"steps\":[{\"set\":{\"goalXY\":[2.0,2.0],\"goalXYold\":[2.0,2.0],\"goalThetaloc\":[4.0,0.0],\"progress\":0.0}}],\"capture\":[\"distTrav\",\"ang1\",\"angP\",\"xyP\",\"Alpha\"],\"why\":\"progress 0: first segment, the If[Abs[...] == 0] guard not taken\"}"
+    },
+    {
+      "id": "H-DP-18",
+      "steps": [{"set":{"goalXY":[2.0,2.0],"goalXYold":[2.0,2.0],"goalThetaloc":[4.0,2.0],"minRadius":1.0}}],
+      "capture": ["Theta","ceR","dLSR","dRSR","dLSL","shortestPath","%text"],
+      "why": "circle distance exactly 2 r_min: LSR excluded by the strict tolerant Greater (Q-DP-06), label 9.11 instead of 3.14",
+      "source": "{\"id\":\"H-DP-18\",\"steps\":[{\"set\":{\"goalXY\":[2.0,2.0],\"goalXYold\":[2.0,2.0],\"goalThetaloc\":[4.0,2.0],\"minRadius\":1.0}}],\"capture\":[\"Theta\",\"ceR\",\"dLSR\",\"dRSR\",\"dLSL\",\"shortestPath\",\"%text\"],\"why\":\"circle distance exactly 2 r_min: LSR excluded by the strict tolerant Greater (Q-DP-06), label 9.11 instead of 3.14\"}"
+    },
+    {
+      "id": "H-DP-19",
+      "steps": [{"set":{"goalXY":[4.0,0.0],"goalXYold":[4.0,0.0],"goalThetaloc":[6.0,0.0],"minRadius":1.0}}],
+      "capture": ["dLRL","dRLR","dLSL","dLSR","dRSR","dRSL","shortestPath"],
+      "why": "circle distance exactly 4 r_min: LRL/RLR excluded; also a straight-ahead tie",
+      "source": "{\"id\":\"H-DP-19\",\"steps\":[{\"set\":{\"goalXY\":[4.0,0.0],\"goalXYold\":[4.0,0.0],\"goalThetaloc\":[6.0,0.0],\"minRadius\":1.0}}],\"capture\":[\"dLRL\",\"dRLR\",\"dLSL\",\"dLSR\",\"dRSR\",\"dRSL\",\"shortestPath\"],\"why\":\"circle distance exactly 4 r_min: LRL/RLR excluded; also a straight-ahead tie\"}"
+    },
+    {
+      "id": "H-DP-20",
+      "steps": [{"set":{"goalXY":[0,0],"goalXYold":[0,0],"goalThetaloc":[2,0],"minRadius":3}}],
+      "capture": ["Theta","ceL","ceR","dLSL","dRSR","dLRL","dRLR","shortestPath","angP","xyP","%messages"],
+      "why": "goal pose = start pose exactly: coincident circle centres, ArcTan[0, 0] (K-DP-03)",
+      "source": "{\"id\":\"H-DP-20\",\"steps\":[{\"set\":{\"goalXY\":[0,0],\"goalXYold\":[0,0],\"goalThetaloc\":[2,0],\"minRadius\":3}}],\"capture\":[\"Theta\",\"ceL\",\"ceR\",\"dLSL\",\"dRSR\",\"dLRL\",\"dRLR\",\"shortestPath\",\"angP\",\"xyP\",\"%messages\"],\"why\":\"goal pose = start pose exactly: coincident circle centres, ArcTan[0, 0] (K-DP-03)\"}"
+    },
+    {
+      "id": "H-DP-21",
+      "steps": [{"set":{"goalXY":[5.0,-3.0]}},{"set":{"goalThetaloc":[7.0,-1.0]}},{"set":{"progress":0.6}}],
+      "captureEachStep": true,
+      "capture": ["goalXYold","Theta","goalThetaloc","shortestPath","xyP","angP","Alpha"],
+      "why": "a sequence of updates keeps the state between steps (coupling, then heading, then progress)",
+      "source": "{\"id\":\"H-DP-21\",\"steps\":[{\"set\":{\"goalXY\":[5.0,-3.0]}},{\"set\":{\"goalThetaloc\":[7.0,-1.0]}},{\"set\":{\"progress\":0.6}}],\"captureEachStep\":true,\"capture\":[\"goalXYold\",\"Theta\",\"goalThetaloc\",\"shortestPath\",\"xyP\",\"angP\",\"Alpha\"],\"why\":\"a sequence of updates keeps the state between steps (coupling, then heading, then progress)\"}"
+    },
+    {
+      "id": "H-DP-22",
+      "steps": [{"set":{"goalXY":[2.0,2.0],"goalXYold":[2.0,2.0],"goalThetaloc":[4.0,0.0],"progress":0.2}}],
+      "capture": ["distTrav","angP","xyP","Alpha"],
+      "why": "car on the straight tangent: Alpha = 0, heading = ArcTan of the line",
+      "source": "{\"id\":\"H-DP-22\",\"steps\":[{\"set\":{\"goalXY\":[2.0,2.0],\"goalXYold\":[2.0,2.0],\"goalThetaloc\":[4.0,0.0],\"progress\":0.2}}],\"capture\":[\"distTrav\",\"angP\",\"xyP\",\"Alpha\"],\"why\":\"car on the straight tangent: Alpha = 0, heading = ArcTan of the line\"}"
+    },
+    {
+      "id": "H-DP-23",
+      "steps": [{"setFrom":"snapshot:3"},{"set":{}}],
+      "capture": ["dLSL","dLSR","dRSR","dRSL","dLRL","dRLR","shortestPath","xyP","angP","Alpha","%text"],
+      "why": "snapshot 3 Settings: LSL 22.5 (label without trailing zero)",
+      "source": "{\"id\":\"H-DP-23\",\"steps\":[{\"setFrom\":\"snapshot:3\"},{\"set\":{}}],\"capture\":[\"dLSL\",\"dLSR\",\"dRSR\",\"dRSL\",\"dLRL\",\"dRLR\",\"shortestPath\",\"xyP\",\"angP\",\"Alpha\",\"%text\"],\"why\":\"snapshot 3 Settings: LSL 22.5 (label without trailing zero)\"}"
+    },
+    {
+      "id": "H-DP-24",
+      "steps": [{"set":{"goalXY":[2.0,2.0],"goalXYold":[2.0,2.0],"goalThetaloc":[4.0,0.0]}},{"set":{}},{"settle":true}],
+      "captureEachStep": true,
+      "capture": ["Theta","goalThetaloc"],
+      "why": "re-evaluating without input changes nothing, also when settled to a fixed point (self-assigned variables, K-DP-06)",
+      "source": "{\"id\":\"H-DP-24\",\"steps\":[{\"set\":{\"goalXY\":[2.0,2.0],\"goalXYold\":[2.0,2.0],\"goalThetaloc\":[4.0,0.0]}},{\"set\":{}},{\"settle\":true}],\"captureEachStep\":true,\"capture\":[\"Theta\",\"goalThetaloc\"],\"why\":\"re-evaluating without input changes nothing, also when settled to a fixed point (self-assigned variables, K-DP-06)\"}"
+    },
+    {
+      "id": "H-DP-25",
+      "steps": [{"set":{}}],
+      "capture": ["Theta","goalThetaloc","dLSL","dLSR","dRSR","dRSL","dLRL","dRLR","shortestPath","xyP","angP","Alpha","%text"],
+      "why": "the exact initial settings (= live state) evaluated as the published notebook opens: label 20.76/2.83, LSL (F-DP-12)",
+      "source": "{\"id\":\"H-DP-25\",\"steps\":[{\"set\":{}}],\"capture\":[\"Theta\",\"goalThetaloc\",\"dLSL\",\"dLSR\",\"dRSR\",\"dRSL\",\"dLRL\",\"dRLR\",\"shortestPath\",\"xyP\",\"angP\",\"Alpha\",\"%text\"],\"why\":\"the exact initial settings (= live state) evaluated as the published notebook opens: label 20.76/2.83, LSL (F-DP-12)\"}"
+    }
+  ]
+}

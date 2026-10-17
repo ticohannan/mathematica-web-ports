@@ -1,0 +1,82 @@
+{
+  "schema": "manipulate-harness/scenarios-1",
+  "app": "dh-parameters",
+  "notebook": "Demonstration-Denavit-Hartenberg-Parameters-for-a-Three-Link-Robot-1-0-0-definition.nb",
+  "notebookSha256": "a376af88b3647f65acd891279ccd9ccda7f85407c5142041a3b06dbfa7dab634",
+  "source": "_internal/batch-ab/design/dh-parameters/TESTPLAN.md",
+  "generatedBy": "tools/harness/extract-scenarios.mjs",
+  "scenarios": [
+    {
+      "id": "H-DH-01",
+      "steps": [{"set":{}}],
+      "capture": ["T1","T2","T3","wl:T1.T2.T3","%g3d","%plotRange"],
+      "why": "initial settings (= live state): transforms, all primitives and the automatic plot range (framing, K-DH-03)",
+      "source": "{\"id\":\"H-DH-01\",\"steps\":[{\"set\":{}}],\"capture\":[\"T1\",\"T2\",\"T3\",\"wl:T1.T2.T3\",\"%g3d\",\"%plotRange\"],\"why\":\"initial settings (= live state): transforms, all primitives and the automatic plot range (framing, K-DH-03)\"}"
+    },
+    {
+      "id": "H-DH-02",
+      "steps": [{"setFrom":"snapshot:2"}],
+      "capture": ["T1","T2","T3","wl:T1.T2.T3","%g3d","%plotRange"],
+      "why": "snapshot 2 (SCARA, raw line 4328): prismatic joint 3, gripper along z (r3 = 0.), framing",
+      "source": "{\"id\":\"H-DH-02\",\"steps\":[{\"setFrom\":\"snapshot:2\"}],\"capture\":[\"T1\",\"T2\",\"T3\",\"wl:T1.T2.T3\",\"%g3d\",\"%plotRange\"],\"why\":\"snapshot 2 (SCARA, raw line 4328): prismatic joint 3, gripper along z (r3 = 0.), framing\"}"
+    },
+    {
+      "id": "H-DH-03",
+      "steps": [{"setFrom":"snapshot:3"}],
+      "capture": ["T1","T2","T3","wl:T1.T2.T3","%g3d","%plotRange"],
+      "why": "snapshot 3 (cylindrical, line 5794): two prismatic joints, r = 0. links",
+      "source": "{\"id\":\"H-DH-03\",\"steps\":[{\"setFrom\":\"snapshot:3\"}],\"capture\":[\"T1\",\"T2\",\"T3\",\"wl:T1.T2.T3\",\"%g3d\",\"%plotRange\"],\"why\":\"snapshot 3 (cylindrical, line 5794): two prismatic joints, r = 0. links\"}"
+    },
+    {
+      "id": "H-DH-04",
+      "steps": [{"setFrom":"snapshot:4"}],
+      "capture": ["T1","T2","T3","wl:T1.T2.T3","%g3d","%plotRange"],
+      "why": "snapshot 4 (planar, line 7441): smallest box, largest zoom; hand along x",
+      "source": "{\"id\":\"H-DH-04\",\"steps\":[{\"setFrom\":\"snapshot:4\"}],\"capture\":[\"T1\",\"T2\",\"T3\",\"wl:T1.T2.T3\",\"%g3d\",\"%plotRange\"],\"why\":\"snapshot 4 (planar, line 7441): smallest box, largest zoom; hand along x\"}"
+    },
+    {
+      "id": "H-DH-05",
+      "steps": [{"setFrom":"snapshot:5"}],
+      "capture": ["T1","T2","T3","wl:T1.T2.T3","%g3d","%plotRange"],
+      "why": "snapshot 5 (spherical wrist, line 8974): mixed exact and machine values",
+      "source": "{\"id\":\"H-DH-05\",\"steps\":[{\"setFrom\":\"snapshot:5\"}],\"capture\":[\"T1\",\"T2\",\"T3\",\"wl:T1.T2.T3\",\"%g3d\",\"%plotRange\"],\"why\":\"snapshot 5 (spherical wrist, line 8974): mixed exact and machine values\"}"
+    },
+    {
+      "id": "H-DH-06",
+      "captureEachStep": true,
+      "steps": [{"set":{"r3":0}},{"set":{"r3":0.0}},{"set":{"r3":0.01}}],
+      "capture": ["wl:DrawGripper[g, r3]"],
+      "why": "the r != 0 branch of DrawGripper for exact 0, machine 0. and 0.01 (Q-DH-04)",
+      "source": "{\"id\":\"H-DH-06\",\"captureEachStep\":true,\"steps\":[{\"set\":{\"r3\":0}},{\"set\":{\"r3\":0.0}},{\"set\":{\"r3\":0.01}}],\"capture\":[\"wl:DrawGripper[g, r3]\"],\"why\":\"the r != 0 branch of DrawGripper for exact 0, machine 0. and 0.01 (Q-DH-04)\"}"
+    },
+    {
+      "id": "H-DH-07",
+      "steps": [{"set":{"j1":"Prismatic","j2":"Prismatic","j3":"Prismatic","d1":0,"d2":1.0,"d3":0.5}}],
+      "capture": ["T1","T2","T3","%g3d"],
+      "why": "prismatic DrawJoint geometry at the slider ends (axis bar from d - 1.21 to d + 0.01, Q-DH-02)",
+      "source": "{\"id\":\"H-DH-07\",\"steps\":[{\"set\":{\"j1\":\"Prismatic\",\"j2\":\"Prismatic\",\"j3\":\"Prismatic\",\"d1\":0,\"d2\":1.0,\"d3\":0.5}}],\"capture\":[\"T1\",\"T2\",\"T3\",\"%g3d\"],\"why\":\"prismatic DrawJoint geometry at the slider ends (axis bar from d - 1.21 to d + 0.01, Q-DH-02)\"}"
+    },
+    {
+      "id": "H-DH-08",
+      "steps": [{"set":{"θ1":"wl:Pi","α1":"wl:-Pi","θ2":"wl:-Pi","α2":"wl:Pi","θ3":"wl:Pi/2","α3":"wl:-Pi/2"}}],
+      "capture": ["T1","T2","T3","wl:T1.T2.T3"],
+      "why": "exact extreme angles: exact entries 0 and ±1 in the transforms (F-DH-09)",
+      "source": "{\"id\":\"H-DH-08\",\"steps\":[{\"set\":{\"θ1\":\"wl:Pi\",\"α1\":\"wl:-Pi\",\"θ2\":\"wl:-Pi\",\"α2\":\"wl:Pi\",\"θ3\":\"wl:Pi/2\",\"α3\":\"wl:-Pi/2\"}}],\"capture\":[\"T1\",\"T2\",\"T3\",\"wl:T1.T2.T3\"],\"why\":\"exact extreme angles: exact entries 0 and ±1 in the transforms (F-DH-09)\"}"
+    },
+    {
+      "id": "H-DH-09",
+      "steps": [{"set":{"r1":0.0,"r2":0}}],
+      "capture": ["%g3d"],
+      "why": "link cuboid drawn for r = 0. and r = 0 (Q-DH-03)",
+      "source": "{\"id\":\"H-DH-09\",\"steps\":[{\"set\":{\"r1\":0.0,\"r2\":0}}],\"capture\":[\"%g3d\"],\"why\":\"link cuboid drawn for r = 0. and r = 0 (Q-DH-03)\"}"
+    },
+    {
+      "id": "H-DH-10",
+      "captureEachStep": true,
+      "steps": [{"set":{"g":0.0}},{"set":{"g":1}}],
+      "capture": ["wl:DrawGripper[g, r3]"],
+      "why": "finger cuboids closed and open (corner order, N-DH-06)",
+      "source": "{\"id\":\"H-DH-10\",\"captureEachStep\":true,\"steps\":[{\"set\":{\"g\":0.0}},{\"set\":{\"g\":1}}],\"capture\":[\"wl:DrawGripper[g, r3]\"],\"why\":\"finger cuboids closed and open (corner order, N-DH-06)\"}"
+    }
+  ]
+}

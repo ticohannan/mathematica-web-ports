@@ -1,0 +1,136 @@
+{
+  "schema": "manipulate-harness/scenarios-1",
+  "app": "arm-configurations",
+  "notebook": "Demonstration-Common-Robot-Arm-Configurations-1-0-0-definition.nb",
+  "notebookSha256": "804b638abd765253346ea7606b61c814a63d9e470b21c92ef8c0696802c97513",
+  "source": "_internal/batch-ab/design/arm-configurations/TESTPLAN.md",
+  "generatedBy": "tools/harness/extract-scenarios.mjs",
+  "scenarios": [
+    {
+      "id": "H-AC-01",
+      "steps": [{"set":{}}],
+      "capture": ["dof","wl:Table[Td[i],{i,1,dof}]","wl:N[Chop[Td[dof]],2]","wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]","%g3d","%plotRange"],
+      "why": "initial settings (= live state): chain, machine-format H and its boxes, primitives, plot range",
+      "source": "{\"id\":\"H-AC-01\",\"steps\":[{\"set\":{}}],\"capture\":[\"dof\",\"wl:Table[Td[i],{i,1,dof}]\",\"wl:N[Chop[Td[dof]],2]\",\"wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]\",\"%g3d\",\"%plotRange\"],\"why\":\"initial settings (= live state): chain, machine-format H and its boxes, primitives, plot range\"}"
+    },
+    {
+      "id": "H-AC-02",
+      "steps": [{"setFrom":"snapshot:4"}],
+      "capture": ["dof","wl:Table[Td[i],{i,1,dof}]","wl:N[Chop[Td[dof]],2]","wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]"],
+      "why": "planar elbow at the reset (Settings, raw line 10505; picture 4)",
+      "source": "{\"id\":\"H-AC-02\",\"steps\":[{\"setFrom\":\"snapshot:4\"}],\"capture\":[\"dof\",\"wl:Table[Td[i],{i,1,dof}]\",\"wl:N[Chop[Td[dof]],2]\",\"wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]\"],\"why\":\"planar elbow at the reset (Settings, raw line 10505; picture 4)\"}"
+    },
+    {
+      "id": "H-AC-03",
+      "steps": [{"setFrom":"snapshot:5"}],
+      "capture": ["dof","wl:Table[Td[i],{i,1,dof}]","wl:N[Chop[Td[dof]],2]","wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]"],
+      "why": "elbow robot: exact H, two-digit format (Settings, line 12137; picture 5)",
+      "source": "{\"id\":\"H-AC-03\",\"steps\":[{\"setFrom\":\"snapshot:5\"}],\"capture\":[\"dof\",\"wl:Table[Td[i],{i,1,dof}]\",\"wl:N[Chop[Td[dof]],2]\",\"wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]\"],\"why\":\"elbow robot: exact H, two-digit format (Settings, line 12137; picture 5)\"}"
+    },
+    {
+      "id": "H-AC-04",
+      "steps": [{"set":{"DHParameters":"wl:{{\"r\",\"r\",\"p\",\"r\",\"r\",\"r\"},{0,0,0,0,0,0},{-Pi/2,Pi/2,0,-Pi/2,Pi/2,0},{1,1,Subscript[q,3],0,0,1},{Subscript[q,1],Subscript[q,2],0,Subscript[q,4],Subscript[q,5],Subscript[q,6]}}","params":"wl:ReplacePart[ConstantArray[0,20],3->0.5]"}}],
+      "capture": ["dof","wl:Table[Td[i],{i,1,dof}]","wl:N[Chop[Td[dof]],2]","wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]"],
+      "why": "Stanford robot at the reset (prismatic joint 3)",
+      "source": "{\"id\":\"H-AC-04\",\"steps\":[{\"set\":{\"DHParameters\":\"wl:{{\\\"r\\\",\\\"r\\\",\\\"p\\\",\\\"r\\\",\\\"r\\\",\\\"r\\\"},{0,0,0,0,0,0},{-Pi/2,Pi/2,0,-Pi/2,Pi/2,0},{1,1,Subscript[q,3],0,0,1},{Subscript[q,1],Subscript[q,2],0,Subscript[q,4],Subscript[q,5],Subscript[q,6]}}\",\"params\":\"wl:ReplacePart[ConstantArray[0,20],3->0.5]\"}}],\"capture\":[\"dof\",\"wl:Table[Td[i],{i,1,dof}]\",\"wl:N[Chop[Td[dof]],2]\",\"wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]\"],\"why\":\"Stanford robot at the reset (prismatic joint 3)\"}"
+    },
+    {
+      "id": "H-AC-05",
+      "steps": [{"set":{"DHParameters":"wl:{{\"r\",\"p\",\"p\"},{0,0,0},{0,-Pi/2,0},{1,Subscript[q,2],Subscript[q,3]},{Subscript[q,1],0,0}}","params":"wl:ReplacePart[ConstantArray[0,20],{2->0.5,3->0.5}]"}}],
+      "capture": ["dof","wl:Table[Td[i],{i,1,dof}]","wl:N[Chop[Td[dof]],2]","wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]"],
+      "why": "cylindrical robot at the reset",
+      "source": "{\"id\":\"H-AC-05\",\"steps\":[{\"set\":{\"DHParameters\":\"wl:{{\\\"r\\\",\\\"p\\\",\\\"p\\\"},{0,0,0},{0,-Pi/2,0},{1,Subscript[q,2],Subscript[q,3]},{Subscript[q,1],0,0}}\",\"params\":\"wl:ReplacePart[ConstantArray[0,20],{2->0.5,3->0.5}]\"}}],\"capture\":[\"dof\",\"wl:Table[Td[i],{i,1,dof}]\",\"wl:N[Chop[Td[dof]],2]\",\"wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]\"],\"why\":\"cylindrical robot at the reset\"}"
+    },
+    {
+      "id": "H-AC-06",
+      "steps": [{"set":{"DHParameters":"wl:{{\"r\",\"r\",\"p\"},{0.75,1,0},{-Pi/2,Pi/2,0},{1,0,Subscript[q,3]},{Subscript[q,1],Subscript[q,2],0}}","params":"wl:ReplacePart[ConstantArray[0,20],3->0.5]"}}],
+      "capture": ["dof","wl:Table[Td[i],{i,1,dof}]","wl:N[Chop[Td[dof]],2]","wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]"],
+      "why": "spherical robot at the reset (machine a1 = 0.75)",
+      "source": "{\"id\":\"H-AC-06\",\"steps\":[{\"set\":{\"DHParameters\":\"wl:{{\\\"r\\\",\\\"r\\\",\\\"p\\\"},{0.75,1,0},{-Pi/2,Pi/2,0},{1,0,Subscript[q,3]},{Subscript[q,1],Subscript[q,2],0}}\",\"params\":\"wl:ReplacePart[ConstantArray[0,20],3->0.5]\"}}],\"capture\":[\"dof\",\"wl:Table[Td[i],{i,1,dof}]\",\"wl:N[Chop[Td[dof]],2]\",\"wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]\"],\"why\":\"spherical robot at the reset (machine a1 = 0.75)\"}"
+    },
+    {
+      "id": "H-AC-07",
+      "steps": [{"set":{"DHParameters":"wl:{{\"r\",\"r\",\"p\",\"r\"},{0.5,0.5,0,0},{0,0,0,0},{0.75,0,Subscript[q,3],0.5},{Subscript[q,1],Subscript[q,2],0,Subscript[q,4]}}","params":"wl:ReplacePart[ConstantArray[0,20],3->0.5]"}}],
+      "capture": ["dof","wl:Table[Td[i],{i,1,dof}]","wl:N[Chop[Td[dof]],2]","wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]"],
+      "why": "SCARA robot at the reset",
+      "source": "{\"id\":\"H-AC-07\",\"steps\":[{\"set\":{\"DHParameters\":\"wl:{{\\\"r\\\",\\\"r\\\",\\\"p\\\",\\\"r\\\"},{0.5,0.5,0,0},{0,0,0,0},{0.75,0,Subscript[q,3],0.5},{Subscript[q,1],Subscript[q,2],0,Subscript[q,4]}}\",\"params\":\"wl:ReplacePart[ConstantArray[0,20],3->0.5]\"}}],\"capture\":[\"dof\",\"wl:Table[Td[i],{i,1,dof}]\",\"wl:N[Chop[Td[dof]],2]\",\"wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]\"],\"why\":\"SCARA robot at the reset\"}"
+    },
+    {
+      "id": "H-AC-08",
+      "steps": [{"set":{"DHParameters":"wl:{{\"p\",\"p\",\"p\",\"r\"},{0,0,0,0},{Pi/2,Pi/2,0,0},{Subscript[q,1],Subscript[q,2],Subscript[q,3],0.5},{0,Pi,0,Subscript[q,4]}}","params":"wl:ReplacePart[ConstantArray[0,20],{1->0.5,2->0.5,3->0.5}]"}}],
+      "capture": ["dof","wl:Table[Td[i],{i,1,dof}]","wl:N[Chop[Td[dof]],2]","wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]"],
+      "why": "Cartesian robot at the reset (θ2 = π from the table)",
+      "source": "{\"id\":\"H-AC-08\",\"steps\":[{\"set\":{\"DHParameters\":\"wl:{{\\\"p\\\",\\\"p\\\",\\\"p\\\",\\\"r\\\"},{0,0,0,0},{Pi/2,Pi/2,0,0},{Subscript[q,1],Subscript[q,2],Subscript[q,3],0.5},{0,Pi,0,Subscript[q,4]}}\",\"params\":\"wl:ReplacePart[ConstantArray[0,20],{1->0.5,2->0.5,3->0.5}]\"}}],\"capture\":[\"dof\",\"wl:Table[Td[i],{i,1,dof}]\",\"wl:N[Chop[Td[dof]],2]\",\"wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]\"],\"why\":\"Cartesian robot at the reset (θ2 = π from the table)\"}"
+    },
+    {
+      "id": "H-AC-09",
+      "steps": [{"setFrom":"snapshot:6"}],
+      "capture": ["dof","wl:Table[Td[i],{i,1,dof}]","wl:N[Chop[Td[dof]],2]","wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]"],
+      "why": "CNC robot at the reset (Settings, line 13574; picture 6)",
+      "source": "{\"id\":\"H-AC-09\",\"steps\":[{\"setFrom\":\"snapshot:6\"}],\"capture\":[\"dof\",\"wl:Table[Td[i],{i,1,dof}]\",\"wl:N[Chop[Td[dof]],2]\",\"wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]\"],\"why\":\"CNC robot at the reset (Settings, line 13574; picture 6)\"}"
+    },
+    {
+      "id": "H-AC-10",
+      "steps": [{"setFrom":"snapshot:5"},{"set":{"params":"wl:ReplacePart[ConstantArray[0,20],{2->3 Pi/8,3->Pi/4}]"}}],
+      "capture": ["wl:Td[dof]","wl:N[Chop[Td[dof]],2]","wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]","%messages"],
+      "why": "exact H with an unsimplified zero entry (radicals): how N[…, 2] prints it (K-AC-03)",
+      "source": "{\"id\":\"H-AC-10\",\"steps\":[{\"setFrom\":\"snapshot:5\"},{\"set\":{\"params\":\"wl:ReplacePart[ConstantArray[0,20],{2->3 Pi/8,3->Pi/4}]\"}}],\"capture\":[\"wl:Td[dof]\",\"wl:N[Chop[Td[dof]],2]\",\"wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]\",\"%messages\"],\"why\":\"exact H with an unsimplified zero entry (radicals): how N[…, 2] prints it (K-AC-03)\"}"
+    },
+    {
+      "id": "H-AC-11",
+      "steps": [{"set":{"params":"wl:Join[{-11,-27,19,0,-8,8} Pi/32, ConstantArray[0,14]]"}}],
+      "capture": ["wl:Table[Td[i],{i,1,dof}]","wl:Map[Precision, First[Td[dof]], {2}]","wl:N[Chop[Td[dof]],2]","wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]"],
+      "why": "anthropomorphic H away from the reset: residues ~1e-16 in the port (K-AC-02) and per-entry exactness (K-AC-09)",
+      "source": "{\"id\":\"H-AC-11\",\"steps\":[{\"set\":{\"params\":\"wl:Join[{-11,-27,19,0,-8,8} Pi/32, ConstantArray[0,14]]\"}}],\"capture\":[\"wl:Table[Td[i],{i,1,dof}]\",\"wl:Map[Precision, First[Td[dof]], {2}]\",\"wl:N[Chop[Td[dof]],2]\",\"wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]\"],\"why\":\"anthropomorphic H away from the reset: residues ~1e-16 in the port (K-AC-02) and per-entry exactness (K-AC-09)\"}"
+    },
+    {
+      "id": "H-AC-12",
+      "steps": [{"setFrom":"snapshot:6"},{"set":{"params":"wl:ReplacePart[ConstantArray[0,20],{1->11/20,2->11/20,3->11/20}]"}}],
+      "capture": ["wl:Td[dof]","wl:N[Chop[Td[dof]],2]","wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]"],
+      "why": "CNC after slider moves: exact H in two-digit format (Q-AC-06)",
+      "source": "{\"id\":\"H-AC-12\",\"steps\":[{\"setFrom\":\"snapshot:6\"},{\"set\":{\"params\":\"wl:ReplacePart[ConstantArray[0,20],{1->11/20,2->11/20,3->11/20}]\"}}],\"capture\":[\"wl:Td[dof]\",\"wl:N[Chop[Td[dof]],2]\",\"wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]\"],\"why\":\"CNC after slider moves: exact H in two-digit format (Q-AC-06)\"}"
+    },
+    {
+      "id": "H-AC-13",
+      "steps": [{"set":{"DHParameters":"wl:{{\"r\",\"p\",\"p\"},{0,0,0},{0,-Pi/2,0},{1,Subscript[q,2],Subscript[q,3]},{Subscript[q,1],0,0}}","params":"wl:ReplacePart[ConstantArray[0,20],{2->27/20,3->3/2}]"}}],
+      "capture": ["wl:Td[dof]","wl:N[Chop[Td[dof]],2]","wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]"],
+      "why": "two-digit rounding of the exact tie 47/20 = 2.35 (K-AC-04)",
+      "source": "{\"id\":\"H-AC-13\",\"steps\":[{\"set\":{\"DHParameters\":\"wl:{{\\\"r\\\",\\\"p\\\",\\\"p\\\"},{0,0,0},{0,-Pi/2,0},{1,Subscript[q,2],Subscript[q,3]},{Subscript[q,1],0,0}}\",\"params\":\"wl:ReplacePart[ConstantArray[0,20],{2->27/20,3->3/2}]\"}}],\"capture\":[\"wl:Td[dof]\",\"wl:N[Chop[Td[dof]],2]\",\"wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]\"],\"why\":\"two-digit rounding of the exact tie 47/20 = 2.35 (K-AC-04)\"}"
+    },
+    {
+      "id": "H-AC-14",
+      "steps": [{"set":{}}],
+      "capture": ["wl:Chop[TransformationFunction[{{1.,0.,0.,1.*^-17},{0.,1.,0.,0.},{0.,0.,1.,0.},{0.,0.,0.,1.}}]]","wl:Chop[TransformationFunction[{{1.,0.,0.,0.},{0.,1.,0.,0.},{0.,0.,1.,0.},{0.,0.,0.,1.}}]]","wl:Chop[Td[dof]] === Td[dof]","wl:InputForm[Td[dof]]"],
+      "why": "does Chop act inside a TransformationFunction? (Q-AC-05, K-AC-01; also relevant to robot-singularities and Robot Manipulator Workspaces)",
+      "source": "{\"id\":\"H-AC-14\",\"steps\":[{\"set\":{}}],\"capture\":[\"wl:Chop[TransformationFunction[{{1.,0.,0.,1.*^-17},{0.,1.,0.,0.},{0.,0.,1.,0.},{0.,0.,0.,1.}}]]\",\"wl:Chop[TransformationFunction[{{1.,0.,0.,0.},{0.,1.,0.,0.},{0.,0.,1.,0.},{0.,0.,0.,1.}}]]\",\"wl:Chop[Td[dof]] === Td[dof]\",\"wl:InputForm[Td[dof]]\"],\"why\":\"does Chop act inside a TransformationFunction? (Q-AC-05, K-AC-01; also relevant to robot-singularities and Robot Manipulator Workspaces)\"}"
+    },
+    {
+      "id": "H-AC-15",
+      "steps": [{"setFrom":"snapshot:3"}],
+      "capture": ["%g3d","%primitives"],
+      "why": "show robot off with g = 0.62 (Settings, line 9130): only joint 1 and the gripper; drawShaft absent (Q-AC-01)",
+      "source": "{\"id\":\"H-AC-15\",\"steps\":[{\"setFrom\":\"snapshot:3\"}],\"capture\":[\"%g3d\",\"%primitives\"],\"why\":\"show robot off with g = 0.62 (Settings, line 9130): only joint 1 and the gripper; drawShaft absent (Q-AC-01)\"}"
+    },
+    {
+      "id": "H-AC-16",
+      "steps": [{"set":{"params":"wl:ReplacePart[ConstantArray[0,20],1->Pi/2]"}}],
+      "capture": ["wl:Td[dof]","wl:Map[Precision, First[Td[dof]], {2}]","wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]"],
+      "why": "machine robot with an exact right angle (plain numbers): zeros print 0., no 6.12323×10^-17 (F-AC-10)",
+      "source": "{\"id\":\"H-AC-16\",\"steps\":[{\"set\":{\"params\":\"wl:ReplacePart[ConstantArray[0,20],1->Pi/2]\"}}],\"capture\":[\"wl:Td[dof]\",\"wl:Map[Precision, First[Td[dof]], {2}]\",\"wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]\"],\"why\":\"machine robot with an exact right angle (plain numbers): zeros print 0., no 6.12323×10^-17 (F-AC-10)\"}"
+    },
+    {
+      "id": "H-AC-17",
+      "steps": [{"set":{"DHParameters":"wl:{{\"r\",\"r\",\"p\",\"r\",\"r\",\"r\"},{0,0,0,0,0,0},{-Pi/2,Pi/2,0,-Pi/2,Pi/2,0},{1,1,Subscript[q,3],0,0,1},{Subscript[q,1],Subscript[q,2],0,Subscript[q,4],Subscript[q,5],Subscript[q,6]}}","params":"wl:ReplacePart[ConstantArray[0,20],3->3/2]"}}],
+      "capture": ["wl:Td[dof]","%plotRange","%g3d"],
+      "why": "Stanford at full extension: end frame at z = 3.5 beyond the PlotRange ±3 (clipping, F-AC-14)",
+      "source": "{\"id\":\"H-AC-17\",\"steps\":[{\"set\":{\"DHParameters\":\"wl:{{\\\"r\\\",\\\"r\\\",\\\"p\\\",\\\"r\\\",\\\"r\\\",\\\"r\\\"},{0,0,0,0,0,0},{-Pi/2,Pi/2,0,-Pi/2,Pi/2,0},{1,1,Subscript[q,3],0,0,1},{Subscript[q,1],Subscript[q,2],0,Subscript[q,4],Subscript[q,5],Subscript[q,6]}}\",\"params\":\"wl:ReplacePart[ConstantArray[0,20],3->3/2]\"}}],\"capture\":[\"wl:Td[dof]\",\"%plotRange\",\"%g3d\"],\"why\":\"Stanford at full extension: end frame at z = 3.5 beyond the PlotRange ±3 (clipping, F-AC-14)\"}"
+    },
+    {
+      "id": "H-AC-18",
+      "steps": [{"set":{"params":"wl:ReplacePart[ConstantArray[0,20],1->Pi/32]"}}],
+      "capture": ["wl:Table[Td[i],{i,1,dof}]","wl:Map[Precision, First[Td[dof]], {2}]","wl:N[Chop[Td[dof]],2]","wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]"],
+      "why": "anthropomorphic θ*1 = π/32: symbolic Cos[π/32] in Ad[1] — is H all machine or mixed per entry? (K-AC-09, T-AC-59)",
+      "source": "{\"id\":\"H-AC-18\",\"steps\":[{\"set\":{\"params\":\"wl:ReplacePart[ConstantArray[0,20],1->Pi/32]\"}}],\"capture\":[\"wl:Table[Td[i],{i,1,dof}]\",\"wl:Map[Precision, First[Td[dof]], {2}]\",\"wl:N[Chop[Td[dof]],2]\",\"wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]\"],\"why\":\"anthropomorphic θ*1 = π/32: symbolic Cos[π/32] in Ad[1] — is H all machine or mixed per entry? (K-AC-09, T-AC-59)\"}"
+    }
+  ]
+}

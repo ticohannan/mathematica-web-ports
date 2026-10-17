@@ -9,6 +9,8 @@ import fs from 'node:fs';
 import {
   INITIAL, plotLabelText, pText, setterSelection, sliderPosition, plotRange2D, padded, meshValues3D, unitBallSurface,
 } from '../../demos/unit-balls/norms.js';
+import { scene, plotPoints3D } from '../../demos/unit-balls/norms.js';
+import { loadStates, isExact, isIntegerLiteral } from '../../tools/lib/wl-json.mjs';
 
 const saved = JSON.parse(fs.readFileSync('tests/golden/unit-balls.original-state.json', 'utf8')).state;
 
@@ -74,4 +76,49 @@ describe('unit-balls golden', () => {
     }
     expect([...tips].sort()).toEqual(['-1,0,0', '0,-1,0', '0,0,-1', '0,0,1', '0,1,0', '1,0,0'].sort());
   });
+});
+
+// ---- snapshot Settings (tests/golden/unit-balls.original-states.json, tools/extract_state.py --snapshots): the seven
+// snapshot cells store {dimension, p} behind docs/original-snapshots/unit-balls-<k>.png. p keeps its Wolfram kind:
+// machine real (0.5), exact integer (1, 2: set by the setter) or Infinity (DirectedInfinity[1]).
+const FIXTURE = 'tests/golden/unit-balls.original-states.json';
+const snaps = loadStates(FIXTURE);
+const fixtureText = fs.readFileSync(FIXTURE, 'utf8');
+/** the port's p for a fixture value: exact numbers as strings ('2', 'Infinity'), machine reals as numbers */
+function portP(k) {
+  const p = snaps.snapshots[k - 1].p;
+  if (isExact(p)) return p.wl;
+  return isIntegerLiteral(fixtureText, ['snapshots', String(k), 'p']) ? String(p) : p;
+}
+// what each picture shows: [k, title, dimension, label, selected setter button, slider value text]
+const SHOWN = [
+  [1, 'unit-balls: snapshot 1: 3D with p = 0.5 gives the plot, label 0.5‐norm, setter and slider of the picture', '3D', '0.5‐norm', '1/2', '0.5'],
+  [2, 'unit-balls: snapshot 2: 3D with p = 1 gives the plot, label 1‐norm, setter and slider of the picture', '3D', '1‐norm', '1', '1'],
+  [3, 'unit-balls: snapshot 3: 3D with p = 2 gives the plot, label 2‐norm, setter and slider of the picture', '3D', '2‐norm', '2', '2'],
+  [4, 'unit-balls: snapshot 4: 3D with p = ∞ gives the plot, label ∞‐norm, setter and slider of the picture', '3D', '∞‐norm', 'Infinity', '∞'],
+  [5, 'unit-balls: snapshot 5: 2D with p = 0.5 gives the plot, label 0.5‐norm, setter and slider of the picture', '2D', '0.5‐norm', '1/2', '0.5'],
+  [6, 'unit-balls: snapshot 6: 2D with p = 2 gives the plot, label 2‐norm, setter and slider of the picture', '2D', '2‐norm', '2', '2'],
+  [7, 'unit-balls: snapshot 7: 2D with p = ∞ gives the plot, label ∞‐norm, setter and slider of the picture', '2D', '∞‐norm', 'Infinity', '∞'],
+];
+
+describe('unit-balls golden: the seven snapshot states', () => {
+  it('unit-balls: snapshot 1: the Settings are the live state, p the machine real 0.5', () => {
+    expect(snaps.count).toBe(7);
+    expect(snaps.snapshots[0]).toEqual(snaps.live);
+    expect(portP(1)).toBe(0.5);
+    expect(snaps.specs).toEqual(snaps.live); // initial settings = live state
+  });
+  for (const [k, title, dim, label, button, slider] of SHOWN) {
+    it(title, () => {
+      const p = portP(k);
+      expect(snaps.snapshots[k - 1].dimension).toBe(dim);
+      const sc = scene({ dimension: dim, p });
+      expect(sc.kind).toBe(dim === '2D' ? 'Plot3D' : 'RegionPlot3D');
+      expect(sc.label).toBe(label);
+      expect(setterSelection(p)).toBe(button);
+      expect(pText(p)).toBe(slider); // exact 1 and 2 show "1" and "2" (a machine real would show "1." / "2.")
+      if (slider === '∞') expect(sliderPosition(p)).toBe(0.1);
+      if (dim === '3D') expect(sc.plotPoints).toBe(plotPoints3D(p));
+    });
+  }
 });

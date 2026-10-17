@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.13 |
+| Code version: | 0.1.14 |
 | Document revision | 4 (2026-10-05) — P-TP-01 (WebGL context-loss recovery) implemented as A-TP-06 |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Three Parametrizations of Rotations" by Aaron T. Becker and Benedict Isichei (CC BY-NC-SA 3.0). Readable source: [`docs/original-source/three-parametrizations.txt`](../../docs/original-source/three-parametrizations.txt) |
@@ -165,6 +165,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 4 | v0.1.11 | 2026-10-05 | P-TP-01 approved and implemented as A-TP-06: redraw after a WebGL context is restored (shared viewer code) |
 | 4 | v0.1.12 | 2026-10-06 | no behaviour change (seven further apps added to the site; their additions to `shared/style.css` apply only to their own pages); lighting lead K-TP-01 recorded |
 | 4 | v0.1.13 | 2026-10-12 | no change to this app (collision beep with a mute checkbox in prm-seven-link; new `shared/beep.js` used only there) |
+| 4 | v0.1.14 | 2026-10-16 | no change to this app (Mathematica harness tooling; snapshot-state golden tests for the seven newer apps) |
 
 ## 10. Improvements to consider (not implemented)
 

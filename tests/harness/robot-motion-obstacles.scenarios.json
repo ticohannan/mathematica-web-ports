@@ -1,0 +1,150 @@
+{
+  "schema": "manipulate-harness/scenarios-1",
+  "app": "robot-motion-obstacles",
+  "notebook": "Demonstration-Robot-Motion-with-Obstacles-1-0-0-definition.nb",
+  "notebookSha256": "4108a30e4e80ed067552b459f3a6cebac4db34a66fe76dc1b238f26e0f8c64c4",
+  "source": "_internal/batch-ab/design/robot-motion-obstacles/TESTPLAN.md",
+  "generatedBy": "tools/harness/extract-scenarios.mjs",
+  "scenarios": [
+    {
+      "id": "H-RM-01",
+      "steps": [{"set":{"pObsOld":[-3,-2],"pObs2Old":[-3,-2],"QualityOld":1,"highRes":false}}],
+      "capture": ["freeConfigSpace","highRes","pConfig","Theta1","Theta2","inCollision","resolution"],
+      "why": "the Input cell's cache values force the first computation (the initial settings alone compute nothing, H-RM-20): must equal the saved state (64 x 64, 240 blocked) and pins Theta1/Theta2 and the graphics numbers",
+      "source": "{\"id\":\"H-RM-01\",\"steps\":[{\"set\":{\"pObsOld\":[-3,-2],\"pObs2Old\":[-3,-2],\"QualityOld\":1,\"highRes\":false}}],\"capture\":[\"freeConfigSpace\",\"highRes\",\"pConfig\",\"Theta1\",\"Theta2\",\"inCollision\",\"resolution\"],\"why\":\"the Input cell's cache values force the first computation (the initial settings alone compute nothing, H-RM-20): must equal the saved state (64 x 64, 240 blocked) and pins Theta1/Theta2 and the graphics numbers\"}"
+    },
+    {
+      "id": "H-RM-02",
+      "steps": [{"set":{"Quality":1}}],
+      "capture": ["freeConfigSpace","resolution"],
+      "why": "smallest Q: 32 x 32 grid (reference 64 blocked)",
+      "source": "{\"id\":\"H-RM-02\",\"steps\":[{\"set\":{\"Quality\":1}}],\"capture\":[\"freeConfigSpace\",\"resolution\"],\"why\":\"smallest Q: 32 x 32 grid (reference 64 blocked)\"}"
+    },
+    {
+      "id": "H-RM-03",
+      "steps": [{"set":{"Quality":10}}],
+      "capture": ["freeConfigSpace","resolution"],
+      "why": "largest Q: 320 x 320 grid (reference 6140 blocked)",
+      "source": "{\"id\":\"H-RM-03\",\"steps\":[{\"set\":{\"Quality\":10}}],\"capture\":[\"freeConfigSpace\",\"resolution\"],\"why\":\"largest Q: 320 x 320 grid (reference 6140 blocked)\"}"
+    },
+    {
+      "id": "H-RM-04",
+      "steps": [{"setFrom":"snapshot:2"},{"set":{"pObsOld":[-3,-2]}}],
+      "capture": ["freeConfigSpace","resolution"],
+      "why": "recompute at Q = 5.3100000000000005 in Mathematica 15.0.1: must equal the saved 169 x 169 grid (non-integer iterator count and values)",
+      "source": "{\"id\":\"H-RM-04\",\"steps\":[{\"setFrom\":\"snapshot:2\"},{\"set\":{\"pObsOld\":[-3,-2]}}],\"capture\":[\"freeConfigSpace\",\"resolution\"],\"why\":\"recompute at Q = 5.3100000000000005 in Mathematica 15.0.1: must equal the saved 169 x 169 grid (non-integer iterator count and values)\"}"
+    },
+    {
+      "id": "H-RM-05",
+      "steps": [{"set":{"Quality":2.03125}}],
+      "capture": ["freeConfigSpace","resolution"],
+      "why": "resolution 65. as a machine number: Table count at a whole machine value (K-RM-03; reference 65)",
+      "source": "{\"id\":\"H-RM-05\",\"steps\":[{\"set\":{\"Quality\":2.03125}}],\"capture\":[\"freeConfigSpace\",\"resolution\"],\"why\":\"resolution 65. as a machine number: Table count at a whole machine value (K-RM-03; reference 65)\"}"
+    },
+    {
+      "id": "H-RM-06",
+      "steps": [{"set":{"pConfig":[2.85,0.0]}}],
+      "capture": ["pConfig","Theta1","Theta2"],
+      "why": "wrap left of xMin: pConfig {6.699999999999999, 0}, Theta1 = 2 Pi",
+      "source": "{\"id\":\"H-RM-06\",\"steps\":[{\"set\":{\"pConfig\":[2.85,0.0]}}],\"capture\":[\"pConfig\",\"Theta1\",\"Theta2\"],\"why\":\"wrap left of xMin: pConfig {6.699999999999999, 0}, Theta1 = 2 Pi\"}"
+    },
+    {
+      "id": "H-RM-07",
+      "steps": [{"set":{"pConfig":[6.75,1.85]}}],
+      "capture": ["pConfig","Theta1","Theta2"],
+      "why": "wrap right of xMax and above yMax at once: pConfig {2.9, -2}, both angles 0",
+      "source": "{\"id\":\"H-RM-07\",\"steps\":[{\"set\":{\"pConfig\":[6.75,1.85]}}],\"capture\":[\"pConfig\",\"Theta1\",\"Theta2\"],\"why\":\"wrap right of xMax and above yMax at once: pConfig {2.9, -2}, both angles 0\"}"
+    },
+    {
+      "id": "H-RM-08",
+      "steps": [{"set":{"pConfig":[3.375,-2.0]}}],
+      "capture": ["pConfig","Theta1","Theta2","inCollision","%text"],
+      "why": "straight arm at 45 degrees through obstacle 1: inCollision True, EdgeForm[Red] on bars and disks, loc[Red]; Theta1 = 0.7853981633974486 is 3 ulp above Pi/4: decides whether Abs[Theta1] > Pi/4 is tolerant (port: no theta1 label)",
+      "source": "{\"id\":\"H-RM-08\",\"steps\":[{\"set\":{\"pConfig\":[3.375,-2.0]}}],\"capture\":[\"pConfig\",\"Theta1\",\"Theta2\",\"inCollision\",\"%text\"],\"why\":\"straight arm at 45 degrees through obstacle 1: inCollision True, EdgeForm[Red] on bars and disks, loc[Red]; Theta1 = 0.7853981633974486 is 3 ulp above Pi/4: decides whether Abs[Theta1] > Pi/4 is tolerant (port: no theta1 label)\"}"
+    },
+    {
+      "id": "H-RM-09",
+      "steps": [{"set":{"pObs":[2.0,2.0],"pObs2":[-2.0,-2.0]}}],
+      "capture": ["freeConfigSpace"],
+      "why": "no cell blocked: Raster colours of an all-zero ArrayPlot (K-RM-04)",
+      "source": "{\"id\":\"H-RM-09\",\"steps\":[{\"set\":{\"pObs\":[2.0,2.0],\"pObs2\":[-2.0,-2.0]}}],\"capture\":[\"freeConfigSpace\"],\"why\":\"no cell blocked: Raster colours of an all-zero ArrayPlot (K-RM-04)\"}"
+    },
+    {
+      "id": "H-RM-10",
+      "steps": [{"set":{"pObs":[0.0,0.0]}}],
+      "capture": ["freeConfigSpace","inCollision"],
+      "why": "every cell blocked: Raster colours of an all-one ArrayPlot (K-RM-04)",
+      "source": "{\"id\":\"H-RM-10\",\"steps\":[{\"set\":{\"pObs\":[0.0,0.0]}}],\"capture\":[\"freeConfigSpace\",\"inCollision\"],\"why\":\"every cell blocked: Raster colours of an all-one ArrayPlot (K-RM-04)\"}"
+    },
+    {
+      "id": "H-RM-11",
+      "steps": [{"set":{"pObs":[1.0,1.0]},"controlActive":true}],
+      "capture": ["freeConfigSpace","highRes","resolution"],
+      "why": "coarse grid while a control is active: 16 x 16, highRes False",
+      "source": "{\"id\":\"H-RM-11\",\"steps\":[{\"set\":{\"pObs\":[1.0,1.0]},\"controlActive\":true}],\"capture\":[\"freeConfigSpace\",\"highRes\",\"resolution\"],\"why\":\"coarse grid while a control is active: 16 x 16, highRes False\"}"
+    },
+    {
+      "id": "H-RM-12",
+      "steps": [{"set":{"pObs":[1.0,1.0]},"controlActive":true},{"set":{}}],
+      "capture": ["freeConfigSpace","highRes","resolution"],
+      "why": "the evaluation after release: 64 x 64, highRes True",
+      "source": "{\"id\":\"H-RM-12\",\"steps\":[{\"set\":{\"pObs\":[1.0,1.0]},\"controlActive\":true},{\"set\":{}}],\"capture\":[\"freeConfigSpace\",\"highRes\",\"resolution\"],\"why\":\"the evaluation after release: 64 x 64, highRes True\"}"
+    },
+    {
+      "id": "H-RM-13",
+      "steps": [{"set":{}},{"set":{"freeConfigSpace":7}}],
+      "capture": ["freeConfigSpace"],
+      "why": "cache: Olds equal and highRes True, so the marker 7 is not overwritten",
+      "source": "{\"id\":\"H-RM-13\",\"steps\":[{\"set\":{}},{\"set\":{\"freeConfigSpace\":7}}],\"capture\":[\"freeConfigSpace\"],\"why\":\"cache: Olds equal and highRes True, so the marker 7 is not overwritten\"}"
+    },
+    {
+      "id": "H-RM-14",
+      "steps": [{"set":{}},{"set":{"freeConfigSpace":7,"highRes":false}}],
+      "capture": ["freeConfigSpace","highRes"],
+      "why": "cache: highRes False forces a recomputation (64 x 64)",
+      "source": "{\"id\":\"H-RM-14\",\"steps\":[{\"set\":{}},{\"set\":{\"freeConfigSpace\":7,\"highRes\":false}}],\"capture\":[\"freeConfigSpace\",\"highRes\"],\"why\":\"cache: highRes False forces a recomputation (64 x 64)\"}"
+    },
+    {
+      "id": "H-RM-15",
+      "steps": [{"set":{}},{"set":{"freeConfigSpace":7,"pObs":[1.1000000000000003,1.1]}}],
+      "capture": ["freeConfigSpace","pObsOld"],
+      "why": "tolerant Unequal: a 1-ulp obstacle move keeps the marker 7",
+      "source": "{\"id\":\"H-RM-15\",\"steps\":[{\"set\":{}},{\"set\":{\"freeConfigSpace\":7,\"pObs\":[1.1000000000000003,1.1]}}],\"capture\":[\"freeConfigSpace\",\"pObsOld\"],\"why\":\"tolerant Unequal: a 1-ulp obstacle move keeps the marker 7\"}"
+    },
+    {
+      "id": "H-RM-16",
+      "steps": [{"setFrom":"snapshot:4"},{"set":{"pObs2Old":[-3,-2]}}],
+      "capture": ["freeConfigSpace"],
+      "why": "obstacle 2 at {2.1, 1.1}, outside the locator range: recomputed grid must equal the saved one (1484 blocked)",
+      "source": "{\"id\":\"H-RM-16\",\"steps\":[{\"setFrom\":\"snapshot:4\"},{\"set\":{\"pObs2Old\":[-3,-2]}}],\"capture\":[\"freeConfigSpace\"],\"why\":\"obstacle 2 at {2.1, 1.1}, outside the locator range: recomputed grid must equal the saved one (1484 blocked)\"}"
+    },
+    {
+      "id": "H-RM-17",
+      "steps": [{"set":{"pConfig":[2.9,-2.0]}}],
+      "capture": ["pConfig","Theta1","Theta2"],
+      "why": "exactly on the lower-left edges: no wrap (tolerant Less), angles 0, no labels, empty arcs with arrowheads (Q-RM-05)",
+      "source": "{\"id\":\"H-RM-17\",\"steps\":[{\"set\":{\"pConfig\":[2.9,-2.0]}}],\"capture\":[\"pConfig\",\"Theta1\",\"Theta2\"],\"why\":\"exactly on the lower-left edges: no wrap (tolerant Less), angles 0, no labels, empty arcs with arrowheads (Q-RM-05)\"}"
+    },
+    {
+      "id": "H-RM-18",
+      "steps": [{"setFrom":"snapshot:3"},{"set":{"pObsOld":[-3,-2]}}],
+      "capture": ["freeConfigSpace"],
+      "why": "Q 8 recomputed: must equal the saved 256 x 256 grid; its closest sample is 9.6e-6 from the threshold (largest last-bit risk, D-RM-01)",
+      "source": "{\"id\":\"H-RM-18\",\"steps\":[{\"setFrom\":\"snapshot:3\"},{\"set\":{\"pObsOld\":[-3,-2]}}],\"capture\":[\"freeConfigSpace\"],\"why\":\"Q 8 recomputed: must equal the saved 256 x 256 grid; its closest sample is 9.6e-6 from the threshold (largest last-bit risk, D-RM-01)\"}"
+    },
+    {
+      "id": "H-RM-19",
+      "steps": [{"set":{"pConfig":[5.0,-2.05]}}],
+      "capture": ["pConfig","Theta2","%text"],
+      "why": "wrap from below to exactly yMax: Theta2 = 6.283185307179585 if a/b is a*(1/b), 6.283185307179586 if a true division (K-RM-06)",
+      "source": "{\"id\":\"H-RM-19\",\"steps\":[{\"set\":{\"pConfig\":[5.0,-2.05]}}],\"capture\":[\"pConfig\",\"Theta2\",\"%text\"],\"why\":\"wrap from below to exactly yMax: Theta2 = 6.283185307179585 if a/b is a*(1/b), 6.283185307179586 if a true division (K-RM-06)\"}"
+    },
+    {
+      "id": "H-RM-20",
+      "steps": [{"set":{}}],
+      "capture": ["freeConfigSpace","highRes","pObsOld","QualityOld","resolution"],
+      "why": "the initial settings compute nothing: cache condition false, resolution unassigned, the stored grid is shown (F-RM-12, D-RM-07)",
+      "source": "{\"id\":\"H-RM-20\",\"steps\":[{\"set\":{}}],\"capture\":[\"freeConfigSpace\",\"highRes\",\"pObsOld\",\"QualityOld\",\"resolution\"],\"why\":\"the initial settings compute nothing: cache condition false, resolution unassigned, the stored grid is shown (F-RM-12, D-RM-07)\"}"
+    }
+  ]
+}

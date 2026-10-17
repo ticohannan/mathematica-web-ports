@@ -1,0 +1,108 @@
+{
+  "schema": "manipulate-harness/scenarios-1",
+  "app": "torus-chart",
+  "notebook": "Demonstration-Chart-for-a-Torus-1-0-0-definition.nb",
+  "notebookSha256": "290bc414db9f64a3076c45ece391b77d3f2b3ab77995fea725c4ab2e6bee1c08",
+  "source": "_internal/batch-ab/design/torus-chart/TESTPLAN.md",
+  "generatedBy": "tools/harness/extract-scenarios.mjs",
+  "scenarios": [
+    {
+      "id": "H-TC-01",
+      "steps": [{"setFrom":"snapshot:1"}],
+      "capture": ["θ","φ","config","manifold","%options:Lighting,PlotLabel,LabelStyle,BoxRatios","wl:Charting`ResolvePlotTheme[\"Business\", ParametricPlot3D]"],
+      "why": "the live state (= snapshot 1 Settings, λ = 2.): angles, ball, the flat manifold, and the Business theme read directly (K-TC-01, K-TC-02)",
+      "source": "{\"id\":\"H-TC-01\",\"steps\":[{\"setFrom\":\"snapshot:1\"}],\"capture\":[\"θ\",\"φ\",\"config\",\"manifold\",\"%options:Lighting,PlotLabel,LabelStyle,BoxRatios\",\"wl:Charting`ResolvePlotTheme[\\\"Business\\\", ParametricPlot3D]\"],\"why\":\"the live state (= snapshot 1 Settings, λ = 2.): angles, ball, the flat manifold, and the Business theme read directly (K-TC-01, K-TC-02)\"}"
+    },
+    {
+      "id": "H-TC-02",
+      "steps": [{"set":{"λ":0,"p1":[1,0],"p2":[1,0]}}],
+      "capture": ["θ","φ","config","manifold","%options:Lighting,PlotLabel,LabelStyle,BoxRatios"],
+      "why": "the initial settings with exact integers: θ = φ = 0 exactly, ball {2π, π, 0}; torus surface and mesh",
+      "source": "{\"id\":\"H-TC-02\",\"steps\":[{\"set\":{\"λ\":0,\"p1\":[1,0],\"p2\":[1,0]}}],\"capture\":[\"θ\",\"φ\",\"config\",\"manifold\",\"%options:Lighting,PlotLabel,LabelStyle,BoxRatios\"],\"why\":\"the initial settings with exact integers: θ = φ = 0 exactly, ball {2π, π, 0}; torus surface and mesh\"}"
+    },
+    {
+      "id": "H-TC-03",
+      "steps": [{"setFrom":"snapshot:2"}],
+      "capture": ["θ","φ","config","manifold","%options:Lighting,PlotLabel,LabelStyle,BoxRatios"],
+      "why": "snapshot 2 (λ = 0.13): torus with a gap; mesh levels and lighting",
+      "source": "{\"id\":\"H-TC-03\",\"steps\":[{\"setFrom\":\"snapshot:2\"}],\"capture\":[\"θ\",\"φ\",\"config\",\"manifold\",\"%options:Lighting,PlotLabel,LabelStyle,BoxRatios\"],\"why\":\"snapshot 2 (λ = 0.13): torus with a gap; mesh levels and lighting\"}"
+    },
+    {
+      "id": "H-TC-04",
+      "steps": [{"setFrom":"snapshot:3"}],
+      "capture": ["θ","φ","config","manifold","%options:Lighting,PlotLabel,LabelStyle,BoxRatios"],
+      "why": "snapshot 3 (λ = 0.56): funnel; mesh rings, front/back faces",
+      "source": "{\"id\":\"H-TC-04\",\"steps\":[{\"setFrom\":\"snapshot:3\"}],\"capture\":[\"θ\",\"φ\",\"config\",\"manifold\",\"%options:Lighting,PlotLabel,LabelStyle,BoxRatios\"],\"why\":\"snapshot 3 (λ = 0.56): funnel; mesh rings, front/back faces\"}"
+    },
+    {
+      "id": "H-TC-05",
+      "steps": [{"setFrom":"snapshot:4"}],
+      "capture": ["θ","φ","config","manifold","%options:Lighting,PlotLabel,LabelStyle,BoxRatios"],
+      "why": "snapshot 4 (λ = 1.45): second branch; mesh = constant-v arcs?",
+      "source": "{\"id\":\"H-TC-05\",\"steps\":[{\"setFrom\":\"snapshot:4\"}],\"capture\":[\"θ\",\"φ\",\"config\",\"manifold\",\"%options:Lighting,PlotLabel,LabelStyle,BoxRatios\"],\"why\":\"snapshot 4 (λ = 1.45): second branch; mesh = constant-v arcs?\"}"
+    },
+    {
+      "id": "H-TC-06",
+      "steps": [{"set":{"λ":1.0,"p1":[0.0,1.0],"p2":[-1.0,0.0]}}],
+      "capture": ["θ","φ","config","manifold"],
+      "why": "branch boundary λ <= 1 (tolerant); cylinder of radius π",
+      "source": "{\"id\":\"H-TC-06\",\"steps\":[{\"set\":{\"λ\":1.0,\"p1\":[0.0,1.0],\"p2\":[-1.0,0.0]}}],\"capture\":[\"θ\",\"φ\",\"config\",\"manifold\"],\"why\":\"branch boundary λ <= 1 (tolerant); cylinder of radius π\"}"
+    },
+    {
+      "id": "H-TC-07",
+      "steps": [{"set":{"λ":0.5,"p1":[1.0,0.0],"p2":[1.0,0.0]}}],
+      "capture": ["config","%options:PlotLabel"],
+      "why": "PlotLabel at λ = 0.5 (machine) against the exact 1/2: Cylinder",
+      "source": "{\"id\":\"H-TC-07\",\"steps\":[{\"set\":{\"λ\":0.5,\"p1\":[1.0,0.0],\"p2\":[1.0,0.0]}}],\"capture\":[\"config\",\"%options:PlotLabel\"],\"why\":\"PlotLabel at λ = 0.5 (machine) against the exact 1/2: Cylinder\"}"
+    },
+    {
+      "id": "H-TC-08",
+      "steps": [{"set":{"λ":0.49999999999999994,"p1":[1.0,0.0],"p2":[1.0,0.0]}}],
+      "capture": ["config","%options:PlotLabel"],
+      "why": "PlotLabel 1 ulp below 1/2: tolerant Less gives Cylinder?",
+      "source": "{\"id\":\"H-TC-08\",\"steps\":[{\"set\":{\"λ\":0.49999999999999994,\"p1\":[1.0,0.0],\"p2\":[1.0,0.0]}}],\"capture\":[\"config\",\"%options:PlotLabel\"],\"why\":\"PlotLabel 1 ulp below 1/2: tolerant Less gives Cylinder?\"}"
+    },
+    {
+      "id": "H-TC-09",
+      "steps": [{"set":{"λ":1.2,"p1":[1.0,0.0],"p2":[1.0,0.0]}}],
+      "capture": ["config","%options:PlotLabel"],
+      "why": "PlotLabel at 1.2: Plane",
+      "source": "{\"id\":\"H-TC-09\",\"steps\":[{\"set\":{\"λ\":1.2,\"p1\":[1.0,0.0],\"p2\":[1.0,0.0]}}],\"capture\":[\"config\",\"%options:PlotLabel\"],\"why\":\"PlotLabel at 1.2: Plane\"}"
+    },
+    {
+      "id": "H-TC-10",
+      "steps": [{"set":{"λ":1.1999999999999997,"p1":[1.0,0.0],"p2":[1.0,0.0]}}],
+      "capture": ["config","%options:PlotLabel"],
+      "why": "PlotLabel 1 ulp below 1.2: tolerant Less gives Plane?",
+      "source": "{\"id\":\"H-TC-10\",\"steps\":[{\"set\":{\"λ\":1.1999999999999997,\"p1\":[1.0,0.0],\"p2\":[1.0,0.0]}}],\"capture\":[\"config\",\"%options:PlotLabel\"],\"why\":\"PlotLabel 1 ulp below 1.2: tolerant Less gives Plane?\"}"
+    },
+    {
+      "id": "H-TC-11",
+      "steps": [{"set":{"λ":2.0,"p1":[0.0,0.0],"p2":[1.0,0.0]}}],
+      "capture": ["θ","φ","config","%messages"],
+      "why": "a press at the dial centre: Normalize[{0,0}] = {0,0}, ArcTan[0., 0.] (K-TC-03)",
+      "source": "{\"id\":\"H-TC-11\",\"steps\":[{\"set\":{\"λ\":2.0,\"p1\":[0.0,0.0],\"p2\":[1.0,0.0]}}],\"capture\":[\"θ\",\"φ\",\"config\",\"%messages\"],\"why\":\"a press at the dial centre: Normalize[{0,0}] = {0,0}, ArcTan[0., 0.] (K-TC-03)\"}"
+    },
+    {
+      "id": "H-TC-12",
+      "steps": [{"set":{"λ":0.56,"p1":[-1.0,0.0],"p2":[0.0,-1.0]}}],
+      "capture": ["θ","φ","config"],
+      "why": "angles on the axes: π and 3π/2 as machine values",
+      "source": "{\"id\":\"H-TC-12\",\"steps\":[{\"set\":{\"λ\":0.56,\"p1\":[-1.0,0.0],\"p2\":[0.0,-1.0]}}],\"capture\":[\"θ\",\"φ\",\"config\"],\"why\":\"angles on the axes: π and 3π/2 as machine values\"}"
+    },
+    {
+      "id": "H-TC-13",
+      "steps": [{"set":{"λ":2.0,"p1":[1.0,-1.0e-17],"p2":[0.5403023058681398,0.8414709848078965]}}],
+      "capture": ["θ","φ","config"],
+      "why": "θ just below 0 becomes 2π - 1e-17 = 2π in machine arithmetic: ball y = 0 instead of 2π (the chart's jump; the angle range is [0, 2π])",
+      "source": "{\"id\":\"H-TC-13\",\"steps\":[{\"set\":{\"λ\":2.0,\"p1\":[1.0,-1.0e-17],\"p2\":[0.5403023058681398,0.8414709848078965]}}],\"capture\":[\"θ\",\"φ\",\"config\"],\"why\":\"θ just below 0 becomes 2π - 1e-17 = 2π in machine arithmetic: ball y = 0 instead of 2π (the chart's jump; the angle range is [0, 2π])\"}"
+    },
+    {
+      "id": "H-TC-14",
+      "steps": [{"set":{"λ":0.0,"p1":[-1.0,"wl:-0."],"p2":[1.0,0.0]}}],
+      "capture": ["θ","config"],
+      "why": "negative zero in the dial point (if the front end can produce it): θ = π, no signed zero in Mathematica",
+      "source": "{\"id\":\"H-TC-14\",\"steps\":[{\"set\":{\"λ\":0.0,\"p1\":[-1.0,\"wl:-0.\"],\"p2\":[1.0,0.0]}}],\"capture\":[\"θ\",\"config\"],\"why\":\"negative zero in the dial point (if the front end can produce it): θ = π, no signed zero in Mathematica\"}"
+    }
+  ]
+}

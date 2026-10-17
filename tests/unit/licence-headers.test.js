@@ -25,7 +25,9 @@ describe('licence headers', () => {
     expect(['MIT', 'CC-BY-NC-SA-3.0']).toContain(licenceOf(f));
   });
   it('adapted demos, golden tests and the reference planner are CC BY-NC-SA 3.0', () => {
-    for (const f of files.filter((f) => /^(demos\/|tests\/golden\/|tests\/support\/)/.test(f) || f === 'index.html')) {
+    // tests/support/harness-json.js is a generic MIT helper for reading Mathematica-harness results (LICENSE.md)
+    const mitSupport = new Set(['tests/support/harness-json.js']);
+    for (const f of files.filter((f) => (/^(demos\/|tests\/golden\/|tests\/support\/)/.test(f) && !mitSupport.has(f)) || f === 'index.html')) {
       expect(licenceOf(f), f).toBe('CC-BY-NC-SA-3.0');
     }
   });

@@ -1,0 +1,171 @@
+{
+  "schema": "manipulate-harness/scenarios-1",
+  "app": "bfs-motion-planning",
+  "notebook": "Demonstration-Breadth-First-Search-Robot-Motion-Planning-1-0-0-definition.nb",
+  "notebookSha256": "6bbecc3b93eeb819270707a1f14f1832acc53329b98c6441d8cf4df7e5b69914",
+  "source": "_internal/batch-ab/design/bfs-motion-planning/TESTPLAN.md",
+  "generatedBy": "tools/harness/extract-scenarios.mjs",
+  "scenarios": [
+    {
+      "id": "H-BF-01",
+      "steps": [{"set":{"pObsOld":[-3,-2],"pObs2Old":[-3,-2],"QualityOld":1,"highRes":false}}],
+      "capture": ["freeConfigSpace","costmap","parents","path","lS","lE","ccord","Theta1","Theta2","inCollision","updatedCspace","updatedcostmap"],
+      "why": "the Input cell's cache values force grid, search and path (the initial settings alone compute nothing, H-BF-23): must equal the saved state bit for bit (costmap doubles)",
+      "source": "{\"id\":\"H-BF-01\",\"steps\":[{\"set\":{\"pObsOld\":[-3,-2],\"pObs2Old\":[-3,-2],\"QualityOld\":1,\"highRes\":false}}],\"capture\":[\"freeConfigSpace\",\"costmap\",\"parents\",\"path\",\"lS\",\"lE\",\"ccord\",\"Theta1\",\"Theta2\",\"inCollision\",\"updatedCspace\",\"updatedcostmap\"],\"why\":\"the Input cell's cache values force grid, search and path (the initial settings alone compute nothing, H-BF-23): must equal the saved state bit for bit (costmap doubles)\"}"
+    },
+    {
+      "id": "H-BF-02",
+      "steps": [{"setFrom":"snapshot:2"},{"set":{"pObsOld":[-3,-2]}}],
+      "capture": ["freeConfigSpace","costmap","parents","path","lS","lE"],
+      "why": "recompute snapshot 2 in 15.0.1: must equal the saved grid, costmap, parents, path",
+      "source": "{\"id\":\"H-BF-02\",\"steps\":[{\"setFrom\":\"snapshot:2\"},{\"set\":{\"pObsOld\":[-3,-2]}}],\"capture\":[\"freeConfigSpace\",\"costmap\",\"parents\",\"path\",\"lS\",\"lE\"],\"why\":\"recompute snapshot 2 in 15.0.1: must equal the saved grid, costmap, parents, path\"}"
+    },
+    {
+      "id": "H-BF-03",
+      "steps": [{"setFrom":"snapshot:3"}],
+      "capture": ["freeConfigSpace","costmap","path","ccord"],
+      "why": "snapshot 3 as saved: cache condition false keeps the stale grid (K-BF-04)",
+      "source": "{\"id\":\"H-BF-03\",\"steps\":[{\"setFrom\":\"snapshot:3\"}],\"capture\":[\"freeConfigSpace\",\"costmap\",\"path\",\"ccord\"],\"why\":\"snapshot 3 as saved: cache condition false keeps the stale grid (K-BF-04)\"}"
+    },
+    {
+      "id": "H-BF-04",
+      "steps": [{"setFrom":"snapshot:3"},{"set":{"pObs2Old":[-3,-2]}}],
+      "capture": ["freeConfigSpace","costmap","parents","path","ccord"],
+      "why": "snapshot 3 recomputed for the saved obstacle positions (reference: 1078 blocked, 38 cells, cost 46.01999999999997)",
+      "source": "{\"id\":\"H-BF-04\",\"steps\":[{\"setFrom\":\"snapshot:3\"},{\"set\":{\"pObs2Old\":[-3,-2]}}],\"capture\":[\"freeConfigSpace\",\"costmap\",\"parents\",\"path\",\"ccord\"],\"why\":\"snapshot 3 recomputed for the saved obstacle positions (reference: 1078 blocked, 38 cells, cost 46.01999999999997)\"}"
+    },
+    {
+      "id": "H-BF-05",
+      "steps": [{"setFrom":"snapshot:4"},{"set":{"pObsOld":[-3,-2]}}],
+      "capture": ["freeConfigSpace","costmap","parents","path","lS","lE","Theta1","Theta2"],
+      "why": "recompute snapshot 4 (Q 6): must equal the saved state",
+      "source": "{\"id\":\"H-BF-05\",\"steps\":[{\"setFrom\":\"snapshot:4\"},{\"set\":{\"pObsOld\":[-3,-2]}}],\"capture\":[\"freeConfigSpace\",\"costmap\",\"parents\",\"path\",\"lS\",\"lE\",\"Theta1\",\"Theta2\"],\"why\":\"recompute snapshot 4 (Q 6): must equal the saved state\"}"
+    },
+    {
+      "id": "H-BF-06",
+      "steps": [{"set":{"Quality":1}}],
+      "capture": ["freeConfigSpace","costmap","path","lS","lE"],
+      "why": "smallest grid 16 x 16 (reference: lS {8,7}, lE {8,11}, 5 cells, label 1.57)",
+      "source": "{\"id\":\"H-BF-06\",\"steps\":[{\"set\":{\"Quality\":1}}],\"capture\":[\"freeConfigSpace\",\"costmap\",\"path\",\"lS\",\"lE\"],\"why\":\"smallest grid 16 x 16 (reference: lS {8,7}, lE {8,11}, 5 cells, label 1.57)\"}"
+    },
+    {
+      "id": "H-BF-07",
+      "steps": [{"set":{"Quality":10}}],
+      "capture": ["freeConfigSpace","costmap","path","lS","lE"],
+      "why": "largest grid 160 x 160 (reference: 1536 blocked, 43 cells, label 1.65)",
+      "source": "{\"id\":\"H-BF-07\",\"steps\":[{\"set\":{\"Quality\":10}}],\"capture\":[\"freeConfigSpace\",\"costmap\",\"path\",\"lS\",\"lE\"],\"why\":\"largest grid 160 x 160 (reference: 1536 blocked, 43 cells, label 1.65)\"}"
+    },
+    {
+      "id": "H-BF-08",
+      "steps": [{"set":{"Quality":5.31}}],
+      "capture": ["freeConfigSpace","resolution","lS","lE","path"],
+      "why": "non-integer Q: 84.96 -> 84 cells, cell rule with L = 84 (reference: lS {40,36}, lE {40,58})",
+      "source": "{\"id\":\"H-BF-08\",\"steps\":[{\"set\":{\"Quality\":5.31}}],\"capture\":[\"freeConfigSpace\",\"resolution\",\"lS\",\"lE\",\"path\"],\"why\":\"non-integer Q: 84.96 -> 84 cells, cell rule with L = 84 (reference: lS {40,36}, lE {40,58})\"}"
+    },
+    {
+      "id": "H-BF-09",
+      "steps": [{"set":{"progress":0.0}}],
+      "capture": ["ccord","Theta1","Theta2","inCollision"],
+      "why": "P = 0: Max[1, Ceiling[0]] = 1, the start cell centre (16,14)",
+      "source": "{\"id\":\"H-BF-09\",\"steps\":[{\"set\":{\"progress\":0.0}}],\"capture\":[\"ccord\",\"Theta1\",\"Theta2\",\"inCollision\"],\"why\":\"P = 0: Max[1, Ceiling[0]] = 1, the start cell centre (16,14)\"}"
+    },
+    {
+      "id": "H-BF-10",
+      "steps": [{"setFrom":"snapshot:4"},{"set":{"progress":0.14}}],
+      "capture": ["ccord","path","Theta1","Theta2"],
+      "why": "Ceiling[0.14 * 50] with 0.14*50 = 7.000000000000001 -> the 8th cell (Q-BF-09)",
+      "source": "{\"id\":\"H-BF-10\",\"steps\":[{\"setFrom\":\"snapshot:4\"},{\"set\":{\"progress\":0.14}}],\"capture\":[\"ccord\",\"path\",\"Theta1\",\"Theta2\"],\"why\":\"Ceiling[0.14 * 50] with 0.14*50 = 7.000000000000001 -> the 8th cell (Q-BF-09)\"}"
+    },
+    {
+      "id": "H-BF-11",
+      "steps": [{"set":{"pConfigF":[3.315625,1.740625]}}],
+      "capture": ["lE","path","costmap","ccord","inCollision"],
+      "why": "goal in the blocked cell (1,4): Infinity cost, one-cell path, label text of Round[Infinity, 0.01] (K-BF-01)",
+      "source": "{\"id\":\"H-BF-11\",\"steps\":[{\"set\":{\"pConfigF\":[3.315625,1.740625]}}],\"capture\":[\"lE\",\"path\",\"costmap\",\"ccord\",\"inCollision\"],\"why\":\"goal in the blocked cell (1,4): Infinity cost, one-cell path, label text of Round[Infinity, 0.01] (K-BF-01)\"}"
+    },
+    {
+      "id": "H-BF-12",
+      "steps": [{"set":{"pConfigI":[3.315625,1.740625],"progress":0.0}}],
+      "capture": ["lS","costmap","path","ccord","inCollision"],
+      "why": "start in the blocked cell (1,4): the search still spreads (reference 18 cells, cost 22.740000000000002); at P 0 both glyphs red",
+      "source": "{\"id\":\"H-BF-12\",\"steps\":[{\"set\":{\"pConfigI\":[3.315625,1.740625],\"progress\":0.0}}],\"capture\":[\"lS\",\"costmap\",\"path\",\"ccord\",\"inCollision\"],\"why\":\"start in the blocked cell (1,4): the search still spreads (reference 18 cells, cost 22.740000000000002); at P 0 both glyphs red\"}"
+    },
+    {
+      "id": "H-BF-13",
+      "steps": [{"set":{"pConfigF":[4.5,0.0]}}],
+      "capture": ["lS","lE","path","costmap"],
+      "why": "goal = start: path {lS}, label 0.",
+      "source": "{\"id\":\"H-BF-13\",\"steps\":[{\"set\":{\"pConfigF\":[4.5,0.0]}}],\"capture\":[\"lS\",\"lE\",\"path\",\"costmap\"],\"why\":\"goal = start: path {lS}, label 0.\"}"
+    },
+    {
+      "id": "H-BF-14",
+      "steps": [{"set":{"pConfigI":[4.5,-2.05]}}],
+      "capture": ["pConfigI","pS","lS","parents","costmap","path","ccord","%messages"],
+      "why": "start dragged below the bottom edge: applyTorus gives exactly y = yMax; row 1 if a/b = a*(1/b), row 0 with Set::shape and Part errors if a true division (K-BF-03) - decides cellOf's division",
+      "source": "{\"id\":\"H-BF-14\",\"steps\":[{\"set\":{\"pConfigI\":[4.5,-2.05]}}],\"capture\":[\"pConfigI\",\"pS\",\"lS\",\"parents\",\"costmap\",\"path\",\"ccord\",\"%messages\"],\"why\":\"start dragged below the bottom edge: applyTorus gives exactly y = yMax; row 1 if a/b = a*(1/b), row 0 with Set::shape and Part errors if a true division (K-BF-03) - decides cellOf's division\"}"
+    },
+    {
+      "id": "H-BF-15",
+      "steps": [{"set":{"pConfigI":[2.85,0.0],"pConfigF":[6.75,1.85]}}],
+      "capture": ["pConfigI","pConfigF","lS","lE"],
+      "why": "applyTorus on both locators: {6.699999999999999, 0.} -> lS {16,32}; {2.9, -2} -> lE {32,1}",
+      "source": "{\"id\":\"H-BF-15\",\"steps\":[{\"set\":{\"pConfigI\":[2.85,0.0],\"pConfigF\":[6.75,1.85]}}],\"capture\":[\"pConfigI\",\"pConfigF\",\"lS\",\"lE\"],\"why\":\"applyTorus on both locators: {6.699999999999999, 0.} -> lS {16,32}; {2.9, -2} -> lE {32,1}\"}"
+    },
+    {
+      "id": "H-BF-16",
+      "steps": [{"set":{}},{"set":{"freeConfigSpace":[[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0]],"updatedCspace":true,"pConfigI":[5.1,-0.4],"pConfigF":[3.8,1.5]}}],
+      "capture": ["lS","lE","costmap","parents","path"],
+      "why": "tolerant Greater: lvl(1,2) = 3.8200000000000003 via (6,3), path {4,4},{5,4},{6,3},{1,2}, label 4. (Q-BF-02)",
+      "source": "{\"id\":\"H-BF-16\",\"steps\":[{\"set\":{}},{\"set\":{\"freeConfigSpace\":[[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0]],\"updatedCspace\":true,\"pConfigI\":[5.1,-0.4],\"pConfigF\":[3.8,1.5]}}],\"capture\":[\"lS\",\"lE\",\"costmap\",\"parents\",\"path\"],\"why\":\"tolerant Greater: lvl(1,2) = 3.8200000000000003 via (6,3), path {4,4},{5,4},{6,3},{1,2}, label 4. (Q-BF-02)\"}"
+    },
+    {
+      "id": "H-BF-17",
+      "steps": [{"set":{}},{"set":{"freeConfigSpace":[[0,0,0,0,0],[0,0,-1,0,0],[0,-1,0,0,0],[0,0,0,0,0],[0,0,0,0,0]],"updatedCspace":true,"pConfigI":[4.8,-0.1],"pConfigF":[4.04,0.66]}}],
+      "capture": ["lS","lE","costmap","parents","path"],
+      "why": "corner cutting: path {3,3},{2,2}, label 1.77 (Q-BF-03)",
+      "source": "{\"id\":\"H-BF-17\",\"steps\":[{\"set\":{}},{\"set\":{\"freeConfigSpace\":[[0,0,0,0,0],[0,0,-1,0,0],[0,-1,0,0,0],[0,0,0,0,0],[0,0,0,0,0]],\"updatedCspace\":true,\"pConfigI\":[4.8,-0.1],\"pConfigF\":[4.04,0.66]}}],\"capture\":[\"lS\",\"lE\",\"costmap\",\"parents\",\"path\"],\"why\":\"corner cutting: path {3,3},{2,2}, label 1.77 (Q-BF-03)\"}"
+    },
+    {
+      "id": "H-BF-18",
+      "steps": [{"set":{}},{"set":{"freeConfigSpace":[[0,-1,0,0,-1],[-1,-1,0,0,-1],[0,0,0,0,0],[0,0,0,0,0],[-1,-1,0,0,-1]],"updatedCspace":true,"pConfigI":[4.8,-0.1],"pConfigF":[3.28,1.42]}}],
+      "capture": ["lE","costmap","path","costmapcolor"],
+      "why": "free but enclosed goal (1,1): Infinity, dark red like an obstacle, path {1,1} (Q-BF-05, Q-BF-10)",
+      "source": "{\"id\":\"H-BF-18\",\"steps\":[{\"set\":{}},{\"set\":{\"freeConfigSpace\":[[0,-1,0,0,-1],[-1,-1,0,0,-1],[0,0,0,0,0],[0,0,0,0,0],[-1,-1,0,0,-1]],\"updatedCspace\":true,\"pConfigI\":[4.8,-0.1],\"pConfigF\":[3.28,1.42]}}],\"capture\":[\"lE\",\"costmap\",\"path\",\"costmapcolor\"],\"why\":\"free but enclosed goal (1,1): Infinity, dark red like an obstacle, path {1,1} (Q-BF-05, Q-BF-10)\"}"
+    },
+    {
+      "id": "H-BF-19",
+      "steps": [{"set":{}},{"set":{"freeConfigSpace":[[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0]],"updatedCspace":true,"pConfigI":[5.1,-0.4],"pConfigF":[3.2,1.5]}}],
+      "capture": ["costmap","path","costmapcolor"],
+      "why": "goal on the unique farthest cell (1,1), 4.2299999999999995: the Raster greys show which maximum ArrayPlot uses after path colouring (K-BF-02)",
+      "source": "{\"id\":\"H-BF-19\",\"steps\":[{\"set\":{}},{\"set\":{\"freeConfigSpace\":[[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0]],\"updatedCspace\":true,\"pConfigI\":[5.1,-0.4],\"pConfigF\":[3.2,1.5]}}],\"capture\":[\"costmap\",\"path\",\"costmapcolor\"],\"why\":\"goal on the unique farthest cell (1,1), 4.2299999999999995: the Raster greys show which maximum ArrayPlot uses after path colouring (K-BF-02)\"}"
+    },
+    {
+      "id": "H-BF-20",
+      "steps": [{"set":{"pObs":[1.0,1.0]},"controlActive":true}],
+      "capture": ["freeConfigSpace","highRes","lS","lE","path"],
+      "why": "obstacle drag: 8 x 8 grid, search and path on it (reference: 4 blocked, lS {4,4}, lE {4,6}, 3 cells)",
+      "source": "{\"id\":\"H-BF-20\",\"steps\":[{\"set\":{\"pObs\":[1.0,1.0]},\"controlActive\":true}],\"capture\":[\"freeConfigSpace\",\"highRes\",\"lS\",\"lE\",\"path\"],\"why\":\"obstacle drag: 8 x 8 grid, search and path on it (reference: 4 blocked, lS {4,4}, lE {4,6}, 3 cells)\"}"
+    },
+    {
+      "id": "H-BF-21",
+      "steps": [{"set":{"pObs":[1.0,1.0]},"controlActive":true},{"set":{}}],
+      "capture": ["freeConfigSpace","highRes","lS","lE","path"],
+      "why": "release: 32 x 32 grid, search and path redone, highRes True",
+      "source": "{\"id\":\"H-BF-21\",\"steps\":[{\"set\":{\"pObs\":[1.0,1.0]},\"controlActive\":true},{\"set\":{}}],\"capture\":[\"freeConfigSpace\",\"highRes\",\"lS\",\"lE\",\"path\"],\"why\":\"release: 32 x 32 grid, search and path redone, highRes True\"}"
+    },
+    {
+      "id": "H-BF-22",
+      "steps": [{"set":{"pConfigF":[5.5,-2.05]}}],
+      "capture": ["pConfigF","pE","lE","path","ccord","%messages","%text"],
+      "why": "goal dragged below the bottom edge: lE row 1 (a*(1/b)) or row 0 with Part errors in getShortestPath (true division), K-BF-03",
+      "source": "{\"id\":\"H-BF-22\",\"steps\":[{\"set\":{\"pConfigF\":[5.5,-2.05]}}],\"capture\":[\"pConfigF\",\"pE\",\"lE\",\"path\",\"ccord\",\"%messages\",\"%text\"],\"why\":\"goal dragged below the bottom edge: lE row 1 (a*(1/b)) or row 0 with Part errors in getShortestPath (true division), K-BF-03\"}"
+    },
+    {
+      "id": "H-BF-23",
+      "steps": [{"set":{}}],
+      "capture": ["freeConfigSpace","costmap","path","lS","lE","updatedCspace","updatedcostmap","resolution","%text"],
+      "why": "the initial settings compute nothing: resolution unassigned, stored arrays kept, label 1.57 (F-BF-14, D-BF-08)",
+      "source": "{\"id\":\"H-BF-23\",\"steps\":[{\"set\":{}}],\"capture\":[\"freeConfigSpace\",\"costmap\",\"path\",\"lS\",\"lE\",\"updatedCspace\",\"updatedcostmap\",\"resolution\",\"%text\"],\"why\":\"the initial settings compute nothing: resolution unassigned, stored arrays kept, label 1.57 (F-BF-14, D-BF-08)\"}"
+    }
+  ]
+}

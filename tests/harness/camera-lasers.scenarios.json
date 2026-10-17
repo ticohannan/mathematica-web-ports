@@ -1,0 +1,131 @@
+{
+  "schema": "manipulate-harness/scenarios-1",
+  "app": "camera-lasers",
+  "notebook": "Demonstration-Measuring-Distance-and-Orientation-Using-Camera-and-Lasers-1-0-0-definition.nb",
+  "notebookSha256": "7c122719202ab9f5226b81dda62d612597b0b7e5422985434c229ce061d5892a",
+  "source": "_internal/batch-ab/design/camera-lasers/TESTPLAN.md",
+  "generatedBy": "tools/harness/extract-scenarios.mjs",
+  "scenarios": [
+    {
+      "id": "H-CL-01",
+      "steps": [{"set":{"p":"wl:{3,-1/5}","pFixed":"wl:{3,-1/5}","p1":[1,0],"s":1,"λ":0.5}},{"set":{}}],
+      "captureEachStep": true,
+      "capture": ["sc","θ","objectPts","InterPt1","InterPt2","InterPt3D1","InterPt3D2","p","pFixed","%text","%primitives"],
+      "why": "the opening state, computed exactly by the original (rational p): reference for D-CL-01 and the label exactness",
+      "source": "{\"id\":\"H-CL-01\",\"steps\":[{\"set\":{\"p\":\"wl:{3,-1/5}\",\"pFixed\":\"wl:{3,-1/5}\",\"p1\":[1,0],\"s\":1,\"λ\":0.5}},{\"set\":{}}],\"captureEachStep\":true,\"capture\":[\"sc\",\"θ\",\"objectPts\",\"InterPt1\",\"InterPt2\",\"InterPt3D1\",\"InterPt3D2\",\"p\",\"pFixed\",\"%text\",\"%primitives\"],\"why\":\"the opening state, computed exactly by the original (rational p): reference for D-CL-01 and the label exactness\"}"
+    },
+    {
+      "id": "H-CL-02",
+      "steps": [{"set":{"p":[6.94,-0.040000000000000036],"pFixed":[6.94,-0.040000000000000036],"p1":[1.0,0.0],"s":1,"λ":0.5}}],
+      "capture": ["θ","objectPts","InterPt1","InterPt2","InterPt3D1","InterPt3D2","%primitives"],
+      "why": "snapshot 2 setting (machine p, machine p1)",
+      "source": "{\"id\":\"H-CL-02\",\"steps\":[{\"set\":{\"p\":[6.94,-0.040000000000000036],\"pFixed\":[6.94,-0.040000000000000036],\"p1\":[1.0,0.0],\"s\":1,\"λ\":0.5}}],\"capture\":[\"θ\",\"objectPts\",\"InterPt1\",\"InterPt2\",\"InterPt3D1\",\"InterPt3D2\",\"%primitives\"],\"why\":\"snapshot 2 setting (machine p, machine p1)\"}"
+    },
+    {
+      "id": "H-CL-03",
+      "steps": [{"set":{"p":[6.94,-0.040000000000000036],"pFixed":[6.94,-0.040000000000000036],"p1":[0.49613893835683376,-0.8682431421244592],"s":0.65,"λ":0.5}}],
+      "capture": ["sc","θ","objectPts","InterPt1","InterPt2","InterPt3D1","InterPt3D2","%text","%primitives"],
+      "why": "snapshot 3 setting: sc 1/2 with fraction labels, two visible faces",
+      "source": "{\"id\":\"H-CL-03\",\"steps\":[{\"set\":{\"p\":[6.94,-0.040000000000000036],\"pFixed\":[6.94,-0.040000000000000036],\"p1\":[0.49613893835683376,-0.8682431421244592],\"s\":0.65,\"λ\":0.5}}],\"capture\":[\"sc\",\"θ\",\"objectPts\",\"InterPt1\",\"InterPt2\",\"InterPt3D1\",\"InterPt3D2\",\"%text\",\"%primitives\"],\"why\":\"snapshot 3 setting: sc 1/2 with fraction labels, two visible faces\"}"
+    },
+    {
+      "id": "H-CL-04",
+      "steps": [{"set":{"p":[5.18,1.0099999999999998],"pFixed":[5.18,1.0099999999999998],"p1":[0.7607566910198931,-0.6490371769540347],"s":1,"λ":0.5}}],
+      "capture": ["θ","objectPts","InterPt1","InterPt2","InterPt3D1","InterPt3D2","%primitives"],
+      "why": "snapshot 4 setting: one laser misses",
+      "source": "{\"id\":\"H-CL-04\",\"steps\":[{\"set\":{\"p\":[5.18,1.0099999999999998],\"pFixed\":[5.18,1.0099999999999998],\"p1\":[0.7607566910198931,-0.6490371769540347],\"s\":1,\"λ\":0.5}}],\"capture\":[\"θ\",\"objectPts\",\"InterPt1\",\"InterPt2\",\"InterPt3D1\",\"InterPt3D2\",\"%primitives\"],\"why\":\"snapshot 4 setting: one laser misses\"}"
+    },
+    {
+      "id": "H-CL-05",
+      "steps": [{"set":{"λ":0.1,"s":0.1}},{"set":{"s":0.99}},{"set":{"s":1.0}},{"set":{"λ":0.5,"s":0.2}},{"set":{"s":0.49}},{"set":{"s":0.5}},{"set":{"s":0.65}},{"set":{"s":1.0}},{"set":{"λ":2.0,"s":2.0}}],
+      "captureEachStep": true,
+      "capture": ["sc","%text"],
+      "why": "every Piecewise branch and its boundaries (0.1, 0.25, 0.5 reached exactly), exact versus machine tick labels",
+      "source": "{\"id\":\"H-CL-05\",\"steps\":[{\"set\":{\"λ\":0.1,\"s\":0.1}},{\"set\":{\"s\":0.99}},{\"set\":{\"s\":1.0}},{\"set\":{\"λ\":0.5,\"s\":0.2}},{\"set\":{\"s\":0.49}},{\"set\":{\"s\":0.5}},{\"set\":{\"s\":0.65}},{\"set\":{\"s\":1.0}},{\"set\":{\"λ\":2.0,\"s\":2.0}}],\"captureEachStep\":true,\"capture\":[\"sc\",\"%text\"],\"why\":\"every Piecewise branch and its boundaries (0.1, 0.25, 0.5 reached exactly), exact versus machine tick labels\"}"
+    },
+    {
+      "id": "H-CL-06",
+      "steps": [{"set":{"λ":0.5}},{"set":{"λ":0.24}},{"set":{"λ":1.2}},{"set":{"λ":0.4}},{"set":{"λ":2.0}}],
+      "captureEachStep": true,
+      "capture": ["%g","%primitives"],
+      "why": "Round[20 λ] and Round[3/λ] at exact halves (12.5, 2.5, 7.5, 1.5): half to even",
+      "source": "{\"id\":\"H-CL-06\",\"steps\":[{\"set\":{\"λ\":0.5}},{\"set\":{\"λ\":0.24}},{\"set\":{\"λ\":1.2}},{\"set\":{\"λ\":0.4}},{\"set\":{\"λ\":2.0}}],\"captureEachStep\":true,\"capture\":[\"%g\",\"%primitives\"],\"why\":\"Round[20 λ] and Round[3/λ] at exact halves (12.5, 2.5, 7.5, 1.5): half to even\"}"
+    },
+    {
+      "id": "H-CL-07",
+      "steps": [{"set":{"p1":[1,0]}},{"set":{"p1":"wl:{Cos[Pi/32],Sin[Pi/32]}"}},{"set":{"p1":"wl:{Cos[Pi/16],Sin[Pi/16]}"}},{"set":{"p1":"wl:{Cos[Pi/4],Sin[Pi/4]}"}},{"set":{"p1":"wl:{Cos[Pi/2],Sin[Pi/2]}"}},{"set":{"p1":"wl:{Cos[31 Pi/32],Sin[31 Pi/32]}"}},{"set":{"p1":"wl:{Cos[-Pi/32],Sin[-Pi/32]}"}},{"set":{"p1":"wl:{Cos[-Pi/2],Sin[-Pi/2]}"}},{"set":{"p1":"wl:{Cos[-Pi],Sin[-Pi]}"}}],
+      "captureEachStep": true,
+      "capture": ["θ","objectPts","InterPt1","InterPt2","%text"],
+      "why": "exact dial values as the current dial sets them: θ exact or not (K-CL-02), the π/16 label threshold, θ in [0, 2π)",
+      "source": "{\"id\":\"H-CL-07\",\"steps\":[{\"set\":{\"p1\":[1,0]}},{\"set\":{\"p1\":\"wl:{Cos[Pi/32],Sin[Pi/32]}\"}},{\"set\":{\"p1\":\"wl:{Cos[Pi/16],Sin[Pi/16]}\"}},{\"set\":{\"p1\":\"wl:{Cos[Pi/4],Sin[Pi/4]}\"}},{\"set\":{\"p1\":\"wl:{Cos[Pi/2],Sin[Pi/2]}\"}},{\"set\":{\"p1\":\"wl:{Cos[31 Pi/32],Sin[31 Pi/32]}\"}},{\"set\":{\"p1\":\"wl:{Cos[-Pi/32],Sin[-Pi/32]}\"}},{\"set\":{\"p1\":\"wl:{Cos[-Pi/2],Sin[-Pi/2]}\"}},{\"set\":{\"p1\":\"wl:{Cos[-Pi],Sin[-Pi]}\"}}],\"captureEachStep\":true,\"capture\":[\"θ\",\"objectPts\",\"InterPt1\",\"InterPt2\",\"%text\"],\"why\":\"exact dial values as the current dial sets them: θ exact or not (K-CL-02), the π/16 label threshold, θ in [0, 2π)\"}"
+    },
+    {
+      "id": "H-CL-08",
+      "steps": [{"set":{"p":[5.0,-4.0]}},{"set":{"p":[5.0,-3.99]}},{"set":{"p":[5.0,-4.5]}}],
+      "captureEachStep": true,
+      "capture": ["p","pFixed","objectPts"],
+      "why": "locator rule: y <= -4 restores pFixed, otherwise pFixed follows p",
+      "source": "{\"id\":\"H-CL-08\",\"steps\":[{\"set\":{\"p\":[5.0,-4.0]}},{\"set\":{\"p\":[5.0,-3.99]}},{\"set\":{\"p\":[5.0,-4.5]}}],\"captureEachStep\":true,\"capture\":[\"p\",\"pFixed\",\"objectPts\"],\"why\":\"locator rule: y <= -4 restores pFixed, otherwise pFixed follows p\"}"
+    },
+    {
+      "id": "H-CL-09",
+      "steps": [{"set":{"p":[8.0,0.0],"p1":"wl:{0,1}"}}],
+      "capture": ["InterPt1","InterPt2","InterPt3D1","InterPt3D2","%primitives"],
+      "why": "both lasers miss: InterPt {10000, ±1}, tiny PointSize",
+      "source": "{\"id\":\"H-CL-09\",\"steps\":[{\"set\":{\"p\":[8.0,0.0],\"p1\":\"wl:{0,1}\"}}],\"capture\":[\"InterPt1\",\"InterPt2\",\"InterPt3D1\",\"InterPt3D2\",\"%primitives\"],\"why\":\"both lasers miss: InterPt {10000, ±1}, tiny PointSize\"}"
+    },
+    {
+      "id": "H-CL-10",
+      "steps": [{"set":{"p":"wl:{3,-1}","p1":[1,0]}},{"set":{"p":[3.0,-1.0]}}],
+      "captureEachStep": true,
+      "capture": ["InterPt1","InterPt2","objectPts"],
+      "why": "laser along the top edge (parallel, ignored) hitting the front corner; exact and machine p",
+      "source": "{\"id\":\"H-CL-10\",\"steps\":[{\"set\":{\"p\":\"wl:{3,-1}\",\"p1\":[1,0]}},{\"set\":{\"p\":[3.0,-1.0]}}],\"captureEachStep\":true,\"capture\":[\"InterPt1\",\"InterPt2\",\"objectPts\"],\"why\":\"laser along the top edge (parallel, ignored) hitting the front corner; exact and machine p\"}"
+    },
+    {
+      "id": "H-CL-11",
+      "steps": [{"set":{"p":"wl:{1/2,0}","p1":[1,0]}},{"set":{"p":[0.5,0.0]}},{"set":{"p":[0.55,0.0],"s":0.1}}],
+      "captureEachStep": true,
+      "capture": ["InterPt1","InterPt2","InterPt3D1","%primitives","%messages"],
+      "why": "face at x = 0 (division by zero, K-CL-03) and at x = 0.05 (PointSize 2, Q-CL-05)",
+      "source": "{\"id\":\"H-CL-11\",\"steps\":[{\"set\":{\"p\":\"wl:{1/2,0}\",\"p1\":[1,0]}},{\"set\":{\"p\":[0.5,0.0]}},{\"set\":{\"p\":[0.55,0.0],\"s\":0.1}}],\"captureEachStep\":true,\"capture\":[\"InterPt1\",\"InterPt2\",\"InterPt3D1\",\"%primitives\",\"%messages\"],\"why\":\"face at x = 0 (division by zero, K-CL-03) and at x = 0.05 (PointSize 2, Q-CL-05)\"}"
+    },
+    {
+      "id": "H-CL-12",
+      "steps": [{"set":{"p":[0.2,0.0],"p1":"wl:{Cos[Pi/4],Sin[Pi/4]}"}}],
+      "capture": ["objectPts","InterPt1","InterPt2","%primitives","%messages"],
+      "why": "object reaching behind the camera: Max[0.001, z] in the projection, faces with negative depth",
+      "source": "{\"id\":\"H-CL-12\",\"steps\":[{\"set\":{\"p\":[0.2,0.0],\"p1\":\"wl:{Cos[Pi/4],Sin[Pi/4]}\"}}],\"capture\":[\"objectPts\",\"InterPt1\",\"InterPt2\",\"%primitives\",\"%messages\"],\"why\":\"object reaching behind the camera: Max[0.001, z] in the projection, faces with negative depth\"}"
+    },
+    {
+      "id": "H-CL-13",
+      "steps": [{"set":{"s":2.0}},{"set":{"s":0.1}}],
+      "captureEachStep": true,
+      "capture": ["sc","InterPt1","InterPt2","%text"],
+      "why": "laser spacing extremes: lasers outside the object, reticule positions",
+      "source": "{\"id\":\"H-CL-13\",\"steps\":[{\"set\":{\"s\":2.0}},{\"set\":{\"s\":0.1}}],\"captureEachStep\":true,\"capture\":[\"sc\",\"InterPt1\",\"InterPt2\",\"%text\"],\"why\":\"laser spacing extremes: lasers outside the object, reticule positions\"}"
+    },
+    {
+      "id": "H-CL-14",
+      "steps": [{"set":{"λ":0.1}},{"set":{"λ":2.0}}],
+      "captureEachStep": true,
+      "capture": ["sc","InterPt3D1","%g","%primitives"],
+      "why": "focal length extremes: field of view, grid counts 2/61 and 40/5",
+      "source": "{\"id\":\"H-CL-14\",\"steps\":[{\"set\":{\"λ\":0.1}},{\"set\":{\"λ\":2.0}}],\"captureEachStep\":true,\"capture\":[\"sc\",\"InterPt3D1\",\"%g\",\"%primitives\"],\"why\":\"focal length extremes: field of view, grid counts 2/61 and 40/5\"}"
+    },
+    {
+      "id": "H-CL-15",
+      "steps": [{"set":{"p1":"wl:{-1,0}"}}],
+      "capture": ["θ","objectPts","%text","%primitives"],
+      "why": "θ = π: half-circle arc and the θ label at p + 1.5 {-1, 0}",
+      "source": "{\"id\":\"H-CL-15\",\"steps\":[{\"set\":{\"p1\":\"wl:{-1,0}\"}}],\"capture\":[\"θ\",\"objectPts\",\"%text\",\"%primitives\"],\"why\":\"θ = π: half-circle arc and the θ label at p + 1.5 {-1, 0}\"}"
+    },
+    {
+      "id": "H-CL-16",
+      "steps": [{"set":{}}],
+      "capture": ["wl:Nearest[Table[{Cos@a,Sin@a},{a,-Pi,Pi,Pi/32}],{0.,0.}]","wl:Nearest[N[Table[{Cos@a,Sin@a},{a,-Pi,Pi,Pi/32}]],{0.,0.}]","wl:Position[Table[{Cos@a,Sin@a},{a,-Pi,Pi,Pi/32}],First@Nearest[Table[{Cos@a,Sin@a},{a,-Pi,Pi,Pi/32}],{0.,0.}]]"],
+      "why": "the dial setter at the exact centre: which of the 65 exact points Nearest returns (not all equidistant in machine arithmetic, K-CL-09)",
+      "source": "{\"id\":\"H-CL-16\",\"steps\":[{\"set\":{}}],\"capture\":[\"wl:Nearest[Table[{Cos@a,Sin@a},{a,-Pi,Pi,Pi/32}],{0.,0.}]\",\"wl:Nearest[N[Table[{Cos@a,Sin@a},{a,-Pi,Pi,Pi/32}]],{0.,0.}]\",\"wl:Position[Table[{Cos@a,Sin@a},{a,-Pi,Pi,Pi/32}],First@Nearest[Table[{Cos@a,Sin@a},{a,-Pi,Pi,Pi/32}],{0.,0.}]]\"],\"why\":\"the dial setter at the exact centre: which of the 65 exact points Nearest returns (not all equidistant in machine arithmetic, K-CL-09)\"}"
+    }
+  ]
+}

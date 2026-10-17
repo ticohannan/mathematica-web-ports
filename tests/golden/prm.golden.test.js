@@ -9,6 +9,7 @@ import fs from 'node:fs';
 import { evaluate, initialState, makePolys, connectPoints, DELTA } from '../../demos/prm/model.js';
 import { ptInPolys, toroidDist } from '../../demos/common/prm-core.js';
 import { replayRng } from '../../shared/random.js';
+import { loadStates, plain } from '../../tools/lib/wl-json.mjs';
 
 const saved = JSON.parse(fs.readFileSync('tests/golden/prm.original-state.json', 'utf8')).state;
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
@@ -137,4 +138,54 @@ describe('prm golden (owner state 1, Mathematica 15.0.1)', () => {
     expect(view.qsn).not.toBe(null);
     expect(view.qfn).not.toBe(null);
   });
+});
+
+// ---- snapshot Settings (tests/golden/prm.original-states.json, tools/extract_state.py --snapshots): the five snapshot
+// cells store the full state behind docs/original-snapshots/prm-<k>.png: the original's samples, obstacles, roadmap and
+// query result. Snapshot 1 is the live state (tested above); snapshots 2-5 come from one session with 200 samples.
+const snapFx = loadStates('tests/golden/prm.original-states.json');
+const snapState = (k) => plain(snapFx.snapshots[k - 1]);
+// the label of each picture
+const LABELS = { 1: 'no path possible', 2: 'no path possible', 3: 'no path possible', 4: 'path length = 4.4', 5: 'path length = 4.36' };
+const labelText = (l) => (typeof l === 'string' ? l : `${l.prefix}${l.value}`);
+
+describe('prm golden: the five snapshot states', () => {
+  it('prm: snapshot 1: the Settings are the live state (550 samples, r = 0.14, no path)', () => {
+    expect(snapFx.count).toBe(5);
+    expect(snapState(1)).toEqual(saved);
+  });
+  for (const [k, title] of [
+    [2, 'prm: snapshot 2: polygons, free and colliding samples and the roadmap of radius r are rebuilt from the saved samples bit for bit'],
+    [3, 'prm: snapshot 3: polygons, free and colliding samples and the roadmap of radius r are rebuilt from the saved samples bit for bit'],
+    [4, 'prm: snapshot 4: polygons, free and colliding samples and the roadmap of radius r are rebuilt from the saved samples bit for bit'],
+    [5, 'prm: snapshot 5: polygons, free and colliding samples and the roadmap of radius r are rebuilt from the saved samples bit for bit'],
+  ]) {
+    it(title, () => {
+      const st = snapState(k);
+      expect(makePolys(st.polySides, st.polyXY)).toEqual(st.polys);
+      expect(st.pts.filter((p) => !ptInPolys(st.polys, p))).toEqual(st.goodPts);
+      expect(st.pts.filter((p) => ptInPolys(st.polys, p))).toEqual(st.badPts);
+      // a full rebuild from point 1 (what the body does when r changes) gives the saved edges and adjacency, in order
+      const [adj, edges] = st.r > 0 ? connectPoints(st.goodPts, st.goodPts.map(() => []), st.polys, DELTA, [], 1, st.r) : [st.goodPts.map(() => []), []];
+      expect(edges).toEqual(st.edgesNN);
+      expect(adj).toEqual(st.edgesNNadj);
+    });
+  }
+  for (const [k, title] of [
+    [2, 'prm: snapshot 2: evaluating the saved state reproduces the saved path, changes nothing and the label reads no path possible'],
+    [3, 'prm: snapshot 3: evaluating the saved state reproduces the saved path, changes nothing and the label reads no path possible'],
+    [4, 'prm: snapshot 4: evaluating the saved state reproduces the saved path, changes nothing and the label reads path length = 4.4'],
+    [5, 'prm: snapshot 5: evaluating the saved state reproduces the saved path, changes nothing and the label reads path length = 4.36'],
+  ]) {
+    it(title, () => {
+      const st = snapState(k);
+      const { state, view } = evaluate(JSON.parse(JSON.stringify(st)), replayRng({}));
+      expect(state).toEqual(st);
+      expect(labelText(view.label)).toBe(LABELS[k]);
+      // start and goal connect to their nearest free samples (magenta in every picture, also with r = 0)
+      expect(view.qsn).toEqual(st.goodPts[53]);
+      expect(view.qfn).toEqual(st.goodPts[126]);
+      if (Array.isArray(st.path)) expect([st.path[0], st.path[st.path.length - 1]]).toEqual([54, 127]);
+    });
+  }
 });

@@ -1,0 +1,143 @@
+{
+  "schema": "manipulate-harness/scenarios-1",
+  "app": "rrt",
+  "notebook": "Demonstration-Rapidly-Exploring-Random-Tree-RRT-and-RRT-1-0-0-definition.nb",
+  "notebookSha256": "50200ee5b7b55850261067a405070a6495c6f5b9fd90ba562f3378d1433558e0",
+  "source": "_internal/batch-ab/design/rrt/TESTPLAN.md",
+  "generatedBy": "tools/harness/extract-scenarios.mjs",
+  "scenarios": [
+    {
+      "id": "H-RT-01",
+      "steps": [{"set":{"verts":[[0.0,0.0],0,1,0,[]],"finalGoal":[18,-18],"finalGoalOld":[10,10],"goalRadius":1,"goalRadiusOld":-1,"treeType":"RRT","treeTypeOld":0,"obstacles":"narrow passage","obstaclesold":[],"explorationBias":0,"newrand":[],"path":[],"cost":[],"nodestoadd":0,"reachGoal":false}},{"set":{}}],
+      "captureEachStep": true,
+      "capture": ["verts","finalGoalOld","goalRadiusOld","treeTypeOld","obstaclesold","cost","path","newrand","reachGoal","nodestoadd","%text"],
+      "why": "the initial settings (stored Variables), set explicitly (verts as a single record, treeTypeOld 0): the first evaluation must give the saved live state, the second must change nothing (Q-RT-13)",
+      "source": "{\"id\":\"H-RT-01\",\"steps\":[{\"set\":{\"verts\":[[0.0,0.0],0,1,0,[]],\"finalGoal\":[18,-18],\"finalGoalOld\":[10,10],\"goalRadius\":1,\"goalRadiusOld\":-1,\"treeType\":\"RRT\",\"treeTypeOld\":0,\"obstacles\":\"narrow passage\",\"obstaclesold\":[],\"explorationBias\":0,\"newrand\":[],\"path\":[],\"cost\":[],\"nodestoadd\":0,\"reachGoal\":false}},{\"set\":{}}],\"captureEachStep\":true,\"capture\":[\"verts\",\"finalGoalOld\",\"goalRadiusOld\",\"treeTypeOld\",\"obstaclesold\",\"cost\",\"path\",\"newrand\",\"reachGoal\",\"nodestoadd\",\"%text\"],\"why\":\"the initial settings (stored Variables), set explicitly (verts as a single record, treeTypeOld 0): the first evaluation must give the saved live state, the second must change nothing (Q-RT-13)\"}"
+    },
+    {
+      "id": "H-RT-02",
+      "steps": [{"seed":101},{"press":"1"},{"settle":true},{"press":"1"},{"settle":true},{"press":"1"},{"settle":true}],
+      "captureEachStep": true,
+      "capture": ["verts","newrand","nodestoadd","reachGoal","$RandomDraws"],
+      "why": "single additions: draw order (RandomReal[] then RandomReal[{-20.,20.},2]), Round[..., 0.01] of each pair, unit steps from the root",
+      "source": "{\"id\":\"H-RT-02\",\"steps\":[{\"seed\":101},{\"press\":\"1\"},{\"settle\":true},{\"press\":\"1\"},{\"settle\":true},{\"press\":\"1\"},{\"settle\":true}],\"captureEachStep\":true,\"capture\":[\"verts\",\"newrand\",\"nodestoadd\",\"reachGoal\",\"$RandomDraws\"],\"why\":\"single additions: draw order (RandomReal[] then RandomReal[{-20.,20.},2]), Round[..., 0.01] of each pair, unit steps from the root\"}"
+    },
+    {
+      "id": "H-RT-03",
+      "steps": [{"seed":102},{"press":"10"},{"set":{}},{"set":{}},{"set":{}},{"set":{}},{"set":{}},{"set":{}}],
+      "captureEachStep": true,
+      "capture": ["wl:{Length[verts], nodestoadd}","$RandomDraws"],
+      "why": "the If plus While[nodestoadd > 5] rule: 5 nodes in the first evaluation, then one per evaluation (K-RT-04)",
+      "source": "{\"id\":\"H-RT-03\",\"steps\":[{\"seed\":102},{\"press\":\"10\"},{\"set\":{}},{\"set\":{}},{\"set\":{}},{\"set\":{}},{\"set\":{}},{\"set\":{}}],\"captureEachStep\":true,\"capture\":[\"wl:{Length[verts], nodestoadd}\",\"$RandomDraws\"],\"why\":\"the If plus While[nodestoadd > 5] rule: 5 nodes in the first evaluation, then one per evaluation (K-RT-04)\"}"
+    },
+    {
+      "id": "H-RT-04",
+      "steps": [{"set":{"treeType":"RRT","obstacles":"narrow passage","finalGoal":[-12.66,17.25],"goalRadius":2.5,"explorationBias":0.0}},{"settle":true},{"seed":103},{"press":"500"},{"settle":true},{"press":"500"},{"settle":true}],
+      "capture": ["verts","newrand","path","cost","reachGoal","nodestoadd","$RandomDraws","%text"],
+      "why": "snapshot 3 configuration: full RRT replay bit for bit; decides the Normalize model of 15.0.1 (K-RT-02) and Round (K-RT-03)",
+      "source": "{\"id\":\"H-RT-04\",\"steps\":[{\"set\":{\"treeType\":\"RRT\",\"obstacles\":\"narrow passage\",\"finalGoal\":[-12.66,17.25],\"goalRadius\":2.5,\"explorationBias\":0.0}},{\"settle\":true},{\"seed\":103},{\"press\":\"500\"},{\"settle\":true},{\"press\":\"500\"},{\"settle\":true}],\"capture\":[\"verts\",\"newrand\",\"path\",\"cost\",\"reachGoal\",\"nodestoadd\",\"$RandomDraws\",\"%text\"],\"why\":\"snapshot 3 configuration: full RRT replay bit for bit; decides the Normalize model of 15.0.1 (K-RT-02) and Round (K-RT-03)\"}"
+    },
+    {
+      "id": "H-RT-05",
+      "steps": [{"set":{"treeType":"Random Tree","obstacles":"narrow passage","finalGoal":[-12.66,17.25],"goalRadius":2.5,"explorationBias":0.0}},{"settle":true},{"seed":104},{"press":"500"},{"settle":true},{"press":"500"},{"settle":true}],
+      "capture": ["verts","newrand","path","cost","reachGoal","$RandomDraws","%text"],
+      "why": "snapshot 2 configuration: Random Tree with RandomInteger draws; Position of the drawn node",
+      "source": "{\"id\":\"H-RT-05\",\"steps\":[{\"set\":{\"treeType\":\"Random Tree\",\"obstacles\":\"narrow passage\",\"finalGoal\":[-12.66,17.25],\"goalRadius\":2.5,\"explorationBias\":0.0}},{\"settle\":true},{\"seed\":104},{\"press\":\"500\"},{\"settle\":true},{\"press\":\"500\"},{\"settle\":true}],\"capture\":[\"verts\",\"newrand\",\"path\",\"cost\",\"reachGoal\",\"$RandomDraws\",\"%text\"],\"why\":\"snapshot 2 configuration: Random Tree with RandomInteger draws; Position of the drawn node\"}"
+    },
+    {
+      "id": "H-RT-06",
+      "steps": [{"set":{"treeType":"ctl:treeType#3","obstacles":"narrow passage","finalGoal":[-12.66,17.25],"goalRadius":2.5,"explorationBias":0.0}},{"settle":true},{"seed":105},{"press":"500"},{"settle":true},{"press":"500"},{"settle":true}],
+      "capture": ["treeTypeOld","verts","newrand","path","cost","reachGoal","$RandomDraws","%text"],
+      "why": "snapshot 4 configuration: RRT* parent choice, Ordering, rewiring and updateCostToGo over a full run",
+      "source": "{\"id\":\"H-RT-06\",\"steps\":[{\"set\":{\"treeType\":\"ctl:treeType#3\",\"obstacles\":\"narrow passage\",\"finalGoal\":[-12.66,17.25],\"goalRadius\":2.5,\"explorationBias\":0.0}},{\"settle\":true},{\"seed\":105},{\"press\":\"500\"},{\"settle\":true},{\"press\":\"500\"},{\"settle\":true}],\"capture\":[\"treeTypeOld\",\"verts\",\"newrand\",\"path\",\"cost\",\"reachGoal\",\"$RandomDraws\",\"%text\"],\"why\":\"snapshot 4 configuration: RRT* parent choice, Ordering, rewiring and updateCostToGo over a full run\"}"
+    },
+    {
+      "id": "H-RT-07",
+      "steps": [{"set":{"treeType":"ctl:treeType#3","obstacles":"concave","finalGoal":[-12.66,17.25],"goalRadius":2.5,"explorationBias":0.0}},{"settle":true},{"seed":106},{"press":"500"},{"settle":true}],
+      "capture": ["treeTypeOld","verts","newrand","path","cost","reachGoal","$RandomDraws"],
+      "why": "snapshot 5 configuration: RRT* around the concave obstacle (ptInPoly never fires, Q-RT-01)",
+      "source": "{\"id\":\"H-RT-07\",\"steps\":[{\"set\":{\"treeType\":\"ctl:treeType#3\",\"obstacles\":\"concave\",\"finalGoal\":[-12.66,17.25],\"goalRadius\":2.5,\"explorationBias\":0.0}},{\"settle\":true},{\"seed\":106},{\"press\":\"500\"},{\"settle\":true}],\"capture\":[\"treeTypeOld\",\"verts\",\"newrand\",\"path\",\"cost\",\"reachGoal\",\"$RandomDraws\"],\"why\":\"snapshot 5 configuration: RRT* around the concave obstacle (ptInPoly never fires, Q-RT-01)\"}"
+    },
+    {
+      "id": "H-RT-08",
+      "steps": [{"set":{"treeType":"RRT","obstacles":"concave","finalGoal":[-12.66,17.25],"goalRadius":2.5,"explorationBias":0.0}},{"settle":true},{"seed":107},{"press":"500"},{"settle":true}],
+      "capture": ["verts","newrand","path","cost","reachGoal","$RandomDraws"],
+      "why": "snapshot 6 configuration: RRT leaving the C-shaped cavity",
+      "source": "{\"id\":\"H-RT-08\",\"steps\":[{\"set\":{\"treeType\":\"RRT\",\"obstacles\":\"concave\",\"finalGoal\":[-12.66,17.25],\"goalRadius\":2.5,\"explorationBias\":0.0}},{\"settle\":true},{\"seed\":107},{\"press\":\"500\"},{\"settle\":true}],\"capture\":[\"verts\",\"newrand\",\"path\",\"cost\",\"reachGoal\",\"$RandomDraws\"],\"why\":\"snapshot 6 configuration: RRT leaving the C-shaped cavity\"}"
+    },
+    {
+      "id": "H-RT-09",
+      "steps": [{"set":{"treeType":"RRT","obstacles":"sparse","explorationBias":0.0}},{"settle":true},{"seed":108},{"press":"200"},{"settle":true},{"set":{"treeType":"ctl:treeType#3"}},{"settle":true},{"press":"200"},{"settle":true}],
+      "captureEachStep": true,
+      "capture": ["verts","newrand","path","cost","reachGoal","treeTypeOld","$RandomDraws"],
+      "why": "the sparse squares (both orientations, corridors of width 2) for RRT and RRT*; the tree-type reset between them",
+      "source": "{\"id\":\"H-RT-09\",\"steps\":[{\"set\":{\"treeType\":\"RRT\",\"obstacles\":\"sparse\",\"explorationBias\":0.0}},{\"settle\":true},{\"seed\":108},{\"press\":\"200\"},{\"settle\":true},{\"set\":{\"treeType\":\"ctl:treeType#3\"}},{\"settle\":true},{\"press\":\"200\"},{\"settle\":true}],\"captureEachStep\":true,\"capture\":[\"verts\",\"newrand\",\"path\",\"cost\",\"reachGoal\",\"treeTypeOld\",\"$RandomDraws\"],\"why\":\"the sparse squares (both orientations, corridors of width 2) for RRT and RRT*; the tree-type reset between them\"}"
+    },
+    {
+      "id": "H-RT-10",
+      "steps": [{"set":{"treeType":"RRT","obstacles":"none","finalGoal":[18,-18],"goalRadius":1,"explorationBias":0.9}},{"settle":true},{"seed":109},{"press":"100"},{"settle":true}],
+      "capture": ["verts","newrand","path","cost","reachGoal","$RandomDraws"],
+      "why": "bias toward an integer goal: exact landing on the goal, duplicate nodes, Nearest returning several equal elements, Position finding the first copy (Q-RT-02, K-RT-01)",
+      "source": "{\"id\":\"H-RT-10\",\"steps\":[{\"set\":{\"treeType\":\"RRT\",\"obstacles\":\"none\",\"finalGoal\":[18,-18],\"goalRadius\":1,\"explorationBias\":0.9}},{\"settle\":true},{\"seed\":109},{\"press\":\"100\"},{\"settle\":true}],\"capture\":[\"verts\",\"newrand\",\"path\",\"cost\",\"reachGoal\",\"$RandomDraws\"],\"why\":\"bias toward an integer goal: exact landing on the goal, duplicate nodes, Nearest returning several equal elements, Position finding the first copy (Q-RT-02, K-RT-01)\"}"
+    },
+    {
+      "id": "H-RT-11",
+      "steps": [{"set":{"treeType":"ctl:treeType#3","obstacles":"none","finalGoal":[3.37,-2.81],"goalRadius":0.0,"explorationBias":0.5}},{"settle":true},{"seed":110},{"press":"200"},{"settle":true}],
+      "capture": ["treeTypeOld","verts","newrand","path","cost","reachGoal","$RandomDraws"],
+      "why": "RRT* with duplicates: equal dists+eucDist in Ordering, rewiring at zero distance, goal radius 0 reached only by an exact hit",
+      "source": "{\"id\":\"H-RT-11\",\"steps\":[{\"set\":{\"treeType\":\"ctl:treeType#3\",\"obstacles\":\"none\",\"finalGoal\":[3.37,-2.81],\"goalRadius\":0.0,\"explorationBias\":0.5}},{\"settle\":true},{\"seed\":110},{\"press\":\"200\"},{\"settle\":true}],\"capture\":[\"treeTypeOld\",\"verts\",\"newrand\",\"path\",\"cost\",\"reachGoal\",\"$RandomDraws\"],\"why\":\"RRT* with duplicates: equal dists+eucDist in Ordering, rewiring at zero distance, goal radius 0 reached only by an exact hit\"}"
+    },
+    {
+      "id": "H-RT-12",
+      "steps": [{"set":{"treeType":"Random Tree","obstacles":"none","finalGoal":[2.0,1.0],"goalRadius":0.5,"explorationBias":0.3}},{"settle":true},{"seed":111},{"press":"200"},{"settle":true}],
+      "capture": ["verts","newrand","path","cost","reachGoal","$RandomDraws"],
+      "why": "Random Tree with bias: RandomInteger index turned into a location and back (first copy of duplicates, Q-RT-05)",
+      "source": "{\"id\":\"H-RT-12\",\"steps\":[{\"set\":{\"treeType\":\"Random Tree\",\"obstacles\":\"none\",\"finalGoal\":[2.0,1.0],\"goalRadius\":0.5,\"explorationBias\":0.3}},{\"settle\":true},{\"seed\":111},{\"press\":\"200\"},{\"settle\":true}],\"capture\":[\"verts\",\"newrand\",\"path\",\"cost\",\"reachGoal\",\"$RandomDraws\"],\"why\":\"Random Tree with bias: RandomInteger index turned into a location and back (first copy of duplicates, Q-RT-05)\"}"
+    },
+    {
+      "id": "H-RT-13",
+      "steps": [{"set":{"finalGoal":[0.5,0.5],"goalRadius":1}},{"settle":true}],
+      "capture": ["reachGoal","cost","path","%text"],
+      "why": "root alone in the goal disk: cost is the exact 0; how Round[0, 0.01] prints in the label (K-RT-06)",
+      "source": "{\"id\":\"H-RT-13\",\"steps\":[{\"set\":{\"finalGoal\":[0.5,0.5],\"goalRadius\":1}},{\"settle\":true}],\"capture\":[\"reachGoal\",\"cost\",\"path\",\"%text\"],\"why\":\"root alone in the goal disk: cost is the exact 0; how Round[0, 0.01] prints in the label (K-RT-06)\"}"
+    },
+    {
+      "id": "H-RT-14",
+      "steps": [{"seed":112},{"press":"10"},{"settle":true},{"set":{"finalGoal":[0.5,0.5]}},{"settle":true},{"set":{"treeType":"Random Tree"}},{"settle":true},{"set":{"obstacles":"concave"}},{"settle":true}],
+      "captureEachStep": true,
+      "capture": ["verts","path","newrand","reachGoal","cost","treeTypeOld","obstaclesold"],
+      "why": "reset branch: verts, path, newrand, reachGoal reset, cost kept (Q-RT-06)",
+      "source": "{\"id\":\"H-RT-14\",\"steps\":[{\"seed\":112},{\"press\":\"10\"},{\"settle\":true},{\"set\":{\"finalGoal\":[0.5,0.5]}},{\"settle\":true},{\"set\":{\"treeType\":\"Random Tree\"}},{\"settle\":true},{\"set\":{\"obstacles\":\"concave\"}},{\"settle\":true}],\"captureEachStep\":true,\"capture\":[\"verts\",\"path\",\"newrand\",\"reachGoal\",\"cost\",\"treeTypeOld\",\"obstaclesold\"],\"why\":\"reset branch: verts, path, newrand, reachGoal reset, cost kept (Q-RT-06)\"}"
+    },
+    {
+      "id": "H-RT-15",
+      "steps": [{"set":{"treeType":"RRT","obstacles":"none"}},{"settle":true},{"seed":113},{"press":"200"},{"settle":true},{"set":{"finalGoal":[-5.0,5.0]}},{"settle":true},{"set":{"goalRadius":2.5}},{"settle":true},{"set":{"finalGoal":[19.0,19.0]}},{"settle":true}],
+      "captureEachStep": true,
+      "capture": ["path","cost","reachGoal","finalGoalOld","goalRadiusOld"],
+      "why": "goal-change branch: path and reachGoal reset and recomputed without new nodes",
+      "source": "{\"id\":\"H-RT-15\",\"steps\":[{\"set\":{\"treeType\":\"RRT\",\"obstacles\":\"none\"}},{\"settle\":true},{\"seed\":113},{\"press\":\"200\"},{\"settle\":true},{\"set\":{\"finalGoal\":[-5.0,5.0]}},{\"settle\":true},{\"set\":{\"goalRadius\":2.5}},{\"settle\":true},{\"set\":{\"finalGoal\":[19.0,19.0]}},{\"settle\":true}],\"captureEachStep\":true,\"capture\":[\"path\",\"cost\",\"reachGoal\",\"finalGoalOld\",\"goalRadiusOld\"],\"why\":\"goal-change branch: path and reachGoal reset and recomputed without new nodes\"}"
+    },
+    {
+      "id": "H-RT-16",
+      "steps": [{"set":{"treeType":"RRT","obstacles":"narrow passage","finalGoal":[5.5,-10.0],"goalRadius":1,"explorationBias":0.9}},{"settle":true},{"seed":114},{"press":"10"},{"settle":true}],
+      "capture": ["verts","newrand","reachGoal","$RandomDraws"],
+      "why": "goal inside wall 2: most attempts collide and are retried with new draws (Q-RT-10); the draw count must match",
+      "source": "{\"id\":\"H-RT-16\",\"steps\":[{\"set\":{\"treeType\":\"RRT\",\"obstacles\":\"narrow passage\",\"finalGoal\":[5.5,-10.0],\"goalRadius\":1,\"explorationBias\":0.9}},{\"settle\":true},{\"seed\":114},{\"press\":\"10\"},{\"settle\":true}],\"capture\":[\"verts\",\"newrand\",\"reachGoal\",\"$RandomDraws\"],\"why\":\"goal inside wall 2: most attempts collide and are retried with new draws (Q-RT-10); the draw count must match\"}"
+    },
+    {
+      "id": "H-RT-17",
+      "steps": [{"set":{"treeType":"ctl:treeType#3","obstacles":"narrow passage","finalGoal":[12.0,12.0],"goalRadius":1.5,"explorationBias":0.2}},{"settle":true},{"seed":115},{"press":"500"},{"settle":true},{"press":"500"},{"settle":true}],
+      "capture": ["treeTypeOld","verts","newrand","path","cost","reachGoal","$RandomDraws"],
+      "why": "RRT* with goal-biased samples through the narrow gaps: many rewires near the goal",
+      "source": "{\"id\":\"H-RT-17\",\"steps\":[{\"set\":{\"treeType\":\"ctl:treeType#3\",\"obstacles\":\"narrow passage\",\"finalGoal\":[12.0,12.0],\"goalRadius\":1.5,\"explorationBias\":0.2}},{\"settle\":true},{\"seed\":115},{\"press\":\"500\"},{\"settle\":true},{\"press\":\"500\"},{\"settle\":true}],\"capture\":[\"treeTypeOld\",\"verts\",\"newrand\",\"path\",\"cost\",\"reachGoal\",\"$RandomDraws\"],\"why\":\"RRT* with goal-biased samples through the narrow gaps: many rewires near the goal\"}"
+    },
+    {
+      "id": "H-RT-18",
+      "steps": [{"set":{"treeType":"ctl:treeType#3","obstacles":"narrow passage","explorationBias":0.0}},{"settle":true},{"seed":116},{"press":"500"},{"settle":true},{"press":"500"},{"settle":true},{"press":"500"},{"settle":true},{"press":"500"},{"settle":true}],
+      "captureEachStep": true,
+      "capture": ["wl:Length[verts]","wl:AbsoluteTime[]","%messages"],
+      "why": "kernel time of large RRT* batches (K-RT-05, N-RT-04) and deep updateCostToGo recursion (no $RecursionLimit messages expected)",
+      "source": "{\"id\":\"H-RT-18\",\"steps\":[{\"set\":{\"treeType\":\"ctl:treeType#3\",\"obstacles\":\"narrow passage\",\"explorationBias\":0.0}},{\"settle\":true},{\"seed\":116},{\"press\":\"500\"},{\"settle\":true},{\"press\":\"500\"},{\"settle\":true},{\"press\":\"500\"},{\"settle\":true},{\"press\":\"500\"},{\"settle\":true}],\"captureEachStep\":true,\"capture\":[\"wl:Length[verts]\",\"wl:AbsoluteTime[]\",\"%messages\"],\"why\":\"kernel time of large RRT* batches (K-RT-05, N-RT-04) and deep updateCostToGo recursion (no $RecursionLimit messages expected)\"}"
+    }
+  ]
+}

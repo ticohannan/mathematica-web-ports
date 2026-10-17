@@ -1,0 +1,199 @@
+{
+  "schema": "manipulate-harness/scenarios-1",
+  "app": "minkowski-sum",
+  "notebook": "Demonstration-Minkowski-Sum-of-Convex-Robot-and-Obstacle-1-0-0-definition.nb",
+  "notebookSha256": "27c1d60a273ea7420f449d39961ff4380342b43c7d6855dfe620b0803b2a5185",
+  "source": "_internal/batch-ab/design/minkowski-sum/TESTPLAN.md",
+  "generatedBy": "tools/harness/extract-scenarios.mjs",
+  "scenarios": [
+    {
+      "id": "H-MS-01",
+      "steps": [{"set":{}}],
+      "capture": ["pts","rl","ol","dl","c","s","robot","obstacle","rc","oc","robotNormal","obstacleNormal","orderOfNormals","pos","orderOfNormalsKeys","prev","minkowskiPoints","shiftedMink","minkRobotlinelist","minkObstlinelist","robotlabel","obstaclelabel","minkowskiRobotSidesLabels","minkowskiObstacleSidesLabels","discretPolygon","%plotRange"],
+      "why": "defaults: clamp of pts[[7]], hulls, Normalize model (K-MS-02), vector Total (K-MS-08), sort, merge, labels, dl 1017, bit for bit",
+      "source": "{\"id\":\"H-MS-01\",\"steps\":[{\"set\":{}}],\"capture\":[\"pts\",\"rl\",\"ol\",\"dl\",\"c\",\"s\",\"robot\",\"obstacle\",\"rc\",\"oc\",\"robotNormal\",\"obstacleNormal\",\"orderOfNormals\",\"pos\",\"orderOfNormalsKeys\",\"prev\",\"minkowskiPoints\",\"shiftedMink\",\"minkRobotlinelist\",\"minkObstlinelist\",\"robotlabel\",\"obstaclelabel\",\"minkowskiRobotSidesLabels\",\"minkowskiObstacleSidesLabels\",\"discretPolygon\",\"%plotRange\"],\"why\":\"defaults: clamp of pts[[7]], hulls, Normalize model (K-MS-02), vector Total (K-MS-08), sort, merge, labels, dl 1017, bit for bit\"}"
+    },
+    {
+      "id": "H-MS-02",
+      "steps": [{"set":{"m":5}}],
+      "capture": ["robot","rc","orderOfNormals","pos","minkowskiPoints","minkRobotlinelist","dl"],
+      "why": "robot pentagon with a y tie in the Graham sort (Q-MS-04), every robot setter value is covered by H-MS-01..08",
+      "source": "{\"id\":\"H-MS-02\",\"steps\":[{\"set\":{\"m\":5}}],\"capture\":[\"robot\",\"rc\",\"orderOfNormals\",\"pos\",\"minkowskiPoints\",\"minkRobotlinelist\",\"dl\"],\"why\":\"robot pentagon with a y tie in the Graham sort (Q-MS-04), every robot setter value is covered by H-MS-01..08\"}"
+    },
+    {
+      "id": "H-MS-03",
+      "steps": [{"set":{"m":4}}],
+      "capture": ["robot","rc","orderOfNormals","pos","minkowskiPoints","dl"],
+      "why": "robot edges 4",
+      "source": "{\"id\":\"H-MS-03\",\"steps\":[{\"set\":{\"m\":4}}],\"capture\":[\"robot\",\"rc\",\"orderOfNormals\",\"pos\",\"minkowskiPoints\",\"dl\"],\"why\":\"robot edges 4\"}"
+    },
+    {
+      "id": "H-MS-04",
+      "steps": [{"set":{"m":2,"n":4}}],
+      "capture": ["robot","obstacle","rc","oc","robotNormal","orderOfNormals","pos","minkowskiPoints","robotlabel","minkowskiRobotSidesLabels","minkowskiObstacleSidesLabels","dl"],
+      "why": "two-vertex robot (snapshot 4 configuration type): label offsets -0.65 and the 0.7 conditions",
+      "source": "{\"id\":\"H-MS-04\",\"steps\":[{\"set\":{\"m\":2,\"n\":4}}],\"capture\":[\"robot\",\"obstacle\",\"rc\",\"oc\",\"robotNormal\",\"orderOfNormals\",\"pos\",\"minkowskiPoints\",\"robotlabel\",\"minkowskiRobotSidesLabels\",\"minkowskiObstacleSidesLabels\",\"dl\"],\"why\":\"two-vertex robot (snapshot 4 configuration type): label offsets -0.65 and the 0.7 conditions\"}"
+    },
+    {
+      "id": "H-MS-05",
+      "steps": [{"set":{"m":2,"n":2}}],
+      "capture": ["robot","obstacle","orderOfNormals","pos","minkowskiPoints","robotlabel","obstaclelabel","minkowskiRobotSidesLabels","minkowskiObstacleSidesLabels","dl"],
+      "why": "both two-vertex: both 0.7 branches, obstacle edges 2",
+      "source": "{\"id\":\"H-MS-05\",\"steps\":[{\"set\":{\"m\":2,\"n\":2}}],\"capture\":[\"robot\",\"obstacle\",\"orderOfNormals\",\"pos\",\"minkowskiPoints\",\"robotlabel\",\"obstaclelabel\",\"minkowskiRobotSidesLabels\",\"minkowskiObstacleSidesLabels\",\"dl\"],\"why\":\"both two-vertex: both 0.7 branches, obstacle edges 2\"}"
+    },
+    {
+      "id": "H-MS-06",
+      "steps": [{"set":{"m":1}}],
+      "capture": ["robot","rl","rc","robotNormal","orderOfNormals","pos","minkowskiPoints","dl","%messages"],
+      "why": "point robot: where Sort puts the None angle, whether SequencePosition finds an alpha-beta pair (K-MS-01)",
+      "source": "{\"id\":\"H-MS-06\",\"steps\":[{\"set\":{\"m\":1}}],\"capture\":[\"robot\",\"rl\",\"rc\",\"robotNormal\",\"orderOfNormals\",\"pos\",\"minkowskiPoints\",\"dl\",\"%messages\"],\"why\":\"point robot: where Sort puts the None angle, whether SequencePosition finds an alpha-beta pair (K-MS-01)\"}"
+    },
+    {
+      "id": "H-MS-07",
+      "steps": [{"set":{"n":1}}],
+      "capture": ["obstacle","ol","oc","obstacleNormal","orderOfNormals","pos","minkowskiPoints","dl","%messages"],
+      "why": "point obstacle (K-MS-01)",
+      "source": "{\"id\":\"H-MS-07\",\"steps\":[{\"set\":{\"n\":1}}],\"capture\":[\"obstacle\",\"ol\",\"oc\",\"obstacleNormal\",\"orderOfNormals\",\"pos\",\"minkowskiPoints\",\"dl\",\"%messages\"],\"why\":\"point obstacle (K-MS-01)\"}"
+    },
+    {
+      "id": "H-MS-08",
+      "steps": [{"set":{"m":1,"n":1}}],
+      "capture": ["orderOfNormals","pos","minkowskiPoints","dl","%messages"],
+      "why": "None against None (K-MS-01)",
+      "source": "{\"id\":\"H-MS-08\",\"steps\":[{\"set\":{\"m\":1,\"n\":1}}],\"capture\":[\"orderOfNormals\",\"pos\",\"minkowskiPoints\",\"dl\",\"%messages\"],\"why\":\"None against None (K-MS-01)\"}"
+    },
+    {
+      "id": "H-MS-09",
+      "steps": [{"set":{"pts":[[0.5,2.0],[3.249,2.6],[2.298,3.298],[1.348,2.607],[1.71,1.489],[-1.71,1.489],[-1.347,2.607],[-2.298,3.298],[-3.249,2.607],[-2.885,1.489]]}}],
+      "capture": ["pts","robot","rc","orderOfNormals","pos","minkowskiPoints","dl"],
+      "why": "robot vertex dragged past the centre limit: clamp written back into pts",
+      "source": "{\"id\":\"H-MS-09\",\"steps\":[{\"set\":{\"pts\":[[0.5,2.0],[3.249,2.6],[2.298,3.298],[1.348,2.607],[1.71,1.489],[-1.71,1.489],[-1.347,2.607],[-2.298,3.298],[-3.249,2.607],[-2.885,1.489]]}}],\"capture\":[\"pts\",\"robot\",\"rc\",\"orderOfNormals\",\"pos\",\"minkowskiPoints\",\"dl\"],\"why\":\"robot vertex dragged past the centre limit: clamp written back into pts\"}"
+    },
+    {
+      "id": "H-MS-10",
+      "steps": [{"set":{"pts":[[2.885,1.489],[3.249,2.6],[2.298,3.298],[1.348,2.607],[1.71,1.489],[0.2,2.0],[-1.347,2.607],[-2.298,3.298],[-3.249,2.607],[-2.885,1.489]]}}],
+      "capture": ["pts","obstacle","oc","minkowskiPoints","dl"],
+      "why": "obstacle vertex dragged past the limit; two obstacle vertices then share x = -1.34704",
+      "source": "{\"id\":\"H-MS-10\",\"steps\":[{\"set\":{\"pts\":[[2.885,1.489],[3.249,2.6],[2.298,3.298],[1.348,2.607],[1.71,1.489],[0.2,2.0],[-1.347,2.607],[-2.298,3.298],[-3.249,2.607],[-2.885,1.489]]}}],\"capture\":[\"pts\",\"obstacle\",\"oc\",\"minkowskiPoints\",\"dl\"],\"why\":\"obstacle vertex dragged past the limit; two obstacle vertices then share x = -1.34704\"}"
+    },
+    {
+      "id": "H-MS-11",
+      "steps": [{"set":{"pts":[[1.0,1.6],[1.0,2.4],[1.0,3.1],[1.348,2.607],[1.71,1.489],[-1.71,1.489],[-1.347,2.607],[-2.298,3.298],[-3.249,2.607],[-2.885,1.489]]}}],
+      "capture": ["pts","robot","rl","rc","robotNormal","orderOfNormals","pos","minkowskiPoints","dl"],
+      "why": "three collinear robot vertices after the clamp: Graham Break branch, angle tie, zero area, Mean centroid",
+      "source": "{\"id\":\"H-MS-11\",\"steps\":[{\"set\":{\"pts\":[[1.0,1.6],[1.0,2.4],[1.0,3.1],[1.348,2.607],[1.71,1.489],[-1.71,1.489],[-1.347,2.607],[-2.298,3.298],[-3.249,2.607],[-2.885,1.489]]}}],\"capture\":[\"pts\",\"robot\",\"rl\",\"rc\",\"robotNormal\",\"orderOfNormals\",\"pos\",\"minkowskiPoints\",\"dl\"],\"why\":\"three collinear robot vertices after the clamp: Graham Break branch, angle tie, zero area, Mean centroid\"}"
+    },
+    {
+      "id": "H-MS-12",
+      "steps": [{"set":{"n":3,"pts":[[1.0,1.6],[1.0,2.4],[1.0,3.1],[1.348,2.607],[1.71,1.489],[-1.0,1.6],[-1.0,2.4],[-1.0,3.1],[-3.249,2.607],[-2.885,1.489]]}}],
+      "capture": ["robot","obstacle","rc","oc","orderOfNormals","pos","minkowskiPoints","minkRobotlinelist","minkObstlinelist","dl","%messages"],
+      "why": "collinear robot and obstacle: ties of normal angles between robot and obstacle, degenerate sum, obstacle edges 3",
+      "source": "{\"id\":\"H-MS-12\",\"steps\":[{\"set\":{\"n\":3,\"pts\":[[1.0,1.6],[1.0,2.4],[1.0,3.1],[1.348,2.607],[1.71,1.489],[-1.0,1.6],[-1.0,2.4],[-1.0,3.1],[-3.249,2.607],[-2.885,1.489]]}}],\"capture\":[\"robot\",\"obstacle\",\"rc\",\"oc\",\"orderOfNormals\",\"pos\",\"minkowskiPoints\",\"minkRobotlinelist\",\"minkObstlinelist\",\"dl\",\"%messages\"],\"why\":\"collinear robot and obstacle: ties of normal angles between robot and obstacle, degenerate sum, obstacle edges 3\"}"
+    },
+    {
+      "id": "H-MS-13",
+      "steps": [{"set":{"m":4,"n":4,"pts":[[1.5,1.6],[2.5,1.6],[2.5,2.6],[1.5,2.6],[1.71,1.489],[-1.5,1.6],[-2.5,1.6],[-2.5,2.6],[-1.5,2.6],[-2.885,1.489]]}}],
+      "capture": ["robot","obstacle","robotNormal","obstacleNormal","orderOfNormals","pos","orderOfNormalsKeys","minkowskiPoints","minkRobotlinelist","minkObstlinelist"],
+      "why": "exactly tied normal angles between robot and obstacle (parallel edges): Sort tie order and collinear vertices (Q-MS-04, Q-MS-07)",
+      "source": "{\"id\":\"H-MS-13\",\"steps\":[{\"set\":{\"m\":4,\"n\":4,\"pts\":[[1.5,1.6],[2.5,1.6],[2.5,2.6],[1.5,2.6],[1.71,1.489],[-1.5,1.6],[-2.5,1.6],[-2.5,2.6],[-1.5,2.6],[-2.885,1.489]]}}],\"capture\":[\"robot\",\"obstacle\",\"robotNormal\",\"obstacleNormal\",\"orderOfNormals\",\"pos\",\"orderOfNormalsKeys\",\"minkowskiPoints\",\"minkRobotlinelist\",\"minkObstlinelist\"],\"why\":\"exactly tied normal angles between robot and obstacle (parallel edges): Sort tie order and collinear vertices (Q-MS-04, Q-MS-07)\"}"
+    },
+    {
+      "id": "H-MS-14",
+      "steps": [{"set":{"pts":[[2.885,1.489],[2.885,1.489],[2.298,3.298],[1.348,2.607],[1.71,1.489],[-1.71,1.489],[-1.347,2.607],[-2.298,3.298],[-3.249,2.607],[-2.885,1.489]]}}],
+      "capture": ["robot","rl","rc","orderOfNormals","pos","minkowskiPoints","dl"],
+      "why": "two locators on the same point: DeleteDuplicates gives a two-vertex robot",
+      "source": "{\"id\":\"H-MS-14\",\"steps\":[{\"set\":{\"pts\":[[2.885,1.489],[2.885,1.489],[2.298,3.298],[1.348,2.607],[1.71,1.489],[-1.71,1.489],[-1.347,2.607],[-2.298,3.298],[-3.249,2.607],[-2.885,1.489]]}}],\"capture\":[\"robot\",\"rl\",\"rc\",\"orderOfNormals\",\"pos\",\"minkowskiPoints\",\"dl\"],\"why\":\"two locators on the same point: DeleteDuplicates gives a two-vertex robot\"}"
+    },
+    {
+      "id": "H-MS-15",
+      "steps": [{"set":{"pts":[[2.885,1.489],[2.8850000000000002,1.489],[2.298,3.298],[1.348,2.607],[1.71,1.489],[-1.71,1.489],[-1.347,2.607],[-2.298,3.298],[-3.249,2.607],[-2.885,1.489]]}}],
+      "capture": ["robot","rl"],
+      "why": "1-ulp near duplicate: SameQ tolerance of DeleteDuplicates (K-MS-03)",
+      "source": "{\"id\":\"H-MS-15\",\"steps\":[{\"set\":{\"pts\":[[2.885,1.489],[2.8850000000000002,1.489],[2.298,3.298],[1.348,2.607],[1.71,1.489],[-1.71,1.489],[-1.347,2.607],[-2.298,3.298],[-3.249,2.607],[-2.885,1.489]]}}],\"capture\":[\"robot\",\"rl\"],\"why\":\"1-ulp near duplicate: SameQ tolerance of DeleteDuplicates (K-MS-03)\"}"
+    },
+    {
+      "id": "H-MS-16",
+      "steps": [{"set":{"m":4,"pts":[[2.885,1.489],[3.249,2.6],[2.298,3.298],[2.8,2.5],[1.71,1.489],[-1.71,1.489],[-1.347,2.607],[-2.298,3.298],[-3.249,2.607],[-2.885,1.489]]}}],
+      "capture": ["robot","rl","minkowskiPoints","dl"],
+      "why": "interior robot point removed by the hull",
+      "source": "{\"id\":\"H-MS-16\",\"steps\":[{\"set\":{\"m\":4,\"pts\":[[2.885,1.489],[3.249,2.6],[2.298,3.298],[2.8,2.5],[1.71,1.489],[-1.71,1.489],[-1.347,2.607],[-2.298,3.298],[-3.249,2.607],[-2.885,1.489]]}}],\"capture\":[\"robot\",\"rl\",\"minkowskiPoints\",\"dl\"],\"why\":\"interior robot point removed by the hull\"}"
+    },
+    {
+      "id": "H-MS-17",
+      "steps": [{"set":{}},{"set":{"stableOrMove":"move around Minkowski"}},{"set":{"s":119}}],
+      "capture": ["c","s","dl","discretPolygon"],
+      "why": "move view: c False, robot at the second vertex; Graphics numbers give the robot polygon",
+      "source": "{\"id\":\"H-MS-17\",\"steps\":[{\"set\":{}},{\"set\":{\"stableOrMove\":\"move around Minkowski\"}},{\"set\":{\"s\":119}}],\"capture\":[\"c\",\"s\",\"dl\",\"discretPolygon\"],\"why\":\"move view: c False, robot at the second vertex; Graphics numbers give the robot polygon\"}"
+    },
+    {
+      "id": "H-MS-18",
+      "steps": [{"set":{}},{"set":{"stableOrMove":"move around Minkowski"}},{"set":{"s":1017}}],
+      "capture": ["c","s","dl"],
+      "why": "move view at s = dl: closing point equals the first vertex",
+      "source": "{\"id\":\"H-MS-18\",\"steps\":[{\"set\":{}},{\"set\":{\"stableOrMove\":\"move around Minkowski\"}},{\"set\":{\"s\":1017}}],\"capture\":[\"c\",\"s\",\"dl\"],\"why\":\"move view at s = dl: closing point equals the first vertex\"}"
+    },
+    {
+      "id": "H-MS-19",
+      "steps": [{"set":{}},{"set":{"stableOrMove":"move around Minkowski","s":300}},{"set":{"stableOrMove":"static"}}],
+      "capture": ["c","s"],
+      "why": "the static view resets s to 1 and c to True (Q-MS-08)",
+      "source": "{\"id\":\"H-MS-19\",\"steps\":[{\"set\":{}},{\"set\":{\"stableOrMove\":\"move around Minkowski\",\"s\":300}},{\"set\":{\"stableOrMove\":\"static\"}}],\"capture\":[\"c\",\"s\"],\"why\":\"the static view resets s to 1 and c to True (Q-MS-08)\"}"
+    },
+    {
+      "id": "H-MS-20",
+      "steps": [{"set":{}},{"set":{"c":"wl:False"}}],
+      "capture": ["c"],
+      "why": "enable locators unchecked: the body sets c = True again (Q-MS-03)",
+      "source": "{\"id\":\"H-MS-20\",\"steps\":[{\"set\":{}},{\"set\":{\"c\":\"wl:False\"}}],\"capture\":[\"c\"],\"why\":\"enable locators unchecked: the body sets c = True again (Q-MS-03)\"}"
+    },
+    {
+      "id": "H-MS-21",
+      "steps": [{"set":{"a":"wl:True"}}],
+      "capture": ["robotArrows","obstacleArrows","minkowskiSidesNormalArrows","sortedArrows"],
+      "why": "show normals: arrow lengths 0.45 and 0.5 and directions",
+      "source": "{\"id\":\"H-MS-21\",\"steps\":[{\"set\":{\"a\":\"wl:True\"}}],\"capture\":[\"robotArrows\",\"obstacleArrows\",\"minkowskiSidesNormalArrows\",\"sortedArrows\"],\"why\":\"show normals: arrow lengths 0.45 and 0.5 and directions\"}"
+    },
+    {
+      "id": "H-MS-22",
+      "steps": [{"set":{"a":"wl:True","n":3,"pts":[[1.34704,2.4],[3.249,1.489],[3.249,3.298],[1.348,2.607],[1.71,1.489],[-1.34704,2.4],[-3.249,1.489],[-3.249,3.298],[-3.249,2.607],[-2.885,1.489]]}}],
+      "capture": ["shiftedMink","minkowskiSidesNormalArrows","%plotRange"],
+      "why": "most spread-out robot and obstacle: the square still bounds the picture (K-MS-07)",
+      "source": "{\"id\":\"H-MS-22\",\"steps\":[{\"set\":{\"a\":\"wl:True\",\"n\":3,\"pts\":[[1.34704,2.4],[3.249,1.489],[3.249,3.298],[1.348,2.607],[1.71,1.489],[-1.34704,2.4],[-3.249,1.489],[-3.249,3.298],[-3.249,2.607],[-2.885,1.489]]}}],\"capture\":[\"shiftedMink\",\"minkowskiSidesNormalArrows\",\"%plotRange\"],\"why\":\"most spread-out robot and obstacle: the square still bounds the picture (K-MS-07)\"}"
+    },
+    {
+      "id": "H-MS-23",
+      "steps": [{"set":{"n":3,"pts":[[2.885,1.489],[3.249,2.6],[2.298,3.298],[1.348,2.607],[1.71,1.489],[-1.5,1.6],[-2.7,1.6],[-2.0,3.0],[-3.249,2.607],[-2.885,1.489]]}}],
+      "capture": ["minkowskiPoints","discretPolygon","dl"],
+      "why": "an edge whose length is a multiple of the step: Range count rule (K-MS-04)",
+      "source": "{\"id\":\"H-MS-23\",\"steps\":[{\"set\":{\"n\":3,\"pts\":[[2.885,1.489],[3.249,2.6],[2.298,3.298],[1.348,2.607],[1.71,1.489],[-1.5,1.6],[-2.7,1.6],[-2.0,3.0],[-3.249,2.607],[-2.885,1.489]]}}],\"capture\":[\"minkowskiPoints\",\"discretPolygon\",\"dl\"],\"why\":\"an edge whose length is a multiple of the step: Range count rule (K-MS-04)\"}"
+    },
+    {
+      "id": "H-MS-24",
+      "steps": [{"set":{"m":2,"n":1}}],
+      "capture": ["orderOfNormals","pos","minkowskiPoints","minkowskiRobotSidesLabels","%messages"],
+      "why": "two-vertex robot with point obstacle: the 0.7 robot-label branch and K-MS-01",
+      "source": "{\"id\":\"H-MS-24\",\"steps\":[{\"set\":{\"m\":2,\"n\":1}}],\"capture\":[\"orderOfNormals\",\"pos\",\"minkowskiPoints\",\"minkowskiRobotSidesLabels\",\"%messages\"],\"why\":\"two-vertex robot with point obstacle: the 0.7 robot-label branch and K-MS-01\"}"
+    },
+    {
+      "id": "H-MS-25",
+      "steps": [{"setFrom":"snapshot:2"}],
+      "capture": ["pts","rl","ol","dl","c","s","robot","obstacle","rc","oc","robotNormal","obstacleNormal","orderOfNormals","pos","minkowskiPoints","minkRobotlinelist","minkObstlinelist","robotlabel","obstaclelabel","minkowskiRobotSidesLabels","minkowskiObstacleSidesLabels","%g"],
+      "why": "snapshot 2 (dragged machine-number vertices, normals on): every local bit for bit, Settings unchanged by one evaluation",
+      "source": "{\"id\":\"H-MS-25\",\"steps\":[{\"setFrom\":\"snapshot:2\"}],\"capture\":[\"pts\",\"rl\",\"ol\",\"dl\",\"c\",\"s\",\"robot\",\"obstacle\",\"rc\",\"oc\",\"robotNormal\",\"obstacleNormal\",\"orderOfNormals\",\"pos\",\"minkowskiPoints\",\"minkRobotlinelist\",\"minkObstlinelist\",\"robotlabel\",\"obstaclelabel\",\"minkowskiRobotSidesLabels\",\"minkowskiObstacleSidesLabels\",\"%g\"],\"why\":\"snapshot 2 (dragged machine-number vertices, normals on): every local bit for bit, Settings unchanged by one evaluation\"}"
+    },
+    {
+      "id": "H-MS-26",
+      "steps": [{"setFrom":"snapshot:3"}],
+      "capture": ["c","s","dl","rc","oc","discretPolygon","%g"],
+      "why": "snapshot 3: move view at s 150, robot centroid (0.888862, 0.450124) as in the picture",
+      "source": "{\"id\":\"H-MS-26\",\"steps\":[{\"setFrom\":\"snapshot:3\"}],\"capture\":[\"c\",\"s\",\"dl\",\"rc\",\"oc\",\"discretPolygon\",\"%g\"],\"why\":\"snapshot 3: move view at s 150, robot centroid (0.888862, 0.450124) as in the picture\"}"
+    },
+    {
+      "id": "H-MS-27",
+      "steps": [{"setFrom":"snapshot:5"}],
+      "capture": ["c","s","dl","rc","oc","discretPolygon","%g"],
+      "why": "snapshot 5: two-vertex robot in the move view at s 166",
+      "source": "{\"id\":\"H-MS-27\",\"steps\":[{\"setFrom\":\"snapshot:5\"}],\"capture\":[\"c\",\"s\",\"dl\",\"rc\",\"oc\",\"discretPolygon\",\"%g\"],\"why\":\"snapshot 5: two-vertex robot in the move view at s 166\"}"
+    }
+  ]
+}

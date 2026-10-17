@@ -14,6 +14,7 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import { evaluate, initialState, environment, GUARD_COLORS } from '../../demos/art-gallery/model.js';
 import { visiblePolys, withNormalizeModel } from '../../demos/art-gallery/visibility.js';
+import { loadStates, plain } from '../../tools/lib/wl-json.mjs';
 
 const saved = JSON.parse(fs.readFileSync('tests/golden/art-gallery.original-state.json', 'utf8')).state;
 const owner = JSON.parse(fs.readFileSync('tests/golden/art-gallery.owner-state-1.json', 'utf8')).state;
@@ -164,4 +165,49 @@ describe('art-gallery golden: owner state 1 (Mathematica 15.0.1, saved 2026-10-0
     expect(state.ptsOld).toEqual(owner.ptsOld);
     expect(state.ptsOld[8]).toEqual([-10, -10]); // guards 7 and 8 were never shown
   });
+});
+
+// ---- snapshot Settings (tests/golden/art-gallery.original-states.json, tools/extract_state.py --snapshots): the six
+// snapshot cells with the regions the original computed. Snapshot 1 is the 14.1 live state; 2-6 are the 2019 cells
+// that SNAPSHOTS_2019 above embeds by hand (the fixture must hold the same data).
+const snapFx = loadStates('tests/golden/art-gallery.original-states.json');
+const snapState = (k) => plain(snapFx.snapshots[k - 1]);
+const HIDDEN = [[10, 10], [10, 10]]; // placeholder of a guard that was never shown
+
+describe('art-gallery golden: the six snapshot states', () => {
+  it('art-gallery: snapshot 1: the Settings are the live state saved by Mathematica 14.1, guard 1 bit-identical with Normalize via the dnrm2 Norm', () => {
+    expect(snapFx.count).toBe(6);
+    const st = snapState(1);
+    expect(st).toEqual(saved);
+    const polys = environment(st.reg, st.pts).listofPoly;
+    expect(viaNorm(() => visiblePolys(polys, st.pts[2]))).toEqual(st.visibleRegion[0]); // D-AG-08, K-AG-10
+    st.visibleRegion.slice(1).forEach((r) => expect(r).toEqual(HIDDEN));
+  });
+  it('art-gallery: snapshots 2 to 6: the fixture holds the 2019 data embedded in this test (cell ids, settings, regions)', () => {
+    SNAPSHOTS_2019.forEach((ref, i) => {
+      const k = i + 2;
+      const st = snapState(k);
+      expect(ref.picture).toBe(k);
+      expect(snapFx.cellIds[k - 1]).toBe(ref.cellId);
+      expect([st.s, st.reg]).toEqual([ref.s, ref.reg]);
+      expect(st.pts).toEqual(ref.pts);
+      expect(st.visibleRegion.slice(0, ref.visibleRegion.length)).toEqual(ref.visibleRegion);
+    });
+  });
+  for (const [k, title] of [
+    [2, "art-gallery: snapshot 2: every shown guard's region is bit-identical and evaluating the state recomputes nothing"],
+    [3, "art-gallery: snapshot 3: every shown guard's region is bit-identical and evaluating the state recomputes nothing"],
+    [4, "art-gallery: snapshot 4: every shown guard's region is bit-identical and evaluating the state recomputes nothing"],
+    [5, "art-gallery: snapshot 5: every shown guard's region is bit-identical and evaluating the state recomputes nothing"],
+    [6, "art-gallery: snapshot 6: every shown guard's region is bit-identical and evaluating the state recomputes nothing"],
+  ]) {
+    it(title, () => {
+      const st = snapState(k);
+      const polys = environment(st.reg, st.pts).listofPoly;
+      for (let i = 0; i < st.s; i++) expect(visiblePolys(polys, st.pts[i + 2]), `guard ${i + 1}`).toEqual(st.visibleRegion[i]);
+      const { state, view } = evaluate(JSON.parse(JSON.stringify(st)));
+      expect(view.recomputed).toEqual([]);
+      expect(state).toEqual(st); // ptsOld, sOld, prevReg and the cached regions of hidden guards stay (N-AG-03)
+    });
+  }
 });

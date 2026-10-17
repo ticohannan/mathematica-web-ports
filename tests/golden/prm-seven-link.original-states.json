@@ -1,0 +1,31 @@
+{
+ "source": "Demonstration-Probabilistic-Roadmap-Method-with-Seven-Link-Articulated-Robot-1-0-0-definition.nb",
+ "note": "Manipulate states saved in the ORIGINAL notebook, computed by the original Mathematica code: states[0] = the live state of the output cell, specs = the initial settings (the Manipulate's stored \"Variables\"), snapshots = the Settings stored with each snapshot cell. Extracted with tools/extract_state.py --snapshots. Golden parity fixture (CC BY-NC-SA 3.0, as the original).",
+ "format": "Numbers: a JSON integer is an exact Wolfram integer (|x| <= 2^53 - 1; larger ones are {\"wl\": digits}); a JSON number written with a decimal point or an exponent is a machine real (the shortest text that reads back as the identical double); any other exact number (Rational, rational multiple of Pi, arbitrary-precision real, an unevaluated Sin[...], Infinity) is {\"wl\": a Wolfram-readable form (not necessarily InputForm: compare exact values by value), \"n\": its double} - \"n\" is the correctly rounded double for a Rational or rational multiple of Pi, Python's double evaluation otherwise, and absent for Infinity. Symbols are {\"sym\": name}, other expressions {\"head\": name, \"args\": [...]}; variable names without context and $$, Greek letters as Unicode. packedTypes maps the JSON pointer of a decoded packed array that was stored with a narrower element type (CompressedData tag b) to that type. snapshots[\"k\"] belongs to the picture docs/original-snapshots/<dir>-k.png (cells in file order).",
+ "specs": {
+  "collideState": -1,
+  "collisions": 0,
+  "goal": 1,
+  "isCollide": false,
+  "loc": [[321,780],[181,785],[104,668],[42,542],[144,446],[144,306],[133,167]],
+  "locOld": [[321,780],[181,785],[104,668],[42,542],[144,446],[144,306],[133,167]],
+  "movement": "relative"
+ },
+ "states": [
+  {"collideState":0,"collisions":0,"goal":1,"isCollide":false,"loc":[[321,780],[181,785],[104,668],[42,542],[144,446],[144,306],[133,167]],"locOld":[[321,780],[181,785],[104,668],[42,542],[144,446],[144,306],[133,167]],"movement":"relative"}
+ ],
+ "snapshots": {
+  "1": {"isCollide":false,"movement":"relative","locOld":[[321,780],[181,785],[104,668],[42,542],[144,446],[144,306],[133,167]],"loc":[[321,780],[181,785],[104,668],[42,542],[144,446],[144,306],[133,167]],"goal":1,"collideState":0,"collisions":0},
+  "2": {"isCollide":false,"movement":"relative","locOld":[[313.18351494038154,798.8363035107787],[182.13147521439728,848.084276907245],[89.81995373604605,742.8294290267227],[43.22712447127957,610.8100809708247],[104.66406626197974,485.0106287327243],[200.31725730574968,382.7831028742547],[65.9860347641669,422.218146306255]],"loc":[[313.18351494038154,798.8363035107787],[182.13147521439728,848.084276907245],[89.81995373604605,742.8294290267227],[43.22712447127957,610.8100809708247],[104.66406626197974,485.0106287327243],[200.31725730574968,382.7831028742547],[65.9860347641669,422.218146306255]],"goal":1,"collideState":0,"collisions":0},
+  "3": {"isCollide":false,"movement":"relative","locOld":[[488.43920441581463,712.9096715770786],[372.43571537261334,791.2881796631852],[257.2683957717048,870.8902430531639],[117.37760845116475,865.3614436500897],[35.3287559125951,751.9242989526667],[149.95576783093358,671.5461418534081],[275.39457718924507,733.7161113464775]],"loc":[[488.43920441581463,712.9096715770786],[372.43571537261334,791.2881796631852],[257.2683957717048,870.8902430531639],[117.37760845116475,865.3614436500897],[35.3287559125951,751.9242989526667],[149.95576783093358,671.5461418534081],[275.39457718924507,733.7161113464775]],"goal":1,"collideState":0,"collisions":3},
+  "4": {"isCollide":false,"movement":"relative","locOld":[[498.9830205585873,716.8263436633803],[405.5744829378413,821.1088690430126],[271.7682381476517,779.9276979189681],[342.59504475425206,659.1652721984186],[482.54135760216906,655.2884796745708],[531.7287548106538,524.2136920308185],[531.8433934586892,384.2137389666107]],"loc":[[498.9830205585873,716.8263436633803],[405.5744829378413,821.1088690430126],[271.7682381476517,779.9276979189681],[342.59504475425206,659.1652721984186],[482.54135760216906,655.2884796745708],[531.7287548106538,524.2136920308185],[531.8433934586892,384.2137389666107]],"goal":1,"collideState":0,"collisions":14},
+  "5": {"isCollide":false,"movement":"relative","locOld":[[501.85938524748263,718.066383193164],[505.6952382438639,578.1189422312438],[498.66818211579977,438.29540886803255],[452.8832418025577,305.9937110689761],[532.2322999380667,190.65192777685073],[672.1871549394958,187.096852316475],[797.8542877010138,248.80399731200202]],"loc":[[501.85938524748263,718.066383193164],[505.6952382438639,578.1189422312438],[498.66818211579977,438.29540886803255],[452.8832418025577,305.9937110689761],[532.2322999380667,190.65192777685073],[672.1871549394958,187.096852316475],[797.8542877010138,248.80399731200202]],"goal":1,"collideState":0,"collisions":36}
+ },
+ "snapshotCellIds": {
+  "1": 392586725,
+  "2": 1349030276,
+  "3": 19503706,
+  "4": 1381272398,
+  "5": 746969116
+ }
+}

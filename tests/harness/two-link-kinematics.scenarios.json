@@ -1,0 +1,214 @@
+{
+  "schema": "manipulate-harness/scenarios-1",
+  "app": "two-link-kinematics",
+  "notebook": "Demonstration-Forward-and-Inverse-Kinematics-for-Two-Link-Arm-1-0-0-definition.nb",
+  "notebookSha256": "f0979536afbe62b970027c49f3f34cd48583fc73c96dccd0f933de13270612ec",
+  "source": "_internal/batch-ab/design/two-link-kinematics/TESTPLAN.md",
+  "generatedBy": "tools/harness/extract-scenarios.mjs",
+  "scenarios": [
+    {
+      "id": "H-TK-01",
+      "steps": [{"set":{"pVelp":[1,1],"jointVel":[1,0]}},{"set":{}}],
+      "captureEachStep": true,
+      "capture": ["pEnd","pEndp","pVel","pVelp","p1","p2","IsElbowUp","IsElbowUpp","jointVel","Theta1","Theta2","r2","J","U","\\[CapitalSigma]","V","q","%g"],
+      "why": "first evaluation of the declared initial values (inverse velocity in the singular branch, exact SVD, jointVel 2/5, 1/5) and the saved state as a fixed point",
+      "source": "{\"id\":\"H-TK-01\",\"steps\":[{\"set\":{\"pVelp\":[1,1],\"jointVel\":[1,0]}},{\"set\":{}}],\"captureEachStep\":true,\"capture\":[\"pEnd\",\"pEndp\",\"pVel\",\"pVelp\",\"p1\",\"p2\",\"IsElbowUp\",\"IsElbowUpp\",\"jointVel\",\"Theta1\",\"Theta2\",\"r2\",\"J\",\"U\",\"\\\\[CapitalSigma]\",\"V\",\"q\",\"%g\"],\"why\":\"first evaluation of the declared initial values (inverse velocity in the singular branch, exact SVD, jointVel 2/5, 1/5) and the saved state as a fixed point\"}"
+    },
+    {
+      "id": "H-TK-02",
+      "start": "live",
+      "steps": [{"set":{"pEnd":[1.0,1.0]}},{"set":{}}],
+      "captureEachStep": true,
+      "capture": ["pEnd","pEndp","p1","p2","IsElbowUp","Theta1","Theta2","J","\\[CapitalSigma]","pVel","jointVel"],
+      "why": "IK at D = 0 (elbow up), then a second evaluation with nothing changed: FK round trip of p1, p2 (K-TK-02)",
+      "source": "{\"id\":\"H-TK-02\",\"start\":\"live\",\"steps\":[{\"set\":{\"pEnd\":[1.0,1.0]}},{\"set\":{}}],\"captureEachStep\":true,\"capture\":[\"pEnd\",\"pEndp\",\"p1\",\"p2\",\"IsElbowUp\",\"Theta1\",\"Theta2\",\"J\",\"\\\\[CapitalSigma]\",\"pVel\",\"jointVel\"],\"why\":\"IK at D = 0 (elbow up), then a second evaluation with nothing changed: FK round trip of p1, p2 (K-TK-02)\"}"
+    },
+    {
+      "id": "H-TK-03",
+      "start": "live",
+      "steps": [{"set":{"pEnd":[1.0,1.0]}},{"set":{"IsElbowUp":false}}],
+      "captureEachStep": true,
+      "capture": ["p1","p2","IsElbowUp","IsElbowUpp","Theta1","Theta2","pEnd","pVel"],
+      "why": "the check box starts IK with the other root",
+      "source": "{\"id\":\"H-TK-03\",\"start\":\"live\",\"steps\":[{\"set\":{\"pEnd\":[1.0,1.0]}},{\"set\":{\"IsElbowUp\":false}}],\"captureEachStep\":true,\"capture\":[\"p1\",\"p2\",\"IsElbowUp\",\"IsElbowUpp\",\"Theta1\",\"Theta2\",\"pEnd\",\"pVel\"],\"why\":\"the check box starts IK with the other root\"}"
+    },
+    {
+      "id": "H-TK-04",
+      "start": "live",
+      "steps": [{"set":{"pEnd":[2.0,2.0]}}],
+      "capture": ["pEnd","Theta1","Theta2","IsElbowUp","J","U","\\[CapitalSigma]","V","pVel"],
+      "why": "outer clamp 2 (pEnd/Norm[pEnd]) and the tolerant x^2 + y^2 >= 4: exact theta2 = 0 and the singular values of an exactly singular machine J",
+      "source": "{\"id\":\"H-TK-04\",\"start\":\"live\",\"steps\":[{\"set\":{\"pEnd\":[2.0,2.0]}}],\"capture\":[\"pEnd\",\"Theta1\",\"Theta2\",\"IsElbowUp\",\"J\",\"U\",\"\\\\[CapitalSigma]\",\"V\",\"pVel\"],\"why\":\"outer clamp 2 (pEnd/Norm[pEnd]) and the tolerant x^2 + y^2 >= 4: exact theta2 = 0 and the singular values of an exactly singular machine J\"}"
+    },
+    {
+      "id": "H-TK-05",
+      "start": "live",
+      "steps": [{"set":{"pEnd":[2.0,2.0]}},{"set":{"pVel":[2.0,2.5]}}],
+      "captureEachStep": true,
+      "capture": ["\\[CapitalSigma]","U","V","q","vNorm","pVel","pVelp","jointVel"],
+      "why": "inverse velocity on the outer boundary with r1 = 1: singular branch with exactly singular J (K-TK-01)",
+      "source": "{\"id\":\"H-TK-05\",\"start\":\"live\",\"steps\":[{\"set\":{\"pEnd\":[2.0,2.0]}},{\"set\":{\"pVel\":[2.0,2.5]}}],\"captureEachStep\":true,\"capture\":[\"\\\\[CapitalSigma]\",\"U\",\"V\",\"q\",\"vNorm\",\"pVel\",\"pVelp\",\"jointVel\"],\"why\":\"inverse velocity on the outer boundary with r1 = 1: singular branch with exactly singular J (K-TK-01)\"}"
+    },
+    {
+      "id": "H-TK-06",
+      "start": "live",
+      "steps": [{"set":{"r1":1.5}},{"set":{"pEnd":[0.3,0.4]}}],
+      "captureEachStep": true,
+      "capture": ["pEnd","Theta1","Theta2","IsElbowUp","p1","p2","\\[CapitalSigma]"],
+      "why": "inner clamp and D = -1 up to rounding with elbow up: theta2 = pi (box unticked) or -pi + 1.5e-8 (K-TK-03)",
+      "source": "{\"id\":\"H-TK-06\",\"start\":\"live\",\"steps\":[{\"set\":{\"r1\":1.5}},{\"set\":{\"pEnd\":[0.3,0.4]}}],\"captureEachStep\":true,\"capture\":[\"pEnd\",\"Theta1\",\"Theta2\",\"IsElbowUp\",\"p1\",\"p2\",\"\\\\[CapitalSigma]\"],\"why\":\"inner clamp and D = -1 up to rounding with elbow up: theta2 = pi (box unticked) or -pi + 1.5e-8 (K-TK-03)\"}"
+    },
+    {
+      "id": "H-TK-07",
+      "start": "live",
+      "steps": [{"set":{"r1":1.5}},{"set":{"IsElbowUp":false}},{"set":{"pEnd":[0.3,0.4]}}],
+      "captureEachStep": true,
+      "capture": ["pEnd","Theta1","Theta2","IsElbowUp","p2"],
+      "why": "inner boundary with elbow down; the toggle at theta2 = 0 keeps the box as set",
+      "source": "{\"id\":\"H-TK-07\",\"start\":\"live\",\"steps\":[{\"set\":{\"r1\":1.5}},{\"set\":{\"IsElbowUp\":false}},{\"set\":{\"pEnd\":[0.3,0.4]}}],\"captureEachStep\":true,\"capture\":[\"pEnd\",\"Theta1\",\"Theta2\",\"IsElbowUp\",\"p2\"],\"why\":\"inner boundary with elbow down; the toggle at theta2 = 0 keeps the box as set\"}"
+    },
+    {
+      "id": "H-TK-08",
+      "start": "live",
+      "steps": [{"set":{"p1":[0.0,1.0]}}],
+      "capture": ["Theta1","Theta2","pEnd","pEndp","IsElbowUp","pVel"],
+      "why": "FK from a dial value",
+      "source": "{\"id\":\"H-TK-08\",\"start\":\"live\",\"steps\":[{\"set\":{\"p1\":[0.0,1.0]}}],\"capture\":[\"Theta1\",\"Theta2\",\"pEnd\",\"pEndp\",\"IsElbowUp\",\"pVel\"],\"why\":\"FK from a dial value\"}"
+    },
+    {
+      "id": "H-TK-09",
+      "start": "live",
+      "steps": [{"set":{"p2":[-1.0,0.0]}},{"set":{"r1":1.4}}],
+      "captureEachStep": true,
+      "capture": ["pEnd","pEndp","Theta1","Theta2","IsElbowUp","p1","p2","\\[CapitalSigma]"],
+      "why": "folded arm (tip at rounding distance from the origin), then an r1 change pushes the tip to the inner circle along the rounding vector, Abs[r1 - r2] (pEnd/Norm[pEnd]) = (0, 0.7999999999999998), and starts IK (Q-TK-07)",
+      "source": "{\"id\":\"H-TK-09\",\"start\":\"live\",\"steps\":[{\"set\":{\"p2\":[-1.0,0.0]}},{\"set\":{\"r1\":1.4}}],\"captureEachStep\":true,\"capture\":[\"pEnd\",\"pEndp\",\"Theta1\",\"Theta2\",\"IsElbowUp\",\"p1\",\"p2\",\"\\\\[CapitalSigma]\"],\"why\":\"folded arm (tip at rounding distance from the origin), then an r1 change pushes the tip to the inner circle along the rounding vector, Abs[r1 - r2] (pEnd/Norm[pEnd]) = (0, 0.7999999999999998), and starts IK (Q-TK-07)\"}"
+    },
+    {
+      "id": "H-TK-10",
+      "start": "live",
+      "steps": [{"set":{"r1":2.0}},{"set":{"pEnd":[1.0,1.0]}}],
+      "captureEachStep": true,
+      "capture": ["r2","pEnd","Theta1","Theta2","\\[CapitalSigma]","IsElbowUp"],
+      "why": "r2 = 0: both clamps act, the tolerant >= must avoid the division by 2 r1 r2 = 0",
+      "source": "{\"id\":\"H-TK-10\",\"start\":\"live\",\"steps\":[{\"set\":{\"r1\":2.0}},{\"set\":{\"pEnd\":[1.0,1.0]}}],\"captureEachStep\":true,\"capture\":[\"r2\",\"pEnd\",\"Theta1\",\"Theta2\",\"\\\\[CapitalSigma]\",\"IsElbowUp\"],\"why\":\"r2 = 0: both clamps act, the tolerant >= must avoid the division by 2 r1 r2 = 0\"}"
+    },
+    {
+      "id": "H-TK-11",
+      "start": "live",
+      "steps": [{"set":{"r1":0.0}},{"set":{"pEnd":[0.5,-0.5]}}],
+      "captureEachStep": true,
+      "capture": ["r2","pEnd","Theta1","Theta2","\\[CapitalSigma]","IsElbowUp"],
+      "why": "r1 = 0: the workspace is a circle, J has rank 1",
+      "source": "{\"id\":\"H-TK-11\",\"start\":\"live\",\"steps\":[{\"set\":{\"r1\":0.0}},{\"set\":{\"pEnd\":[0.5,-0.5]}}],\"captureEachStep\":true,\"capture\":[\"r2\",\"pEnd\",\"Theta1\",\"Theta2\",\"\\\\[CapitalSigma]\",\"IsElbowUp\"],\"why\":\"r1 = 0: the workspace is a circle, J has rank 1\"}"
+    },
+    {
+      "id": "H-TK-12",
+      "start": "live",
+      "steps": [{"set":{"pEnd":[0.0,0.0]}}],
+      "capture": ["pEnd","pEndp","Theta1","Theta2","p1","p2","IsElbowUp","pVel","jointVel","%messages","%g"],
+      "why": "pEnd at the origin with r1 = 1: Abs[r1 - r2] (pEnd/Norm[pEnd]) = 0 ({0., 0.}/0.) (K-TK-04, D-TK-07)",
+      "source": "{\"id\":\"H-TK-12\",\"start\":\"live\",\"steps\":[{\"set\":{\"pEnd\":[0.0,0.0]}}],\"capture\":[\"pEnd\",\"pEndp\",\"Theta1\",\"Theta2\",\"p1\",\"p2\",\"IsElbowUp\",\"pVel\",\"jointVel\",\"%messages\",\"%g\"],\"why\":\"pEnd at the origin with r1 = 1: Abs[r1 - r2] (pEnd/Norm[pEnd]) = 0 ({0., 0.}/0.) (K-TK-04, D-TK-07)\"}"
+    },
+    {
+      "id": "H-TK-13",
+      "start": "live",
+      "steps": [{"set":{"p1":[0.0,0.0]}}],
+      "capture": ["Theta1","pEnd","pVel","%messages","%g"],
+      "why": "a dial press exactly at its centre: ArcTan[0., 0.] (K-TK-04)",
+      "source": "{\"id\":\"H-TK-13\",\"start\":\"live\",\"steps\":[{\"set\":{\"p1\":[0.0,0.0]}}],\"capture\":[\"Theta1\",\"pEnd\",\"pVel\",\"%messages\",\"%g\"],\"why\":\"a dial press exactly at its centre: ArcTan[0., 0.] (K-TK-04)\"}"
+    },
+    {
+      "id": "H-TK-14",
+      "start": "live",
+      "steps": [{"set":{"pEnd":[1.0,1.0]}},{"set":{"pVel":[1.2,1.3]}}],
+      "captureEachStep": true,
+      "capture": ["q","vNorm","pVel","jointVel","\\[CapitalSigma]","U","V"],
+      "why": "inverse velocity inside the ellipse; jointVel bit for bit for the 4-argument Dot (K-TK-10)",
+      "source": "{\"id\":\"H-TK-14\",\"start\":\"live\",\"steps\":[{\"set\":{\"pEnd\":[1.0,1.0]}},{\"set\":{\"pVel\":[1.2,1.3]}}],\"captureEachStep\":true,\"capture\":[\"q\",\"vNorm\",\"pVel\",\"jointVel\",\"\\\\[CapitalSigma]\",\"U\",\"V\"],\"why\":\"inverse velocity inside the ellipse; jointVel bit for bit for the 4-argument Dot (K-TK-10)\"}"
+    },
+    {
+      "id": "H-TK-15",
+      "start": "live",
+      "steps": [{"set":{"pEnd":[1.0,1.0]}},{"set":{"pVel":[3.0,1.0]}}],
+      "captureEachStep": true,
+      "capture": ["q","vNorm","pVel","jointVel","U","V"],
+      "why": "inverse velocity outside the ellipse (radial scaling); jointVel bit for bit (K-TK-10)",
+      "source": "{\"id\":\"H-TK-15\",\"start\":\"live\",\"steps\":[{\"set\":{\"pEnd\":[1.0,1.0]}},{\"set\":{\"pVel\":[3.0,1.0]}}],\"captureEachStep\":true,\"capture\":[\"q\",\"vNorm\",\"pVel\",\"jointVel\",\"U\",\"V\"],\"why\":\"inverse velocity outside the ellipse (radial scaling); jointVel bit for bit (K-TK-10)\"}"
+    },
+    {
+      "id": "H-TK-16",
+      "start": "live",
+      "steps": [{"set":{"pEnd":[1.0,1.0]}},{"set":{"jointVel":[0.0,1.0]}}],
+      "captureEachStep": true,
+      "capture": ["pVel","pVelp","jointVel"],
+      "why": "forward velocity from the pad",
+      "source": "{\"id\":\"H-TK-16\",\"start\":\"live\",\"steps\":[{\"set\":{\"pEnd\":[1.0,1.0]}},{\"set\":{\"jointVel\":[0.0,1.0]}}],\"captureEachStep\":true,\"capture\":[\"pVel\",\"pVelp\",\"jointVel\"],\"why\":\"forward velocity from the pad\"}"
+    },
+    {
+      "id": "H-TK-17",
+      "start": "live",
+      "steps": [{"set":{"jointVel":[0,0]}}],
+      "capture": ["pVel","jointVel","%g"],
+      "why": "zero joint velocities: Point instead of Arrow for the velocity arcs, zero-length green arrow",
+      "source": "{\"id\":\"H-TK-17\",\"start\":\"live\",\"steps\":[{\"set\":{\"jointVel\":[0,0]}}],\"capture\":[\"pVel\",\"jointVel\",\"%g\"],\"why\":\"zero joint velocities: Point instead of Arrow for the velocity arcs, zero-length green arrow\"}"
+    },
+    {
+      "id": "H-TK-18",
+      "start": "live",
+      "steps": [{"set":{"r1":1.5}},{"set":{"pEnd":[2.0,0.5]}},{"set":{"pVel":[2.5,1.5]}}],
+      "captureEachStep": true,
+      "capture": ["Theta2","J","\\[CapitalSigma]","U","q","vNorm","pVel","jointVel"],
+      "why": "outer boundary with r1 = 1.5 (J singular only up to rounding): the SVD tolerance decides the velocity branch (K-TK-01)",
+      "source": "{\"id\":\"H-TK-18\",\"start\":\"live\",\"steps\":[{\"set\":{\"r1\":1.5}},{\"set\":{\"pEnd\":[2.0,0.5]}},{\"set\":{\"pVel\":[2.5,1.5]}}],\"captureEachStep\":true,\"capture\":[\"Theta2\",\"J\",\"\\\\[CapitalSigma]\",\"U\",\"q\",\"vNorm\",\"pVel\",\"jointVel\"],\"why\":\"outer boundary with r1 = 1.5 (J singular only up to rounding): the SVD tolerance decides the velocity branch (K-TK-01)\"}"
+    },
+    {
+      "id": "H-TK-19",
+      "start": "live",
+      "steps": [{"set":{"r1":1.5}},{"set":{"pEnd":[0.3,0.4]}},{"set":{"pVel":[1.0,1.0]}}],
+      "captureEachStep": true,
+      "capture": ["Theta2","J","\\[CapitalSigma]","q","vNorm","pVel","jointVel"],
+      "why": "inverse velocity at the folded singularity theta2 = pi: port predicts the singular branch, pVel (0.76, 0.68) (K-TK-01)",
+      "source": "{\"id\":\"H-TK-19\",\"start\":\"live\",\"steps\":[{\"set\":{\"r1\":1.5}},{\"set\":{\"pEnd\":[0.3,0.4]}},{\"set\":{\"pVel\":[1.0,1.0]}}],\"captureEachStep\":true,\"capture\":[\"Theta2\",\"J\",\"\\\\[CapitalSigma]\",\"q\",\"vNorm\",\"pVel\",\"jointVel\"],\"why\":\"inverse velocity at the folded singularity theta2 = pi: port predicts the singular branch, pVel (0.76, 0.68) (K-TK-01)\"}"
+    },
+    {
+      "id": "H-TK-20",
+      "start": "live",
+      "steps": [{"set":{"r1":2.5}}],
+      "capture": ["r2","pEnd","Theta1","Theta2","\\[CapitalSigma]","pVel","%messages"],
+      "why": "a typed r1 outside the slider range (negative r2, K-TK-09)",
+      "source": "{\"id\":\"H-TK-20\",\"start\":\"live\",\"steps\":[{\"set\":{\"r1\":2.5}}],\"capture\":[\"r2\",\"pEnd\",\"Theta1\",\"Theta2\",\"\\\\[CapitalSigma]\",\"pVel\",\"%messages\"],\"why\":\"a typed r1 outside the slider range (negative r2, K-TK-09)\"}"
+    },
+    {
+      "id": "H-TK-21",
+      "start": "live",
+      "steps": [{"set":{"IsElbowUp":false}}],
+      "capture": ["IsElbowUp","IsElbowUpp","Theta1","Theta2","pEnd"],
+      "why": "elbow toggle with the arm straight: IK gives theta2 = 0 and the box keeps the user's value",
+      "source": "{\"id\":\"H-TK-21\",\"start\":\"live\",\"steps\":[{\"set\":{\"IsElbowUp\":false}}],\"capture\":[\"IsElbowUp\",\"IsElbowUpp\",\"Theta1\",\"Theta2\",\"pEnd\"],\"why\":\"elbow toggle with the arm straight: IK gives theta2 = 0 and the box keeps the user's value\"}"
+    },
+    {
+      "id": "H-TK-22",
+      "start": "live",
+      "steps": [{"set":{"jointVel":[-0.6,0.8]}}],
+      "capture": ["pVel","jointVel","%g"],
+      "why": "negative and positive velocity arcs: B-spline control points (12, K-TK-07) and arrow directions",
+      "source": "{\"id\":\"H-TK-22\",\"start\":\"live\",\"steps\":[{\"set\":{\"jointVel\":[-0.6,0.8]}}],\"capture\":[\"pVel\",\"jointVel\",\"%g\"],\"why\":\"negative and positive velocity arcs: B-spline control points (12, K-TK-07) and arrow directions\"}"
+    },
+    {
+      "id": "H-TK-23",
+      "steps": [{"set":{}}],
+      "capture": ["wl:SingularValueDecomposition[{{1.,0.},{1.,1.*^-14}}]","wl:SingularValueDecomposition[{{1.,0.},{1.,1.*^-13}}]","wl:PseudoInverse[{{1.,0.},{1.,1.*^-14}}]","wl:{MatrixRank[{{1.,0.},{0.,1.*^-14}}],MatrixRank[{{1.,0.},{0.,1.*^-13}}]}","wl:Module[{a={{0.3,0.7},{-0.2,0.9}},b={{1.1,0.},{0.,3.7}},c={{0.6,-0.8},{0.8,0.6}},d={0.123,-0.456}},{a.b.c.d,((a.b).c).d,a.(b.(c.d))}]","wl:Normalize/@{{3.,4.1},{-0.7,0.31},{1.*^-3,2.5}}"],
+      "why": "SVD/PseudoInverse/MatrixRank tolerance edges (K-TK-01), the 4-argument Dot order (K-TK-10), the Normalize model (K-TK-11)",
+      "source": "{\"id\":\"H-TK-23\",\"steps\":[{\"set\":{}}],\"capture\":[\"wl:SingularValueDecomposition[{{1.,0.},{1.,1.*^-14}}]\",\"wl:SingularValueDecomposition[{{1.,0.},{1.,1.*^-13}}]\",\"wl:PseudoInverse[{{1.,0.},{1.,1.*^-14}}]\",\"wl:{MatrixRank[{{1.,0.},{0.,1.*^-14}}],MatrixRank[{{1.,0.},{0.,1.*^-13}}]}\",\"wl:Module[{a={{0.3,0.7},{-0.2,0.9}},b={{1.1,0.},{0.,3.7}},c={{0.6,-0.8},{0.8,0.6}},d={0.123,-0.456}},{a.b.c.d,((a.b).c).d,a.(b.(c.d))}]\",\"wl:Normalize/@{{3.,4.1},{-0.7,0.31},{1.*^-3,2.5}}\"],\"why\":\"SVD/PseudoInverse/MatrixRank tolerance edges (K-TK-01), the 4-argument Dot order (K-TK-10), the Normalize model (K-TK-11)\"}"
+    },
+    {
+      "id": "H-TK-24",
+      "steps": [{"setFrom":"snapshot:2"},{"set":{}},{"setFrom":"snapshot:3"},{"set":{}},{"setFrom":"snapshot:4"},{"set":{}}],
+      "captureEachStep": true,
+      "capture": ["pEnd","pEndp","pVel","pVelp","p1","p2","jointVel","IsElbowUp","Theta1","Theta2","\\[CapitalSigma]","%g"],
+      "why": "the snapshot Settings re-evaluated: fixed points (T-TK-34...T-TK-36)",
+      "source": "{\"id\":\"H-TK-24\",\"steps\":[{\"setFrom\":\"snapshot:2\"},{\"set\":{}},{\"setFrom\":\"snapshot:3\"},{\"set\":{}},{\"setFrom\":\"snapshot:4\"},{\"set\":{}}],\"captureEachStep\":true,\"capture\":[\"pEnd\",\"pEndp\",\"pVel\",\"pVelp\",\"p1\",\"p2\",\"jointVel\",\"IsElbowUp\",\"Theta1\",\"Theta2\",\"\\\\[CapitalSigma]\",\"%g\"],\"why\":\"the snapshot Settings re-evaluated: fixed points (T-TK-34...T-TK-36)\"}"
+    }
+  ]
+}

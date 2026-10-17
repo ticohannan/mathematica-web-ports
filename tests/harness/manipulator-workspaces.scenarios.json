@@ -1,0 +1,173 @@
+{
+  "schema": "manipulate-harness/scenarios-1",
+  "app": "manipulator-workspaces",
+  "notebook": "Demonstration-Robot-Manipulator-Workspaces-1-0-0-definition.nb",
+  "notebookSha256": "7256f5be8993ff3537374ae75583c8edd326af0b29d563153bdd262103abf1d3",
+  "source": "_internal/batch-ab/design/manipulator-workspaces/TESTPLAN.md",
+  "generatedBy": "tools/harness/extract-scenarios.mjs",
+  "scenarios": [
+    {
+      "id": "H-MW-01",
+      "steps": [{"setFrom":"snapshot:1"}],
+      "capture": ["pm","wl:Table[Td[i],{i,1,dof}]","TypeOld","r1old","r2old","r3old","workspace3D","wl:Chop[Td[dof]] === Td[dof]"],
+      "why": "the live state (= snapshot 1 Settings): TypeOld = Type and r..old = r, so no recompute; pm = {1., 1., 1.}; workspace3D stays the stored graphic; does Chop act on the TransformationFunction (Q-MW-09, K-AC-01)?",
+      "source": "{\"id\":\"H-MW-01\",\"steps\":[{\"setFrom\":\"snapshot:1\"}],\"capture\":[\"pm\",\"wl:Table[Td[i],{i,1,dof}]\",\"TypeOld\",\"r1old\",\"r2old\",\"r3old\",\"workspace3D\",\"wl:Chop[Td[dof]] === Td[dof]\"],\"why\":\"the live state (= snapshot 1 Settings): TypeOld = Type and r..old = r, so no recompute; pm = {1., 1., 1.}; workspace3D stays the stored graphic; does Chop act on the TransformationFunction (Q-MW-09, K-AC-01)?\"}"
+    },
+    {
+      "id": "H-MW-02",
+      "steps": [{"setFrom":"snapshot:1"},{"set":{"TypeOld":"wl:{{\"r\"},{0},{-Pi/2},{1},{Subscript[q,1]}}"}}],
+      "capture": ["TypeOld","workspace3D","pm"],
+      "why": "forces a recompute of the planar state: identical to the stored graphic (determinism, the shrunk first surface and its refinement)?",
+      "source": "{\"id\":\"H-MW-02\",\"steps\":[{\"setFrom\":\"snapshot:1\"},{\"set\":{\"TypeOld\":\"wl:{{\\\"r\\\"},{0},{-Pi/2},{1},{Subscript[q,1]}}\"}}],\"capture\":[\"TypeOld\",\"workspace3D\",\"pm\"],\"why\":\"forces a recompute of the planar state: identical to the stored graphic (determinism, the shrunk first surface and its refinement)?\"}"
+    },
+    {
+      "id": "H-MW-03",
+      "steps": [{"setFrom":"snapshot:2"},{"set":{"TypeOld":"wl:{{\"r\"},{0},{-Pi/2},{1},{Subscript[q,1]}}"}}],
+      "capture": ["pm","wl:Table[Td[i],{i,1,dof}]","workspace3D"],
+      "why": "spherical (snapshot 2) recomputed at its stored ranges: compare with the snapshot's stored workspace3D and with the port grid",
+      "source": "{\"id\":\"H-MW-03\",\"steps\":[{\"setFrom\":\"snapshot:2\"},{\"set\":{\"TypeOld\":\"wl:{{\\\"r\\\"},{0},{-Pi/2},{1},{Subscript[q,1]}}\"}}],\"capture\":[\"pm\",\"wl:Table[Td[i],{i,1,dof}]\",\"workspace3D\"],\"why\":\"spherical (snapshot 2) recomputed at its stored ranges: compare with the snapshot's stored workspace3D and with the port grid\"}"
+    },
+    {
+      "id": "H-MW-04",
+      "steps": [{"setFrom":"snapshot:3"},{"set":{"TypeOld":"wl:{{\"r\"},{0},{-Pi/2},{1},{Subscript[q,1]}}"}}],
+      "capture": ["pm","wl:Table[Td[i],{i,1,dof}]","workspace3D"],
+      "why": "SCARA (snapshot 3) recomputed at its stored ranges: compare with the snapshot's stored workspace3D and with the port grid",
+      "source": "{\"id\":\"H-MW-04\",\"steps\":[{\"setFrom\":\"snapshot:3\"},{\"set\":{\"TypeOld\":\"wl:{{\\\"r\\\"},{0},{-Pi/2},{1},{Subscript[q,1]}}\"}}],\"capture\":[\"pm\",\"wl:Table[Td[i],{i,1,dof}]\",\"workspace3D\"],\"why\":\"SCARA (snapshot 3) recomputed at its stored ranges: compare with the snapshot's stored workspace3D and with the port grid\"}"
+    },
+    {
+      "id": "H-MW-05",
+      "steps": [{"setFrom":"snapshot:4"},{"set":{"TypeOld":"wl:{{\"r\"},{0},{-Pi/2},{1},{Subscript[q,1]}}"}}],
+      "capture": ["pm","wl:Table[Td[i],{i,1,dof}]","workspace3D"],
+      "why": "CNC (snapshot 4) recomputed at its stored ranges: compare with the snapshot's stored workspace3D and with the port grid",
+      "source": "{\"id\":\"H-MW-05\",\"steps\":[{\"setFrom\":\"snapshot:4\"},{\"set\":{\"TypeOld\":\"wl:{{\\\"r\\\"},{0},{-Pi/2},{1},{Subscript[q,1]}}\"}}],\"capture\":[\"pm\",\"wl:Table[Td[i],{i,1,dof}]\",\"workspace3D\"],\"why\":\"CNC (snapshot 4) recomputed at its stored ranges: compare with the snapshot's stored workspace3D and with the port grid\"}"
+    },
+    {
+      "id": "H-MW-06",
+      "steps": [{"setFrom":"snapshot:5"},{"set":{"TypeOld":"wl:{{\"r\"},{0},{-Pi/2},{1},{Subscript[q,1]}}"}}],
+      "capture": ["pm","wl:Table[Td[i],{i,1,dof}]","workspace3D"],
+      "why": "planar RPR (snapshot 5) recomputed at its stored ranges: compare with the snapshot's stored workspace3D and with the port grid",
+      "source": "{\"id\":\"H-MW-06\",\"steps\":[{\"setFrom\":\"snapshot:5\"},{\"set\":{\"TypeOld\":\"wl:{{\\\"r\\\"},{0},{-Pi/2},{1},{Subscript[q,1]}}\"}}],\"capture\":[\"pm\",\"wl:Table[Td[i],{i,1,dof}]\",\"workspace3D\"],\"why\":\"planar RPR (snapshot 5) recomputed at its stored ranges: compare with the snapshot's stored workspace3D and with the port grid\"}"
+    },
+    {
+      "id": "H-MW-07",
+      "steps": [{"setFrom":"snapshot:6"},{"set":{"TypeOld":"wl:{{\"r\"},{0},{-Pi/2},{1},{Subscript[q,1]}}"}}],
+      "capture": ["pm","wl:Table[Td[i],{i,1,dof}]","workspace3D"],
+      "why": "cylindrical (snapshot 6) recomputed at its stored ranges: compare with the snapshot's stored workspace3D and with the port grid",
+      "source": "{\"id\":\"H-MW-07\",\"steps\":[{\"setFrom\":\"snapshot:6\"},{\"set\":{\"TypeOld\":\"wl:{{\\\"r\\\"},{0},{-Pi/2},{1},{Subscript[q,1]}}\"}}],\"capture\":[\"pm\",\"wl:Table[Td[i],{i,1,dof}]\",\"workspace3D\"],\"why\":\"cylindrical (snapshot 6) recomputed at its stored ranges: compare with the snapshot's stored workspace3D and with the port grid\"}"
+    },
+    {
+      "id": "H-MW-08",
+      "steps": [{"setFrom":"snapshot:7"},{"set":{"TypeOld":"wl:{{\"r\"},{0},{-Pi/2},{1},{Subscript[q,1]}}"}}],
+      "capture": ["pm","wl:Table[Td[i],{i,1,dof}]","workspace3D"],
+      "why": "Stanford (snapshot 7) recomputed at its stored ranges: compare with the snapshot's stored workspace3D and with the port grid",
+      "source": "{\"id\":\"H-MW-08\",\"steps\":[{\"setFrom\":\"snapshot:7\"},{\"set\":{\"TypeOld\":\"wl:{{\\\"r\\\"},{0},{-Pi/2},{1},{Subscript[q,1]}}\"}}],\"capture\":[\"pm\",\"wl:Table[Td[i],{i,1,dof}]\",\"workspace3D\"],\"why\":\"Stanford (snapshot 7) recomputed at its stored ranges: compare with the snapshot's stored workspace3D and with the port grid\"}"
+    },
+    {
+      "id": "H-MW-09",
+      "steps": [{"setFrom":"snapshot:8"},{"set":{"TypeOld":"wl:{{\"r\"},{0},{-Pi/2},{1},{Subscript[q,1]}}"}}],
+      "capture": ["pm","wl:Table[Td[i],{i,1,dof}]","workspace3D"],
+      "why": "Cartesian (snapshot 8) recomputed at its stored ranges: compare with the snapshot's stored workspace3D and with the port grid",
+      "source": "{\"id\":\"H-MW-09\",\"steps\":[{\"setFrom\":\"snapshot:8\"},{\"set\":{\"TypeOld\":\"wl:{{\\\"r\\\"},{0},{-Pi/2},{1},{Subscript[q,1]}}\"}}],\"capture\":[\"pm\",\"wl:Table[Td[i],{i,1,dof}]\",\"workspace3D\"],\"why\":\"Cartesian (snapshot 8) recomputed at its stored ranges: compare with the snapshot's stored workspace3D and with the port grid\"}"
+    },
+    {
+      "id": "H-MW-10",
+      "steps": [{"set":{}}],
+      "capture": ["pm","wl:Table[Td[i],{i,1,dof}]","TypeOld","workspace3D"],
+      "why": "the initial settings (elbow, TypeOld = elbow): no recompute, the stored elbow workspace",
+      "source": "{\"id\":\"H-MW-10\",\"steps\":[{\"set\":{}}],\"capture\":[\"pm\",\"wl:Table[Td[i],{i,1,dof}]\",\"TypeOld\",\"workspace3D\"],\"why\":\"the initial settings (elbow, TypeOld = elbow): no recompute, the stored elbow workspace\"}"
+    },
+    {
+      "id": "H-MW-11",
+      "steps": [{"set":{"TypeOld":"wl:{{\"r\"},{0},{-Pi/2},{1},{Subscript[q,1]}}"}}],
+      "capture": ["pm","wl:Table[Td[i],{i,1,dof}]","workspace3D"],
+      "why": "elbow recomputed from the initial settings: compare with the stored elbow graphic",
+      "source": "{\"id\":\"H-MW-11\",\"steps\":[{\"set\":{\"TypeOld\":\"wl:{{\\\"r\\\"},{0},{-Pi/2},{1},{Subscript[q,1]}}\"}}],\"capture\":[\"pm\",\"wl:Table[Td[i],{i,1,dof}]\",\"workspace3D\"],\"why\":\"elbow recomputed from the initial settings: compare with the stored elbow graphic\"}"
+    },
+    {
+      "id": "H-MW-12",
+      "steps": [{"set":{"Type":"wl:{{\"r\",\"r\",\"r\"},{0,1,1},{Pi/2,0,0},{2,1/3,-1/3},{Subscript[q,1],Subscript[q,2],Subscript[q,3]}}","TypeOld":"wl:{{\"r\"},{0},{-Pi/2},{1},{Subscript[q,1]}}","params":[0.5,0.5,0.5],"r1":[0.5,1.5],"r2":[0.5,1.5],"r3":[0.5,1.5]}}],
+      "capture": ["pm","wl:Table[Td[i],{i,1,dof}]","workspace3D"],
+      "why": "PUMA robot arm (offsets 1/3, -1/3), no snapshot",
+      "source": "{\"id\":\"H-MW-12\",\"steps\":[{\"set\":{\"Type\":\"wl:{{\\\"r\\\",\\\"r\\\",\\\"r\\\"},{0,1,1},{Pi/2,0,0},{2,1/3,-1/3},{Subscript[q,1],Subscript[q,2],Subscript[q,3]}}\",\"TypeOld\":\"wl:{{\\\"r\\\"},{0},{-Pi/2},{1},{Subscript[q,1]}}\",\"params\":[0.5,0.5,0.5],\"r1\":[0.5,1.5],\"r2\":[0.5,1.5],\"r3\":[0.5,1.5]}}],\"capture\":[\"pm\",\"wl:Table[Td[i],{i,1,dof}]\",\"workspace3D\"],\"why\":\"PUMA robot arm (offsets 1/3, -1/3), no snapshot\"}"
+    },
+    {
+      "id": "H-MW-13",
+      "steps": [{"set":{"Type":"wl:{{\"r\",\"r\",\"r\"},{0,1,1},{Pi/2,0,0},{2,1/3,1/3},{Subscript[q,1],Subscript[q,2],Subscript[q,3]}}","TypeOld":"wl:{{\"r\"},{0},{-Pi/2},{1},{Subscript[q,1]}}","params":[0.5,0.5,0.5],"r1":[0.5,1.5],"r2":[0.5,1.5],"r3":[0.5,1.5]}}],
+      "capture": ["pm","wl:Table[Td[i],{i,1,dof}]","workspace3D"],
+      "why": "offset PUMA arm, no snapshot",
+      "source": "{\"id\":\"H-MW-13\",\"steps\":[{\"set\":{\"Type\":\"wl:{{\\\"r\\\",\\\"r\\\",\\\"r\\\"},{0,1,1},{Pi/2,0,0},{2,1/3,1/3},{Subscript[q,1],Subscript[q,2],Subscript[q,3]}}\",\"TypeOld\":\"wl:{{\\\"r\\\"},{0},{-Pi/2},{1},{Subscript[q,1]}}\",\"params\":[0.5,0.5,0.5],\"r1\":[0.5,1.5],\"r2\":[0.5,1.5],\"r3\":[0.5,1.5]}}],\"capture\":[\"pm\",\"wl:Table[Td[i],{i,1,dof}]\",\"workspace3D\"],\"why\":\"offset PUMA arm, no snapshot\"}"
+    },
+    {
+      "id": "H-MW-14",
+      "steps": [{"set":{"Type":"wl:{{\"r\",\"r\",\"p\"},{0,1,0},{-Pi/2,0,0},{1,0,Subscript[q,3]},{Subscript[q,1],Subscript[q,2],0}}","TypeOld":"wl:{{\"r\"},{0},{-Pi/2},{1},{Subscript[q,1]}}","params":[0.5,0.5,0.5],"r1":[0.5,1.5],"r2":[0.5,1.5],"r3":[0.5,1.5]}}],
+      "capture": ["pm","wl:Table[Td[i],{i,1,dof}]","workspace3D"],
+      "why": "offset spherical arm, no snapshot",
+      "source": "{\"id\":\"H-MW-14\",\"steps\":[{\"set\":{\"Type\":\"wl:{{\\\"r\\\",\\\"r\\\",\\\"p\\\"},{0,1,0},{-Pi/2,0,0},{1,0,Subscript[q,3]},{Subscript[q,1],Subscript[q,2],0}}\",\"TypeOld\":\"wl:{{\\\"r\\\"},{0},{-Pi/2},{1},{Subscript[q,1]}}\",\"params\":[0.5,0.5,0.5],\"r1\":[0.5,1.5],\"r2\":[0.5,1.5],\"r3\":[0.5,1.5]}}],\"capture\":[\"pm\",\"wl:Table[Td[i],{i,1,dof}]\",\"workspace3D\"],\"why\":\"offset spherical arm, no snapshot\"}"
+    },
+    {
+      "id": "H-MW-15",
+      "steps": [{"set":{"Type":"wl:{{\"r\",\"r\",\"p\"},{0,1,0},{-Pi/2,Pi/2,0},{1,0,Subscript[q,3]},{Subscript[q,1],Subscript[q,2],0}}","TypeOld":"wl:{{\"r\"},{0},{-Pi/2},{1},{Subscript[q,1]}}","params":[0.5,0.5,0.5],"r1":[0.5,1.5],"r2":[0.5,1.5],"r3":[0.5,1.5]}}],
+      "capture": ["pm","wl:Table[Td[i],{i,1,dof}]","workspace3D"],
+      "why": "twisted spherical, no snapshot",
+      "source": "{\"id\":\"H-MW-15\",\"steps\":[{\"set\":{\"Type\":\"wl:{{\\\"r\\\",\\\"r\\\",\\\"p\\\"},{0,1,0},{-Pi/2,Pi/2,0},{1,0,Subscript[q,3]},{Subscript[q,1],Subscript[q,2],0}}\",\"TypeOld\":\"wl:{{\\\"r\\\"},{0},{-Pi/2},{1},{Subscript[q,1]}}\",\"params\":[0.5,0.5,0.5],\"r1\":[0.5,1.5],\"r2\":[0.5,1.5],\"r3\":[0.5,1.5]}}],\"capture\":[\"pm\",\"wl:Table[Td[i],{i,1,dof}]\",\"workspace3D\"],\"why\":\"twisted spherical, no snapshot\"}"
+    },
+    {
+      "id": "H-MW-16",
+      "steps": [{"set":{"Type":"wl:{{\"p\",\"p\",\"p\"},{0,0,0},{0,0,-0},{Subscript[q,1],Subscript[q,2],Subscript[q,3]},{0,0,0}}","TypeOld":"wl:{{\"r\"},{0},{-Pi/2},{1},{Subscript[q,1]}}","params":[0.5,0.5,0.5],"r1":[0.5,1.5],"r2":[0.5,1.5],"r3":[0.5,1.5]}}],
+      "capture": ["pm","wl:Table[Td[i],{i,1,dof}]","workspace3D"],
+      "why": "linear robot arm: every surface collapses to a segment (degenerate ParametricPlot3D)",
+      "source": "{\"id\":\"H-MW-16\",\"steps\":[{\"set\":{\"Type\":\"wl:{{\\\"p\\\",\\\"p\\\",\\\"p\\\"},{0,0,0},{0,0,-0},{Subscript[q,1],Subscript[q,2],Subscript[q,3]},{0,0,0}}\",\"TypeOld\":\"wl:{{\\\"r\\\"},{0},{-Pi/2},{1},{Subscript[q,1]}}\",\"params\":[0.5,0.5,0.5],\"r1\":[0.5,1.5],\"r2\":[0.5,1.5],\"r3\":[0.5,1.5]}}],\"capture\":[\"pm\",\"wl:Table[Td[i],{i,1,dof}]\",\"workspace3D\"],\"why\":\"linear robot arm: every surface collapses to a segment (degenerate ParametricPlot3D)\"}"
+    },
+    {
+      "id": "H-MW-17",
+      "steps": [{"set":{"Type":"wl:{{\"p\",\"p\",\"p\"},{0,0,0},{-Pi/2,Pi/2,0},{Subscript[q,1],Subscript[q,2],Subscript[q,3]},{-Pi/2,-Pi/2,0}}","TypeOld":"wl:{{\"r\"},{0},{-Pi/2},{1},{Subscript[q,1]}}","params":[0.0,0.5,1.0],"r1":[-3.1,-1.0],"r2":[-1.0,1.0],"r3":[0.5,1.5]}}],
+      "capture": ["pm","wl:Table[Td[i],{i,1,dof}]","%primitives"],
+      "why": "negative prismatic extension: reversed Cuboid corners in drawJoint (output graphic), K-MW-03",
+      "source": "{\"id\":\"H-MW-17\",\"steps\":[{\"set\":{\"Type\":\"wl:{{\\\"p\\\",\\\"p\\\",\\\"p\\\"},{0,0,0},{-Pi/2,Pi/2,0},{Subscript[q,1],Subscript[q,2],Subscript[q,3]},{-Pi/2,-Pi/2,0}}\",\"TypeOld\":\"wl:{{\\\"r\\\"},{0},{-Pi/2},{1},{Subscript[q,1]}}\",\"params\":[0.0,0.5,1.0],\"r1\":[-3.1,-1.0],\"r2\":[-1.0,1.0],\"r3\":[0.5,1.5]}}],\"capture\":[\"pm\",\"wl:Table[Td[i],{i,1,dof}]\",\"%primitives\"],\"why\":\"negative prismatic extension: reversed Cuboid corners in drawJoint (output graphic), K-MW-03\"}"
+    },
+    {
+      "id": "H-MW-18",
+      "steps": [{"set":{"r1":[0.5,1.5000000000000004]}}],
+      "capture": ["r1old","pm","workspace3D"],
+      "why": "from the initial elbow settings: tolerant Unequal, no recompute, r1old unchanged, pm uses the new value (Q-MW-03)",
+      "source": "{\"id\":\"H-MW-18\",\"steps\":[{\"set\":{\"r1\":[0.5,1.5000000000000004]}}],\"capture\":[\"r1old\",\"pm\",\"workspace3D\"],\"why\":\"from the initial elbow settings: tolerant Unequal, no recompute, r1old unchanged, pm uses the new value (Q-MW-03)\"}"
+    },
+    {
+      "id": "H-MW-19",
+      "steps": [{"set":{"Type":"wl:{{\"r\",\"r\",\"r\"},{0,1,1},{Pi/2,0,0},{2,0,0},{Subscript[q,1],Subscript[q,2],Subscript[q,3]}}","TypeOld":"wl:{{\"r\"},{0},{-Pi/2},{1},{Subscript[q,1]}}","params":[0.5,0.5,0.5],"r1":[-3.1,3.1],"r2":[-3.1,3.1],"r3":[-3.1,3.1]}}],
+      "capture": ["workspace3D"],
+      "why": "full ranges: folded, self-overlapping surfaces; does Speed refine (K-MW-07)?",
+      "source": "{\"id\":\"H-MW-19\",\"steps\":[{\"set\":{\"Type\":\"wl:{{\\\"r\\\",\\\"r\\\",\\\"r\\\"},{0,1,1},{Pi/2,0,0},{2,0,0},{Subscript[q,1],Subscript[q,2],Subscript[q,3]}}\",\"TypeOld\":\"wl:{{\\\"r\\\"},{0},{-Pi/2},{1},{Subscript[q,1]}}\",\"params\":[0.5,0.5,0.5],\"r1\":[-3.1,3.1],\"r2\":[-3.1,3.1],\"r3\":[-3.1,3.1]}}],\"capture\":[\"workspace3D\"],\"why\":\"full ranges: folded, self-overlapping surfaces; does Speed refine (K-MW-07)?\"}"
+    },
+    {
+      "id": "H-MW-20",
+      "steps": [{"setFrom":"snapshot:2"}],
+      "capture": ["%options:Axes,Boxed,SphericalRegion,ImageSize,PlotRange","%plotRange"],
+      "why": "the produced Show graphic: which options survive (Axes -> True of workspace3D?), K-MW-02",
+      "source": "{\"id\":\"H-MW-20\",\"steps\":[{\"setFrom\":\"snapshot:2\"}],\"capture\":[\"%options:Axes,Boxed,SphericalRegion,ImageSize,PlotRange\",\"%plotRange\"],\"why\":\"the produced Show graphic: which options survive (Axes -> True of workspace3D?), K-MW-02\"}"
+    },
+    {
+      "id": "H-MW-21",
+      "steps": [{"set":{"Type":"wl:{{\"r\",\"r\",\"p\"},{1.2,.6,0},{0,Pi,0},{1.5,0,Subscript[q,3]},{Subscript[q,1],Subscript[q,2],0}}","TypeOld":"wl:{{\"r\"},{0},{-Pi/2},{1},{Subscript[q,1]}}","params":[0.0,1.0,0.5],"r1":[-3.1,3.1],"r2":[-3.1,3.1],"r3":[0.0,1.0]}}],
+      "capture": ["pm","wl:Table[Td[i],{i,1,dof}]","workspace3D"],
+      "why": "wrap-around: a full turn of joints 1 and 2, overlapping surfaces; slider ends",
+      "source": "{\"id\":\"H-MW-21\",\"steps\":[{\"set\":{\"Type\":\"wl:{{\\\"r\\\",\\\"r\\\",\\\"p\\\"},{1.2,.6,0},{0,Pi,0},{1.5,0,Subscript[q,3]},{Subscript[q,1],Subscript[q,2],0}}\",\"TypeOld\":\"wl:{{\\\"r\\\"},{0},{-Pi/2},{1},{Subscript[q,1]}}\",\"params\":[0.0,1.0,0.5],\"r1\":[-3.1,3.1],\"r2\":[-3.1,3.1],\"r3\":[0.0,1.0]}}],\"capture\":[\"pm\",\"wl:Table[Td[i],{i,1,dof}]\",\"workspace3D\"],\"why\":\"wrap-around: a full turn of joints 1 and 2, overlapping surfaces; slider ends\"}"
+    },
+    {
+      "id": "H-MW-22",
+      "captureEachStep": true,
+      "steps": [{"set":{"Type":"wl:{{\"r\",\"r\",\"r\"},{1,1,1},{0,0,0},{0,0,0},{Subscript[q,1],Subscript[q,2],Subscript[q,2]}}"}},{"set":{"Type":"wl:{{\"r\",\"r\",\"r\"},{0,1,1},{Pi/2,0,0},{2,0,0},{Subscript[q,1],Subscript[q,2],Subscript[q,3]}}"}}],
+      "capture": ["TypeOld","workspace3D"],
+      "why": "the cache follows TypeOld: leaving the initial elbow settings and returning recomputes the elbow workspace (compare with H-MW-11)",
+      "source": "{\"id\":\"H-MW-22\",\"captureEachStep\":true,\"steps\":[{\"set\":{\"Type\":\"wl:{{\\\"r\\\",\\\"r\\\",\\\"r\\\"},{1,1,1},{0,0,0},{0,0,0},{Subscript[q,1],Subscript[q,2],Subscript[q,2]}}\"}},{\"set\":{\"Type\":\"wl:{{\\\"r\\\",\\\"r\\\",\\\"r\\\"},{0,1,1},{Pi/2,0,0},{2,0,0},{Subscript[q,1],Subscript[q,2],Subscript[q,3]}}\"}}],\"capture\":[\"TypeOld\",\"workspace3D\"],\"why\":\"the cache follows TypeOld: leaving the initial elbow settings and returning recomputes the elbow workspace (compare with H-MW-11)\"}"
+    },
+    {
+      "id": "H-MW-23",
+      "captureEachStep": true,
+      "steps": [{"set":{"params":[0.0,0.0,0.0]}},{"set":{"params":[1.0,1.0,1.0]}}],
+      "capture": ["pm","wl:Table[Td[i],{i,1,dof}]"],
+      "why": "slider ends: pm = r min then r max; no recompute",
+      "source": "{\"id\":\"H-MW-23\",\"captureEachStep\":true,\"steps\":[{\"set\":{\"params\":[0.0,0.0,0.0]}},{\"set\":{\"params\":[1.0,1.0,1.0]}}],\"capture\":[\"pm\",\"wl:Table[Td[i],{i,1,dof}]\"],\"why\":\"slider ends: pm = r min then r max; no recompute\"}"
+    }
+  ]
+}

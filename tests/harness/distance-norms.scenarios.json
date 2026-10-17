@@ -1,0 +1,119 @@
+{
+  "schema": "manipulate-harness/scenarios-1",
+  "app": "distance-norms",
+  "notebook": "Demonstration-Distance-Norms-in-Robot-Workspace-and-Phase-Space-1-0-0-definition.nb",
+  "notebookSha256": "712f8d74a61dba9ad5e80a6592b80eca72078668332c81098d9f923f20786355",
+  "source": "_internal/batch-ab/design/distance-norms/TESTPLAN.md",
+  "generatedBy": "tools/harness/extract-scenarios.mjs",
+  "scenarios": [
+    {
+      "id": "H-DN-01",
+      "steps": [{"set":{"cORw":"phase space","p":"wl:Infinity","pEnd":[2,0],"pEndp":[2,0],"bound":"wl:1/2","r1":1,"p1":[1,0],"p2":[0,1],"IsElbowUpp":true}}],
+      "capture": ["Theta1","Theta2","r2","arm","%g"],
+      "why": "opening state with exact values (snapshot 1): arm primitives and the infinity-norm region",
+      "source": "{\"id\":\"H-DN-01\",\"steps\":[{\"set\":{\"cORw\":\"phase space\",\"p\":\"wl:Infinity\",\"pEnd\":[2,0],\"pEndp\":[2,0],\"bound\":\"wl:1/2\",\"r1\":1,\"p1\":[1,0],\"p2\":[0,1],\"IsElbowUpp\":true}}],\"capture\":[\"Theta1\",\"Theta2\",\"r2\",\"arm\",\"%g\"],\"why\":\"opening state with exact values (snapshot 1): arm primitives and the infinity-norm region\"}"
+    },
+    {
+      "id": "H-DN-02",
+      "steps": [{"set":{"cORw":"phase space","p":1}},{"set":{"p":2}},{"set":{"p":3}},{"set":{"p":"wl:Infinity"}}],
+      "captureEachStep": true,
+      "capture": ["Theta1","Theta2","r2","%g"],
+      "why": "the four norms in phase space at the opening angles: outlines and areas",
+      "source": "{\"id\":\"H-DN-02\",\"steps\":[{\"set\":{\"cORw\":\"phase space\",\"p\":1}},{\"set\":{\"p\":2}},{\"set\":{\"p\":3}},{\"set\":{\"p\":\"wl:Infinity\"}}],\"captureEachStep\":true,\"capture\":[\"Theta1\",\"Theta2\",\"r2\",\"%g\"],\"why\":\"the four norms in phase space at the opening angles: outlines and areas\"}"
+    },
+    {
+      "id": "H-DN-03",
+      "steps": [{"set":{"cORw":"workspace","p":1}},{"set":{"p":2}},{"set":{"p":3}},{"set":{"p":"wl:Infinity"}}],
+      "captureEachStep": true,
+      "capture": ["Theta1","Theta2","r2","%g"],
+      "why": "the four norms in workspace mode: exact p-balls around the tip (1, 1)",
+      "source": "{\"id\":\"H-DN-03\",\"steps\":[{\"set\":{\"cORw\":\"workspace\",\"p\":1}},{\"set\":{\"p\":2}},{\"set\":{\"p\":3}},{\"set\":{\"p\":\"wl:Infinity\"}}],\"captureEachStep\":true,\"capture\":[\"Theta1\",\"Theta2\",\"r2\",\"%g\"],\"why\":\"the four norms in workspace mode: exact p-balls around the tip (1, 1)\"}"
+    },
+    {
+      "id": "H-DN-04",
+      "steps": [{"setFrom":"snapshot:6"}],
+      "capture": ["Theta1","Theta2","arm","%g"],
+      "why": "fold near the outer circle (snapshot 6 Settings): outline, kink, whether output triangles overlap (K-DN-01)",
+      "source": "{\"id\":\"H-DN-04\",\"steps\":[{\"setFrom\":\"snapshot:6\"}],\"capture\":[\"Theta1\",\"Theta2\",\"arm\",\"%g\"],\"why\":\"fold near the outer circle (snapshot 6 Settings): outline, kink, whether output triangles overlap (K-DN-01)\"}"
+    },
+    {
+      "id": "H-DN-05",
+      "steps": [{"set":{"p":"wl:Infinity","bound":3.14,"p2":[0.955336489125606,0.29552020666133955]}}],
+      "capture": ["Theta1","Theta2","%g"],
+      "why": "largest slider d with theta2 = 0.3: three sheets, the workspace annulus covered twice (K-DN-01, D-DN-02)",
+      "source": "{\"id\":\"H-DN-05\",\"steps\":[{\"set\":{\"p\":\"wl:Infinity\",\"bound\":3.14,\"p2\":[0.955336489125606,0.29552020666133955]}}],\"capture\":[\"Theta1\",\"Theta2\",\"%g\"],\"why\":\"largest slider d with theta2 = 0.3: three sheets, the workspace annulus covered twice (K-DN-01, D-DN-02)\"}"
+    },
+    {
+      "id": "H-DN-06",
+      "steps": [{"set":{"bound":0.01}}],
+      "capture": ["Theta1","Theta2","%g"],
+      "why": "smallest d: a tiny region must still be drawn",
+      "source": "{\"id\":\"H-DN-06\",\"steps\":[{\"set\":{\"bound\":0.01}}],\"capture\":[\"Theta1\",\"Theta2\",\"%g\"],\"why\":\"smallest d: a tiny region must still be drawn\"}"
+    },
+    {
+      "id": "H-DN-07",
+      "steps": [{"set":{"r1":0.0}}],
+      "capture": ["r2","arm","%g","%messages"],
+      "why": "r1 = 0: rank-1 map, degenerate region (K-DN-02)",
+      "source": "{\"id\":\"H-DN-07\",\"steps\":[{\"set\":{\"r1\":0.0}}],\"capture\":[\"r2\",\"arm\",\"%g\",\"%messages\"],\"why\":\"r1 = 0: rank-1 map, degenerate region (K-DN-02)\"}"
+    },
+    {
+      "id": "H-DN-08",
+      "steps": [{"set":{"r1":2.0}}],
+      "capture": ["r2","arm","%g","%messages"],
+      "why": "r1 = 2 (r2 = 0): degenerate region, label on link 1 (K-DN-02)",
+      "source": "{\"id\":\"H-DN-08\",\"steps\":[{\"set\":{\"r1\":2.0}}],\"capture\":[\"r2\",\"arm\",\"%g\",\"%messages\"],\"why\":\"r1 = 2 (r2 = 0): degenerate region, label on link 1 (K-DN-02)\"}"
+    },
+    {
+      "id": "H-DN-09",
+      "steps": [{"set":{"r1":1.5}},{"set":{"r1":0.5}}],
+      "captureEachStep": true,
+      "capture": ["r2","arm"],
+      "why": "Robot Arm label on link 1 (r2 < 1) and on link 2 (r2 >= 1) with machine r1",
+      "source": "{\"id\":\"H-DN-09\",\"steps\":[{\"set\":{\"r1\":1.5}},{\"set\":{\"r1\":0.5}}],\"captureEachStep\":true,\"capture\":[\"r2\",\"arm\"],\"why\":\"Robot Arm label on link 1 (r2 < 1) and on link 2 (r2 >= 1) with machine r1\"}"
+    },
+    {
+      "id": "H-DN-10",
+      "steps": [{"set":{"p2":[1.0,0.0]}}],
+      "capture": ["Theta2","arm"],
+      "why": "theta2 = 0: the blue angle arc becomes a Point (myArrowArc equal angles)",
+      "source": "{\"id\":\"H-DN-10\",\"steps\":[{\"set\":{\"p2\":[1.0,0.0]}}],\"capture\":[\"Theta2\",\"arm\"],\"why\":\"theta2 = 0: the blue angle arc becomes a Point (myArrowArc equal angles)\"}"
+    },
+    {
+      "id": "H-DN-11",
+      "steps": [{"set":{"p1":[0.0,0.0]}}],
+      "capture": ["Theta1","arm","%messages"],
+      "why": "dial pressed exactly at its centre: ArcTan[0., 0.] (K-DN-03)",
+      "source": "{\"id\":\"H-DN-11\",\"steps\":[{\"set\":{\"p1\":[0.0,0.0]}}],\"capture\":[\"Theta1\",\"arm\",\"%messages\"],\"why\":\"dial pressed exactly at its centre: ArcTan[0., 0.] (K-DN-03)\"}"
+    },
+    {
+      "id": "H-DN-12",
+      "steps": [{"set":{"p1":[0.7071067811865476,0.7071067811865476]}}],
+      "capture": ["Theta1","arm"],
+      "why": "theta1 = pi/4 up to rounding: the tolerant Abs[theta1] > pi/4 hides the label",
+      "source": "{\"id\":\"H-DN-12\",\"steps\":[{\"set\":{\"p1\":[0.7071067811865476,0.7071067811865476]}}],\"capture\":[\"Theta1\",\"arm\"],\"why\":\"theta1 = pi/4 up to rounding: the tolerant Abs[theta1] > pi/4 hides the label\"}"
+    },
+    {
+      "id": "H-DN-13",
+      "steps": [{"set":{"pEnd":[0.5,0.5]}}],
+      "capture": ["Theta1","Theta2","arm","%g"],
+      "why": "the inert end-effector locator changes nothing (Q-DN-01)",
+      "source": "{\"id\":\"H-DN-13\",\"steps\":[{\"set\":{\"pEnd\":[0.5,0.5]}}],\"capture\":[\"Theta1\",\"Theta2\",\"arm\",\"%g\"],\"why\":\"the inert end-effector locator changes nothing (Q-DN-01)\"}"
+    },
+    {
+      "id": "H-DN-14",
+      "steps": [{"setFrom":"snapshot:2"}],
+      "capture": ["Theta1","Theta2","arm","%g","%plotRange"],
+      "why": "workspace square around the tip (-0.0096, 1.99995) of snapshot 2, just inside the plot range",
+      "source": "{\"id\":\"H-DN-14\",\"steps\":[{\"setFrom\":\"snapshot:2\"}],\"capture\":[\"Theta1\",\"Theta2\",\"arm\",\"%g\",\"%plotRange\"],\"why\":\"workspace square around the tip (-0.0096, 1.99995) of snapshot 2, just inside the plot range\"}"
+    },
+    {
+      "id": "H-DN-15",
+      "steps": [{"setFrom":"snapshot:1"},{"setFrom":"snapshot:2"},{"setFrom":"snapshot:3"},{"setFrom":"snapshot:4"},{"setFrom":"snapshot:5"},{"setFrom":"snapshot:6"}],
+      "captureEachStep": true,
+      "capture": ["cORw","Theta1","Theta2","arm","%g"],
+      "why": "all six snapshot Settings, including cORw = configuration (Q-DN-07)",
+      "source": "{\"id\":\"H-DN-15\",\"steps\":[{\"setFrom\":\"snapshot:1\"},{\"setFrom\":\"snapshot:2\"},{\"setFrom\":\"snapshot:3\"},{\"setFrom\":\"snapshot:4\"},{\"setFrom\":\"snapshot:5\"},{\"setFrom\":\"snapshot:6\"}],\"captureEachStep\":true,\"capture\":[\"cORw\",\"Theta1\",\"Theta2\",\"arm\",\"%g\"],\"why\":\"all six snapshot Settings, including cORw = configuration (Q-DN-07)\"}"
+    }
+  ]
+}

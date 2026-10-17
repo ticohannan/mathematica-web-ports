@@ -1,0 +1,29 @@
+{
+ "source": "Demonstration-Shortest-Path-for-Forward-and-Reverse-Motion-of-a-Car-1-0-0-definition.nb",
+ "note": "Manipulate states saved in the ORIGINAL notebook, computed by the original Mathematica code: states[0] = the live state of the output cell, specs = the initial settings (the Manipulate's stored \"Variables\"), snapshots = the Settings stored with each snapshot cell. Extracted with tools/extract_state.py --snapshots. Golden parity fixture (CC BY-NC-SA 3.0, as the original).",
+ "format": "Numbers: a JSON integer is an exact Wolfram integer (|x| <= 2^53 - 1; larger ones are {\"wl\": digits}); a JSON number written with a decimal point or an exponent is a machine real (the shortest text that reads back as the identical double); any other exact number (Rational, rational multiple of Pi, arbitrary-precision real, an unevaluated Sin[...], Infinity) is {\"wl\": a Wolfram-readable form (not necessarily InputForm: compare exact values by value), \"n\": its double} - \"n\" is the correctly rounded double for a Rational or rational multiple of Pi, Python's double evaluation otherwise, and absent for Infinity. Symbols are {\"sym\": name}, other expressions {\"head\": name, \"args\": [...]}; variable names without context and $$, Greek letters as Unicode. packedTypes maps the JSON pointer of a decoded packed array that was stored with a narrower element type (CompressedData tag b) to that type. snapshots[\"k\"] belongs to the picture docs/original-snapshots/<dir>-k.png (cells in file order).",
+ "specs": {
+  "locs": [[-10,-5],[-10,-7],[8,5],[10,4]],
+  "locsOld": [[-10,-5],[-10,-7],[8,5],[10,4]],
+  "minRadius": 3,
+  "optPath": [[0,0,1]],
+  "progress": 0.0,
+  "progressOld": -1,
+  "type": "Reeds-Shepp"
+ },
+ "states": [
+  {"locs":[[-10,-5],[-10,-7],[8,5],[10,4]],"locsOld":[[-10,-5],[-10,-7],[8,5],[10,4]],"minRadius":3,"optPath":[[0.6464033872903242,1.0,-1.0],[1.5707963267948966,-1.0,1.0],[4.699796477066468,0.0,1.0],[1.1100509962911302,1.0,1.0]],"progress":0.0,"progressOld":-1,"type":"Reeds-Shepp"}
+ ],
+ "snapshots": {
+  "1": {"locs":[[-10,-5],[-10,-7],[8,5],[10,4]],"locsOld":[[-10,-5],[-10,-7],[8,5],[10,4]],"progress":0.0,"progressOld":-1,"optPath":[[0.6464033872903242,1.0,-1.0],[1.5707963267948966,-1.0,1.0],[4.699796477066468,0.0,1.0],[1.1100509962911302,1.0,1.0]],"minRadius":3,"type":"Reeds-Shepp"},
+  "2": {"locs":[[-10,-5],[-10.0,-3.0],[8,5],[6.211145618000167,5.894427190999914]],"locsOld":[[-10,-5],[-10.0,-3.0],[8,5],[6.211145618000167,5.894427190999914]],"progress":0.745,"progressOld":-1,"optPath":[[1.4766268455915117,1.0,1.0],[4.7619457384678485,0.0,1.0],[2.583775563385603,-1.0,1.0]],"minRadius":3,"type":"Dubins"},
+  "3": {"locs":[[-2.09,-2.04],[-2.09,-0.040000000000000036],[3.66,-1.6799999999999997],[3.529437973132967,0.31573383925321385]],"locsOld":[[-2.09,-2.04],[-2.09,-0.040000000000000036],[3.66,-1.6799999999999997],[3.529437973132967,0.31573383925321385]],"progress":0.366,"progressOld":-1,"optPath":[[0.4273569245847597,-1.0,-1.0],[0.6563135594931571,1.0,1.0],[0.6563135594931571,-1.0,1.0],[0.4926843942081116,1.0,-1.0]],"minRadius":8.142,"type":"Reeds-Shepp"},
+  "4": {"locs":[[-2.09,-2.04],[-2.09,-0.040000000000000036],[3.66,-1.6799999999999997],[3.529437973132967,0.31573383925321385]],"locsOld":[[-2.09,-2.04],[-2.09,-0.040000000000000036],[3.66,-1.6799999999999997],[3.529437973132967,0.31573383925321385]],"progress":0.34900000000000003,"progressOld":-1,"optPath":[[1.416515841396222,1.0,1.0],[0.7125449659326776,0.0,1.0],[4.801341996160012,1.0,1.0]],"minRadius":8.142,"type":"Dubins"}
+ },
+ "snapshotCellIds": {
+  "1": 210222468,
+  "2": 524604434,
+  "3": 1606351303,
+  "4": 1929423084
+ }
+}

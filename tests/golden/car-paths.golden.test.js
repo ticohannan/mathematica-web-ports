@@ -7,6 +7,8 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import { evaluate, initialState, getOptimalPath, pathLength } from '../../demos/car-paths/carpaths.js';
 import { mmaNumberString } from '../../shared/mma-extra.js';
+import { changeOfBasisR, cart2Polar, modPi, angfrom1to2, path7, timeflip, drawPath } from '../../demos/car-paths/carpaths.js';
+import { loadStates, plain, isIntegerLiteral } from '../../tools/lib/wl-json.mjs';
 
 const saved = JSON.parse(fs.readFileSync('tests/golden/car-paths.original-state.json', 'utf8')).state;
 // owner state 1 (Mathematica 15.0.1, saved 2026-10-06): non-integer poses, so the original computed with machine numbers
@@ -90,5 +92,106 @@ describe('car-paths golden', () => {
     expect([state.progress, state.progressOld, state.minRadius, state.type]).toEqual([owner1.progress, owner1.progressOld, owner1.minRadius, owner1.type]);
     // label: the saved path (sum 3.964105 x 6.318 = 25.045) and Norm[{17.55, 5.42, pi/2 - ArcTan[1/2]}] = 18.401
     expect(label(view)).toBe('path length: 25.05   distance: 18.4');
+  });
+});
+
+// ---- snapshot Settings (tests/golden/car-paths.original-states.json, extracted with tools/extract_state.py --snapshots):
+// each snapshot cell of the original notebook stores the full Manipulate state behind its picture
+// (docs/original-snapshots/car-paths-<k>.png), including the optPath the original computed.
+const FIXTURE = 'tests/golden/car-paths.original-states.json';
+const snaps = loadStates(FIXTURE);
+const snapText = fs.readFileSync(FIXTURE, 'utf8');
+const snap = (k) => plain(snaps.snapshots[k - 1]);
+const sameBits = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+const fixedPoint = (st, out) => {
+  expect(out.locs).toEqual(st.locs);
+  expect(out.locsOld).toEqual(st.locsOld);
+  expect([out.progress, out.progressOld, out.minRadius, out.type]).toEqual([st.progress, st.progressOld, st.minRadius, st.type]);
+};
+
+describe('car-paths golden: the four snapshot states', () => {
+  it('car-paths: snapshot 1: the Settings are the live state, with exact integer poses, label 24.08 and 20.62', () => {
+    expect(snaps.count).toBe(4);
+    expect(snap(1)).toEqual(plain(snaps.live));
+    // exact integers in the notebook (JSON integers), so the original computed symbolically (D-CP-01)
+    for (const ptr of [['locs', 1, 0], ['locs', 3, 1], ['minRadius']]) expect(isIntegerLiteral(snapText, ['snapshots', '1', ...ptr])).toBe(true);
+    const st = snap(1);
+    const { state, view } = evaluate({ ...st });
+    fixedPoint(st, state);
+    expect(state.optPath.map((e) => [e[1], e[2]])).toEqual(st.optPath.map((e) => [e[1], e[2]]));
+    state.optPath.forEach((e, i) => expect(Math.abs(e[0] - st.optPath[i][0])).toBeLessThanOrEqual(ulp(st.optPath[i][0])));
+    expect(label(view)).toBe('path length: 24.08   distance: 20.62');
+  });
+  it('car-paths: snapshot 2: Dubins with machine-number markers gives the saved optPath bit for bit, label 26.47 and 20.62', () => {
+    const st = snap(2);
+    expect(st.type).toBe('Dubins');
+    expect(isIntegerLiteral(snapText, ['snapshots', '2', 'locs', 1, 1])).toBe(false); // {-10., -3.}: machine reals
+    const { state, view } = evaluate({ ...st });
+    expect(sameBits(state.optPath, st.optPath)).toBe(true);
+    fixedPoint(st, state);
+    expect(label(view)).toBe('path length: 26.47   distance: 20.62');
+    expect(st.progress).toBe(745 * 0.001);
+  });
+  it('car-paths: snapshot 3: Reeds-Shepp with r_min 8.142 gives the saved path word, parameters within 1 ulp, label 18.18 and 5.76', () => {
+    // bit for bit only with the summation order of K-CP-11 (next two tests)
+    const st = snap(3);
+    const { state, view } = evaluate({ ...st });
+    expect(state.optPath.map((e) => [e[1], e[2]])).toEqual(st.optPath.map((e) => [e[1], e[2]]));
+    state.optPath.forEach((e, i) => expect(Math.abs(e[0] - st.optPath[i][0])).toBeLessThanOrEqual(ulp(st.optPath[i][0])));
+    fixedPoint(st, state);
+    expect(label(view)).toBe('path length: 18.18   distance: 5.76');
+  });
+  // K-CP-11: the original evaluates t = modπ[Theta + π/2 + a] with the machine terms added first ((Theta + a) + π/2);
+  // the port adds left to right ((Theta + π/2) + a), 1 ulp lower here in t and therefore in v. Skipped until K-CP-11 is
+  // decided (no change to the port without a design decision).
+  it.skip('car-paths: snapshot 3: the saved optPath bit for bit (K-CP-11, order of Theta + Pi/2 + a)', () => {
+    const st = snap(3);
+    expect(sameBits(evaluate({ ...st }).state.optPath, st.optPath)).toBe(true);
+  });
+  it('car-paths: snapshot 3: path7 with the machine terms of Theta + Pi/2 + a added first reproduces the saved parameters (evidence for K-CP-11)', () => {
+    const st = snap(3);
+    const L = st.locs;
+    const start = [L[0][0], L[0][1], angfrom1to2(L[0], L[1])], goal = [L[2][0], L[2][1], angfrom1to2(L[2], L[3])];
+    const [x, y, Th] = changeOfBasisR(start, goal, st.minRadius);
+    // the optimum is path7 (C|CuCu|C) in its timeflip variant: path7[-x, y, -Phi]
+    expect(sameBits(timeflip(path7(-x, y, -Th)).map((e) => [e[1], e[2]]), st.optPath.map((e) => [e[1], e[2]]))).toBe(true);
+    const Phi = -Th;
+    const [rho, Theta] = cart2Polar(-x + Math.sin(Phi), y - 1 - Math.cos(Phi));
+    const u = Math.acos((20 - rho * rho) / 16);
+    const a = Math.asin((2 * Math.sin(u)) / rho);
+    expect(u).toBe(st.optPath[1][0]); // u is bit-identical
+    const port = modPi(Theta + Math.PI / 2 + a); // as the port (left to right)
+    const alt = modPi((Theta + a) + Math.PI / 2); // machine terms first, then the exact π/2
+    expect(port).toBe(0.42735692458475966);
+    expect(alt).toBe(st.optPath[0][0]); // 0.4273569245847597
+    expect(modPi(alt - Phi)).toBe(st.optPath[3][0]); // v = modπ[t - Phi]: 0.4926843942081116
+    expect(modPi(port - Phi)).toBe(0.49268439420811155);
+  });
+  it('car-paths: snapshot 4: Dubins with r_min 8.142 gives the saved optPath bit for bit, label 56.43 and 5.76', () => {
+    const st = snap(4);
+    const { state, view } = evaluate({ ...st });
+    expect(sameBits(state.optPath, st.optPath)).toBe(true);
+    fixedPoint(st, state);
+    expect(label(view)).toBe('path length: 56.43   distance: 5.76');
+    // slider values are min + k step in machine arithmetic (K-CP-07): 349 x 0.001, not the decimal 0.349
+    expect(st.progress).toBe(349 * 0.001);
+    expect(st.progress).not.toBe(0.349);
+    expect(st.minRadius).toBe(0.001 + 8141 * 0.001);
+  });
+  it('car-paths: snapshot 4: the two forward right arcs of 1.42 and 4.80 rad have angE < angS and are drawn over their own length, as the picture shows (K-CP-01)', () => {
+    // docs/original-snapshots/car-paths-4.png: the start arc is the short arc up and right of the green car, the goal arc
+    // runs below the right construction circle's centre round to the red car (about 3/4 of the circle); a 2π
+    // complement convention would draw 4.87 and 1.48 rad instead
+    const st = snap(4);
+    const L = st.locs;
+    const arcs = drawPath(st.optPath, [L[0][0], L[0][1], angfrom1to2(L[0], L[1])], st.minRadius).filter((e) => e.kind === 'arc');
+    expect(arcs).toHaveLength(2);
+    arcs.forEach((a, i) => {
+      const param = st.optPath[i === 0 ? 0 : 2][0];
+      expect(a.angE).toBeLessThan(a.angS);
+      expect(Math.abs(a.angS - a.angE - param)).toBeLessThan(1e-14);
+    });
+    expect(arcs[1].angE).toBeLessThan(-Math.PI / 2); // the goal arc covers the bottom of its circle (angle -π/2)
+    expect(arcs[1].angS).toBeGreaterThan(-Math.PI / 2);
   });
 });
