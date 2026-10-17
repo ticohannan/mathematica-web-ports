@@ -131,6 +131,41 @@ test.describe('seven-link robot', () => {
     await expect(page.getByTestId('success-text')).toHaveText('Congratulations! You solved goal 1 in only 0 collisions!');
   });
 
+  test('a newly counted collision beeps once and the mute checkbox silences it (Beep[] of the original)', async ({ page }) => {
+    await openDemo(page, URL);
+    await expect(page.getByTestId('check-mute')).not.toBeChecked();
+    await page.locator('.caption').click(); // a user gesture: browsers allow sound only after one
+    // Web Audio is missing in some engines (e.g. Playwright's WebKit on Windows), and a machine without a sound device
+    // may keep it suspended: then the port is silent (D-SL-02), no tone may be started, and only the Beep[] count is
+    // checked. Where the audio runs, every newly counted collision must start exactly one tone.
+    const state = () => page.evaluate(() => window.__demo.audio().state);
+    if ((await state()) !== 'unavailable') await expect.poll(state, { timeout: 5000 }).toBe('running').catch(() => {});
+    const audible = (await state()) === 'running';
+    if (!audible) test.info().annotations.push({ type: 'note', description: `no running Web Audio here (${await state()}): beep counted, silent` });
+    const start7 = await page.evaluate(() => window.__demo.getState().loc[6]);
+    const push = () => page.evaluate(() => {
+      for (let k = 0; k < 200 && !window.__demo.getState().isCollide; k++) window.__demo.moveLocator(7, [300, 230]);
+      for (let k = 0; k < 5; k++) window.__demo.moveLocator(7, [300, 230]); // pushing on: undone, no new count, no beep
+      return { beeps: window.__demo.beeps(), sounds: window.__demo.sounds(), collisions: window.__demo.getState().collisions };
+    });
+    const pullOut = (p) => page.evaluate((p) => {
+      for (let k = 0; k < 200 && (window.__demo.getState().isCollide || window.__demo.getState().collideState); k++) window.__demo.moveLocator(7, p);
+      return window.__demo.getState().isCollide;
+    }, p);
+    const tones = (n) => (audible ? n : 0);
+    expect(await push()).toEqual({ beeps: 1, sounds: tones(1), collisions: 1 });
+    expect(await pullOut(start7)).toBe(false);
+    expect(await push()).toEqual({ beeps: 2, sounds: tones(2), collisions: 2 }); // a second push counts and beeps again
+    await page.getByTestId('check-mute').check();
+    await page.getByTestId('button-restart').click(); // restart and Initial settings leave the page preference alone
+    await expect(page.getByTestId('check-mute')).toBeChecked();
+    expect(await push()).toEqual({ beeps: 3, sounds: tones(2), collisions: 1 });
+    await page.getByTestId('reset').click();
+    await expect(page.getByTestId('check-mute')).toBeChecked();
+    await page.getByTestId('check-mute').uncheck();
+    expect(await push()).toEqual({ beeps: 4, sounds: tones(3), collisions: 1 });
+  });
+
   test('Initial settings restores the opening state', async ({ page }) => {
     await openDemo(page, URL);
     await page.getByTestId('setter-goal-3').click();

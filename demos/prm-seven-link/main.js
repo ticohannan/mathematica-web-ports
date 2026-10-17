@@ -3,7 +3,8 @@
 // SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // demos/prm-seven-link/main.js — page: controls, SVG drawing, locator dragging (browser only).
 import { Controls } from '../../shared/ui.js';
-import { addButton } from '../../shared/ui-extra.js';
+import { addButton, addCheckbox } from '../../shared/ui-extra.js';
+import { createBeeper } from '../../shared/beep.js';
 import { createPlot, addLocators, locatorGlyph } from '../../shared/svg-plot.js';
 import { NAMED, darker } from '../../shared/mma-colors.js';
 import { mmaNumberString } from '../../shared/mma-extra.js';
@@ -55,10 +56,12 @@ function run() {
   const r = evaluate(state);
   state = r.state;
   view = r.view;
-  if (r.view.beep) beeps++;
+  if (r.view.beep) { beeps++; beeper.beep(); } // Beep[] on a newly counted collision (F-SL-14)
   draw();
 }
 let beeps = 0;
+// Beep[] as a short Web Audio tone; sound starts after the first press or key press on the page (F-SL-14, D-SL-02)
+const beeper = createBeeper();
 
 // Locators: {{loc, locstart}, {18, 7}, {884, 884}, Locator, Appearance -> None}
 const clampLoc = ([x, y]) => [Math.min(Math.max(x, MIN_X), MAX_X), Math.min(Math.max(y, MIN_Y), MAX_Y)];
@@ -89,6 +92,12 @@ const goalCtl = controls.setterBar({
   onChange: (v) => { state.goal = v; run(); },
 });
 
+// port addition A-SL-07: mute the collision beep (a page preference: "Initial settings" leaves it as it is)
+const muteCtl = addCheckbox(controls, {
+  name: 'mute', label: 'mute beep', value: false, parent: document.querySelector('.panel-tools'),
+  onChange: (m) => beeper.setMuted(m),
+});
+
 document.getElementById('reset').addEventListener('click', () => {
   state = initialState();
   movementCtl.set(state.movement);
@@ -104,6 +113,9 @@ window.__demo = {
   getState: () => JSON.parse(JSON.stringify(state)),
   view: () => JSON.parse(JSON.stringify(view)),
   beeps: () => beeps,
+  /** tones actually started (not muted, audio available) and the audio state (F-SL-14, A-SL-07) */
+  sounds: () => beeper.played,
+  audio: () => ({ state: beeper.state, muted: beeper.muted, checkbox: muteCtl.get() }),
   /** move locator n (1..7) to world point p, as one front-end update */
   moveLocator: (n, p) => { state.loc[n - 1] = clampLoc(p); run(); return JSON.parse(JSON.stringify(state)); },
   setState: (partial) => { state = { ...state, ...JSON.parse(JSON.stringify(partial)) }; movementCtl.set(state.movement); goalCtl.set(state.goal); run(); },

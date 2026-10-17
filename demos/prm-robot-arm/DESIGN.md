@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.12 |
+| Code version: | 0.1.13 |
 | Document revision | 3 (2026-10-06) — published on the main site (private-preview banner removed) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Probabilistic Roadmap Method for Robot Arm", contributed by Aaron T. Becker and Yitong Lu, published January 29, 2020 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ProbabilisticRoadmapMethodForRobotArm/>. Readable source: [`docs/original-source/prm-robot-arm.txt`](../../docs/original-source/prm-robot-arm.txt); snapshots: `docs/original-snapshots/prm-robot-arm-*.png`; saved state: `tests/golden/prm-robot-arm.original-state.json` |
@@ -179,6 +179,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 1 | v0.1.0 | 2026-10-06 | first AI conversion: feature list, quirks and deviations written with the port |
 | 2 | v0.1.1 | 2026-10-06 | owner testing round 1 (after an independent review): K-PA-01 resolved (incl. Position), K-PA-05 extended (strips, inner Locator icons), D-PA-09 (12 px grab zone), owner-state citations moved to F-PA-10/F-PA-12, path label marked as regression pin; LocatorPane press-anywhere picking outside the 3D inset (F-PA-09, K-PA-05); progress/radius animator stated (F-PA-07, F-PA-08, O-PA-02); K-PA-01 partly resolved; owner state 1 golden tests (O-PA-03); O-PA-01 |
 | 3 | v0.1.12 | 2026-10-06 | added to this repository and published: private-preview banner removed (A-PA-04), role line updated; no other feature changes. Versions v0.1.0 and v0.1.1 in this document (Since column, rows above) are versions of the separate repository the app was developed in, not of this repository |
+| 3 | v0.1.13 | 2026-10-12 | no change to this app (collision beep with a mute checkbox in prm-seven-link; new `shared/beep.js` used only there) |
 
 ## 10. Improvements to consider (not implemented)
 

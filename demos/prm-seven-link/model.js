@@ -170,7 +170,7 @@ export function evaluate(stateIn) {
     st.collideState = 0;
   } else if (st.collideState === 0) {
     st.collisions += 1;
-    beep = true; // Beep[] in the original (not reproduced, D-SL-02)
+    beep = true; // Beep[] in the original: main.js plays a tone unless muted (F-SL-14, A-SL-07)
     st.collideState = 1;
   } else {
     st.loc = st.locOld.map((p) => [...p]);

@@ -87,6 +87,8 @@ svg.svg-plot .locator:focus-visible .locator-glyph circle, svg.svg-plot .locator
 .ctl-button { font: inherit; font-size: 0.85rem; border: 1px solid var(--line); background: var(--btn); border-radius: 4px; padding: 4px 10px; cursor: pointer; }
 .ctl-button:active { background: var(--btn-on); }
 .ctl-check { display: flex; align-items: center; gap: 6px; }
+/* a port-addition checkbox beside "Initial settings" (prm-seven-link's "mute beep") */
+.panel-tools .ctl-check { flex-direction: row; gap: 4px; align-self: center; }
 .ctl-popup { font: inherit; font-size: 0.85rem; padding: 2px 4px; }
 .graphic.wide { max-width: 760px; flex-basis: 600px; }
 .vslider { writing-mode: vertical-lr; direction: rtl; height: 80px; width: 22px; }

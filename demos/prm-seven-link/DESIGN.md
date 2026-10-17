@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.12 |
-| Document revision | 3 (2026-10-06) — published on the main site (private-preview banner removed) |
+| Code version: | 0.1.13 |
+| Document revision | 4 (2026-10-12) — P-SL-01 implemented: the original's collision beep (F-SL-14) with a mute checkbox (A-SL-07); K-SL-02 resolved by the owner's observation (one evaluation per update, as implemented) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Probabilistic Roadmap Method with Seven-Link Articulated Robot", contributed by Aaron T. Becker and Yitong Lu, published April 29, 2020 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ProbabilisticRoadmapMethodWithSevenLinkArticulatedRobot/>. Readable source: [`docs/original-source/prm-seven-link.txt`](../../docs/original-source/prm-seven-link.txt); snapshots: `docs/original-snapshots/prm-seven-link-*.png` |
 | Port files | `model.js` (constants, geometry, one evaluation of the Manipulate body; pure), `main.js` (SVG drawing, locators, controls), `index.html` |
@@ -20,7 +20,7 @@ no planner and no random sampling — it lets the user feel why planning in a 7-
 
 In scope: the original's controls (restart, movement relative/absolute, goal 1–7), the seven invisible joint
 locators, the rate-limited joint motion, collision counting, the status and success texts, the drawing.
-Out of scope (would need a design entry first): an actual PRM planner, more goals, undo, sound.
+Out of scope (would need a design entry first): an actual PRM planner, more goals, undo, other sounds.
 
 ## 3. Users and use cases
 
@@ -52,13 +52,14 @@ Out of scope (would need a design entry first): an actual PRM planner, more goal
 | F-SL-09 | Goal configuration og from the accumulated relative angles of the goal row; worst error = largest distance between corresponding joints of og and the robot (base included); success when worst error < 20 and no collision | the puzzle's objective | v0.1.0 | unit "goal configuration: og starts at the base and has 8 points, links of length 140"; unit "success needs worst error < 20 and no collision in the PREVIOUS evaluation"; golden "seven-link: worst error of the start position for goal 1 is 669.7, as in the original snapshot" |
 | F-SL-10 | Constants of the original: 7 obstacles (Fig. 2 of [1]), base (445, 846), start joints, goal table, workspace 18…884 × 7…884 | same scene as the original | v0.1.0 | golden "seven-link: the saved state is the state after the first evaluation of the initial settings"; golden "seven-link: evaluating the saved state again changes nothing" |
 
-### 4.3 Graphics (SVG)
+### 4.3 Graphics (SVG) and sound
 
 | ID | Feature | Why | Since | Verified by |
 |----|---------|-----|-------|-------------|
 | F-SL-11 | Text "`n` collisions, worst error = `e`" above the workspace (worst error rounded to 0.1) and, on success, "Congratulations! You solved goal `g` in only `n` collisions!" | feedback to the player | v0.1.0 | e2e "status text reads "0 collisions, worst error = 669.7" at the start (as the original snapshot)"; e2e "success message when the robot matches the goal" |
 | F-SL-12 | Drawing order and colours of the original: white workspace rectangle with thick black edge; blue obstacles with thick black edges; goal chain as a darker-green line with large points; robot as a brown line (red while colliding), Thickness 0.005; locator glyphs at the robot's accepted joints (`Locator /@ locOld`) | same picture as the original | v0.1.0 | e2e "loads without errors and draws workspace, obstacles, robot and goal"; review |
 | F-SL-13 | Title, caption and details text of the original | explains the Demonstration | v0.1.0 | M-SL-01 |
+| F-SL-14 | A beep on every newly counted collision (`collisions=collisions+1;Beep[];collideState = 1;`), not on the updates that undo further pushing; a short Web Audio tone (D-SL-02) | the original's audible collision feedback (owner decision 2026-10-12, P-SL-01) | v0.1.13 | unit "is silent until the first pointer press, then plays one tone per beep"; e2e "a newly counted collision beeps once and the mute checkbox silences it (Beep[] of the original)"; M-SL-03 |
 
 ### 4.4 Port additions
 
@@ -70,6 +71,7 @@ Out of scope (would need a design entry first): an actual PRM planner, more goal
 | A-SL-04 | "All demos" link (the private-preview banner of v0.1.0–v0.1.1 was removed in v0.1.12, when publication was cleared) | site navigation | v0.1.0 | inventory; M-GEN-01 |
 | A-SL-05 | Credit footer: original title, authors, licence, adaptation notice | required by CC BY-NC-SA 3.0 | v0.1.0 | e2e "attribution on" |
 | A-SL-06 | Start-up notice (watchdog, `<noscript>`) when the page cannot start (DEC-22) | a clear message instead of an empty page | v0.1.0 | e2e "start-up notice when" |
+| A-SL-07 | "mute beep" checkbox next to "Initial settings" (default: not muted); silences F-SL-14; a page preference, so "Initial settings" and "restart" leave it as it is | the beep may get annoying (owner request 2026-10-12, P-SL-01) | v0.1.13 | unit "plays nothing while muted and again after unmuting"; e2e "a newly counted collision beeps once and the mute checkbox silences it (Beep[] of the original)"; inventory |
 
 ## 5. UI inventory
 
@@ -83,6 +85,7 @@ matches any text. Checked by the browser test "every control on … is specified
 | `setter-goal-*` | F-SL-03 |
 | `locator-*` | F-SL-04, A-SL-02 |
 | `reset` | A-SL-01 |
+| `check-mute` | A-SL-07 |
 | `crumbs` | A-SL-04 |
 | `details` | F-SL-13 |
 | `credits` | A-SL-05 |
@@ -99,6 +102,10 @@ matches any text. Checked by the browser test "every control on … is specified
   evaluates.
 - The invisible Manipulate locators sit at `loc`; the drawn locator glyphs sit at `locOld`, as in the original.
 - Mathematica's tolerant comparisons (`==`, `<=` on machine reals) come from `shared/mma.js`.
+- The beep (F-SL-14) uses `shared/beep.js` (MIT): `createBeeper()` creates the Web Audio context on the first press,
+  touch, click or key press on the page and resumes it on later ones when it is not running (browsers allow sound only
+  after a user gesture); `beep()` plays a 0.15 s, 880 Hz tone while the context is running, unless muted (A-SL-07). `model.js` reports `view.beep` when an update counts a new collision; `main.js`
+  calls the beeper. `window.__demo.beeps()` counts the `Beep[]` evaluations, `__demo.sounds()` the tones started.
 - Drawing uses `shared/svg-plot.js` (PlotRange → viewBox, Thickness/PointSize as fractions of the plot width,
   container-level locator hit-testing).
 
@@ -112,25 +119,27 @@ matches any text. Checked by the browser test "every control on … is specified
 | Q-SL-04 | quirk kept | "worst error" and the success test use the state before the current update; the collision count in the text is the updated one. |
 | Q-SL-05 | quirk kept | On the first colliding update the colliding joints stay in `loc` (the invisible locators stay there) while the robot is drawn at `locOld`; the next update reverts. |
 | D-SL-01 | deviation | What counts as one update differs: Mathematica's front end decides how often it re-evaluates during a drag; the port evaluates once per animation frame with the latest pointer position (and once per arrow key). The rate limit per update is the same; the speed of a drag may differ. To be compared with the original by hand (M-SL-02). |
-| D-SL-02 | deviation | `Beep[]` on a new collision is not reproduced (no sound); the count is shown as in the original. Default chosen until the owner decides whether the port should beep. |
+| D-SL-02 | deviation | The sound of `Beep[]` differs: Mathematica plays the operating system's alert sound, the port a short plain tone (Web Audio, 0.15 s, 880 Hz). The port is silent until the user's first press, touch, click or key press on the page (browser autoplay rule; tones are not queued while the browser keeps audio suspended) and in browsers without Web Audio (e.g. Playwright's WebKit on Windows). Until v0.1.12 the port did not beep at all (owner decision 2026-10-12: beep, with a mute checkbox, P-SL-01). |
 | D-SL-03 | deviation | Font, point sizes and line widths approximate Mathematica's (`Medium` text ≈ 13 px; `PointSize[Large]` = 1.8 % of the plot width, measured on the original's snapshot). `Opacity[6]` (> 1) is drawn as opaque. |
 | D-SL-04 | deviation | When several joints collide with exact touching geometry, Mathematica may compare exact integers (unmoved joints keep integer coordinates) where the port uses machine numbers. Not observed; listed as a lead (K-SL-01). |
 | D-SL-05 | deviation (resolved in v0.1.1) | Locator picking now follows Mathematica's LocatorPane, which "by default directs any click to the nearest locator" ([LocatorPane reference](https://reference.wolfram.com/language/ref/LocatorPane.html), Details); Manipulate `Locator` controls are LocatorPane locators. PORT DEVIATION: a press within 12 CSS px grabs that joint's invisible locator where it is (no jump; the distance at which Mathematica grabs without a jump is unknown, M-SL-06); a press also gives the locator keyboard focus; a press anywhere else moves the nearest joint's locator to the press point, and the evaluation then turns that link by at most 0.05 rad toward it (Q-SL-01). Ties: lower joint number. While dragging, the body runs once per animation frame (D-SL-01). After a first collision the invisible locators are not under the drawn glyphs (Q-SL-05); the nearest-locator rule still picks the joint nearest to the press. Still unknown in the original: the distance at which a press grabs without a jump, and the tie rule (M-SL-06). Verified by e2e "a press away from every locator turns the nearest joint toward the press point". |
 | K-SL-01 | known issue (lead) | Exact (integer/rational) vs machine arithmetic in `segmentIntersectionQ` for segments whose ends are all integers (unmoved joints against obstacle edges): the port computes `Det` exactly for integer entries and with Mathematica's LU-based `Det` (bit-exact, `shared/mma-exact.js`) otherwise, and `ArcTan` correctly rounded; the intersection point and `Gamma` are machine numbers where Mathematica has exact rationals. Only matters at exact touching. `Cos`/`Sin` are the browser's (last-bit differences possible). |
-| K-SL-02 | known issue (lead, important) | **Does Mathematica evaluate the body again after the body assigns its own control variables** (`loc[[i]] = …`, `locOld = loc`, `collideState = …`)? The port evaluates once per update. If the original re-evaluates until nothing changes, holding a link against an obstacle behaves very differently: measured with the port's model over 120 updates, one pass gives 1 collision and a red robot; re-running to a fixed point gives 108 collisions and the robot never turns red. No snapshot shows a red robot; snapshots 4–5 show 14 and 36 collisions — suggestive, not proof. To check by hand (M-SL-03). If the original re-runs, `main.js` should loop `evaluate` until `loc`, `locOld` and `collideState` stop changing (a proposed change, §8). **Owner evidence (2026-10-06):** the owner's saved state after playing goal 7 in Mathematica 15.0.1 has **132 collisions** with the robot not in collision (owner state 1; golden "seven-link: evaluating owner state 1 again changes nothing and keeps the count of 132 collisions"). Under the port's one-pass rule each collision needs a separate entry into an obstacle after a collision-free update, so 132 would mean 132 separate bumps; under re-evaluation a few seconds of pushing gives that many. Strongly suggestive of re-evaluation, still not proof: the owner is asked whether the count kept climbing while he pushed and whether the robot stayed red (M-SL-03). |
+| K-SL-02 | known issue (lead, resolved 2026-10-12) | **Does Mathematica evaluate the body again after the body assigns its own control variables** (`loc[[i]] = …`, `locOld = loc`, `collideState = …`)? The port evaluates once per update. If the original re-evaluates until nothing changes, holding a link against an obstacle behaves very differently: measured with the port's model over 120 updates, one pass gives 1 collision and a red robot; re-running to a fixed point gives 108 collisions and the robot never turns red. No snapshot shows a red robot; snapshots 4–5 show 14 and 36 collisions — suggestive, not proof. To check by hand (M-SL-03). If the original re-runs, `main.js` should loop `evaluate` until `loc`, `locOld` and `collideState` stop changing (a proposed change, §8). **Owner evidence (2026-10-06):** the owner's saved state after playing goal 7 in Mathematica 15.0.1 has **132 collisions** with the robot not in collision (owner state 1; golden "seven-link: evaluating owner state 1 again changes nothing and keeps the count of 132 collisions"). Under the port's one-pass rule each collision needs a separate entry into an obstacle after a collision-free update, so 132 would mean 132 separate bumps; under re-evaluation a few seconds of pushing gives that many. Strongly suggestive of re-evaluation, still not proof: the owner is asked whether the count kept climbing while he pushed and whether the robot stayed red (M-SL-03). **Resolved (owner, 2026-10-12, Mathematica 15.0.1, M-SL-03):** "the collision counter increments once every time the robot is pushed into an obstacle" — one count per push, not a count that keeps climbing while pushing: the original evaluates the body once per update, as the port does (O-SL-03). The 132 collisions of owner state 1 must therefore have been 132 separate pushes. No change. |
 | K-SL-03 | known issue (lead, mostly resolved in v0.1.1) | Which invisible locator a press grabs, from how far, and what a press on empty space does in the original. Resolved from the LocatorPane reference and the owner's car-paths and art-gallery observations (the same front-end mechanism): any press goes to the nearest locator (D-SL-05). Open: the no-jump grab distance and the tie rule (M-SL-06). |
 | K-SL-04 | known issue (lead, resolved in v0.1.1) | Is `locOld[[i]] != loc[[i]]` (Unequal on point lists) tolerant? extra-checks.wls, Mathematica 15.0.1, owner run 2026-10-06: `{1., 2.} != {1. + 2.^-52, 2.}` → False, `{1., 2.} != {1.001, 2.}` → True. Tolerant, as the port's `samePoint` (`mEqual` per coordinate, `shared/mma.js`). No change. |
 | O-SL-01 | owner observation (2026-10-06) | "In neither version do relative/absolute appear to change anything (same collision counts and worst error)." Explanation: with joint 7 (the usual one to drag) there is no following link, so both modes are identical; for joints 1–6 the difference per update is small (one 0.05 rad step: "relative" shifts the following joints parallel, "absolute" rotates them with the link). Visible when joint 2 or 3 is dragged through about 30° (M-SL-04, reworded). Both modes are implemented as in the original (F-SL-06, unit tests). |
-| O-SL-02 | owner observation (2026-10-06) | Owner state 1 (goal 7, 132 collisions, not colliding, "relative"): the port reproduces it — every link 140 long, no collision, re-evaluation changes nothing; the port's status text for it is "132 collisions, worst error = 489.2" (owner to compare with the saved output, M-SL-07). Evidence for K-SL-02. |
+| O-SL-02 | owner observation (2026-10-06) | Owner state 1 (goal 7, 132 collisions, not colliding, "relative"): the port reproduces it — every link 140 long, no collision, re-evaluation changes nothing; the port's status text for it is "132 collisions, worst error = 489.2" (owner to compare with the saved output, M-SL-07). Evidence for K-SL-02 (superseded by O-SL-03). |
+| O-SL-03 | owner observation (2026-10-12) | "The collision counter increments once every time the robot is pushed into an obstacle" (M-SL-03 (b)). Resolves K-SL-02: one evaluation per update. Still to record when convenient: whether the robot stays red while pushing (M-SL-03 (a)) — this alone would settle the question directly, since under re-evaluation it never turns red — and whether "movement" is disabled (c); both follow from the one-pass rule. |
 | N-SL-01 | note | `For[i==1, …]` in the original is a comparison, not an assignment; it works because the Module sets `i = 1`. |
 | N-SL-02 | note | The goal table has 8 rows; the setter offers 1–7, row 8 is the robot's start (c1 in the original's comments). |
 
 ## 8. Proposed changes
 
-No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
+No open proposal (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)).
 
 | ID | Status | Requested by / date | Change | Reason | Acceptance criteria |
 |----|--------|---------------------|--------|--------|---------------------|
+| P-SL-01 | implemented in v0.1.13 as F-SL-14 and A-SL-07 (approved by the owner 2026-10-12) | owner / 2026-10-12 (decision on D-SL-02) | beep on every newly counted collision, as the original's `Beep[]`; a "mute beep" checkbox to turn it off | audible feedback as in the original; the mute because the beep may get annoying | one tone per newly counted collision and none for the undone pushes after it; none while "mute beep" is checked; the checkbox survives "Initial settings" and "restart"; existing tests pass |
 
 ## 9. Revision history
 
@@ -139,6 +148,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 1 | v0.1.0 | 2026-10-06 | first AI conversion: feature list, quirks and deviations written with the port |
 | 2 | v0.1.1 | 2026-10-06 | owner testing round 1 (Mathematica 15.0.1): nearest-locator picking (D-SL-05 resolved, K-SL-03 mostly resolved); K-SL-04 resolved (tolerant Unequal, no change); owner state 1 golden tests; O-SL-01 (relative/absolute explained), O-SL-02, 12 px no-jump grab zone marked as a port deviation and the 132-collision evidence for K-SL-02; checklist M-SL-04/06 reworded, M-SL-07 added. Beep (D-SL-02) still awaiting the owner's decision. |
 | 3 | v0.1.12 | 2026-10-06 | added to this repository and published: private-preview banner removed (A-SL-04), role line updated; no other feature changes. Versions v0.1.0 and v0.1.1 in this document (Since column, rows above) are versions of the separate repository the app was developed in, not of this repository |
+| 4 | v0.1.13 | 2026-10-12 | P-SL-01 implemented: collision beep (F-SL-14, `shared/beep.js`) with a "mute beep" checkbox (A-SL-07, inventory `check-mute`); D-SL-02 reworded (the tone differs from the system alert sound); K-SL-02 resolved by the owner's observation (O-SL-03), no change to the model; M-SL-03 reworded |
 
 ## 10. Improvements to consider (not implemented)
 

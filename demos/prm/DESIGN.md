@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.12 |
+| Code version: | 0.1.13 |
 | Document revision | 3 (2026-10-06) — published on the main site (private-preview banner removed) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Probabilistic Roadmap Method", contributed by Aaron T. Becker and Yitong Lu, published January 13, 2020 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ProbabilisticRoadmapMethod/>. Readable source: [`docs/original-source/prm.txt`](../../docs/original-source/prm.txt); snapshots: `docs/original-snapshots/prm-*.png`; saved state: `tests/golden/prm.original-state.json` |
@@ -170,6 +170,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 1 | v0.1.0 | 2026-10-06 | first AI conversion: feature list, quirks and deviations written with the port |
 | 2 | v0.1.1 | 2026-10-06 | owner testing round 1 (after an independent review): K-PR-02 resolved, K-PR-05 reopened as partly resolved (inner Locator icons), D-PR-07 (12 px grab zone), focus on press; CirclePoints[7] as correctly rounded table (F-PR-07); LocatorPane press-anywhere picking (F-PR-06, K-PR-05 resolved); K-PR-01 resolved (Nearest ties in input order, inclusive radius); Q-PR-01 three-way tie confirmed; owner state 1 golden tests; O-PR-01 owner observation and K-PR-06 |
 | 3 | v0.1.12 | 2026-10-06 | added to this repository and published: private-preview banner removed (A-PR-04), role line updated; no other feature changes. Versions v0.1.0 and v0.1.1 in this document (Since column, rows above) are versions of the separate repository the app was developed in, not of this repository |
+| 3 | v0.1.13 | 2026-10-12 | no change to this app (collision beep with a mute checkbox in prm-seven-link; new `shared/beep.js` used only there) |
 
 ## 10. Improvements to consider (not implemented)
 

@@ -11,12 +11,14 @@ Drag joint 7 slowly through about a quarter turn, then quickly. In both the orig
 follows the pointer and whether it lags behind. Expected: the link turns in small steps (0.05 rad per update) in both;
 the number of steps per second may differ.
 
-### M-SL-03 Collisions (K-SL-02 — the most important check of this app)
+### M-SL-03 Collisions and the beep (K-SL-02, F-SL-14, A-SL-07)
 Drag a link into a blue obstacle and KEEP pushing against it for a few seconds. Record in the original: (a) does the
 robot turn red and stay red while you push? (b) does the collision count rise by one only, or keep climbing while you
-push? (c) is "movement" disabled while red? The port: red robot, the count rises by one, "movement" disabled, further
-moves into the obstacle are undone. If the original's count keeps climbing and the robot does not stay red, the original
-evaluates its body again after assigning its own variables (K-SL-02). The original beeps; the port is silent (D-SL-02).
+push? (c) is "movement" disabled while red? (d) how many beeps do you hear? The port: red robot, the count rises by one,
+"movement" disabled, further moves into the obstacle are undone, one beep (a plain tone; Mathematica plays the system
+alert sound, D-SL-02). Then tick "mute beep" in the port and repeat: no sound, the count still rises by one.
+Owner, 2026-10-12: (b) the count rises once per push in the original — K-SL-02 resolved (one evaluation per update, as
+the port); (a), (c) and (d) still to record.
 
 ### M-SL-04 Relative vs absolute (O-SL-01)
 Dragging joint 7 shows no difference (it has no following link). Use joint 3: press "restart", select "absolute" and

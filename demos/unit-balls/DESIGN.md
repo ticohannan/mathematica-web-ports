@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.12 |
+| Code version: | 0.1.13 |
 | Document revision | 3 (2026-10-06) — published on the main site (private-preview banner removed) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Unit Balls for Different p-Norms in 2D and 3D", contributed by Aaron T. Becker and Ravi Patel, published December 29, 2020 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/UnitBallsForDifferentPNormsIn2DAnd3D/>. Readable source: [`docs/original-source/unit-balls.txt`](../../docs/original-source/unit-balls.txt) (the flattened `(…)^1/p` is `(…)^(1/p)` in the notebook); saved state: `tests/golden/unit-balls.original-state.json`; snapshots: `docs/original-snapshots/unit-balls-1…7.png` |
@@ -194,6 +194,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 1 | v0.1.0 | 2026-10-06 | first AI conversion: feature list, quirks, deviations and leads written with the port |
 | 2 | v0.1.1 | 2026-10-06 | owner testing round 1 (Mathematica 15.0.1): K-UB-01 resolved — measured 2D PlotRange values entered in `PLOT_RANGE_2D_Z_MEASURED` and used (F-UB-11, new unit test), explanation of the factor 1 − 1.43e-7, clip planes ignore rounding-size differences; K-UB-08 resolved (confirms Q-UB-01); O-UB-01 added (owner: fine, port faster); checklist M-UB-05 updated |
 | 3 | v0.1.12 | 2026-10-06 | added to this repository and published: private-preview banner removed (A-UB-04), role line updated; no other feature changes. Versions v0.1.0 and v0.1.1 in this document (Since column, rows above) are versions of the separate repository the app was developed in, not of this repository |
+| 3 | v0.1.13 | 2026-10-12 | no change to this app (collision beep with a mute checkbox in prm-seven-link; new `shared/beep.js` used only there) |
 
 ## 10. Improvements to consider (not implemented)
 

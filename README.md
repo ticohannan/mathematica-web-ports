@@ -65,7 +65,7 @@ demos/common/              code shared by the two PRM apps (derived from the ori
 shared/                    mma.js (Mathematica semantics), mma-exact.js (bit-exact Det/Norm/ArcTan),
                            linalg.js, ui.js (Manipulate-style controls), three-helpers.js, style.css;
                            for the newer apps also svg-plot.js (Graphics as SVG, locators), ui-extra.js,
-                           mma-extra.js, mma-colors.js, mma-lighting.js, random.js, requirements.js
+                           mma-extra.js, mma-colors.js, mma-lighting.js, random.js, requirements.js, beep.js
 vendor/three/              three.js r186 (MIT), served locally — no CDN needed
 tests/unit/                Vitest unit + property tests
 tests/golden/              fixtures extracted from the ORIGINAL notebooks (saved states) + parity tests

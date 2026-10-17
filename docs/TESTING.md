@@ -65,13 +65,16 @@ states are cached. Boundary 5 and robot 5 have **no** golden data — test those
 ### The seven newer apps (added in v0.1.12)
 Their unit tests are `tests/unit/<app>.test.js` (plus `prm-core.test.js` for the code the two PRM apps share), their
 golden tests `tests/golden/<app>.golden.test.js`. Their originals are Wolfram "definition" notebooks, which store their
-snapshots as pictures only (`docs/original-snapshots/`) and **one** live Manipulate state each
-(`tests/golden/<app>.original-state.json`). More states come from saving the original after moving its controls
+snapshots as pictures (`docs/original-snapshots/`) and **one** live Manipulate state each
+(`tests/golden/<app>.original-state.json`). Each snapshot cell also stores the full Manipulate state behind its
+picture (`TaggingRules -> {"Settings" :> {…}}`, found 2026-10-12; 36 states in the seven notebooks); the extraction
+tools do not read these yet, so the tests do not use them. More states come from saving the original after moving its
+controls
 (`tests/golden/<app>.owner-state-1.json`, saved in Mathematica 15.0.1) and extracting them:
 ```bat
 python tools\extract_state.py path\to\Notebook.nb tests\golden\<app>.owner-state-2.json
 ```
-The extractor writes every state it finds in the notebook; the golden tests use `states[0]` unless told otherwise.
+The extractor writes every live Manipulate state it finds in the notebook; the golden tests use `states[0]` unless told otherwise.
 Questions only Mathematica can answer are collected as `K-` leads in each DESIGN.md and checked with plain Wolfram
 Language scripts: `wolframscript -file tools\wolfram\extra-checks.wls` and `extra-checks-2.wls` (they write
 `test-output\extra-checks*.txt`). An automated `compare:original` (layer 5) exists only for motion planning.

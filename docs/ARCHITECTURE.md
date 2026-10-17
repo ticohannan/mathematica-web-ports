@@ -55,6 +55,8 @@ The seven apps added in v0.1.12 add MIT helpers: `shared/mma-extra.js` (list sem
 `MinimalBy`, `Position`, `Accumulate`, number formatting), `mma-colors.js` (named colours, `Lighter`/`Darker`),
 `mma-lighting.js` (Mathematica's documented default lights), `random.js` (seeded or replayed random numbers, so
 saved states of the originals can be replayed) and `requirements.js` (start-up watchdog and WebGL 2 notice, DEC-22).
+v0.1.13 adds `beep.js` (a short Web Audio tone for Mathematica's `Beep[]`, played only after the user's first press,
+touch or key press on the page and only while the browser lets audio run; used by the seven-link robot).
 
 ## Rendering choices
 

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.12 |
+| Code version: | 0.1.13 |
 | Document revision | 3 (2026-10-06) — published on the main site (private-preview banner removed) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Robot Singularities in Three-Link Manipulators", contributed by Aaron T. Becker and Yitong Lu, published January 11, 2021 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/RobotSingularitiesInThreeLinkManipulators/>. Readable source: [`docs/original-source/robot-singularities.txt`](../../docs/original-source/robot-singularities.txt); snapshots: `docs/original-snapshots/robot-singularities-*.png`; saved state: `tests/golden/robot-singularities.original-state.json` |
@@ -180,6 +180,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 1 | v0.1.0 | 2026-10-06 | first AI conversion: feature list, quirks, deviations and leads written with the port; after review: Mathematica colour arithmetic and documented lighting (new shared/mma-lighting.js), double-sided translucent solids, default edges, phase-space scale, Thick = 3 px, golden fixtures (Jacobians, snapshot 3 surfaces), K-RS-03 verified |
 | 2 | v0.1.1 | 2026-10-06 | owner testing round 1: K-RS-04 resolved (SVD tie order by dominant axis, D-RS-09), K-RS-05 partly resolved (MatrixRank tolerance 3 eps relative, a port choice within the bounds of the data; checks added to extra-checks.wls), K-RS-06 partly resolved (slider arithmetic confirmed), K-RS-10 resolved (lighting confirmed, lead for the main repository), O-RS-01 added, golden tests for owner state 1 |
 | 3 | v0.1.12 | 2026-10-06 | added to this repository and published: private-preview banner removed (A-RS-04), role line updated; no other feature changes. Versions v0.1.0 and v0.1.1 in this document (Since column, rows above) are versions of the separate repository the app was developed in, not of this repository |
+| 3 | v0.1.13 | 2026-10-12 | no change to this app (collision beep with a mute checkbox in prm-seven-link; new `shared/beep.js` used only there) |
 
 ## 10. Improvements to consider (not implemented)
 

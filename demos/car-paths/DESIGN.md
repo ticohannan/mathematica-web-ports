@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.12 |
+| Code version: | 0.1.13 |
 | Document revision | 3 (2026-10-06) — published on the main site (private-preview banner removed) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Shortest Path for Forward and Reverse Motion of a Car", contributed by Francesco Bernardini and Aaron T. Becker, published January 4, 2023 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ShortestPathForForwardAndReverseMotionOfACar/>. Readable source: [`docs/original-source/car-paths.txt`](../../docs/original-source/car-paths.txt); snapshots: `docs/original-snapshots/car-paths-*.png` |
@@ -174,6 +174,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 1 | v0.1.0 | 2026-10-06 | first AI conversion: feature list, quirks and deviations written with the port |
 | 2 | v0.1.1 | 2026-10-06 | owner testing round 1: nearest-locator (LocatorPane) picking, also during the progress animation (F-CP-05, D-CP-06 and K-CP-10 resolved, O-CP-01); golden test for owner state 1 (O-CP-02); K-CP-07 display part resolved by extra-checks.wls; K-CP-01 picture requested again; M-CP-08 updated |
 | 3 | v0.1.12 | 2026-10-06 | added to this repository and published: private-preview banner removed (A-CP-04), role line updated; no other feature changes. Versions v0.1.0 and v0.1.1 in this document (Since column, rows above) are versions of the separate repository the app was developed in, not of this repository |
+| 3 | v0.1.13 | 2026-10-12 | no change to this app (collision beep with a mute checkbox in prm-seven-link; new `shared/beep.js` used only there) |
 
 ## 10. Improvements to consider (not implemented)
 

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.12 |
+| Code version: | 0.1.13 |
 | Document revision | 3 (2026-10-06) — published on the main site (private-preview banner removed) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Art Gallery Problem", contributed by Shreyas Poyrekar, Arifa Sultana and Aaron T. Becker, published September 13, 2019 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ArtGalleryProblem/>. Readable source: [`docs/original-source/art-gallery.txt`](../../docs/original-source/art-gallery.txt); snapshots: `docs/original-snapshots/art-gallery-*.png` |
@@ -178,6 +178,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 1 | v0.1.0 | 2026-10-06 | first AI conversion: feature list, quirks and deviations written with the port |
 | 2 | v0.1.1 | 2026-10-06 | owner testing round 1: nearest-locator picking (D-AG-04, K-AG-05 resolved, O-AG-01); exact `ColorData[100]` colours (K-AG-04, D-AG-02 resolved); `Norm` confirmed dnrm2 and `Normalize` with the correctly rounded length as default (K-AG-03 resolved, D-AG-08, K-AG-10, A-AG-07 now a `Normalize` model); 1-ulp `SameQ` in `Position`/`DeleteCases` (K-AG-08 resolved); owner state 1 golden tests; owner observations O-AG-01, O-AG-02; lead K-AG-09; 12 px no-jump grab zone recorded as D-AG-09; regression pins labelled (K-AG-08, K-AG-10) |
 | 3 | v0.1.12 | 2026-10-06 | added to this repository and published: private-preview banner removed (A-AG-04), role line updated; no other feature changes. Versions v0.1.0 and v0.1.1 in this document (Since column, rows above) are versions of the separate repository the app was developed in, not of this repository |
+| 3 | v0.1.13 | 2026-10-12 | no change to this app (collision beep with a mute checkbox in prm-seven-link; new `shared/beep.js` used only there) |
 
 ## 10. Improvements to consider (not implemented)
 

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.12 |
+| Code version: | 0.1.13 |
 | Document revision | 4 (2026-10-05) — P-EA-02 (WebGL context-loss recovery) implemented as A-EA-06 |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Euler Angles: Precession, Nutation, and Spin", contributed by Kevin Hernandez, based on a program by Sándor Kabai (CC BY-NC-SA 3.0). Readable source: [`docs/original-source/euler-angles.txt`](../../docs/original-source/euler-angles.txt) |
@@ -140,6 +140,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 3 | v0.1.10 | 2026-10-03 | no change (WebKit browser tests now required to publish; test tooling only) |
 | 4 | v0.1.11 | 2026-10-05 | P-EA-02 approved and implemented as A-EA-06: redraw after a WebGL context is restored (shared viewer code) |
 | 4 | v0.1.12 | 2026-10-06 | no behaviour change (seven further apps added to the site; their additions to `shared/style.css` apply only to their own pages); lighting lead K-EA-02 recorded |
+| 4 | v0.1.13 | 2026-10-12 | no change to this app (collision beep with a mute checkbox in prm-seven-link; new `shared/beep.js` used only there) |
 
 ## 10. Improvements to consider (not implemented)
 
