@@ -1,0 +1,110 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstration by Aaron T. Becker and Yitong Lu
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Probabilistic Roadmap Method in 3D</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <script src="../../shared/requirements.js" data-needs-webgl2></script>
+  <script type="importmap">{ "imports": { "three": "../../vendor/three/three.module.js", "three/addons/": "../../vendor/three/addons/" } }</script>
+  <style>
+    /* ControlPlacement -> Top: four rows of controls above the two 300 × 300 pictures (snapshots) */
+    .manipulate .controls { min-width: 0; max-width: none; flex-basis: 100%; gap: 8px; }
+    #controls .ctl-row { gap: 10px 22px !important; align-items: center !important; }
+    #controls .ctl-slider { flex-direction: row; align-items: center; gap: 6px; }
+    #controls .ctl-slider .ctl-label, #controls .ctl-vslider .ctl-label, #controls .ctl-pad2d .ctl-label { font-size: 0.95rem; }
+    #controls .ctl-label i { font-family: "Times New Roman", serif; font-size: 1.05rem; }
+    #controls .ctl-label sub { font-size: 0.7em; }
+    #controls .p3-theta input[type=range] { width: 150px; }
+    #controls .ctl-pad2d { flex-direction: row; align-items: center; gap: 8px; }
+    #controls .ctl-pad2d .ctl-line { flex-direction: column; align-items: center; gap: 2px; }
+    #controls .ctl-pad2d svg { width: 80px; height: 80px; }
+    #controls .pad-thumb { r: 11px; }
+    #controls .ctl-pad-fields .ctl-field { width: 3.6em; }
+    #controls .ctl-vslider { flex-direction: row; align-items: center; gap: 6px; }
+    #controls .ctl-vslider input { height: 80px; }
+    #controls .p3-check { max-width: 12em; line-height: 1.25; }
+    #controls .p3-radius input[type=range] { width: 240px; }
+    #controls .p3-progress input[type=range] { width: min(500px, 70vw); }
+    .graphic.p3-graphic { max-width: none; flex-basis: 100%; display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 10px; padding: 8px 6px 10px; }
+    .p3-pane { display: flex; flex-direction: column; align-items: center; }
+    .p3-plotlabel { font: 15px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #111; margin: 2px 0 4px; text-align: center; min-height: 2.6em; line-height: 1.3; }
+    .p3-plotlabel .p3-red { color: #f00; }
+    .p3-view { position: relative; width: 300px; max-width: 100%; }
+    .lbl.p3-axis { font: italic 14px "Times New Roman", serif; color: #222; }
+    .lbl.p3-axis sub { font-style: normal; font-size: 10px; }
+    .lbl.p3-tick { font: 11px system-ui, sans-serif; color: #222; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Probabilistic roadmap method in 3D</div>
+    <h1 class="demo-title">Probabilistic Roadmap Method in 3D</h1>
+
+    <section class="manipulate controls-top" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="graphic p3-graphic" id="graphic" data-testid="graphic">
+        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser with WebGL 2.</div></noscript>
+        <div class="p3-pane" data-testid="pane-workspace">
+          <div class="p3-plotlabel" data-testid="plotlabel-workspace">robot workspace</div>
+          <div class="p3-view" id="view-workspace"></div>
+        </div>
+        <div class="p3-pane" data-testid="pane-phase">
+          <div class="p3-plotlabel" data-testid="plotlabel-phase">robot phase space<br><span data-testid="path-label"></span></div>
+          <div class="p3-view" id="view-phase"></div>
+        </div>
+      </div>
+    </section>
+
+    <p class="caption">This Demonstration uses the probabilistic roadmap method (PRM) to plan a motion path for a three-link
+      robot in a 3D configuration space that avoids collisions with a blue and a yellow sphere. If a path from the initial
+      configuration to the goal configuration is found, it can be traversed by moving the "progress" slider. To generate a
+      new roadmap, click "restart" and then click "add 100 vertices" to randomly sample configurations and calculate if
+      they collide with obstacles (red points) or are safe (green points). If no path is found, continue adding vertices
+      or increase the "radius" value to try to connect safe vertices less than radius distance apart into a roadmap.
+      Although the PRM does not need to calculate the configuration space obstacles, you can make them visible with a
+      checkbox.</p>
+
+    <details class="details" data-testid="details">
+      <summary>Details</summary>
+      <p>The goal of robot motion planning is to find a continuous path from an initial configuration to a goal
+        configuration that is collision free. A configuration is a complete specification of every point of the robot.
+        This Demonstration uses a three-link robot with three rotational joints that can each rotate from 0 to 2π. The
+        joints can each rotate independently either clockwise or counterclockwise. Obstacles in the robot's workspace map
+        to obstacle regions in a 3D configuration space. The robot's joint angles are specified by θ<sub>1</sub>,
+        θ<sub>2</sub> and θ<sub>3</sub>. You can adjust the two obstacle positions in 3D. The "restart" button removes all
+        the sampled configurations, and the "new goal" button randomly assigns a new goal position.</p>
+      <p>Changing the obstacle positions requires rebuilding the roadmap. Longer radius values require more computation
+        but result in a denser roadmap and shorter paths.</p>
+      <p>PRM was developed in 1996 by Lydia Kavraki et al. [1]. PRMs generate a roadmap that can be reused for subsequent
+        motion-planning queries. PRM was designed for high-dimension configuration spaces (dimensions of 5 or more), but
+        this Demonstration uses three dimensions for ease of visualization.</p>
+      <p>Reference:<br>
+        [1] L. E. Kavraki, P. Svestka, J-C. Latombe and Mark H. Overmars, "Probabilistic Roadmaps for Path Planning in
+        High-Dimensional Configuration Spaces," <i>IEEE Transactions on Robotics and Automation</i>, 12(4), 1996
+        pp. 566–580. doi:10.1109/70.508439.</p>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. Drag in either picture to rotate it; each view keeps its
+      rotation when a control changes (as the original's Dynamic view points). "add 100 vertices" and "new goal" draw
+      random numbers like the original (different ones on every run); add <code>?seed=N</code> to the address for a
+      reproducible run. The configuration-space obstacle volumes are computed on a grid (see DESIGN.md, D-P3-02). All
+      computation runs in your browser.</p>
+    <div class="credits" data-testid="credits">
+      Adapted from <a href="https://demonstrations.wolfram.com/ProbabilisticRoadmapMethodIn3D/">"Probabilistic Roadmap Method in 3D"</a>
+      by Aaron T. Becker and Yitong Lu, Wolfram Demonstrations Project (published February 26, 2020), licensed
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+      This JavaScript/WebGL translation by Tico Hannan (© 2026; produced with an AI code-generation tool) is released under the
+      same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

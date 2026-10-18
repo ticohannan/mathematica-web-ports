@@ -5,7 +5,7 @@
 // p1 = {−Sin[3π/32], Cos[3π/32]} = {Cos[19π/32], Sin[19π/32]}; 1/√2 as cached in the motion-planning original),
 // exact trigonometric values (Cos[π/2] = 0, Sin[π/6] = 1/2), doubles computed in Python's math module.
 import { describe, it, expect } from 'vitest';
-import { reducePi, trigPi, cosPi, sinPi, cosSinPi, octantForm, piOver } from '../../shared/exact-pi.js';
+import { reducePi, trigPi, cosPi, sinPi, cosSinPi, octantForm, piOver, piFrac } from '../../shared/exact-pi.js';
 
 describe('first-octant reduction', () => {
   it('octant table of shared/exact-pi.js: cos 19π/32 is the double of -sin 3π/32 and cos π/4 = sin π/4 = 0.7071067811865475 (bits provisional until H-ME-12)', () => { // T-ME-06
@@ -72,5 +72,42 @@ describe('piOver: N[Pi/n] for an exact integer n', () => {
     for (const k of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) expect(piOver(2 ** k)).toBe(Math.PI / 2 ** k); // exact halvings
     expect(() => piOver(2.5)).toThrow();
     expect(() => piOver(0)).toThrow();
+  });
+});
+
+describe('piFrac: N[num Pi/den] for exact integers num, den', () => {
+  // an independent π: Machin's formula π = 16·arctan(1/5) − 4·arctan(1/239) in BigInt fixed point, 400 bits + 20 guard bits
+  const atanInv = (x, one) => {
+    let sum = 0n, term = one / x, k = 1n, sgn = 1n;
+    const x2 = x * x;
+    while (term !== 0n) { sum += (sgn * term) / k; term /= x2; k += 2n; sgn = -sgn; }
+    return sum;
+  };
+  const ONE = 1n << 420n;
+  const PI_2_400 = (16n * atanInv(5n, ONE) - 4n * atanInv(239n, ONE)) >> 20n; // π·2^400, error a few units
+  // the correctly rounded double of kπ/32 = k·π·2^400 / 2^405: Number(BigInt) rounds to nearest, 2^-405 scales exactly
+  const nearestKPi32 = (k) => Number(BigInt(k) * PI_2_400) * 2 ** -405;
+
+  it('is the correctly rounded kπ/32 for k = -64 … 64 against an independent π (Machin formula, 400 bits); k·Math.PI/32 is 1 ulp off for 30 of them', () => {
+    let off = 0;
+    for (let k = -64; k <= 64; k++) {
+      expect(piFrac(k, 32), `k = ${k}`).toBe(nearestKPi32(k) + 0);
+      if ((k * Math.PI) / 32 !== nearestKPi32(k)) off++;
+    }
+    expect(off).toBe(30);
+    expect(nearestKPi32(32)).toBe(Math.PI); // the independent π rounds to Math.PI
+  });
+  it('gives the doubles of tools/extract_state.py (Python Fraction, correctly rounded) for the snapshot angles: 19π/32 = 1.8653206380689398, 59π/32 = 5.792311455056181', () => {
+    expect(piFrac(19, 32)).toBe(1.8653206380689398);
+    expect((19 * Math.PI) / 32).toBe(1.8653206380689396);
+    expect(piFrac(59, 32)).toBe(5.792311455056181);
+  });
+  it('agrees with piOver, is odd in num and den, and rejects non-integers', () => {
+    for (const n of [1, 2, 3, 7, 48, 1000]) expect(piFrac(1, n)).toBe(piOver(n));
+    expect(piFrac(-19, 32)).toBe(-piFrac(19, 32));
+    expect(piFrac(19, -32)).toBe(-piFrac(19, 32));
+    expect(Object.is(piFrac(0, 32), 0)).toBe(true);
+    expect(() => piFrac(1.5, 2)).toThrow();
+    expect(() => piFrac(1, 0)).toThrow();
   });
 });

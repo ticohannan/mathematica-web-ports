@@ -89,7 +89,7 @@ describe.each(APPS)('design document of $dir', ({ dir, prefix, spec }) => {
         } else if (m) {
           const hay = m[1] === 'e2e' ? e2eText : unitText;
           expect(hay.includes(m[2]), `${id}: test title "${m[2]}" not found (${m[1]})`).toBe(true);
-        } else if (/^M-[A-Z]+-\d+$/.test(ref)) {
+        } else if (/^M-[A-Z][A-Z0-9]*-\d+$/.test(ref)) {
           expect(checklist, `${id}: checklist item ${ref}`).toMatch(new RegExp(`### ${ref}\\b`));
         } else {
           expect(['inventory', 'compare', 'review'], `${id}: unknown reference "${ref}"`).toContain(ref);

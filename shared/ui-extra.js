@@ -42,11 +42,22 @@ export function addPopup(controls, { name, label = '', options, value, onChange,
   return api;
 }
 
-/** VerticalSlider — data-testid "vslider-<name>"; value shown below */
+/**
+ * VerticalSlider — data-testid "vslider-<name>"; value shown below.
+ * Home = minimum, End = maximum in every engine (WAI-ARIA slider pattern). WebKit's native vertical range input maps
+ * Home to the TOP, i.e. the maximum (found in the owner's WebKit run of v0.1.16: Home put prm-3d's blue_z at 2, not 0),
+ * so the two keys are handled here; arrows and PageUp/PageDown stay native (they agree in all three engines).
+ */
 export function addVerticalSlider(controls, { name, label = '', min, max, step = 0, value, onInput, parent }) {
   const range = el('input', { type: 'range', class: 'vslider', min, max, step: step || 'any', value, 'data-testid': `vslider-${name}`, 'aria-label': label || name, 'aria-orientation': 'vertical' });
   const out = el('span', { class: 'ctl-vvalue', 'data-testid': `value-${name}` }, fmt(value, step || 0.01));
   range.addEventListener('input', () => { out.textContent = fmt(Number(range.value), step || 0.01); onInput?.(Number(range.value)); });
+  range.addEventListener('keydown', (e) => {
+    if (e.key !== 'Home' && e.key !== 'End') return;
+    e.preventDefault();
+    range.value = String(e.key === 'Home' ? min : max);
+    range.dispatchEvent(new Event('input', { bubbles: true }));
+  });
   const row = el('div', { class: 'ctl ctl-vslider', 'data-testid': `ctl-${name}` }, label ? el('label', { class: 'ctl-label' }, label) : null, range, out);
   (parent ?? controls.root).append(row);
   const api = { row, get: () => Number(range.value), set: (v) => { range.value = String(v); out.textContent = fmt(Number(v), step || 0.01); } };

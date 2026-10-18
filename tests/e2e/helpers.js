@@ -30,11 +30,14 @@ export async function reviewShot(page, testInfo, name) {
 /**
  * Simulate a WebGL context loss and restore on the demo's scene canvas (WEBGL_lose_context), then
  * read how much of the canvas is drawn WITHOUT forcing a render: the page must redraw by itself.
- * Returns { supported: false } where the browser does not offer the extension.
+ * Returns { supported: false } where the browser does not offer the extension. `selector`: the canvas (default
+ * [data-testid=scene-canvas]; pages that rename it pass their own). `which`: for pages with several viewers, the
+ * argument of window.__demo.inkFraction(which) that reads THIS canvas; the poll then waits until that canvas is
+ * drawn again (0.02 < ink < 0.5), so a canvas that stays empty fails. Without it the page's default ink is polled.
  */
-export async function inkAfterContextRestore(page) {
-  const supported = await page.evaluate(async () => {
-    const canvas = document.querySelector('[data-testid=scene-canvas]');
+export async function inkAfterContextRestore(page, selector = '[data-testid=scene-canvas]', { which } = {}) {
+  const supported = await page.evaluate(async (sel) => {
+    const canvas = document.querySelector(sel);
     const gl = canvas.getContext('webgl2');
     const ext = gl && gl.getExtension('WEBGL_lose_context');
     if (!ext) return false;
@@ -47,12 +50,19 @@ export async function inkAfterContextRestore(page) {
     ext.restoreContext();
     await restored;
     return true;
-  });
+  }, selector);
   if (!supported) return { supported };
   // The page redraws on its next animation frame. Until then the restored canvas is empty, which
   // reads as fully "inked" (transparent black); a black background would too.
   let ink = 1;
-  await expect.poll(async () => (ink = await page.evaluate(() => window.__demo.inkFraction())), { timeout: 5000 }).toBeLessThan(0.5);
+  if (which === undefined) {
+    await expect.poll(async () => (ink = await page.evaluate(() => window.__demo.inkFraction())), { timeout: 5000 }).toBeLessThan(0.5);
+  } else {
+    await expect.poll(async () => {
+      ink = await page.evaluate((w) => window.__demo.inkFraction(w), which);
+      return ink > 0.02 && ink < 0.5 ? 'redrawn' : `ink ${ink}`;
+    }, { timeout: 5000, message: `canvas ${selector} redrawn after the context restore` }).toBe('redrawn');
+  }
   return { supported, ink };
 }
 

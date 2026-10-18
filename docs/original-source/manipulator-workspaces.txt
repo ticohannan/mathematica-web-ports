@@ -1,0 +1,344 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Private reference (R-04). Extracted 2026-10-12 with tools/nbextract.py; cached outputs skipped.
+
+### [Title]
+Robot Manipulator Workspaces
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+A robot's workspace is the total volume swept out by the end effector as the manipulator executes all possible motions. The shape of the workspace dictates the applications for which each design can be used. This Demonstration lets you load several robot designs to compare their workspaces. You can set the position and range for each joint using sliders.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+(*This code sometimes crashes*)
+
+drawZArrow[jr_]:=Line[{{{0,0,0},{0,0,2jr}}, (*mathematica's built-in 3D arrow sometimes draws poorly*)
+{{0,0,2jr},{1/32,0,3/2jr}},
+{{0,0,2jr},{-1/32,0,3/2jr}},
+{{0,0,2jr},{0,1/32,3/2jr}},
+{{0,0,2jr},{0,-1/32,3/2jr}}}];
+drawCoordAxes[jr_]:= {Thick,{Red,drawZArrow[jr]},
+{Blue,Rotate[drawZArrow[jr],π/2,{0,1,0}]},
+{Green,Rotate[drawZArrow[jr],-π/2,{1,0,0}]}}
+drawJoint[ j_,d_,r_,Theta_]:=Module[{jr = 1/5,ar = 1/20,pr=1/7,vr=1/6},{
+(*draw coordinate axis*)
+drawCoordAxes[jr],
+(*draw z-axis*)
+{Gray,If["\<p\>"==j,Cuboid[{-ar,-ar,-jr-.01},{ar,ar,d+.01}],Cylinder[{{0,0,Min[-ar,d-jr]-.01},{0,0,Max[ar,d]+.01}},ar]]},
+(*draw joint*)
+{LightBlue,If[j=="\<p\>",
+{Cuboid[{-jr,-jr,-jr},{jr,jr,+jr-.1}],
+Cuboid[{-jr,-jr,+jr},{jr,jr,+jr+.05}]
+},
+{Cylinder[{{0,0,-jr-.05},{0,0,+jr+.05}},.7*jr]
+}]},
+(*draw x(i+1) *)
+If[r!=0, Rotate[{Gray,Cuboid[{-ar,-ar,d-ar},{r,ar,d+ar}]},Theta,{0,0,1}]]
+}];
+
+drawWristCenter[r_]:= Module[{jr = 1/5,ar = 1/20},{
+(*draw z-axis*) drawCoordAxes[jr],
+{PointSize[.02],Orange,Point[{0,0,0}]}}];
+
+(*math function to create a T matrix*)
+dhTransform[d_,r_,Theta_,Alpha_]:=RotationTransform[Theta,{0,0,1}].TranslationTransform[{0,0,d}].TranslationTransform[{r,0,0}].RotationTransform[Alpha,{1,0,0}];
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{Ad,Td,a,d,theta,alpha,jointtype,pm},
+pm={r1[[1]]+params[[1]](r1[[2]]-r1[[1]]),
+r2[[1]]+params[[2]](r2[[2]]-r2[[1]]),
+r3[[1]]+params[[3]](r3[[2]]-r3[[1]])};  
+
+
+Table[{jointtype[i],a[i],alpha[i],d[i],theta[i]}=Type[[;;,i]],{i,1,dof}];
+
+If[TypeOld!=Type\[Or] r1old != r1\[Or] r2old != r2\[Or] r3old != r3, (*recalculating the workspace is slow, so only do this when needed*)
+TypeOld=Type;
+ r1old = r1;
+ r2old = r2;
+ r3old = r3;
+Module[{o3coords,p1,p2,p3},
+o3coords[p1_,p2_,p3_]=Module[{p={p1,p2,p3}},(Dot@@Table[
+If["\<p\>"== jointtype[i],
+dhTransform[p[[i]],a[i],theta[i],alpha[i]],
+dhTransform[d[i],a[i],p[[i]],         alpha[i]]
+],{i,1,dof}])[[1,1;;3,4]]]; (*only grab the x,y,z coords*)
+
+workspace3D=ParametricPlot3D[{ (* create an array of plots varying 2 DOF, and setting the third to min, middle, and max of range  *)
+o3coords[r1[[1]]+a(r1[[2]]-r1[[1]]),r2[[1]]+b(r2[[2]]-r2[[1]]),r3[[1]]+0(r3[[2]]-r3[[1]])],
+o3coords[r1[[1]]+a(r1[[2]]-r1[[1]]),r2[[1]]+b(r2[[2]]-r2[[1]]),r3[[1]]+1(r3[[2]]-r3[[1]])],
+o3coords[r1[[1]]+a(r1[[2]]-r1[[1]]),r2[[1]]+0(r2[[2]]-r2[[1]]),r3[[1]]+b(r3[[2]]-r3[[1]])],
+o3coords[r1[[1]]+a(r1[[2]]-r1[[1]]),r2[[1]]+1(r2[[2]]-r2[[1]]),r3[[1]]+b(r3[[2]]-r3[[1]])],
+o3coords[r1[[1]]+0(r1[[2]]-r1[[1]]),r2[[1]]+a(r2[[2]]-r2[[1]]),r3[[1]]+b(r3[[2]]-r3[[1]])],
+o3coords[r1[[1]]+1(r1[[2]]-r1[[1]]),r2[[1]]+a(r2[[2]]-r2[[1]]),r3[[1]]+b(r3[[2]]-r3[[1]])],
+o3coords[r1[[1]]+a(r1[[2]]-r1[[1]]),r2[[1]]+b(r2[[2]]-r2[[1]]),r3[[1]]+1/2(r3[[2]]-r3[[1]])],
+o3coords[r1[[1]]+a(r1[[2]]-r1[[1]]),r2[[1]]+1/2(r2[[2]]-r2[[1]]),r3[[1]]+b(r3[[2]]-r3[[1]])],
+o3coords[r1[[1]]+1/2(r1[[2]]-r1[[1]]),r2[[1]]+a(r2[[2]]-r2[[1]]),r3[[1]]+b(r3[[2]]-r3[[1]])]
+},
+{a,0,1},{b,0,1},
+Mesh->1,(*PlotStyle->Red,*)BoundaryStyle->Blue,
+(*BoundaryStyle->Blue,*)PerformanceGoal->"\<Speed\>"
+,PlotStyle->Directive[LightBlue,Opacity[.5]]]];
+];
+Ad =Table[ If["\<p\>"== jointtype[i],
+dhTransform[pm[[i]],a[i],theta[i],alpha[i]],
+dhTransform[d[i],   a[i],pm[[i]],      alpha[i]]],{i,1,dof}];
+Td[1] = Ad[[1]];
+Table[Td[i] = Chop[Td[i-1].Ad[[i]]],{i,2,dof}];
+Show[{
+Graphics3D[{
+(*ground*){LightBrown,Cylinder[{{0,0,-2/5},{0,0,-1/5-1/20}},2.2]},
+If["\<r\>"==jointtype[1],drawJoint[jointtype[1],d[1],a[1],pm[[1]]],drawJoint[jointtype[1],pm[[1]],a[1],theta[1]]],
+Table[   If["\<r\>"==jointtype[i],
+GeometricTransformation[drawJoint[jointtype[i],d[i],a[i],pm[[i]]],Td[i-1]],GeometricTransformation[drawJoint[jointtype[i],pm[[i]],a[i],theta[i]],Td[i-1]]],{i,2,dof}],
+GeometricTransformation[drawWristCenter[0],Chop[Td[dof]]]
+},SphericalRegion->True,(*PlotRange->{{-3,3},{-3,3},{-1/2,4.}},*)ImageSize->425,Boxed->False],workspace3D
+}]],
+{{dof,3},1,3,1,ControlType->None},
+{workspace3D, Graphics3D[Point[{0,0,0}]],None},
+{{TypeOld,{{"\<r\>"},{0},{-Pi/2},{1},{Subscript[q, 1]}}},None},
+{{params,ConstantArray[0,3]},ControlType->None},
+
+Dynamic[Grid[Table[With[{i=i},
+If["\<p\>"== Type[[1,i]],
+{Subscript["\<d\>",i],Slider[params[[i]]=0.5;Dynamic[params[[i]]],{0,1,0.01},ImageSize->160]},
+{Subscript["\<Theta\>",i],Slider[params[[i]]=0.5;Dynamic[params[[i]]],{0,1,0.01},ImageSize->160]}
+]],{i,dof}](*End Table*)]],(*End Dynamic*)
+Delimiter,
+{{r1,{0.5,1.5},"\<\!\(\*SubscriptBox[\(r\), \(1\)]\)\>"},-3.1,3.1,0.1,ControlType->IntervalSlider,Method -> "\<Push\>",MinIntervalSize->0.1,ImageSize->160},
+{{r2,{0.5,1.5},"\<\!\(\*SubscriptBox[\(r\), \(2\)]\)\>"},-3.1,3.1,0.1,ControlType->IntervalSlider,Method -> "\<Push\>",MinIntervalSize->0.1,ImageSize->160},
+{{r3,{0.5,1.5},"\<\!\(\*SubscriptBox[\(r\), \(3\)]\)\>"},-3.1,3.1,0.1,ControlType->IntervalSlider,Method -> "\<Push\>",MinIntervalSize->0.1,ImageSize->160},
+{{r1old,{0.5,1.5}},ControlType->None},
+{{r2old,{0.5,1.5}},ControlType->None},
+{{r3old,{0.5,1.5}},ControlType->None},
+Delimiter,(*"\<DH parameters\>",*)
+{{Type,{{"\<r\>","\<r\>","\<r\>"},{0,1,1},{Pi/2,0,0},{2,0,0},{Subscript[q, 1],Subscript[q, 2],Subscript[q, 3]}},"\<\>"},
+{{{"\<r\>","\<r\>","\<r\>"},{1,1,1},{0,0,0},{0,0,0},{Subscript[q, 1],Subscript[q, 2],Subscript[q, 2]}}->"\<planar robot arm\>",
+{{"\<r\>","\<r\>","\<r\>"},{0,1,1},{Pi/2,0,0},{2,0,0},{Subscript[q, 1],Subscript[q, 2],Subscript[q, 3]}}->"\<elbow robot arm\>",
+{{"\<r\>","\<r\>","\<r\>"},{0,1,1},{Pi/2,0,0},{2,1/3,-1/3},{Subscript[q, 1],Subscript[q, 2],Subscript[q, 3]}}->"\<PUMA robot arm\>",
+{{"\<r\>","\<r\>","\<r\>"},{0,1,1},{Pi/2,0,0},{2,1/3,1/3},{Subscript[q, 1],Subscript[q, 2],Subscript[q, 3]}}->"\<offset PUMA arm\>",{{"\<r\>","\<r\>","\<p\>"},{0,0,0},{-Pi/2,+Pi/2,0},{1,1,Subscript[q, 3]},{Subscript[q, 1],Subscript[q, 2],0}}->"\<Stanford robot arm\>",{{"\<r\>","\<p\>","\<p\>"},{0,0,0},{0,-Pi/2,0},{1,Subscript[q, 2],Subscript[q, 3]},{Subscript[q, 1],0,0}}->"\<cylindrical robot arm\>",
+{{"\<r\>","\<r\>","\<p\>"},{0,0,0},{-Pi/2,Pi/2,0},{1,0,Subscript[q, 3]},{Subscript[q, 1],Subscript[q, 2],0}}->"\<spherical robot arm\>",{{"\<r\>","\<r\>","\<p\>"},{0,1,0},{-Pi/2,0,0},{1,0,Subscript[q, 3]},{Subscript[q, 1],Subscript[q, 2],0}}->"\<offset spherical arm\>",
+{{"\<r\>","\<r\>","\<p\>"},{0,1,0},{-Pi/2,Pi/2,0},{1,0,Subscript[q, 3]},{Subscript[q, 1],Subscript[q, 2],0}}->"\<twisted spherical\>",
+{{"\<r\>","\<r\>","\<p\>"},{1.2,.6,0},{0,Pi,0},{1.5,0,Subscript[q, 3]},{Subscript[q, 1],Subscript[q, 2],0}}->"\<SCARA robot arm\>",
+{{"\<r\>","\<p\>","\<r\>"},{1,1,1},{Pi/2,Pi/2,0},{0,Subscript[q, 2],0},{Subscript[q, 1],0,Subscript[q, 2]}}->"\<planar RPR arm\>",
+{{"\<p\>","\<p\>","\<p\>"},{0,0,0},{-Pi/2,Pi/2,0},{Subscript[q, 1],Subscript[q, 2],Subscript[q, 3]},{-Pi/2,-Pi/2,0}}->"\<CNC robot arm\>",{{"\<p\>","\<p\>","\<p\>"},{0,0,0},{-Pi/2,-Pi/2,-0},{Subscript[q, 1],Subscript[q, 2],Subscript[q, 3]},{0,0,0}}->"\<Cartesian robot arm\>",
+{{"\<p\>","\<p\>","\<p\>"},{0,0,0},{0,0,-0},{Subscript[q, 1],Subscript[q, 2],Subscript[q, 3]},{0,0,0}}->"\<linear robot arm\>"},PopupMenu},
+ControlPlacement->Left,
+SaveDefinitions-> True, SynchronousInitialization->False]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Aaron T. Becker
+
+### [Text]
+Benedict Isichei
+
+### [Text]
+Muhammad Sultan
+
+### [Text]
+Maruthi S. Chemudupati
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+\<This Demonstration creates a serial-link robot arm with three joints (three degrees of freedom) and displays the robot workspace (the volume swept out by the end effector as the manipulator executes all possible motions). You can manipulate each joint using the sliders and select from a variety of robot types. The workspaces vary greatly and determine the tasks the robot is suited for.\>
+
+### [Text]
+In this Demonstration, prismatic joints and revolute joints are limited by the range sliders Subscript[r, 1], Subscript[r, 2] and Subscript[r, 3]. The range is between -π and π. Changes to these range sliders or to the type of robot require recomputing the workspace, which is time-consuming. Changing the current position of the robot arm updates the graphic quickly.
+
+### [Text]
+The shape of the workspace also indicates where the robots experience Jacobian singularities. Snapshot 1 shows the spherical manipulator at its default position, with the end effector pointing along the z axis. The manipulator can generate instantaneous motion in the \[PlusMinus]x (blue arrow) and \[PlusMinus]z (red arrow) axes but cannot move along the \[PlusMinus]y (green arrow) axis.
+
+### [Text]
+The workspaces are generated by combining multiple 2D parametric plots. These plots correspond to the parameter i∈{1,2,3} being set to its minimum, middle and maximum values, while the other parameters vary along their full ranges. For the Cartesian manipulator, this results in a cube that is divided into eight smaller cubes. For other types of robots, for instance the Stanford robot arm, the relation is less intuitive.
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] M. W. Spong, S. Hutchinson and M. Vidyasagar, Robot Modeling and Control, Hoboken, NJ: John Wiley and Sons, 2006.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+robot
+
+### [Item]
+robot arm
+
+### [Item]
+DH parameters
+
+### [Item]
+revolute
+
+### [Item]
+prismatic
+
+### [Item]
+degree of freedom
+
+### [Item]
+SCARA arm
+
+### [Item]
+anthropomorphic
+
+### [Item]
+robotics
+
+### [Item]
+SCARA robot arm
+
+### [Item]
+spherical robot arm
+
+### [Item]
+CNC robot
+
+### [Item]
+cylindrical robot arm
+
+### [Item]
+link length
+
+### [Item]
+link twist
+
+### [Item]
+link offset
+
+### [Item]
+joint angle
+
+### [Item]
+workspace
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Parametric Equations
+
+### [Text]
+ParametricPlot3D
+
+### [Text]
+Denavit\[Dash]Hartenberg Parameters for a Three-Link Robot
+
+### [Text]
+Forward and Inverse Kinematics for Two-Link Arm
+
+### [Text]
+Forward and Inverse Kinematics of the SCARA Robot
+
+### [Text]
+Inverse Kinematics for a Robot Manipulator with Six Degrees of Freedom
+
+### [Text]
+Kinematics of a Redundant Anthropomorphic Arm with Seven Degrees of Freedom
+
+### [Text]
+Forward Kinematics of Humanoid Robots
+
+### [Text]
+Snake-Arm Robot
+
+### [Text]
+Model of an Industrial Robot Arm
+
+### [Text]
+Rotation Matrix
+
+### [Text]
+Forward Kinematics
+
+### [Text]
+A Model of the SCARA Robot
+
+### [Text]
+Inverse Kinematics
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2017-12-13
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

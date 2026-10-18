@@ -1,6 +1,6 @@
 # Design process: features are specified before they are built
 
-This repository holds browser ports of twenty Wolfram Demonstrations. Each app has a **design
+This repository holds browser ports of twenty-six Wolfram Demonstrations. Each app has a **design
 document** that lists every feature the app implements, why it exists, since which version, and how
 it is verified:
 
@@ -26,6 +26,12 @@ it is verified:
 | Measuring Distance and Orientation Using Camera and Lasers | [`demos/camera-lasers/DESIGN.md`](../demos/camera-lasers/DESIGN.md) | `demos/camera-lasers/` |
 | Minkowski Sum of Convex Robot and Obstacle | [`demos/minkowski-sum/DESIGN.md`](../demos/minkowski-sum/DESIGN.md) | `demos/minkowski-sum/` |
 | Configuration Space for Four-Bar Linkage | [`demos/four-bar-linkage/DESIGN.md`](../demos/four-bar-linkage/DESIGN.md) | `demos/four-bar-linkage/` |
+| Denavit-Hartenberg Parameters for a Three-Link Robot | [`demos/dh-parameters/DESIGN.md`](../demos/dh-parameters/DESIGN.md) | `demos/dh-parameters/` |
+| Chart for a Torus | [`demos/torus-chart/DESIGN.md`](../demos/torus-chart/DESIGN.md) | `demos/torus-chart/` |
+| Manipulability Ellipsoid of a Robot Arm | [`demos/manipulability-ellipsoid/DESIGN.md`](../demos/manipulability-ellipsoid/DESIGN.md) | `demos/manipulability-ellipsoid/` |
+| Common Robot Arm Configurations | [`demos/arm-configurations/DESIGN.md`](../demos/arm-configurations/DESIGN.md) | `demos/arm-configurations/` |
+| Robot Manipulator Workspaces | [`demos/manipulator-workspaces/DESIGN.md`](../demos/manipulator-workspaces/DESIGN.md) | `demos/manipulator-workspaces/` |
+| Probabilistic Roadmap Method in 3D | [`demos/prm-3d/DESIGN.md`](../demos/prm-3d/DESIGN.md) | `demos/prm-3d/` |
 
 The originals came without design documents. Version 0.1.6 added best-effort design documents
 reconstructed from the original notebooks (their code, captions and details text) and from the

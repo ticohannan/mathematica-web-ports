@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.15 |
+| Code version: | 0.1.16 |
 | Document revision | 1 (2026-10-17) — first implementation |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Minkowski Sum of Convex Robot and Obstacle", contributed by Shreyas Poyrekar, Arifa Sultana and Aaron T. Becker, published 2019-04-23 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/MinkowskiSumOfConvexRobotAndObstacle/>. Readable source: `docs/original-source/minkowski-sum.txt`; snapshots: `docs/original-snapshots/minkowski-sum-1.png` … `-5.png` (the extraction's pictures 6 and 7 are the Wolfram logo, not snapshots); golden data (`tests/golden/minkowski-sum.original-states.json`, COMMON-DECISIONS §1): the live state, the Settings of the five snapshot cells (raw notebook lines 4386, 5542, 6194, 7236, 7866) and the initial settings |
@@ -307,6 +307,7 @@ No open proposal. Template (see `docs/DESIGN_PROCESS.md`):
 | Doc rev. | Code version | Date | Change |
 |----------|--------------|------|--------|
 | 1 | v0.1.15 | 2026-10-17 | first implementation, from the design draft approved by the owner on 2026-10-17 (DEC-17; draft of 2026-10-12 with COMMON-DECISIONS §6 and owner rules R-A/R-B/R-C applied). `demos/common/polygon-core.js` created (owned by this app; helpers moved from motion-planning and art-gallery without behaviour change). Changes against the draft: harness references written as the golden tests `minkowski-sum: harness H-MS-nn` (the design-docs test accepts only test titles, checklist items, inventory, compare and review); D-MS-06 added (both control sets in the page, one hidden); D-MS-02 and §6.6 state the arrowhead and image sizes used; A-MS-03 adds `stopAnimation`. |
+| 2 | v0.1.16 | 2026-10-18 | version number only (batch B release); no change to this app |
 
 ## 10. Improvements to consider (not implemented)
 

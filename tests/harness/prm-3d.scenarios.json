@@ -131,8 +131,8 @@
       "id": "H-P3-17",
       "steps": [{"set":{"Obstaxy":[0,0],"Obstaz":0.6}},{"seed":3},{"press":"add 100 vertices"}],
       "capture": ["goodPts","badPts","edgesNN","edgesNNadj","rold","%messages","$RandomDraws"],
-      "why": "few free samples after an obstacle move, then new samples: stale adjacency in the incremental call, then the rebuild (K-P3-05); messages recorded",
-      "source": "{\"id\":\"H-P3-17\",\"steps\":[{\"set\":{\"Obstaxy\":[0,0],\"Obstaz\":0.6}},{\"seed\":3},{\"press\":\"add 100 vertices\"}],\"capture\":[\"goodPts\",\"badPts\",\"edgesNN\",\"edgesNNadj\",\"rold\",\"%messages\",\"$RandomDraws\"],\"why\":\"few free samples after an obstacle move, then new samples: stale adjacency in the incremental call, then the rebuild (K-P3-05); messages recorded\"}"
+      "why": "sphere a on the base axis (Q-P3-06): every old and new sample collides, so add 100 vertices adds no free sample, connectPoints is not called and the old edges stay (Q-P3-07); messages recorded (K-P3-05's guard is not reached)",
+      "source": "{\"id\":\"H-P3-17\",\"steps\":[{\"set\":{\"Obstaxy\":[0,0],\"Obstaz\":0.6}},{\"seed\":3},{\"press\":\"add 100 vertices\"}],\"capture\":[\"goodPts\",\"badPts\",\"edgesNN\",\"edgesNNadj\",\"rold\",\"%messages\",\"$RandomDraws\"],\"why\":\"sphere a on the base axis (Q-P3-06): every old and new sample collides, so add 100 vertices adds no free sample, connectPoints is not called and the old edges stay (Q-P3-07); messages recorded (K-P3-05's guard is not reached)\"}"
     },
     {
       "id": "H-P3-18",

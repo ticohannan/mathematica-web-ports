@@ -1,0 +1,211 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Private reference (R-04). Extracted 2026-10-12 with tools/nbextract.py; cached outputs skipped.
+
+
+### [Title]
+Chart for a Torus
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+A torus (more precisely, a 2-torus) has the shape of the outer surface of a donut. A torus can be parametrized by two angular variables (Theta,Phi), each in[0,2π). A dissected torus can be pictured as equivalent to a rectangle in the two-dimensional Euclidean plane \[DoubleStruckCapitalR]^2, with opposite pairs of edges glued together. Locally, the 2-torus resembles \[DoubleStruckCapitalR]^2, but there is no global continuous mapping since the Euclidean plane extends to infinity. This Demonstration shows possible mappings from a 2-torus to \[DoubleStruckCapitalR]^2. The operation necessarily introduces discontinuities, where small changes of Theta or Phi create large jumps in the planar configuration. Two rotary dials determine a point (Theta,Phi) (highlighted in green) in the course of a transformation.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+arrowArc[s_Circle]:=s/.Circle[a_,r_,{start_,end_}]:>({s,Arrow[{#-r/10^6 {-Sin@end,Cos@end},#}]}&[a+r {Cos@end,Sin@end}]);
+TorusToPlane[λ_,u_,v_ ]:=If[λ<= 1,
+{(1)/(3) π (3-Cos[u] (-2-λ+(λ-1) Cos[v])),
+(1)/(3) π (3-(-2-λ+(λ-1) Cos[v]) Sin[u]),
+-λ( v-π)+(1-λ)Sin[v]},
+{(λ-1)( v)+(2-λ)(π+Cos[u]π),
+(λ-1) (2π-u)+(2-λ)(π+Sin[u]π),
+(λ-2) ( v-π)}];
+makeHand[fl_, bl_, fw_, bw_] :=
+ Polygon[{{ -bl,-bw}, { -bl,bw}, { fl,fw}, { fl + 8 fw,0}, { fl,-fw}}/10];
+makeDialControl[Dynamic[pt_],cent_,color_]:=Module[{ang},
+LocatorPane[Dynamic[pt,(pt = Normalize[#])&],
+ang=Dynamic[ArcTan[pt[[1]],pt[[2]]]];If[ang <0,ang=ang+2π];
+Graphics[
+{
+Gray,Circle[cent],
+Gray,Table[Line[{cent+.94{Cos@a,Sin@a},cent+{Cos@a,Sin@a}}],{a,0,2π,π/8}],
+Table[Line[{cent+.98{Cos@a,Sin@a},cent+{Cos@a,Sin@a}}],{a,π/16,2π,π/8}],
+{FontSize->10,Table[Text[Theta,cent+.7{Cos@Theta,Sin@Theta}],{Theta, Rest@Range[- Pi,Pi, Pi/4]}]},
+(*{color,Line[{cent,cent+{Cos@ang,Sin@ang}}],PointSize->Large,Point[cent+{Cos@ang,Sin@ang}]},*)
+(*{color, EdgeForm[Black],Rotate[makeHand[7, 7/3, .1, .3],ang,cent]}*)
+{color, EdgeForm[Black],Rotate[Translate[makeHand[7, 7/3, .1, .3],cent],ang,cent]},
+Black,Arrowheads[.05],
+arrowArc[Circle[cent,0.3,{0,ang}]]
+}]]];
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{Theta,Phi,c2 = {0,-2.5},thetaList=Rest@Range[- Pi,Pi, Pi/4], m=.2,config,manifold},
+Theta = ArcTan[p1[[1]],p1[[2]]];If[Theta <0,Theta=Theta+2π];
+Phi= ArcTan[p2[[1]],p2[[2]]];If[Phi<0,Phi=Phi+2π];
+config=Graphics3D[{Green,Sphere[TorusToPlane[λ,Theta,Phi],2/10]}];
+manifold=ParametricPlot3D[TorusToPlane[λ,u,v]
+,{u, 0,2π},{v, 0,2π},PlotRange->{{-m,2π+m},{-m,2π+m},{-π-m,π+m}}
+,PlotStyle->Directive[Opacity[0.8],FaceForm[<<GraphicsBox>>,<<GraphicsBox>>]],PlotTheme->"\<Business\>",(*BoundaryStyle->Opacity[0],*)
+BoundaryStyle->Directive[Thick,Red],ImageSize->{350,350},SphericalRegion->True,PlotLabel->If[λ<1/2,"\<2-Torus\>",If[λ<1.2,"\<Cylinder\>","\<Plane\>"]]];
+Show[manifold,config]],
+Row[{Control@{{λ,0,"\<Torus -> Plane\>"} ,0,2,Appearance->"\<Labeled\>", ImageSize->Small}}],
+{{p1,{1,0},"\<Theta\>"},(makeDialControl[#1,{0,0},Red]&),ImageSize->{160,160}},
+{{p2,{1,0},"\<Phi\>"},(makeDialControl[#1,{0,0},Blue]&),ImageSize->{160,160}},ControlPlacement->Left,SaveDefinitions->True
+]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Item]
+Aaron T. Becker
+
+### [Item]
+Haoran Zhao
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+The 2-torus (or T^2) is a manifold that can be embedded in \[DoubleStruckCapitalR]^3, as illustrated by the 3D plot. A manifold is a topological space that locally resembles n-dimensional Euclidean space \[DoubleStruckCapitalR]^n in a neighborhood of each point. Locally, the neighborhood of any point on T^2 resembles one in \[DoubleStruckCapitalR]^2 (the Euclidean plane).
+
+### [Text]
+Globally, a manifold can differ from a Euclidean space; for example, the surface of the sphere S^2 is not topologically equivalent to a Euclidean space. Likewise the surface of a torus. As shown in this Demonstration, the torus can be split along its longest circumference to form a cylinder, and then this cylinder can be opened up into a rectangle. Both operations introduce discontinuities where small changes of Theta or Phi create large jumps in the configuration.
+
+### [Text]
+In the context of manifolds, these mappings are called charts. To avoid discontinuities, you can switch from one chart to another, much like a pilot can switch from a map of North America to a map of the Pacific when flying from New York to Tokyo. A collection of overlapping charts is called an atlas.
+
+### [Text]
+\<A fun problem: what is the minimum number of charts needed to construct a complete atlas of the torus?\>
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+chart
+
+### [Item]
+atlas
+
+### [Item]
+manifold
+
+### [Item]
+configuration space
+
+### [Item]
+topological space
+
+### [Item]
+torus
+
+### [Item]
+embedding
+
+### [Item]
+robot
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Compact Manifold
+
+### [Text]
+Torus
+
+### [Text]
+Topological Space
+
+### [Text]
+Robot Motion with Obstacles
+
+### [Text]
+Forward and Inverse Kinematics of the SCARA Robot
+
+### [Text]
+Between Sphere and Torus
+
+### [Text]
+Configuration
+
+### [Text]
+Manifold
+
+### [Text]
+Embedding
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2016-05-02
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

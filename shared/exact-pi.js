@@ -120,3 +120,28 @@ export function piOver(n) {
   }
   return best;
 }
+
+// ---- N[num π/den] ----------------------------------------------------------------------------------------------------
+/**
+ * The machine number nearest to the exact num·π/den for integers num, den ≠ 0 (what N[num Pi/den] gives for an exact
+ * angle such as Mathematica's ArcTan of an exact dial point, 19π/32 → 1.8653206380689398; manipulability-ellipsoid
+ * K-ME-09). num·Math.PI/den rounds twice (Math.PI, then the product) and is 1 ulp off for some num/den, e.g. 19π/32
+ * (1.8653206380689396). The candidate doubles around num·Math.PI/den are compared with π·10^67 (error below 10^-67,
+ * far below the distance of these angles to a rounding midpoint). Non-integers or den = 0: RangeError.
+ */
+export function piFrac(num, den = 1) {
+  if (!Number.isInteger(num) || !Number.isInteger(den) || den === 0) throw new RangeError(`piFrac: integers with den ≠ 0 expected, got ${num}/${den}`);
+  if (num === 0) return 0;
+  const sign = (num < 0) !== (den < 0) ? -1 : 1;
+  const p = BigInt(Math.abs(num)), q = BigInt(Math.abs(den));
+  const c = (Math.abs(num) * Math.PI) / Math.abs(den);
+  let best = c, bestErr = null;
+  for (const d of [nextDouble(c, -2), nextDouble(c, -1), c, nextDouble(c, 1), nextDouble(c, 2)]) {
+    // |d − pπ/q| ∝ |m·q·10^67 − p·π·10^67·2^s| / 2^s, compared on the common denominator 2^1100
+    const [m, s] = dyadic(d);
+    const diff = m * q * PI_SCALE - p * PI_DIGITS * (1n << s);
+    const err = (diff < 0n ? -diff : diff) << (1100n - s);
+    if (bestErr === null || err < bestErr) { best = d; bestErr = err; }
+  }
+  return sign * best;
+}

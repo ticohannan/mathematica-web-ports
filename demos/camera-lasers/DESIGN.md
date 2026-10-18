@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.15 |
+| Code version: | 0.1.16 |
 | Document revision | 1 (2026-10-17) — first implementation |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Measuring Distance and Orientation Using Camera and Lasers", contributed by Shiva Shahrokhi and Aaron T. Becker, published 2016-06-29 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/MeasuringDistanceAndOrientationUsingCameraAndLasers/>. Readable source: [`docs/original-source/camera-lasers.txt`](../../docs/original-source/camera-lasers.txt); snapshots: `docs/original-snapshots/camera-lasers-1.png` … `camera-lasers-4.png` (pictures 5 and 6 of the extraction are the Wolfram logo placeholder); saved states (COMMON-DECISIONS §1): [`tests/golden/camera-lasers.original-states.json`](../../tests/golden/camera-lasers.original-states.json), written by `python3 tools/extract_state.py --snapshots`, with `states[0]` = the live output-cell state, `snapshots[1…4]` = the four snapshot cells' `"Settings"` (raw notebook lines 3870, 5398, 7079, 8753) and `specs`, exact values kept as `{"wl":"-1/5"}` |
@@ -239,6 +239,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | Doc rev. | Code version | Date | Change |
 |----------|--------------|------|--------|
 | 1 | v0.1.15 | 2026-10-17 | first implementation of the approved draft (DEC-17; draft of 2026-10-12 with COMMON-DECISIONS §5, §6 and owner rules R-A/R-B/R-C): `model.js`, `main.js`, `index.html`; uses `demos/common/segments.js` (owner rrt), `dial-control.js` with `keyStep: 'grid'` and `arrow-arcs.js` (owner two-link-kinematics); tests with the TESTPLAN titles (unit, golden incl. the harness replays — N-CL-04, e2e); §6.1 bundle table generated. Changed against the draft: T-CL-17's regression pin is k = −29, not −31 (K-CL-09: the exact-π table of `dial-control.js`); the `loc` icon is drawn by `main.js` (N-CL-03), so the bundle has no `arm-view.js`, `two-link.js` or `arm-grid.js`; §5 without the draft's `value-s` row (the vertical slider's value is plain text, not interactive); review fixes |
+| 2 | v0.1.16 | 2026-10-18 | version number only (batch B release); no change to this app |
 
 ## 10. Improvements to consider (not implemented)
 

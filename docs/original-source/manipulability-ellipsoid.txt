@@ -1,0 +1,279 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Private reference (R-04). Extracted 2026-10-12 with tools/nbextract.py; cached outputs skipped.
+
+
+### [Title]
+Manipulability Ellipsoid of a Robot Arm
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+\<Manipulability of a robot is the capacity to change the end effector's position as a function of the joint configuration[1]. A larger manipulability measure indicates a greater range of possible motions at that configuration. The manipulability measure reduces to zero when the robot is in a singular configuration and cannot generate velocities in at least one direction.\>
+
+### [Text]
+\<The manipulability ellipsoid includes all possible velocities normalized for a unit input at a given robot configuration. These velocities are calculated using the robot\[CloseCurlyQuote]s velocity Jacobian.\>
+
+### [Text]
+\<In this Demonstration, you can adjust a three-link elbow manipulator\[CloseCurlyQuote]s configuration to see how the joint configuration affects the manipulability. For singular configurations, the Jacobian loses rank, causing the manipulability ellipsoid to lose dimensions to either an ellipse or a line.\>
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+(*draw circular arcs with arrowheads*)
+myArrowArc[c_,r_,{start_,end_}]:=(*problem -- initial point too far out*)
+If[start==end,Point[c+r{Cos[start],Sin[start]}],
+Arrow[BSplineCurve[Table[c+r{Cos[t],Sin[t]},{t,start,end,(end-start)/(11)}]]]]
+myArrowArc2[c_,r_,{start_,end_}]:=(*problem -- initial point too far out*)
+If[start===end,Point[c+r{Cos[start],Sin[start]}],
+Arrow[BSplineCurve[Table[c+r{Cos[t],Sin[t]},{t,start,end,(end-start)/(11)}]]]]
+makeHand[fl_, bl_, fw_, bw_] :=
+ Polygon[{{ -bl,-bw}, { -bl,bw}, { fl,fw}, { fl + 8 fw,0}, { fl,-fw}}/10];
+makeDialControl[Dynamic[pt_],cent_,color_]:=Module[{ang},
+LocatorPane[Dynamic[pt, (pt =  Nearest[Table[{Cos@a,Sin@a},{a,-π,π,π/32}],#][[1]]) &],
+(*LocatorPane[Dynamic[pt,(pt = Normalize[#])&],*)
+ang=Dynamic[ArcTan[pt[[1]],pt[[2]]]];(*If[ang <0,ang=ang+2π];*)
+Graphics[
+{
+Gray,Circle[cent],
+Gray,Table[Line[{cent+.94{Cos@a,Sin@a},cent+{Cos@a,Sin@a}}],{a,0,2π,π/8}],
+Table[Line[{cent+.98{Cos@a,Sin@a},cent+{Cos@a,Sin@a}}],{a,π/16,2π,π/8}],
+{FontSize->10,Table[Text[Theta,cent+.7{Cos@Theta,Sin@Theta}],{Theta, Rest@Range[- Pi,Pi, Pi/4]}]},
+{color, EdgeForm[Black],Rotate[Translate[makeHand[7, 7/3, .1, .3],cent],ang,cent]},
+Black,Arrowheads[.05],
+color,myArrowArc2[cent,0.3,{0,ang}]
+},ImageSize->140]]];
+(*Linear Velocity Jacobian of a 3-Link Elbow Manipulator with joint angles Theta1, Theta2, and Theta3 and link lengths r1, r2, and r3*)
+JvRRRanthro[Theta1_,Theta2_,Theta3_,r2_,r3_] :=(\[NoBreak]<<Grid:-(r2 Cos[Theta2]+r3 Cos[Theta2+Theta3]) Sin[Theta1]-r2 Sin[Theta2]Cos[Theta1]-r3 Cos[Theta1]Sin[Theta2+Theta3]-r3 Cos[Theta1]Sin[Theta2+Theta3] | Cos[Theta1] (r2 Cos[Theta2]+r3 Cos[Theta2+Theta3])-r2 Sin[Theta1]Sin[Theta2]-r3 Sin[Theta1]Sin[Theta2+Theta3]-r3 Sin[Theta1]Sin[Theta2+Theta3] | 0r2 Cos[Theta2]+r3 Cos[Theta2+Theta3]r3 Cos[Theta2+Theta3]>>\[NoBreak]);
+splineCircle[m_List,r_,angles_List: {0,2 π}]:=
+(*Efficient 3D circle, thanks http://mathematica.stackexchange.com/questions/10957/an-efficient-circular-arc-primitive-for-graphics3d *)
+Module[{seg,Phi,start,end,pts,w,k},{start,end}=Mod[angles//N,2 π];
+If[end<=start,end+=2 π];
+seg=Quotient[end-start//N,π/2];
+Phi=Mod[end-start//N,π/2];
+If[seg==4,seg=3;Phi=π/2];
+pts=r RotationMatrix[start].#&/@Join[Take[{{1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1}},2 seg+1],RotationMatrix[seg π/2].#&/@{{1,Tan[Phi/2]},{Cos[Phi],Sin[Phi]}}];
+If[Length[m]==2,pts=m+#&/@pts,pts=m+#&/@Transpose[Append[Transpose[pts],ConstantArray[0,Length[pts]]]]];
+w=Join[Take[{1,1/Sqrt[2],1,1/Sqrt[2],1,1/Sqrt[2],1},2 seg+1],{Cos[Phi/2],1}];
+k=Join[{0,0,0},Riffle[#,#]&@Range[seg+1],{seg+1}];
+BSplineCurve[pts,SplineDegree->2,SplineKnots->k,SplineWeights->w]]/;Length[m]==2||Length[m]==3
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[Module[{w = 1/8,r1=1,r2=1,r3=1,U,\[CapitalSigma],V,\[CapitalSigma]full,d1 = 2,o0,o1,o2,oc,z1},
+If[Theta1prev!= Theta1, p1={Cos[Theta1],Sin[Theta1]};Theta1prev= Theta1];
+If[Theta2prev!= Theta2, p2={Cos[Theta2],Sin[Theta2]};Theta2prev= Theta2];
+If[Theta3prev!= Theta3, p3={Cos[Theta3],Sin[Theta3]};Theta3prev= Theta3];
+Theta1 = ArcTan[p1[[1]],p1[[2]]];If[Theta1 < 0,Theta1=Theta1+2π];
+Theta2= ArcTan[p2[[1]],p2[[2]]];(*If[Theta2<0,Theta2=Theta2+2π];*)
+Theta3= ArcTan[p3[[1]],p3[[2]]];(*If[Theta3<0,Theta3=Theta3+2π];*)
+
+o0 = (\[NoBreak]<<Grid:0 | 0 | 0>>\[NoBreak]);o1 = (\[NoBreak]<<Grid:0 | 0 | d1>>\[NoBreak]);o2 = (\[NoBreak]<<Grid:r2 Cos[Theta1] Cos[Theta2] | r2 Cos[Theta2]Sin[Theta1] | d1+r2 Sin[Theta2]>>\[NoBreak]);oc = (\[NoBreak]<<Grid:Cos[Theta1](r2 Cos[Theta2] +r3 Cos[Theta2+Theta3]) | Sin[Theta1](r2 Cos[Theta2]+r3 Cos[Theta2+Theta3]) | d1+r2 Sin[Theta2]+r3 Sin[Theta2+Theta3]>>\[NoBreak]);
+z1 =(\[NoBreak]<<Grid:Sin[Theta1] | -Cos[Theta1] | 0>>\[NoBreak]) ;
+Column[{
+Text@Style["\<Manipulability μ = \>",FontSize->18],
+Text@Style[Row[{EngineeringForm[Det[\[CapitalSigma]full]],Invisible["\<9\>"^"\<9\>"]}],FontSize->18],
+Graphics3D[{
+(*floor*)
+(*{Brown,Opacity[.1],Cuboid[{-2,-2,-.01},{2,2,0}]},*)
+(*draw manipulability ellipse*)
+{U,\[CapitalSigma]full,V} =SingularValueDecomposition[ N[JvRRRanthro[Theta1,Theta2,Theta3,r2,r3]]];
+\[CapitalSigma] =\[CapitalSigma]full/1;
+GeometricTransformation[
+{Arrowheads[.02],
+If[\[CapitalSigma][[1,1]]>0.1,{Blue,Arrow[{o0 ,\[CapitalSigma][[1]]}],Arrow[{o0,-\[CapitalSigma][[1]]}],
+Blue,GeometricTransformation[splineCircle[{0,0,0},1,{0,2π}],
+DiagonalMatrix[{\[CapitalSigma][[1,1]],\[CapitalSigma][[2,2]],1}]]}],
+If[\[CapitalSigma][[2,2]]>0.1,{Red,Arrow[{o0,\[CapitalSigma][[2]]}],Arrow[{o0,-\[CapitalSigma][[2]]}],
+Red,GeometricTransformation[splineCircle[{0,0,0},1,{0,2π}],DiagonalMatrix[{1,\[CapitalSigma][[2,2]],\[CapitalSigma][[3,3]]}].RotationMatrix[π/2,{0,1,0}]]}],
+If[\[CapitalSigma][[3,3]]>0.1,{Green,Arrow[{o0,\[CapitalSigma][[3]]}],Arrow[{o0,-\[CapitalSigma][[3]]}],
+Darker[Green],GeometricTransformation[splineCircle[{0,0,0},1,{0,2π}],DiagonalMatrix[{\[CapitalSigma][[1,1]],1,\[CapitalSigma][[3,3]]}].RotationMatrix[π/2,{1,0,0}]]
+}],
+If[MatrixRank[\[CapitalSigma]]>2,{Opacity[0.5],LightBlue,Ellipsoid[{0,0,0},\[CapitalSigma]^2]}]}
+,{U,oc}],
+(*draw arm with arrows showing angles*)
+Gray,EdgeForm[Black],
+Arrowheads[.02],
+(*Joint 1*)
+{Red,Cylinder[{o0,o1/4},3w]},
+{Gray,Cylinder[{o0,o1},w]},
+{Thick,Red,splineCircle[o0,1,{0,Theta1}],
+Point[{Cos[Theta1],Sin[Theta1],0}],
+PointSize[Medium],Point[{Cos[Theta1-.05Sign[Theta1]],Sin[Theta1-.05Sign[Theta1]],0}],
+PointSize[Large],Point[{Cos[Theta1-.12Sign[Theta1]],Sin[Theta1-.12Sign[Theta1]],0}]},
+(*JointTheta2*)
+{Cylinder[{o1 ,o2 },w]},
+{Blue,Cylinder[{o1-z1/4,o1+z1/4},2w]},
+{Thick,Blue,GeometricTransformation[{splineCircle[o0,1/2,{0,Theta2}](*,PointSize[Large],Point[{Cos[Theta2],Sin[Theta2],0}]*)},{RotationMatrix[Theta1,{0,0,1}].RotationMatrix[π/2,{1,0,0}],o1}]},
+(*JointTheta3*)
+{Cylinder[{o2,oc },w]},
+{Green,Cylinder[{o2-z1/4,o2+z1/4},2w]},
+{Thick,Green,GeometricTransformation[{splineCircle[o0,1/2,{Theta2,Theta2+Theta3}](*,PointSize[Large],Point[{Cos[Theta3],Sin[Theta3],0}]*)},{RotationMatrix[Theta1,{0,0,1}].RotationMatrix[π/2,{1,0,0}],o2}]}
+},
+SphericalRegion->True, PlotRange->{{-3.5,3.5},{-4,4},{-1,5}},ImageSize->{440,420},ViewAngle->18Degree,Boxed->False]
+},Center]
+],
+{Theta1,0,2π,π/32,ControlType->None},{Theta1prev,0,2π,π/32,ControlType->None},
+{{Theta2,0},-π /4,5/4π,π/32,ControlType->None},{Theta2prev,-π /4,5/4π,π/32,ControlType->None},
+{{Theta3,π/4},-3/4π,3/4π,π/32,ControlType->None},{Theta3prev,-3/4π,3/4π,π/32,ControlType->None},
+Control@{{p1,{1,0},"\<\!\(\*SubscriptBox[\(Theta\), \(1\)]\)\>"},(makeDialControl[#1,{0,0},Red]&)},
+Control@{{p2,{1,0},"\<\!\(\*SubscriptBox[\(Theta\), \(2\)]\)\>"},(makeDialControl[#1,{0,0},Blue]&)},
+Control@{{p3,{(1)/(Sqrt[2]),(1)/(Sqrt[2])},"\<\!\(\*SubscriptBox[\(Theta\), \(3\)]\)\>"},(makeDialControl[#1,{0,0},Green]&)},
+ControlPlacement->Left,SaveDefinitions->True,AutorunSequencing->{1,3,5}
+]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Aaron T. Becker
+
+### [Text]
+Mary Burbage
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+\<Calculating the manipulability requires defining the robot configuration in terms of joint angles (forward kinematics) and then calculating how joint velocities generate velocity of the end effector (velocity kinematics).\>
+
+### [Text]
+The configuration is defined using transformation matrices derived using the Denavit\[Dash]Hartenberg convention. The three joints of the elbow manipulator allow three positional degrees of freedom, and the location (origin) of each joint is determined from these transformation matrices. These origins are combined with the axes of rotation from the same transformation matrices to develop the velocity Jacobian, which relates the end effector velocity to the rate of change in the joint positions. The velocity Jacobian J used in this Demonstration is given in[2, eq. 4.98, p. 144]. It is a function of the rotational position of each of the three joints, described by the variables Subscript[Theta, 1], Subscript[Theta, 2], and Subscript[Theta, 3].
+
+### [Text]
+The velocity Jacobian is J=(\[NoBreak]<<Grid:(-Subscript[r, 2] Subscript[c, 2]-Subscript[r, 3] Subscript[c, 23]) Subscript[s, 1]-Subscript[r, 2] Subscript[c, 1] Subscript[s, 2]-Subscript[r, 3] Subscript[c, 1] Subscript[s, 23]-Subscript[r, 3] Subscript[c, 1] Subscript[s, 23] | Subscript[c, 1] (Subscript[r, 2] Subscript[c, 2]+Subscript[r, 3] Subscript[c, 23])-Subscript[r, 2] Subscript[s, 1] Subscript[s, 2]-Subscript[r, 3] Subscript[s, 1] Subscript[s, 23]-Subscript[r, 3] Subscript[s, 1] Subscript[s, 23] | 0Subscript[r, 2] Subscript[c, 2]+Subscript[r, 3] Subscript[c, 23]Subscript[r, 3] Subscript[c, 23]>>\[NoBreak]),
+
+### [Text]
+where Subscript[s, 1] is shorthand for sin(Subscript[Theta, 1]), Subscript[c, 23] is shorthand for cos(Subscript[Theta, 2]+Subscript[Theta, 3]), and so on, and the lengths of links 2 and 3 are Subscript[r, 2] and Subscript[r, 3].
+
+### [Text]
+The manipulability measure is calculated as the product of the diagonal elements Subscript[σ, i] in the \[CapitalSigma] matrix that results from the singular value decomposition of the velocity Jacobian, μ=<<UnderoverscriptBox>>Subscript[σ, i]. It may also be defined relative to the determinant of the Jacobian as μ=Sqrt[det(J J^T)]. From this definition, it is clear that μ=0 when the determinant of the Jacobian is zero. This occurs when the manipulator is in a singular configuration. The determinant of the Jacobian is J=-Subscript[r, 2] Subscript[r, 3] (Subscript[r, 2] Subscript[c, 2]+Subscript[r, 2] Subscript[c, 23]) Subscript[s, 3]. When the elbow manipulator is in the configuration[Subscript[Theta, 1], Subscript[Theta, 2], k π], k∈\[DoubleStruckCapitalZ], the Jacobian has rank 2, and the three-dimensional ellipsoid flattens to a two-dimensional ellipse. At the configuration[Subscript[Theta, 1],π/2+ k π, j π], (j,k)∈\[DoubleStruckCapitalZ]^2, the Jacobian has rank 1, and the ellipsoid collapses to a line. Snapshot 1 gives a three-dimensional ellipse, snapshot 2 a two-dimensional ellipse, and snapshot 3 a one-dimensional ellipse.
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] J. Martinez, "Manipulability Ellipsoids in Robotics," Engineer JAU (blog). (May 26, 2016) engineerjau.wordpress.com/2013/05/04/advanced-robotics-manipulability-ellipsoids.
+
+### [Text]
+[2] M. W. Spong, S. Hutchinson, and M. Vidyasagar, Robot Modeling and Control, Hoboken, NJ: John Wiley and Sons, 2006.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+manipulability
+
+### [Item]
+elbow manipulator
+
+### [Item]
+anthropomorphic arm
+
+### [Item]
+anthropomorphic manipulator
+
+### [Item]
+robot
+
+### [Item]
+robot arm
+
+### [Item]
+manipulator
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Forward and Inverse Kinematics of the SCARA Robot
+
+### [Text]
+Inverse Kinematics for a Robot Manipulator with Six Degrees of Freedom
+
+### [Text]
+Jacobian
+
+### [Text]
+Rotation Matrix
+
+### [Text]
+Singular Value Decomposition
+
+### [Text]
+Singular Value
+
+### [Text]
+Determinant
+
+### [Text]
+Matrix Rank
+
+### [Text]
+Denavit\[Dash]Hartenberg Parameters for a Three-Link Robot
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2016-06-24
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

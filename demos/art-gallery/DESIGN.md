@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.15 |
+| Code version: | 0.1.16 |
 | Document revision | 6 (2026-10-17) — `sameQ` and `lineList` moved to `demos/common/polygon-core.js`; §11 Errors in the original (R-C); checklist items as operator procedures (R-B) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Art Gallery Problem", contributed by Shreyas Poyrekar, Arifa Sultana and Aaron T. Becker, published September 13, 2019 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ArtGalleryProblem/>. Readable source: [`docs/original-source/art-gallery.txt`](../../docs/original-source/art-gallery.txt); snapshots: `docs/original-snapshots/art-gallery-*.png` |
@@ -220,6 +220,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 4 | v0.1.14 | 2026-10-16 | golden tests on the six snapshot states read from `tests/golden/art-gallery.original-states.json` (`tools/extract_state.py --snapshots`): every shown region bit for bit (snapshot 1 with the dnrm2 `Normalize`, D-AG-08), every state a fixed point of the body; N-AG-01 extended; no change to the app |
 | 5 | v0.1.15 | 2026-10-17 | §11 Errors in the original added (owner rule R-C); Mathematica checklist items rewritten as operator procedures (R-B); standalone bundle (owner rule R-A): §6.1, A-AG-08, tools/bundle-app.mjs |
 | 6 | v0.1.15 | 2026-10-17 | `sameQ` and `lineList` moved unchanged to `demos/common/polygon-core.js` (shared with minkowski-sum, COMMON-DECISIONS §3); `visibility.js` re-exports them; no behaviour change (unit and golden tests unchanged and green); §6 and the §6.1 bundle table updated; review fixes |
+| 7 | v0.1.16 | 2026-10-18 | version number only (batch B release); no change to this app |
 
 ## 10. Improvements to consider (not implemented)
 

@@ -1,0 +1,113 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstration by Aaron T. Becker and Mary Burbage
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Manipulability Ellipsoid of a Robot Arm</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <script src="../../shared/requirements.js" data-needs-webgl2></script>
+  <script type="importmap">{ "imports": { "three": "../../vendor/three/three.module.js", "three/addons/": "../../vendor/three/addons/" } }</script>
+  <style>
+    /* ControlPlacement -> Left: the three dials (automatic size, ≈ 180 px) in a column, labels at their left; then
+       Column[{"Manipulability μ =", μ, Graphics3D (ImageSize {440, 420})}, Center] */
+    .manipulate .controls { min-width: 0; max-width: 230px; gap: 8px; }
+    #controls .ctl-dial .ctl-label { font: italic 15px "Times New Roman", serif; min-width: 1.1em; }
+    #graphic.me-graphic { flex: 0 1 460px; max-width: 460px; padding: 8px 10px 10px; }
+    .me-mu { text-align: center; font: 18px system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.35; margin: 18px 0 6px; }
+    .me-mu .me-mu-value { min-height: 1.5em; }
+    .me-mu sup { font-size: 0.65em; line-height: 0; }
+    .me-matrix { border-collapse: collapse; margin: 6px 0; font-family: "Cambria Math", "STIX Two Math", serif; }
+    .me-matrix td { padding: 2px 10px; text-align: center; }
+    .me-matrix tr td:first-child { border-left: 1.5px solid #555; }
+    .me-matrix tr td:last-child { border-right: 1.5px solid #555; }
+    .me-view { position: relative; width: 440px; max-width: 100%; margin: 0 auto; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Manipulability ellipsoid</div>
+    <h1 class="demo-title">Manipulability Ellipsoid of a Robot Arm</h1>
+
+    <section class="manipulate" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="graphic me-graphic" id="graphic" data-testid="graphic">
+        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser with WebGL 2.</div></noscript>
+        <div class="me-mu" aria-live="polite">
+          <div>Manipulability <i>μ</i> =</div>
+          <div class="me-mu-value" data-testid="mu-label"></div>
+        </div>
+        <div class="me-view" id="view"></div>
+      </div>
+    </section>
+
+    <p class="caption">Manipulability of a robot is the capacity to change the end effector's position as a function of
+      the joint configuration [1]. A larger manipulability measure indicates a greater range of possible motions at that
+      configuration. The manipulability measure reduces to zero when the robot is in a singular configuration and cannot
+      generate velocities in at least one direction.</p>
+    <p class="caption">The manipulability ellipsoid includes all possible velocities normalized for a unit input at a given
+      robot configuration. These velocities are calculated using the robot’s velocity Jacobian.</p>
+    <p class="caption">In this Demonstration, you can adjust a three-link elbow manipulator’s configuration to see how the
+      joint configuration affects the manipulability. For singular configurations, the Jacobian loses rank, causing the
+      manipulability ellipsoid to lose dimensions to either an ellipse or a line.</p>
+
+    <details class="details" data-testid="details">
+      <summary>Details</summary>
+      <p>Calculating the manipulability requires defining the robot configuration in terms of joint angles (forward
+        kinematics) and then calculating how joint velocities generate velocity of the end effector (velocity
+        kinematics).</p>
+      <p>The configuration is defined using transformation matrices derived using the Denavit–Hartenberg convention. The
+        three joints of the elbow manipulator allow three positional degrees of freedom, and the location (origin) of each
+        joint is determined from these transformation matrices. These origins are combined with the axes of rotation from
+        the same transformation matrices to develop the velocity Jacobian, which relates the end effector velocity to the
+        rate of change in the joint positions. The velocity Jacobian <i>J</i> used in this Demonstration is given in
+        [2, eq. 4.98, p. 144]. It is a function of the rotational position of each of the three joints, described by the
+        variables θ<sub>1</sub>, θ<sub>2</sub>, and θ<sub>3</sub>.</p>
+      <p>The velocity Jacobian is</p>
+      <table class="me-matrix" aria-label="the velocity Jacobian J">
+        <tr><td>(−<i>r</i><sub>2</sub> <i>c</i><sub>2</sub> − <i>r</i><sub>3</sub> <i>c</i><sub>23</sub>) <i>s</i><sub>1</sub></td><td>−<i>r</i><sub>2</sub> <i>c</i><sub>1</sub> <i>s</i><sub>2</sub> − <i>r</i><sub>3</sub> <i>c</i><sub>1</sub> <i>s</i><sub>23</sub></td><td>−<i>r</i><sub>3</sub> <i>c</i><sub>1</sub> <i>s</i><sub>23</sub></td></tr>
+        <tr><td><i>c</i><sub>1</sub> (<i>r</i><sub>2</sub> <i>c</i><sub>2</sub> + <i>r</i><sub>3</sub> <i>c</i><sub>23</sub>)</td><td>−<i>r</i><sub>2</sub> <i>s</i><sub>1</sub> <i>s</i><sub>2</sub> − <i>r</i><sub>3</sub> <i>s</i><sub>1</sub> <i>s</i><sub>23</sub></td><td>−<i>r</i><sub>3</sub> <i>s</i><sub>1</sub> <i>s</i><sub>23</sub></td></tr>
+        <tr><td>0</td><td><i>r</i><sub>2</sub> <i>c</i><sub>2</sub> + <i>r</i><sub>3</sub> <i>c</i><sub>23</sub></td><td><i>r</i><sub>3</sub> <i>c</i><sub>23</sub></td></tr>
+      </table>
+      <p>where <i>s</i><sub>1</sub> is shorthand for sin(θ<sub>1</sub>), <i>c</i><sub>23</sub> is shorthand for
+        cos(θ<sub>2</sub> + θ<sub>3</sub>), and so on, and the lengths of links 2 and 3 are <i>r</i><sub>2</sub> and
+        <i>r</i><sub>3</sub>.</p>
+      <p>The manipulability measure is calculated as the product of the diagonal elements σ<sub><i>i</i></sub> in the Σ
+        matrix that results from the singular value decomposition of the velocity Jacobian,
+        μ = ∏<sub><i>i</i></sub> σ<sub><i>i</i></sub>. It may also be defined relative to the determinant of the Jacobian
+        as μ = √det(<i>J J</i><sup>T</sup>). From this definition, it is clear that μ = 0 when the determinant of the
+        Jacobian is zero. This occurs when the manipulator is in a singular configuration. The determinant of the Jacobian
+        is <i>J</i> = −<i>r</i><sub>2</sub> <i>r</i><sub>3</sub> (<i>r</i><sub>2</sub> <i>c</i><sub>2</sub> +
+        <i>r</i><sub>2</sub> <i>c</i><sub>23</sub>) <i>s</i><sub>3</sub>. When the elbow manipulator is in the
+        configuration [θ<sub>1</sub>, θ<sub>2</sub>, <i>k</i> π], <i>k</i> ∈ ℤ, the Jacobian has rank 2, and the
+        three-dimensional ellipsoid flattens to a two-dimensional ellipse. At the configuration [θ<sub>1</sub>,
+        π/2 + <i>k</i> π, <i>j</i> π], (<i>j</i>, <i>k</i>) ∈ ℤ<sup>2</sup>, the Jacobian has rank 1, and the ellipsoid
+        collapses to a line. Snapshot 1 gives a three-dimensional ellipse, snapshot 2 a two-dimensional ellipse, and
+        snapshot 3 a one-dimensional ellipse.</p>
+      <p>References:<br>
+        [1] J. Martinez, "Manipulability Ellipsoids in Robotics," Engineer JAU (blog). (May 26, 2016)
+        engineerjau.wordpress.com/2013/05/04/advanced-robotics-manipulability-ellipsoids.<br>
+        [2] M. W. Spong, S. Hutchinson, and M. Vidyasagar, <i>Robot Modeling and Control</i>, Hoboken, NJ: John Wiley and
+        Sons, 2006.</p>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. Click or drag in a dial to set its joint angle (it snaps
+      to multiples of π/32; a focused dial also turns with the arrow keys). Drag in the picture to rotate it. The texts
+      are the original's (its Details contain errors, listed in DESIGN.md §11). All computation runs in your browser.</p>
+    <div class="credits" data-testid="credits">
+      Adapted from <a href="https://demonstrations.wolfram.com/ManipulabilityEllipsoidOfARobotArm/">"Manipulability Ellipsoid of a Robot Arm"</a>
+      by Aaron T. Becker and Mary Burbage, Wolfram Demonstrations Project (published June 24, 2016), licensed
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+      This JavaScript/WebGL translation by Tico Hannan (© 2026; produced with an AI code-generation tool) is released under the
+      same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

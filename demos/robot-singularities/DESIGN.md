@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.15 |
-| Document revision | 5 (2026-10-17) — §11 Errors in the original (R-C); checklist items as operator procedures (R-B) |
+| Code version: | 0.1.16 |
+| Document revision | 6 (2026-10-18) — DH-family move: the generic code lives in `demos/common/` (re-export shims here); no feature change |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Robot Singularities in Three-Link Manipulators", contributed by Aaron T. Becker and Yitong Lu, published January 11, 2021 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/RobotSingularitiesInThreeLinkManipulators/>. Readable source: [`docs/original-source/robot-singularities.txt`](../../docs/original-source/robot-singularities.txt); snapshots: `docs/original-snapshots/robot-singularities-*.png`; saved state: `tests/golden/robot-singularities.original-state.json` |
 | Port files | shared: `shared/mma-lighting.js` (Mathematica's documented default lighting, new with this port); app: `robots.js` (Type table, dhTransform, o3coords, Td, the transcribed Jacobians, joint-variable rules; pure), `singular-sets.js` (the 64 hand-written singularity graphics as data; pure), `svd3.js` (SVD, MatrixRank, manipulability ellipsoid; pure), `g3d.js` (a small model of Graphics3D directives, Show, ParametricPlot3D, InfinitePlane clipping, bounds; pure), `model.js` (drawJoint & co. and one evaluation of the Manipulate body; pure), `main.js` (controls, two three.js viewers), `index.html` |
@@ -120,6 +120,12 @@ matches any text. Checked by the browser test "every control on … is specified
 - `model.js`: `initialState` (= the notebook's saved Manipulate variables), `selectType` (popup + slider-grid reset),
   `evaluate` (one evaluation of the body: wrap, recompute the singular sets only when needed, ellipsoid, Ad/Td,
   the two `Show`s). The draw functions of the Initialization code are data builders.
+- Since v0.1.16 (DH-family move) the generic parts live in `demos/common/` and are shared with the other DH-family ports:
+  `g3d.js` and `svd3.js` here are re-export shims of `demos/common/g3d.js` and `demos/common/svd3.js`; `robots.js`
+  re-exports `DOF`, `joints`, `dhTransform`, `jointTransform`, `makeO3coords`, `computeAd`, `computeTd` from
+  `demos/common/dh-chain.js`; `model.js` re-exports `drawZArrow`, `drawCoordAxes`, `drawJoint` (variant `'rs'`),
+  `drawWristCenter` from `demos/common/robot-draw.js`; `main.js` uses `addPrims`, `disposeGroup`, `fitViewer` of
+  `demos/common/g3d-three.js`.
 - `main.js`: two `createViewer`s (shared/three-helpers) side by side with their own orbit controls, each with
   `outputColorSpace = LinearSRGBColorSpace` and the lights of `shared/mma-lighting.js`; the phase-space
   contents live in a group scaled to the unit cube (BoxRatios {1,1,1}), clipped to the box with clipping planes;
@@ -142,7 +148,8 @@ Owner rule R-A: this one app can be taken out of the repository and hosted anywh
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/robot-singularities/`) | 7 | `g3d.js`, `index.html`, `main.js`, `model.js`, `robots.js`, `singular-sets.js`, `svd3.js` |
-| `shared/` | 10 | `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma-lighting.js`, `mma.js`, `requirements.js`, `style.css`, `three-helpers.js`, `ui-extra.js`, `ui.js` |
+| `shared/` | 11 | `exact-pi.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma-lighting.js`, `mma.js`, `requirements.js`, `style.css`, `three-helpers.js`, `ui-extra.js`, `ui.js` |
+| `demos/common/` | 5 | `dh-chain.js`, `g3d-three.js`, `g3d.js`, `robot-draw.js`, `svd3.js` |
 | `vendor/three/` | 9 | `addons/controls/OrbitControls.js`, `addons/lines/Line2.js`, `addons/lines/LineGeometry.js`, `addons/lines/LineMaterial.js`, `addons/lines/LineSegments2.js`, `addons/lines/LineSegmentsGeometry.js`, `addons/renderers/CSS2DRenderer.js`, `three.core.js`, `three.module.js` |
 | added by the bundler | 8 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/robot-singularities/DESIGN.md`, `vendor/three/LICENSE` |
 <!-- bundle-contents:end -->
@@ -215,6 +222,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 3 | v0.1.13 | 2026-10-12 | no change to this app (collision beep with a mute checkbox in prm-seven-link; new `shared/beep.js` used only there) |
 | 4 | v0.1.14 | 2026-10-16 | golden tests on the four snapshot states (`tests/golden/robot-singularities.original-states.json`, `tools/extract_state.py --snapshots`): Type table, fixed points and ellipsoid rank, stored singular sets of the elbow arm, the offset spherical wrist and the SCARA arm; the older-code primitives of snapshots 2 and 3 (N-RS-06) pinned; N-RS-07 extended; no change to the app |
 | 5 | v0.1.15 | 2026-10-17 | §11 Errors in the original added (owner rule R-C); Mathematica checklist items rewritten as operator procedures (R-B); standalone bundle (owner rule R-A): §6.1, A-RS-07, tools/bundle-app.mjs; review fixes |
+| 6 | v0.1.16 | 2026-10-18 | DH-family move (owner-approved, COMMON-DECISIONS §3, dh-parameters §6.5): the generic code moved unchanged in behaviour to `demos/common/` — `g3d.js` and `svd3.js` (whole files; new options `EdgeForm`, `cuboidCorners`, `zeroTol` with defaults that leave this app's results unchanged), `dh-chain.js` (DOF, joints, dhTransform, jointTransform, makeO3coords, computeAd, computeTd from `robots.js`), `robot-draw.js` (drawZArrow, drawCoordAxes, the ground, drawJoint variant 'rs', drawWristCenter from `model.js`), `g3d-three.js` (addPrims, disposeGroup, fitViewer from `main.js`, with parameters instead of this page's globals); `g3d.js`, `svd3.js`, `robots.js`, `model.js` keep re-export shims, so imports and tests are unchanged; bit-for-bit regression test T-DH-48 (`tests/unit/dh-parameters.test.js`); §6.1 bundle table regenerated; no feature change |
 
 ## 10. Improvements to consider (not implemented)
 

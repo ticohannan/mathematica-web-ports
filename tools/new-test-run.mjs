@@ -57,7 +57,7 @@ export function parseItems(text) {
     cur = null;
   };
   for (const line of lines) {
-    const m = line.match(/^### (M-[A-Z]+-\d+)\s+(.*)$/);
+    const m = line.match(/^### (M-[A-Z][A-Z0-9]*-\d+)\s+(.*)$/);
     if (m) { close(); cur = { id: m[1], title: m[2].trim(), lines: [] }; continue; }
     if (/^(## |---)/.test(line)) { close(); continue; }
     if (cur) cur.lines.push(line);

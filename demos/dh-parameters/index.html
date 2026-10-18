@@ -1,0 +1,147 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstration by Aaron T. Becker and Mary Burbage
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Denavit-Hartenberg Parameters for a Three-Link Robot</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <script src="../../shared/requirements.js" data-needs-webgl2></script>
+  <script type="importmap">{ "imports": { "three": "../../vendor/three/three.module.js", "three/addons/": "../../vendor/three/addons/" } }</script>
+  <style>
+    /* the snapshots: one column of controls at the left (labels left of each control), the 3D picture (ImageSize 425) right */
+    .manipulate .controls { min-width: 0; max-width: 300px; gap: 6px; }
+    #controls .ctl-slider, #controls .ctl-setter { flex-direction: row; align-items: center; gap: 8px; }
+    #controls .ctl-slider { flex-wrap: wrap; }
+    #controls .ctl-anim { flex-basis: 100%; padding-left: 3em; }
+    #controls .ctl-label { min-width: 2.4em; text-align: right; font-style: italic; }
+    #controls .ctl-slider .ctl-field { width: 4.4em; }
+    #controls .ctl-delimiter { margin: 4px 0; }
+    #graphic { flex: 1 1 425px; max-width: 460px; }
+    .dh-view { position: relative; width: 425px; max-width: 100%; margin: 0 auto; }
+    .dh-table { border-collapse: collapse; margin: 6px 0 10px; }
+    .dh-table th, .dh-table td { border: 1px solid #bbb; padding: 2px 10px; text-align: center; }
+    .dh-matrix { border-collapse: collapse; margin: 6px 0; font-family: "Cambria Math", "STIX Two Math", serif; }
+    .dh-matrix td { padding: 2px 10px; text-align: center; }
+    .dh-matrix tr td:first-child { border-left: 1.5px solid #555; }
+    .dh-matrix tr td:last-child { border-right: 1.5px solid #555; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Denavit-Hartenberg parameters</div>
+    <h1 class="demo-title">Denavit-Hartenberg Parameters for a Three-Link Robot</h1>
+
+    <section class="manipulate" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="graphic" id="graphic" data-testid="graphic">
+        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser with WebGL 2.</div></noscript>
+        <div class="dh-view" id="view"></div>
+      </div>
+    </section>
+
+    <p class="caption">The Denavit–Hartenberg (DH) convention for assigning coordinate frames uses four variables to define
+      the reference coordinate frame for each link in a robotic arm. This Demonstration lets you select a three-link
+      combination of revolute (rotating) and prismatic (sliding) joints. You can then vary their DH parameters to create a
+      variety of robot arms in different configurations.</p>
+
+    <details class="details" data-testid="details">
+      <summary>Details</summary>
+      <p>The Denavit–Hartenberg (DH) convention is used to assign coordinate frames to each joint of a robot manipulator in a
+        simplified and consistent fashion [1]. From these parameters, a homogeneous transformation matrix can be defined,
+        which is useful for both forward and inverse kinematics of the manipulator. This homogeneous transformation is the
+        product of four simpler transformations: (1) a rotation θ about the <i>z</i> axis, (2) a translation <i>d</i> along
+        the <i>z</i> axis, (3) a translation <i>r</i> along the <i>x</i> axis, and (4) a rotation α about the <i>x</i> axis.
+        Joints are either revolute or prismatic. For revolute joints, the variable of movement is θ, and for prismatic
+        joints, the variable of movement is <i>d</i>. Under the DH convention, coordinate frames are assigned using two
+        rules: (1) The <i>x</i> axis of the current frame must be perpendicular to the <i>z</i> axis of the previous frame,
+        and (2) the <i>x</i> axis of the current frame must intersect the <i>z</i> axis of the previous frame.</p>
+      <p>The homogeneous transformation between two coordinate frames with DH parameters θ<sub><i>i</i></sub>,
+        <i>d</i><sub><i>i</i></sub>, <i>r</i><sub><i>i</i></sub>, α<sub><i>i</i></sub> is</p>
+      <p><i>A</i><sub><i>i</i></sub> = rot<sub><i>z</i>,θ<sub><i>i</i></sub></sub> trans<sub><i>z</i>,<i>d</i><sub><i>i</i></sub></sub>
+        trans<sub><i>x</i>,<i>r</i><sub><i>i</i></sub></sub> rot<sub><i>z</i>,α<sub><i>i</i></sub></sub> =</p>
+      <table class="dh-matrix" aria-label="the matrix A_i">
+        <tr><td><i>c</i><sub>θ<sub><i>i</i></sub></sub></td><td>−<i>s</i><sub>θ<sub><i>i</i></sub></sub> <i>c</i><sub>α<sub><i>i</i></sub></sub></td><td><i>s</i><sub>θ<sub><i>i</i></sub></sub> <i>s</i><sub>α<sub><i>i</i></sub></sub></td><td><i>r</i><sub><i>i</i></sub> <i>c</i><sub>θ<sub><i>i</i></sub></sub></td></tr>
+        <tr><td><i>s</i><sub>θ<sub><i>i</i></sub></sub></td><td><i>c</i><sub>θ<sub><i>i</i></sub></sub> <i>c</i><sub>α<sub><i>i</i></sub></sub></td><td>−<i>c</i><sub>θ<sub><i>i</i></sub></sub> <i>s</i><sub>α<sub><i>i</i></sub></sub></td><td><i>r</i><sub><i>i</i></sub> <i>s</i><sub>θ<sub><i>i</i></sub></sub></td></tr>
+        <tr><td>0</td><td><i>s</i><sub>α<sub><i>i</i></sub></sub></td><td><i>c</i><sub>α<sub><i>i</i></sub></sub></td><td><i>d</i><sub><i>i</i></sub></td></tr>
+        <tr><td>0</td><td>0</td><td>0</td><td>1</td></tr>
+      </table>
+      <p>where <i>c</i><sub>θ</sub> = cos θ and <i>s</i><sub>θ</sub> = sin θ.</p>
+      <p>A video showing an animation explaining the assignment of DH parameters may be found at [2].</p>
+      <p>In this Demonstration, you can vary the four parameters to see the effect each has on the configuration of the
+        robot. The code is modular and can easily be extended for <i>n</i>-link robots.</p>
+      <p>The default settings give a three-link anthropomorphic manipulator arm, so named because the joints map to a waist,
+        shoulder, and elbow rotation:</p>
+      <table class="dh-table" aria-label="DH table of the anthropomorphic arm">
+        <tr><th>DH parameter</th><th>θ</th><th><i>d</i></th><th><i>r</i></th><th>α</th></tr>
+        <tr><td>Joint 1</td><td>θ<sub>1</sub><sup>*</sup></td><td><i>d</i><sub>1</sub></td><td>0</td><td>π/2</td></tr>
+        <tr><td>Joint 2</td><td>θ<sub>2</sub><sup>*</sup></td><td>0</td><td>0</td><td>0</td></tr>
+        <tr><td>Joint 3</td><td>θ<sub>3</sub><sup>*</sup></td><td>0</td><td>0</td><td>0</td></tr>
+      </table>
+      <p>(Here * indicates the moving joint variable, other parameters are constant.)</p>
+      <p>Anthropomorphic manipulator arms are often used in assembly lines for welding, painting, and construction.</p>
+      <p>The snapshots show, in order:</p>
+      <p>SCARA arm, the Selective Compliant Articulated Robot for Assembly, has two revolute joints and one prismatic joint:</p>
+      <table class="dh-table" aria-label="DH table of the SCARA arm">
+        <tr><th>DH parameter</th><th>θ</th><th><i>d</i></th><th><i>r</i></th><th>α</th></tr>
+        <tr><td>Joint 1</td><td>θ<sub>1</sub><sup>*</sup></td><td><i>d</i><sub>1</sub></td><td>0</td><td>0</td></tr>
+        <tr><td>Joint 2</td><td>θ<sub>2</sub><sup>*</sup></td><td>0</td><td><i>r</i><sub>2</sub></td><td>π</td></tr>
+        <tr><td>Joint 3</td><td>0</td><td><i>d</i><sub>3</sub><sup>*</sup></td><td>0</td><td>0</td></tr>
+      </table>
+      <p>SCARA arms are often used for pick and place tasks on conveyor belts.</p>
+      <p>A three-link cylindrical robot, an early robot model with one revolute joint and two prismatic joints:</p>
+      <table class="dh-table" aria-label="DH table of the cylindrical robot">
+        <tr><th>DH parameter</th><th>θ</th><th><i>d</i></th><th><i>r</i></th><th>α</th></tr>
+        <tr><td>Joint 1</td><td>θ<sub>1</sub><sup>*</sup></td><td><i>d</i><sub>1</sub></td><td>0</td><td>0</td></tr>
+        <tr><td>Joint 2</td><td>0</td><td><i>d</i><sub>2</sub><sup>*</sup></td><td>0</td><td>−π/2</td></tr>
+        <tr><td>Joint 3</td><td>0</td><td><i>d</i><sub>3</sub><sup>*</sup></td><td>0</td><td>0</td></tr>
+      </table>
+      <p>One reason cylindrical robots were popular is because they have simple inverse kinematics that are specified in
+        cylindrical coordinates.</p>
+      <p>A three-link planar revolute robot:</p>
+      <table class="dh-table" aria-label="DH table of the planar robot">
+        <tr><th>DH parameter</th><th>θ</th><th><i>d</i></th><th><i>r</i></th><th>α</th></tr>
+        <tr><td>Joint 1</td><td>θ<sub>1</sub><sup>*</sup></td><td>0</td><td><i>r</i><sub>1</sub></td><td>0</td></tr>
+        <tr><td>Joint 2</td><td>θ<sub>2</sub><sup>*</sup></td><td>0</td><td><i>r</i><sub>2</sub></td><td>0</td></tr>
+        <tr><td>Joint 3</td><td>θ<sub>3</sub><sup>*</sup></td><td>0</td><td><i>r</i><sub>3</sub></td><td>−π/2</td></tr>
+      </table>
+      <p>Three-link planar robots have a disc-shaped workspace that they can reach. The extra joint enables them to achieve
+        desired angles of the end effector (the robot hand) in a subspace of the reachable workspace. This subspace is
+        called the dexterous workspace.</p>
+      <p>A spherical wrist:</p>
+      <table class="dh-table" aria-label="DH table of the spherical wrist">
+        <tr><th>DH parameter</th><th>θ</th><th><i>d</i></th><th><i>r</i></th><th>α</th></tr>
+        <tr><td>Joint 1</td><td>θ<sub>1</sub><sup>*</sup></td><td><i>d</i><sub>1</sub></td><td>0</td><td>−π/2</td></tr>
+        <tr><td>Joint 2</td><td>θ<sub>2</sub><sup>*</sup></td><td>0</td><td>0</td><td>π/2</td></tr>
+        <tr><td>Joint 3</td><td>θ<sub>3</sub><sup>*</sup></td><td><i>d</i><sub>3</sub></td><td>0</td><td>0</td></tr>
+      </table>
+      <p>A spherical wrist can be used to achieve any desired orientation of the end effector. Often a spherical wrist is
+        attached to the end of a three-link robot such as a SCARA, anthropomorphic manipulator, or cylindrical robot. The
+        first three joints are used for position control and the spherical wrist is used for orientation control.</p>
+      <p>References:<br>
+        [1] M. W. Spong, S. Hutchinson, and M. Vidyasagar, <i>Robot Modeling and Control</i>, Hoboken, NJ: John Wiley &amp;
+        Sons, 2006.<br>
+        [2] E. Tira‐Thompson, prod. <i>Denavit-Hartenberg Reference Frame Layout</i> [Video]. (Jun 15, 2016)
+        www.youtube.com/watch?v=rA9tm0gTln8.</p>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. Drag in the picture to rotate it. Each frame shows its
+      <i>x</i> (blue), <i>y</i> (green) and <i>z</i> (red) axes; θ and α are exact multiples of π/32, typed values such as
+      "5π/32" or "5 Pi/32" are accepted. All computation runs in your browser.</p>
+    <div class="credits" data-testid="credits">
+      Adapted from <a href="https://demonstrations.wolfram.com/DenavitHartenbergParametersForAThreeLinkRobot/">"Denavit-Hartenberg Parameters for a Three-Link Robot"</a>
+      by Aaron T. Becker and Mary Burbage, Wolfram Demonstrations Project (published June 16, 2016), licensed
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+      This JavaScript/WebGL translation by Tico Hannan (© 2026; produced with an AI code-generation tool) is released under the
+      same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

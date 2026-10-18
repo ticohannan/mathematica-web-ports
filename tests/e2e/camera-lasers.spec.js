@@ -78,7 +78,9 @@ test.describe('camera and lasers', () => {
     await page.mouse.down();
     // first inside the top view: the object follows to y = -2
     await page.mouse.move(mid.x, mid.y, { steps: 10 });
-    expect(Math.abs((await getState(page)).p[1] + 2)).toBeLessThan(0.05);
+    // the locator applies pointer moves once per animation frame (shared/svg-plot.js): wait for that frame instead
+    // of reading the state at once (WebKit had not drawn it yet and showed an earlier sample, -1.29)
+    await expect.poll(async () => Math.abs((await getState(page)).p[1] + 2)).toBeLessThan(0.05);
     // then on below the bottom edge (y = -4) into the camera image
     await page.mouse.move(mid.x, camRect.y + camRect.height / 2, { steps: 20 });
     await page.mouse.up();
@@ -109,7 +111,7 @@ test.describe('camera and lasers', () => {
     const a = await dialClient(page, 11.25), b = await dialClient(page, 45);
     await page.mouse.move(a.x, a.y);
     await page.mouse.down();
-    expect(Math.abs((await theta(page)) - Math.PI / 16)).toBeLessThan(1e-12);
+    await expect.poll(async () => Math.abs((await theta(page)) - Math.PI / 16)).toBeLessThan(1e-12);
     await page.mouse.move(b.x, b.y, { steps: 6 });
     await page.mouse.up();
     expect(Math.abs((await theta(page)) - (8 * Math.PI) / 32)).toBeLessThan(1e-12);

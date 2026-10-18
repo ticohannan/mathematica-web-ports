@@ -26,14 +26,14 @@ published site `https://ticohannan.github.io/mathematica-web-ports/`); the apps 
 ## GEN — general (do once per browser)
 
 ### M-GEN-01  Landing page and links
-**Steps** — open `http://127.0.0.1:8080/`. Click each of the twenty demo cards in turn; on each demo page click
+**Steps** — open `http://127.0.0.1:8080/`. Click each of the twenty-six demo cards in turn; on each demo page click
 "All demos" (top left) to come back.
 **Record** — the number of cards in each group; any card that does not open its demo or a page that looks broken.
-**Expected** — twenty cards in three groups (three, then seven "further robotics demonstrations", then ten in "batch A"); each link opens its
+**Expected** — twenty-six cards in four groups (three, then seven "further robotics demonstrations", then ten in "batch A", then six in "batch B (3D)"); each link opens its
 demo; no broken page.
 
 ### M-GEN-02  Error console
-**Steps** — press F12, open the Console tab; open each of the twenty demos (`demos/<dir>/`) and use every control once
+**Steps** — press F12, open the Console tab; open each of the twenty-six demos (`demos/<dir>/`) and use every control once
 (each button, slider, setter, checkbox; drag one locator).
 **Record** — for each demo: "no errors", or the exact text of every red message (copy it).
 **Expected** — no red errors.
@@ -57,7 +57,7 @@ keys; press setter buttons and buttons with Enter or Space; move a focused locat
 **Expected** — the picture follows the mouse without noticeable lag.
 
 ### M-GEN-06  Credits (all pages)
-**Steps** — scroll to the end of each of the twenty pages.
+**Steps** — scroll to the end of each of the twenty-six pages.
 **Record** — for each page: footer present (yes/no) and any missing element.
 **Expected** — a credit footer naming the original authors, the title (linked to the Wolfram Demonstrations page), the
 CC BY-NC-SA 3.0 licence, the words "Adapted from" and "Not affiliated with or endorsed".

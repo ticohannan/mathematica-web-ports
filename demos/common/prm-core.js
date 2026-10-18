@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 Tico Hannan
 // SPDX-FileCopyrightText: Original Wolfram Demonstration by Aaron T. Becker and Yitong Lu
 // SPDX-License-Identifier: CC-BY-NC-SA-3.0
-// demos/common/prm-core.js — the functions that "Probabilistic Roadmap Method" and "Probabilistic Roadmap
-// Method for Robot Arm" (both by Aaron T. Becker and Yitong Lu) define IDENTICALLY in their Initialization
-// code, ported once. Pure: no DOM, importable in Node. Names follow the originals; indexes into goodPts that
+// demos/common/prm-core.js — the functions that "Probabilistic Roadmap Method", "Probabilistic Roadmap
+// Method for Robot Arm" and "Probabilistic Roadmap Method in 3D" (all by Aaron T. Becker and Yitong Lu) define
+// IDENTICALLY (up to the number of coordinates) in their Initialization code, ported once. Pure: no DOM, importable in Node. Names follow the originals; indexes into goodPts that
 // the originals store (adjacency lists, A* paths) stay 1-based, as in Mathematica, so the state can be
 // compared with the originals' saved states directly.
 //
@@ -12,6 +12,12 @@
 //   * pathOKT takes a collision PREDICATE instead of the PRM's `polys` (the robot app's pathOKTrobot is the same
 //     code with detCollision as the predicate);
 //   * connectPoints takes the local planner (ps, pe) -> boolean instead of polys / pObs3, obsRad, widtha.
+//   * n dimensions (v0.1.16, owner prm-3d): toroidDist, pathOKT, toroidLine and toroidPt loop over the coordinates
+//     of their arguments (2 in the 2D Demonstrations, 3 in "Probabilistic Roadmap Method in 3D", whose code repeats
+//     every 2D line once more for the third coordinate). Sums are formed left to right starting from the first term,
+//     so every 2D result is the same double as before (guarded by the prm and prm-robot-arm unit and golden
+//     replays). The 3D-only differences are options: toroidPt's zero test (`zeroTest`, N-P3-03) and its wrap;
+//     myAstar, connectPoints, planQuery and progressOnPath take an optional distance function / toroidPt.
 import { mLess, mLessEq, mGreater, mEqual, total, circlePoints as circlePointsShared } from '../../shared/mma.js';
 import { nearest, positionOf } from '../../shared/mma-extra.js';
 
@@ -20,13 +26,31 @@ export const TWO_PI = 2 * Math.PI;
 
 /**
  * toroidDist := Sqrt[Min[(#1[[1]]-#2[[1]])^2, (2π-Abs[#1[[1]]-#2[[1]]])^2] + Min[(#1[[2]]-#2[[2]])^2, (2π-Abs[#1[[2]]-#2[[2]]])^2]] &
- * Torus distance on [0, 2π)²; symmetric in its arguments.
+ * (the 3D Demonstration adds + Min[(#1[[3]]-#2[[3]])^2, (2π-Abs[#1[[3]]-#2[[3]]])^2]).
+ * Torus distance on [0, 2π)^n, n = the length of a; symmetric in its arguments. The terms are added in coordinate
+ * order, left to right (lead K-P3-02).
  */
 export function toroidDist(a, b) {
-  const d1 = a[0] - b[0], d2 = a[1] - b[1];
-  const w1 = TWO_PI - Math.abs(d1), w2 = TWO_PI - Math.abs(d2);
-  return Math.sqrt(Math.min(d1 * d1, w1 * w1) + Math.min(d2 * d2, w2 * w2));
+  const d0 = a[0] - b[0], w0 = TWO_PI - Math.abs(d0);
+  let s = Math.min(d0 * d0, w0 * w0);
+  for (let k = 1; k < a.length; k++) {
+    const d = a[k] - b[k], w = TWO_PI - Math.abs(d);
+    s += Math.min(d * d, w * w);
+  }
+  return Math.sqrt(s);
 }
+
+/**
+ * The shorter way from p to q along one coordinate of the torus: q - p + If[Abs[q-p] < 2π - Abs[q-p], 0,
+ * If[q > p, -2π, +2π]] (tolerant Less / Greater), as every toroid function of the originals writes it.
+ */
+const shortDiff = (p, q) => {
+  const d = Math.abs(q - p);
+  return q - p + (mLess(d, TWO_PI - d) ? 0 : mGreater(q, p) ? -TWO_PI : TWO_PI);
+};
+
+/** wrapto0to2π[x_] := If[x > 2π, x - 2π, If[x < 0, x + 2π, x]] (the 3D Demonstration; tolerant comparisons) */
+export const wrapto0to2pi = (x) => (mGreater(x, TWO_PI) ? x - TWO_PI : mLess(x, 0) ? x + TWO_PI : x);
 
 /** angtest[p1:{x1_,y1_}, p2:{x2_,y2_}] := p1.{{0,-1},{1,0}}.p2 > 0   (= y1 x2 - x1 y2 > 0) */
 export function angtest(p1, p2) {
@@ -61,23 +85,24 @@ export const ptInPolys = (polys, pt) => polys.some((poly) => ptInPoly(poly, pt))
  * Numerics: Mathematica forms {dx,dy}*(i)/(n+1) as {dx,dy} * Rational[i, n+1], i.e. one multiplication by the
  * machine value of i/(n+1); the port does the same.
  */
+//
+// n dimensions (pathOKTrobot of the 3D Demonstration: dx, dy, dz, `dist = Sqrt[dx^2 + dy^2 + dz^2]`, each sample
+// coordinate wrapped by wrapto0to2π, i.e. `> 2π` tested first, nested): the 2D wrap (`< 0` then `> 2π`, sequential)
+// and wrapto0to2π give the same double for every x in (-2π, 4π) (a sample is never further out), so one wrap serves
+// both (unit test "wrapto0to2π and the 2D wrap give the same result on (-2π, 4π)").
 export function pathOKT(ps, pe, collides, delta) {
-  let dx = Math.abs(pe[0] - ps[0]);
-  const dx2 = TWO_PI - dx;
-  let dy = Math.abs(pe[1] - ps[1]);
-  const dy2 = TWO_PI - dy;
-  dx = pe[0] - ps[0] + (mLess(dx, dx2) ? 0 : mGreater(pe[0], ps[0]) ? -TWO_PI : TWO_PI);
-  dy = pe[1] - ps[1] + (mLess(dy, dy2) ? 0 : mGreater(pe[1], ps[1]) ? -TWO_PI : TWO_PI);
-  const dist = Math.sqrt(dx * dx + dy * dy);
+  const n0 = ps.length;
+  const d = new Array(n0);
+  for (let k = 0; k < n0; k++) d[k] = shortDiff(ps[k], pe[k]);
+  let s = d[0] * d[0];
+  for (let k = 1; k < n0; k++) s += d[k] * d[k];
+  const dist = Math.sqrt(s);
   if (mLessEq(dist, delta)) return true;
   const n = Math.ceil(dist / delta);
   for (let i = 1; i <= n; i++) {
     const f = i / (n + 1);
-    const pt = [ps[0] + dx * f, ps[1] + dy * f];
-    if (mLess(pt[0], 0)) pt[0] = pt[0] + TWO_PI;
-    if (mGreater(pt[0], TWO_PI)) pt[0] = pt[0] - TWO_PI;
-    if (mLess(pt[1], 0)) pt[1] = pt[1] + TWO_PI;
-    if (mGreater(pt[1], TWO_PI)) pt[1] = pt[1] - TWO_PI;
+    const pt = new Array(n0);
+    for (let k = 0; k < n0; k++) pt[k] = wrapto0to2pi(ps[k] + d[k] * f);
     if (collides(pt)) return false; // !Or @@ Table[...] — Or stops at the first True
   }
   return true;
@@ -121,14 +146,14 @@ export const sameReal = (a, b) => a === b || (Number.isFinite(a) && Number.isFin
  * (First@Position[...]); openSet is a list in insertion order (AppendTo), with no closed set, so a node can be
  * opened again when a cheaper path to it is found. `tentativegScore < gScore[nbr]` is Mathematica's tolerant Less.
  */
-export function myAstar(adjL, verts, si, fi) {
+export function myAstar(adjL, verts, si, fi, dist = toroidDist) {
   const N = verts.length;
   let openSet = [si];
   const cameFrom = new Array(N + 1).fill(-1);
   const gScore = new Array(N + 1).fill(Infinity);
   gScore[si] = 0;
   const fScore = new Array(N + 1).fill(Infinity);
-  fScore[si] = toroidDist(verts[si - 1], verts[fi - 1]);
+  fScore[si] = dist(verts[si - 1], verts[fi - 1]);
   while (openSet.length > 0) {
     let currentfscore = Infinity;
     for (const k of openSet) if (fScore[k] < currentfscore) currentfscore = fScore[k];
@@ -146,11 +171,11 @@ export function myAstar(adjL, verts, si, fi) {
     }
     openSet = openSet.filter((k) => k !== current); // DeleteCases
     for (const nbr of adjL[current - 1]) {
-      const tentativegScore = gScore[current] + toroidDist(verts[current - 1], verts[nbr - 1]);
+      const tentativegScore = gScore[current] + dist(verts[current - 1], verts[nbr - 1]);
       if (mLess(tentativegScore, gScore[nbr])) {
         cameFrom[nbr] = current;
         gScore[nbr] = tentativegScore;
-        fScore[nbr] = gScore[nbr] + toroidDist(verts[nbr - 1], verts[nbr - 1]);
+        fScore[nbr] = gScore[nbr] + dist(verts[nbr - 1], verts[nbr - 1]);
         if (!openSet.includes(nbr)) openSet.push(nbr); // If[FreeQ[openSet, nbr], AppendTo[openSet, nbr]]
       }
     }
@@ -160,22 +185,22 @@ export function myAstar(adjL, verts, si, fi) {
 
 /**
  * toroidLine[e, color1, color2] AS DATA: the line pieces the original draws for the edge e = {p, q}.
- * If the edge is shorter going round the torus in x or y (dx > 2π-dx || dy > 2π-dy), two pieces in color1 that
- * leave the square: {p, p+{dx,dy}} and {q, q-{dx,dy}}; otherwise one piece {p, q} in color2 (color1 when color2
- * is -1, the default). Returns [{ color, line: [[x,y],[x,y]] }, ...].
+ * If the edge is shorter going round the torus in x or y (dx > 2π-dx || dy > 2π-dy; in 3D also || dz > 2π-dz), two
+ * pieces in color1 that leave the square (cube): {p, p+{dx,dy}} and {q, q-{dx,dy}}; otherwise one piece {p, q} in
+ * color2 (color1 when color2 is -1, the default). Returns [{ color, line: [[x,y],[x,y]] }, ...].
  */
 export function toroidLine(e, color1 = 'Blue', color2 = -1) {
   const [p, q] = e;
-  let dx = Math.abs(q[0] - p[0]);
-  const dx2 = TWO_PI - dx;
-  let dy = Math.abs(q[1] - p[1]);
-  const dy2 = TWO_PI - dy;
-  if (mGreater(dx, dx2) || mGreater(dy, dy2)) {
-    dx = q[0] - p[0] + (mLess(dx, dx2) ? 0 : mGreater(q[0], p[0]) ? -TWO_PI : TWO_PI);
-    dy = q[1] - p[1] + (mLess(dy, dy2) ? 0 : mGreater(q[1], p[1]) ? -TWO_PI : TWO_PI);
+  let wrapped = false;
+  for (let k = 0; k < p.length; k++) {
+    const d = Math.abs(q[k] - p[k]);
+    if (mGreater(d, TWO_PI - d)) { wrapped = true; break; } // Or stops at the first True
+  }
+  if (wrapped) {
+    const d = p.map((_, k) => shortDiff(p[k], q[k]));
     return [
-      { color: color1, wrapped: true, line: [p, [p[0] + dx, p[1] + dy]] },
-      { color: color1, wrapped: true, line: [q, [q[0] - dx, q[1] - dy]] },
+      { color: color1, wrapped: true, line: [p, p.map((v, k) => v + d[k])] },
+      { color: color1, wrapped: true, line: [q, q.map((v, k) => v - d[k])] },
     ];
   }
   return [{ color: color2 === -1 ? color1 : color2, wrapped: false, line: [p, q] }];
@@ -187,18 +212,25 @@ export const toroidLines = (edges, color1 = 'Blue', color2 = -1) => edges.flatMa
 /**
  * toroidPt[e, frac]: the point at fraction frac along the (torus-shortest) edge e = {p, q}, wrapped back into
  * [0, 2π] once per coordinate; p itself when the edge has length 0.
+ * zeroTest 'shortest' (default; the 2D Demonstrations): dist = Sqrt[dx2^2 + dy2^2] of the shortest-way differences,
+ *   wrap `pt + If[pt > 2π, -2π, If[pt < 0, 2π, 0]]`;
+ * zeroTest 'absolute' (the 3D Demonstration, N-P3-03): dist = Sqrt[dx^2 + dy^2 + dz^2] of the ABSOLUTE differences,
+ *   wrap wrapto0to2π. The two differ only for points exactly 2π apart in a coordinate.
  */
-export function toroidPt(e, frac) {
+export function toroidPt(e, frac, { zeroTest = 'shortest' } = {}) {
   const [p, q] = e;
-  const dx = Math.abs(q[0] - p[0]);
-  const dy = Math.abs(q[1] - p[1]);
-  const dx2 = q[0] - p[0] + (mLess(dx, TWO_PI - dx) ? 0 : mGreater(q[0], p[0]) ? -TWO_PI : TWO_PI);
-  const dy2 = q[1] - p[1] + (mLess(dy, TWO_PI - dy) ? 0 : mGreater(q[1], p[1]) ? -TWO_PI : TWO_PI);
-  const dist = Math.sqrt(dx2 * dx2 + dy2 * dy2);
-  if (mEqual(dist, 0)) return [p[0], p[1]];
-  const pt = [p[0] + frac * dx2, p[1] + frac * dy2];
-  pt[0] = pt[0] + (mGreater(pt[0], TWO_PI) ? -TWO_PI : mLess(pt[0], 0) ? TWO_PI : 0);
-  pt[1] = pt[1] + (mGreater(pt[1], TWO_PI) ? -TWO_PI : mLess(pt[1], 0) ? TWO_PI : 0);
+  const n0 = p.length;
+  const ad = p.map((v, k) => Math.abs(q[k] - v));
+  const d2 = p.map((v, k) => shortDiff(v, q[k]));
+  const z = zeroTest === 'absolute' ? ad : d2;
+  let s = z[0] * z[0];
+  for (let k = 1; k < n0; k++) s += z[k] * z[k];
+  const dist = Math.sqrt(s);
+  if (mEqual(dist, 0)) return p.slice();
+  const pt = p.map((v, k) => v + frac * d2[k]);
+  for (let k = 0; k < n0; k++) {
+    pt[k] = zeroTest === 'absolute' ? wrapto0to2pi(pt[k]) : pt[k] + (mGreater(pt[k], TWO_PI) ? -TWO_PI : mLess(pt[k], 0) ? TWO_PI : 0);
+  }
   return pt;
 }
 
@@ -210,15 +242,21 @@ export function toroidPt(e, frac) {
  * pe, 1, 1]: the FIRST point with exactly these coordinates). Returns [edgesNNadj, edgesNN] (new arrays).
  * Notes: the planner is called from ps towards pe; when it refuses, the pair can be tried again later from pe's
  * side (ORIGINAL QUIRK Q-PR-05: pathOKT is not symmetric). Nearest's order for equal distances is not documented
- * (lead K-PR-01); shared/mma-extra.js keeps the input order.
+ * (lead K-PR-01); shared/mma-extra.js keeps the input order. `dist` = Nearest's DistanceFunction (toroidDist).
+ * The 3D Demonstration's connectPoints is text-identical. The callers pass one list per good point (the body joins
+ * empty lists for new samples), or a LONGER list after an obstacle move that left at most 5 free samples (Q-P3-07: the
+ * old lists stay, stale, and are used as they are, as in the original). DEFENSIVE GUARD (K-P3-05, not reachable by the
+ * documented steps): an adjacency list SHORTER than goodPts, where the original would hit Part errors, is first filled
+ * with empty lists up to goodPts.length (a dense array, no holes); a longer one is not touched.
  */
-export function connectPoints(goodPts, edgesNNadjin, pathOK, edgesNNin, point2start, r) {
+export function connectPoints(goodPts, edgesNNadjin, pathOK, edgesNNin, point2start, r, dist = toroidDist) {
   const edgesNNadj = edgesNNadjin.map((a) => a.slice());
+  while (edgesNNadj.length < goodPts.length) edgesNNadj.push([]); // defensive guard (K-P3-05)
   const edgesNN = edgesNNin.slice();
   for (let i = point2start; i <= goodPts.length; i++) {
     const ps = goodPts[i - 1];
     const others = goodPts.filter((_, k) => k !== i - 1); // Drop[goodPts, {i}]
-    for (const pe of nearest(others, ps, { n: 10, r }, toroidDist)) {
+    for (const pe of nearest(others, ps, { n: 10, r }, dist)) {
       const pei = positionOf(goodPts, pe) + 1;
       if (edgesNNadj[i - 1].filter((x) => x === pei).length < 1) {
         if (pathOK(ps, pe)) {
@@ -239,24 +277,25 @@ export function connectPoints(goodPts, edgesNNadjin, pathOK, edgesNNin, point2st
  *     If[qsFree && Length[goodPts] > 5, qsn = the nearest good point if pathOK[qs, it]];
  *     If[qfFree && Length[goodPts] > 5, qfn = the nearest good point if pathOK[qf, it]]];
  *   If[qfn != {} && qsn != {} && Length[edgesNNadj] > 1, path = myAstar[edgesNNadj, goodPts, qsni, qfni]]
- * qsFree / qfFree: the app's "start / goal not in collision" tests. Returns { path, qsn, qfn } (qsn/qfn null = {}).
+ * qsFree / qfFree: the app's "start / goal not in collision" tests; dist: toroidDist (default). Returns
+ * { path, qsn, qfn } (qsn/qfn null = {}).
  */
-export function planQuery({ qs, qf, r, goodPts, edgesNNadj, pathOK, qsFree, qfFree }) {
+export function planQuery({ qs, qf, r, goodPts, edgesNNadj, pathOK, qsFree, qfFree, dist = toroidDist }) {
   let path = -1, qsn = null, qfn = null;
-  if (mLess(toroidDist(qs, qf), r) && pathOK(qs, qf)) {
+  if (mLess(dist(qs, qf), r) && pathOK(qs, qf)) {
     path = -2;
   } else {
     if (qsFree() && goodPts.length > 5) {
-      for (const pe of nearest(goodPts, qs, { n: 1 }, toroidDist)) if (pathOK(qs, pe)) { qsn = pe; break; }
+      for (const pe of nearest(goodPts, qs, { n: 1 }, dist)) if (pathOK(qs, pe)) { qsn = pe; break; }
     }
     if (qfFree() && goodPts.length > 5) {
-      for (const pe of nearest(goodPts, qf, { n: 1 }, toroidDist)) if (pathOK(qf, pe)) { qfn = pe; break; }
+      for (const pe of nearest(goodPts, qf, { n: 1 }, dist)) if (pathOK(qf, pe)) { qfn = pe; break; }
     }
   }
   if (qfn !== null && qsn !== null && edgesNNadj.length > 1) {
     const qsni = positionOf(goodPts, qsn) + 1;
     const qfni = positionOf(goodPts, qfn) + 1;
-    path = myAstar(edgesNNadj, goodPts, qsni, qfni);
+    path = myAstar(edgesNNadj, goodPts, qsni, qfni, dist);
   }
   return { path, qsn, qfn };
 }
@@ -269,18 +308,19 @@ export function planQuery({ qs, qf, r, goodPts, edgesNNadj, pathOK, qsFree, qfFr
  *     point = toroidPt[{mypath[[c]], mypath[[c+1]]}, (progress totdist - distT)/dists[[c]]]
  *   otherwise: null (no path; totdist stays unassigned).
  * The While test is Mathematica's tolerant Less, which keeps c in range at progress = 1.
+ * dist / pt: the app's toroidDist and toroidPt (defaults: this module's, 2D zero test).
  */
-export function progressOnPath({ qs, qf, goodPts, path, progress }) {
-  if (path === -2) return { totdist: toroidDist(qs, qf), point: toroidPt([qs, qf], progress), mypath: [qs, qf] };
+export function progressOnPath({ qs, qf, goodPts, path, progress, dist = toroidDist, pt = toroidPt }) {
+  if (path === -2) return { totdist: dist(qs, qf), point: pt([qs, qf], progress), mypath: [qs, qf] };
   if (!Array.isArray(path) || path.length === 0) return null;
   const mypath = [qs, ...path.map((k) => goodPts[k - 1]), qf];
   const dists = [];
-  for (let i = 0; i < mypath.length - 1; i++) dists.push(toroidDist(mypath[i], mypath[i + 1]));
+  for (let i = 0; i < mypath.length - 1; i++) dists.push(dist(mypath[i], mypath[i + 1]));
   const totdist = total(dists);
   let distT = 0, c = 1;
   // `c < dists.length` is a guard only: in the original a c past the end would be a Part error, which the tolerant
   // Less already prevents for progress <= 1 (the tolerance itself is tested at a segment end in prm-core.test.js)
   while (c < dists.length && mLess(distT + dists[c - 1], progress * totdist)) { distT += dists[c - 1]; c++; }
-  const point = toroidPt([mypath[c - 1], mypath[c]], (progress * totdist - distT) / dists[c - 1]);
+  const point = pt([mypath[c - 1], mypath[c]], (progress * totdist - distT) / dists[c - 1]);
   return { totdist, point, mypath, dists, segment: c };
 }

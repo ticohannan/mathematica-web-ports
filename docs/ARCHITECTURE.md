@@ -70,9 +70,14 @@ no Demonstration code in them — code derived from a Demonstration goes to `dem
 | `shared/ui-interval.js` | `addIntervalSlider` — IntervalSlider with `method` 'Free' / 'Push' / 'Stop', `minIntervalSize`, `labeled`, pointer and keyboard; pure `intervalStep`, `intervalShift`, `intervalLabel`. |
 | `shared/mma-extra.js` (additions) | `lengthCR`, `normalizeCR` (v·(1/correctly rounded length)), `normalizeDnrm2` (v·(1/dnrm2 length)), `engineeringForm` / `engineeringParts` (EngineeringForm text), `nDigits` (text of N[x, n]). |
 | `shared/mma-text.js` | text of exact numbers: `piFraction` ('inline' "5π/32" or 'stacked' parts), `fractionText` / `fractionParts`, `numberText` / `numberParts`, `parsePiFraction`, `parseFraction`. |
-| `shared/exact-pi.js` | Cos/Sin of exact multiples of π with Mathematica's first-octant rewriting and exact 0, ±1, ±1/2: `reducePi`, `trigPi`, `cosPi`, `sinPi`, `cosSinPi`, `octantForm`. |
+| `shared/exact-pi.js` | Cos/Sin of exact multiples of π with Mathematica's first-octant rewriting and exact 0, ±1, ±1/2: `reducePi`, `trigPi`, `cosPi`, `sinPi`, `cosSinPi`, `octantForm`; correctly rounded N[π/n] and N[num π/den]: `piOver`, `piFrac` (owner manipulability-ellipsoid, K-ME-09). |
 | `shared/svg-frame.js` | Frame, frame ticks, axes and tick labels for `svg-plot.js` pictures: `drawFrame`, `drawAxes`, `clipToRange`, `frameLayout`; pure `ticks`, `automaticTicks`, `tickLabel`, `framePrimitives`, `axesPrimitives`. |
 | `shared/three-helpers.js` (additive option) | `createViewer({imageSize: [w, h]})` for a non-square image (the square viewer is unchanged); pure `viewerSize`, `viewerCamera`. |
+
+The 3D apps of batch B share the DH-family modules in `demos/common/` (CC BY-NC-SA, moved from robot-singularities in
+v0.1.16, which keeps re-export shims): `g3d.js` (Graphics3D as data), `svd3.js` (3×3 SVD, `zeroTol`), `dh-chain.js`
+(`dhTransform` with an explicit exact-angle path, `computeTd`), `robot-draw.js` (joints, frames, gripper) and
+`g3d-three.js` (`addPrims`, `disposeGroup`, `fitViewer`); their APIs are listed in each file's header.
 
 Their browser behaviour is tested on a test page that is not part of the site (`tests/e2e/fixtures/shared-controls.html`,
 `tests/e2e/shared-controls.spec.js`); the pure parts by `tests/unit/<module>.test.js`.

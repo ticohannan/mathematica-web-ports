@@ -135,6 +135,21 @@ Mac or iPhone" — report it as *WebKit (Playwright)*. It passed 45/45 on its fi
 machine (v0.1.9) and is required by `publish:tested` since v0.1.10. A real-Safari check (macOS/iOS)
 remains a manual test.
 
+**Writing browser tests that hold in all three engines** (lessons of the owner's Firefox and WebKit runs, v0.1.15 and
+v0.1.16; Chromium alone passed every time):
+- Pointer moves are applied once per animation frame (`shared/svg-plot.js` locators; apps that evaluate in
+  `requestAnimationFrame`). After `page.mouse.move` or a typed value, wait for the frame with `expect.poll(…)` instead
+  of reading the state at once — WebKit had not run the frame yet and returned an earlier sample. After
+  `page.mouse.up` the last pending position is applied at once.
+- Do not assume every intermediate pointer event of a drag arrives: assert ranges that hold for any subset.
+- Never aim within a few pixels of a snapping boundary or a slider end; aim at the middle of the target position, or
+  move past the end of the track (the control clamps).
+- Never expect the last bit of `Math.sin`/`Math.cos`/`Math.exp` (they differ between engines); allow ±2 per colour
+  channel in pixel checks.
+- Native keyboard behaviour of form controls is not the same everywhere: WebKit's vertical range input sends Home to
+  the maximum (the top). `shared/ui-extra.js` therefore handles Home/End of its vertical slider itself (Home = minimum,
+  End = maximum); check such keys in a test of their own.
+
 - Results: terminal + HTML report (`npm run report`).
 - `test-output/review-screenshots/<firefox|chromium|webkit>/*.png` — screenshots of every original snapshot state
   and other key states, **for human side-by-side comparison** with the original's snapshots.

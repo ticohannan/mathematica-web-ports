@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.15 |
+| Code version: | 0.1.16 |
 | Document revision | 5 (2026-10-17) — §11 Errors in the original (R-C); checklist items as operator procedures (R-B) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Three Parametrizations of Rotations" by Aaron T. Becker and Benedict Isichei (CC BY-NC-SA 3.0). Readable source: [`docs/original-source/three-parametrizations.txt`](../../docs/original-source/three-parametrizations.txt) |
@@ -199,6 +199,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 4 | v0.1.13 | 2026-10-12 | no change to this app (collision beep with a mute checkbox in prm-seven-link; new `shared/beep.js` used only there) |
 | 4 | v0.1.14 | 2026-10-16 | no change to this app (Mathematica harness tooling; snapshot-state golden tests for the seven newer apps) |
 | 5 | v0.1.15 | 2026-10-17 | §11 Errors in the original added (owner rule R-C); Mathematica checklist items rewritten as operator procedures (R-B); standalone bundle (owner rule R-A): §6.1, A-TP-07, tools/bundle-app.mjs; review fixes |
+| 6 | v0.1.16 | 2026-10-18 | version number only (batch B release); no change to this app |
 
 ## 10. Improvements to consider (not implemented)
 

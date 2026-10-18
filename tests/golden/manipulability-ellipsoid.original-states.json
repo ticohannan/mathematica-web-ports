@@ -1,0 +1,31 @@
+{
+ "source": "Demonstration-Manipulability-Ellipsoid-of-a-Robot-Arm-1-0-0-definition.nb",
+ "note": "Manipulate states saved in the ORIGINAL notebook, computed by the original Mathematica code: states[0] = the live state of the output cell, specs = the initial settings (the Manipulate's stored \"Variables\"), snapshots = the Settings stored with each snapshot cell. Extracted with tools/extract_state.py --snapshots. Golden parity fixture (CC BY-NC-SA 3.0, as the original).",
+ "format": "Numbers: a JSON integer is an exact Wolfram integer (|x| <= 2^53 - 1; larger ones are {\"wl\": digits}); a JSON number written with a decimal point or an exponent is a machine real (the shortest text that reads back as the identical double); any other exact number (Rational, rational multiple of Pi, arbitrary-precision real, an unevaluated Sin[...], Infinity) is {\"wl\": a Wolfram-readable form (not necessarily InputForm: compare exact values by value), \"n\": its double} - \"n\" is the correctly rounded double for a Rational or rational multiple of Pi, Python's double evaluation otherwise, and absent for Infinity. Symbols are {\"sym\": name}, other expressions {\"head\": name, \"args\": [...]}; variable names without context and $$, Greek letters as Unicode. packedTypes maps the JSON pointer of a decoded packed array that was stored with a narrower element type (CompressedData tag b) to that type. snapshots[\"k\"] belongs to the picture docs/original-snapshots/<dir>-k.png (cells in file order).",
+ "specs": {
+  "p1": [{"wl":"-(Sin[3*Pi/32])","n":-0.29028467725446233},{"wl":"Cos[3*Pi/32]","n":0.9569403357322088}],
+  "p2": [{"wl":"-(Sin[Pi/16])","n":-0.19509032201612825},{"wl":"Cos[Pi/16]","n":0.9807852804032304}],
+  "p3": [{"wl":"-(Sin[5*Pi/32])","n":-0.47139673682599764},{"wl":"-(Cos[5*Pi/32])","n":-0.881921264348355}],
+  "θ1": {"wl":"19*Pi/32","n":1.8653206380689398},
+  "θ1prev": {"wl":"19*Pi/32","n":1.8653206380689398},
+  "θ2": {"wl":"9*Pi/16","n":1.7671458676442586},
+  "θ2prev": {"wl":"9*Pi/16","n":1.7671458676442586},
+  "θ3": {"wl":"-21*Pi/32","n":-2.061670178918302},
+  "θ3prev": {"wl":"-21*Pi/32","n":-2.061670178918302}
+ },
+ "states": [
+  {"p1":[{"wl":"-(Sin[3*Pi/32])","n":-0.29028467725446233},{"wl":"Cos[3*Pi/32]","n":0.9569403357322088}],"p2":[{"wl":"-(Sin[Pi/16])","n":-0.19509032201612825},{"wl":"Cos[Pi/16]","n":0.9807852804032304}],"p3":[{"wl":"-(Sin[5*Pi/32])","n":-0.47139673682599764},{"wl":"-(Cos[5*Pi/32])","n":-0.881921264348355}],"θ1":{"wl":"19*Pi/32","n":1.8653206380689398},"θ1prev":{"wl":"19*Pi/32","n":1.8653206380689398},"θ2":{"wl":"9*Pi/16","n":1.7671458676442586},"θ2prev":{"wl":"9*Pi/16","n":1.7671458676442586},"θ3":{"wl":"-21*Pi/32","n":-2.061670178918302},"θ3prev":{"wl":"-21*Pi/32","n":-2.061670178918302}}
+ ],
+ "snapshots": {
+  "1": {"θ1":{"wl":"19*Pi/32","n":1.8653206380689398},"θ1prev":{"wl":"19*Pi/32","n":1.8653206380689398},"θ2":{"wl":"9*Pi/16","n":1.7671458676442586},"θ2prev":{"wl":"9*Pi/16","n":1.7671458676442586},"θ3":{"wl":"-21*Pi/32","n":-2.061670178918302},"θ3prev":{"wl":"-21*Pi/32","n":-2.061670178918302},"p1":[{"wl":"-(Sin[3*Pi/32])","n":-0.29028467725446233},{"wl":"Cos[3*Pi/32]","n":0.9569403357322088}],"p2":[{"wl":"-(Sin[Pi/16])","n":-0.19509032201612825},{"wl":"Cos[Pi/16]","n":0.9807852804032304}],"p3":[{"wl":"-(Sin[5*Pi/32])","n":-0.47139673682599764},{"wl":"-(Cos[5*Pi/32])","n":-0.881921264348355}]},
+  "2": {"θ1":1.1311921798353952,"θ1prev":1.1311921798353952,"θ2":0,"θ2prev":0,"θ3":{"wl":"Pi/4","n":0.7853981633974483},"θ3prev":{"wl":"Pi/4","n":0.7853981633974483},"p1":[0.42558128300629366,0.9049202017607503],"p2":[1,0],"p3":[{"wl":"(2)^(-1/2)","n":0.7071067811865476},{"wl":"(2)^(-1/2)","n":0.7071067811865476}]},
+  "3": {"θ1":0.8929626109272769,"θ1prev":0.8929626109272768,"θ2":0,"θ2prev":0,"θ3":{"wl":"Pi/4","n":0.7853981633974483},"θ3prev":{"wl":"Pi/4","n":0.7853981633974483},"p1":[0.6271071064982527,0.7789330375451982],"p2":[1,0],"p3":[{"wl":"(2)^(-1/2)","n":0.7071067811865476},{"wl":"(2)^(-1/2)","n":0.7071067811865476}]},
+  "4": {"θ1":{"wl":"59*Pi/32","n":5.792311455056181},"θ1prev":{"wl":"59*Pi/32","n":5.792311455056181},"θ2":0,"θ2prev":0,"θ3":{"wl":"Pi/4","n":0.7853981633974483},"θ3prev":{"wl":"Pi/4","n":0.7853981633974483},"p1":[{"wl":"Cos[5*Pi/32]","n":0.881921264348355},{"wl":"-(Sin[5*Pi/32])","n":-0.47139673682599764}],"p2":[1,0],"p3":[{"wl":"(2)^(-1/2)","n":0.7071067811865476},{"wl":"(2)^(-1/2)","n":0.7071067811865476}]}
+ },
+ "snapshotCellIds": {
+  "1": 190671489,
+  "2": 1476113738,
+  "3": 1312504422,
+  "4": 309798570
+ }
+}

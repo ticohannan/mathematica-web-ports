@@ -16,7 +16,7 @@
 //     {Thickness[1/100], Opacity[0.5], Circle[c, sc 2*.7]}}]
 import { mUnequal, mGreater, mGreaterEq, mLessEq } from '../../shared/mma.js';
 import { arcTan, norm, fma } from '../../shared/mma-exact.js';
-import { matrixRank } from '../robot-singularities/svd3.js';
+import { matrixRank } from '../common/svd3.js';
 import { elbowPosition, tipPosition, armGeometry } from '../common/two-link.js';
 import { myArrowArc } from '../common/arrow-arcs.js';
 

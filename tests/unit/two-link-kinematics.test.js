@@ -12,7 +12,7 @@ import {
   matMul, transpose, SVD_ZERO_TOL,
 } from '../../demos/two-link-kinematics/model.js';
 import { padSetter, padPointer } from '../../demos/two-link-kinematics/velocity-pad.js';
-import { matrixRank } from '../../demos/robot-singularities/svd3.js';
+import { matrixRank } from '../../demos/common/svd3.js';
 import { arcTan } from '../../shared/mma-exact.js';
 
 const ulps = (a, b) => (a === b ? 0 : Math.abs(a - b) / (Number.EPSILON * Math.max(Math.abs(a), Math.abs(b))));

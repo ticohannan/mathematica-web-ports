@@ -1,0 +1,541 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Private reference (R-04). Extracted 2026-10-12 with tools/nbextract.py; cached outputs skipped.
+
+### [Title]
+Probabilistic Roadmap Method in 3D
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+\<This Demonstration uses the probabilistic roadmap method (PRM) to plan a motion path for a three-link robot in a 3D configuration space that avoids collisions with a blue and a yellow sphere. If a path from the initial configuration to the goal configuration is found, it can be traversed by moving the "progress" slider. To generate a new roadmap, click "restart" and then click "add 100 vertices" to randomly sample configurations and calculate if they collide with obstacles (red points) or are safe (green points). If no path is found, continue adding vertices or increase the "radius" value to try to connect safe vertices less than radius distance apart into a roadmap. Although the PRM does not need to calculate the configuration space obstacles, you can make them visible with a checkbox.\>
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+wrapto0to2π[x_]:= If[x>2π,x-2π,If[x<0,x+2π,x]]
+
+### [Input] (init)
+pathOKTrobot[ps_,pe_,pObs3_,obsRad_,widtha_,delta_]:=Module[{dist,n,pt,dx,dx2,dy,dy2,dz,dz2},
+(*Returns tr*)
+(*Toroid assumption*)
+dx = Abs[pe[[1]]-ps[[1]]];
+dx2 =2π- dx;
+dy = Abs[pe[[2]]-ps[[2]]];
+dy2 =2π-dy ;
+dz = Abs[pe[[3]]-ps[[3]]];
+dz2 =2π-dz ;
+
+dx=pe[[1]]-ps[[1]]+If[dx<dx2,0, If[pe[[1]]>ps[[1]],-2π,+2π]];
+dy=pe[[2]]-ps[[2]]+If[dy<dy2,0, If[pe[[2]]>ps[[2]],-2π,+2π]];
+dz=pe[[3]]-ps[[3]]+If[dz<dz2,0, If[pe[[3]]>ps[[3]],-2π,+2π]];
+
+dist = Sqrt[dx^2+dy^2+dz^2];
+If[dist<= delta,
+True,
+n=Ceiling[dist/delta];
+!Or@@Table[pt = ps+ {dx,dy,dz}*(i)/(n+1);
+pt[[1]]=wrapto0to2π[pt[[1]]];
+pt[[2]]=wrapto0to2π[pt[[2]]];
+pt[[3]]=wrapto0to2π[pt[[3]]];
+detCollision[jointAngle2Origin[pt],pObs3,obsRad,widtha] ,{i,1,n}]]
+]
+
+### [Input] (init)
+toroidDist :=(* Toroid assumption *) (\[Sqrt](
+      Min[(#1[[1]]-#2[[1]])^2,(2π-Abs[#1[[1]]-#2[[1]]])^2]
++Min[(#1[[2]]-#2[[2]])^2,(2π-Abs[#1[[2]]-#2[[2]]])^2] 
++Min[(#1[[3]]-#2[[3]])^2,(2π-Abs[#1[[3]]-#2[[3]]])^2])&)
+
+### [Input] (init)
+linDist :=(* Toroid assumption *) (\[Sqrt]((#1[[1]]-#2[[1]])^2+(#1[[2]]-#2[[2]])^2 +(#1[[3]]-#2[[3]])^2 )&)
+
+### [Input] (init)
+myAstar[adjL_,verts_,si_,fi_]:=Module[{openSet,cameFrom,gScore,fScore,current,currentfscore,path,tentativegScore},
+(*The set of discovered nodes that may need to be (re-)expanded. Initially, only the start node is known.*)
+openSet={si};
+cameFrom  = ConstantArray[-1, Length[verts]]; (*For node n,cameFrom[n] is the node immediately preceding it on the cheapest path from start to n currently known.*)
+gScore = ConstantArray[∞, Length[verts]]; (*For node n,gScore[n] is the cost of the cheapest path from start to n currently known.*)
+gScore[[si]] = 0;
+(*For node n,fScore[n]:=gScore[n]+h(n).*)
+fScore= ConstantArray[∞, Length[verts]]; (*map with default value of Infinity*)
+fScore[[si]]=toroidDist[verts[[si]] , verts[[fi]]];
+While[Length[openSet]>0 (*&& ctr<10*),
+(*current:=the node in openSet having the lowest fScore[] value*)
+currentfscore = Min[fScore[[openSet]]];
+current =openSet[[ First@@Position[fScore[[openSet]],currentfscore]]];
+
+If[ current == fi,
+path = {fi};While[First@path!=si,PrependTo[path,cameFrom[[First@path]]]];
+Return[path]
+];
+openSet = DeleteCases[openSet,current];
+Table[
+tentativegScore = gScore[[current]]+toroidDist[verts[[current]],verts[[nbr]]];
+If[tentativegScore< gScore[[nbr]],
+          (*This path to neighbor is better than any previous one. Record it!*)
+cameFrom[[nbr]]=current;
+gScore[[nbr]]=tentativegScore;fScore[[nbr]]=gScore[[nbr]]+toroidDist[verts[[nbr]] , verts[[nbr]]];
+If[ FreeQ[openSet,nbr],AppendTo[openSet,nbr]]];
+,{nbr,adjL[[current]]}];
+];	
+Return[-1]  (*Failure*)
+]
+
+### [Input] (init)
+toroidLines[pts_,color1_:Blue,color2_:-1]:=Table[toroidLine[e,color1,color2], {e,pts}]
+
+### [Input] (init)
+toroidLine[e_,color1_:Blue,color2_:-1]:=Module[{dx,dx2,dy,dy2,dz,dz2},
+dx = Abs[e[[2,1]]-e[[1,1]]];
+dx2 =2π- dx;
+dy = Abs[e[[2,2]]-e[[1,2]]];
+dy2 =2π- dy ;
+dz = Abs[e[[2,3]]-e[[1,3]]];
+dz2 =2π- dz ;
+If[dx>dx2 || dy>dy2 ||dz>dz2,
+dx =e[[2,1]]-e[[1,1]]+If[dx<dx2,0, If[e[[2,1]]>e[[1,1]],-2π,+2π]];
+dy =e[[2,2]]-e[[1,2]]+If[dy<dy2,0, If[e[[2,2]]>e[[1,2]],-2π,+2π]]; 
+dz =e[[2,3]]-e[[1,3]]+If[dz<dz2,0, If[e[[2,3]]>e[[1,3]],-2π,+2π]];
+{color1,Line[{e[[1]],e[[1]]+{dx,dy,dz}}],Line[{e[[2]],e[[2]]-{dx,dy,dz}}]},{If[-1===color2,color1,color2], Line[e]}]
+]
+
+### [Input] (init)
+toroidPt[e_,frac_]:=Module[{dx,dy,dx2,dy2,dz,dz2,dist,pt},
+dx = Abs[e[[2,1]]-e[[1,1]]];
+dy = Abs[e[[2,2]]-e[[1,2]]];
+dz = Abs[e[[2,3]]-e[[1,3]]];
+dx2 =e[[2,1]]-e[[1,1]]+If[dx<2π- dx,0, If[e[[2,1]]>e[[1,1]],-2π,+2π]];
+dy2 =e[[2,2]]-e[[1,2]]+If[dy<2π- dy ,0, If[e[[2,2]]>e[[1,2]],-2π,+2π]];
+dz2 =e[[2,3]]-e[[1,3]]+If[dz<2π- dz ,0, If[e[[2,3]]>e[[1,3]],-2π,+2π]];
+dist = Sqrt[dx^2+dy^2+dz^2];
+If[dist==0,pt=e[[1]],
+pt=e[[1]]+frac{dx2,dy2,dz2};
+pt[[1]] =wrapto0to2π[pt[[1]]];
+pt[[2]] =wrapto0to2π[pt[[2]]];
+pt[[3]] =wrapto0to2π[pt[[3]]];
+];
+pt ]
+
+### [Input] (init)
+(*returns the shortest distance between line segment 'seg' and a list of points*)
+pointsegdis2[{seg_,pointlist_}]:=Module[{u=Subtract@@seg,mean=Plus@@seg/2},Min[EuclideanDistance[#,(mean-u Sign@# Min[1,Abs@#]/2)&@(-(2 (#-mean).u)/u.u)]&/@pointlist]]
+
+### [Input] (init)
+isCollided[{seg_,pointlist_}, d_]:=Module[{u=Subtract@@seg,mean=Plus@@seg/2},If[(Min[EuclideanDistance[#,(mean-u Sign@# Min[1,Abs@#]/2)&@(-(2 (#-mean).u)/u.u)]&/@pointlist]<d),1,0]]
+
+### [Input] (init)
+(*augments the list of edges in a graph of points*)
+connectPoints[goodPts_,edgesNNadjin_,pObs3_,obsRad_,widtha_,delta_,edgesNNin_, point2start_,r_]:=
+Module[{ps,pe,pei,
+edgesNNadj,
+edgesNN
+},  
+edgesNNadj=edgesNNadjin;
+edgesNN=edgesNNin;
+Table[
+ps = goodPts[[i]];
+Table[
+pei = Position[goodPts,pe,1,1][[1,1]];
+(*if pei is not in edgesNNadj[[i]] *)
+If[ Count[edgesNNadj[[i]],pei]<1,
+If[pathOKTrobot[ps,pe,pObs3,obsRad,widtha,delta], 
+AppendTo[edgesNN,{ps,pe}];
+AppendTo[edgesNNadj[[i]],pei];
+AppendTo[edgesNNadj[[pei]],i];]
+] ,{pe,Quiet[Nearest[Drop[goodPts,{i}],ps,{10,r},DistanceFunction->toroidDist]]}],
+ {i,point2start,Length[goodPts]}];
+{edgesNNadj,edgesNN}
+]
+
+### [Input] (init)
+jointAngle2Origin[{Theta1_,Theta2_,Theta3_}]:=Module[{o1,o2,o3},
+o1= {Cos[Theta1],Sin[Theta1],1};
+o2= o1+{Cos[Theta1]Cos[Theta2],Sin[Theta1]Cos[Theta2],Sin[Theta2]};
+o3= o2+{Cos[Theta1]Cos[Theta2]Cos[Theta3]+Sin[Theta1]Sin[Theta3],Sin[Theta1]Cos[Theta2]Cos[Theta3]-Cos[Theta1]Sin[Theta3],Cos[Theta3]Sin[Theta2]};
+Return[{o1,o2,o3}]
+]
+
+### [Input] (init)
+detCollision[{o1_,o2_,o3_},pObs3_,obsRad_,widtha_]:=(
+        pointsegdis2[{{{0,0,1},o1},pObs3}]<obsRad+widtha  (*link 1*)
+||pointsegdis2[{{o1 ,o2},pObs3}]<obsRad+widtha  (*link 2*)
+||pointsegdis2[{{o2,o3},pObs3}]<obsRad+widtha  (*link 3*)
+||pointsegdis2[{{{0,0,0} ,{0,0,1+2widtha}},pObs3}]<obsRad+2*widtha  (*link 0 (base)*))
+
+### [Input] (init)
+drawRobot[{Theta1_,Theta2_,Theta3_},widtha_]:=
+{ Cylinder[{{0,0,-2.1},{0,0,1+2widtha}},1/8] (*base*),
+Rotate[{Cylinder[{{0,0,1},{1+widtha,0,1}},widtha] (*link1*),
+Rotate[{
+Cuboid[{1-widtha,-widtha,1-widtha},{2+widtha,widtha,1+widtha}] (*link2*),
+Rotate[{
+Cuboid[{2-widtha,-widtha,1-widtha},{3+widtha,widtha,1+widtha}] (*link3*)},Theta3,{0,0,-1},{2,0,1}]
+},Theta2,{0,-1,0},{1,0,1}]},
+Theta1,{0,0,1},{0,0,1}]}
+
+### [Input] (init)
+(*Initialization values*)ptsI={{0.11,1.15,4.74},{4.16,5.33,3.1},{5.2,4.18,0.57},{0.22,4.84,5.49},{4.58,0.14,2.11},{4.64,6.14,0.39},{4.06,6.25,4.24},{0.7,2.93,2.94},{5.27,1.86,5.1},{2.83,5.26,3.61},{0.53,6.1,3.9},{3.94,0.5,2.84},{5.71,0.79,5.69},{3.45,1.65,2.51},{3.22,3.07,5.35},{4.29,1.8,3.43},{6.25,5.7,2.92},{5.06,1.06,5.32},{4.48,5.26,4.39},{6.17,3.53,4.72},{6.09,4.43,0.48},{0.26,5.36,4.49},{0.93,3.42,3.29},{1.55,2.34,5.05},{4.08,1.11,2.39},{4.34,4.16,2.1},{2.16,1.31,1.58},{0.98,4.58,3.65},{4.11,1.85,4.9},{1.59,2.27,1.06},{0.27,3.66,2.42},{1.67,6.19,2.51},{5.99,4.84,0.54},{2.75,4.06,5.68},{5.12,4.04,0.52},{5.22,5.22,1.74},{2.94,1.4,4.29},{5.14,1.22,3.36},{2.26,1.09,4.31},{3.77,3.37,3.07},{4.26,2.32,0.38},{1.14,2.55,1.54},{3.89,5.48,2.37},{5.75,6.17,3.8},{1.18,4.62,3.28},{0.84,5.38,4.89},{3.93,0.17,3.17},{1.58,0.79,0.94},{4.67,4.44,3.25},{2.06,4.44,1.88},{5.66,5.51,0.79},{5.48,5.85,2.78},{2.24,5.12,5.96},{5.12,2.62,3.82},{1.61,0.67,0.9},{2.86,0.13,0.76},{5.25,4.98,5.},{4.14,1.94,2.16},{2.6,5.45,0.54},{4.72,2.14,2.87},{4.45,4.19,2.3},{1.64,3.97,0.81},{3.07,4.13,3.25},{0.11,6.,3.96},{5.86,5.87,4.66},{4.87,6.2,3.02},{4.1,2.66,4.95},{4.07,3.79,2.48},{2.,5.59,2.26},{4.66,0.64,2.06},{5.11,5.69,1.94},{5.05,4.15,3.81},{0.75,6.06,5.95},{3.64,1.45,3.87},{0.07,3.97,5.75},{1.07,3.84,3.44},{4.48,4.88,1.84},{1.11,4.23,1.25},{1.57,2.75,2.02},{4.71,4.95,3.01},{2.58,0.29,2.11},{1.92,0.17,3.17},{2.28,4.75,3.09},{5.72,0.09,4.05},{2.26,3.05,5.02},{5.59,5.32,5.63},{1.04,1.04,4.68},{1.03,3.39,5.12},{3.72,4.51,2.84},{0.43,5.91,0.47},{4.55,0.66,1.89},{1.73,5.75,2.25},{1.91,2.59,3.01},{4.17,5.08,5.52},{5.36,1.43,5.57},{3.79,3.06,6.27},{4.29,1.48,3.23},{1.05,0.07,1.27},{5.32,1.26,4.76},{0.75,1.51,5.22}};
+
+### [Input] (init)
+badPtsI={{5.2,4.18,0.57},{0.22,4.84,5.49},{4.58,0.14,2.11},{4.64,6.14,0.39},{4.48,5.26,4.39},{6.09,4.43,0.48},{4.34,4.16,2.1},{5.99,4.84,0.54},{5.12,4.04,0.52},{4.67,4.44,3.25},{4.72,2.14,2.87},{4.45,4.19,2.3},{1.64,3.97,0.81},{4.87,6.2,3.02},{4.66,0.64,2.06},{5.05,4.15,3.81},{4.48,4.88,1.84},{1.11,4.23,1.25},{4.71,4.95,3.01},{4.55,0.66,1.89}};
+
+### [Input] (init)
+goodPtsI={{0.11,1.15,4.74},{4.16,5.33,3.1},{4.06,6.25,4.24},{0.7,2.93,2.94},{5.27,1.86,5.1},{2.83,5.26,3.61},{0.53,6.1,3.9},{3.94,0.5,2.84},{5.71,0.79,5.69},{3.45,1.65,2.51},{3.22,3.07,5.35},{4.29,1.8,3.43},{6.25,5.7,2.92},{5.06,1.06,5.32},{6.17,3.53,4.72},{0.26,5.36,4.49},{0.93,3.42,3.29},{1.55,2.34,5.05},{4.08,1.11,2.39},{2.16,1.31,1.58},{0.98,4.58,3.65},{4.11,1.85,4.9},{1.59,2.27,1.06},{0.27,3.66,2.42},{1.67,6.19,2.51},{2.75,4.06,5.68},{5.22,5.22,1.74},{2.94,1.4,4.29},{5.14,1.22,3.36},{2.26,1.09,4.31},{3.77,3.37,3.07},{4.26,2.32,0.38},{1.14,2.55,1.54},{3.89,5.48,2.37},{5.75,6.17,3.8},{1.18,4.62,3.28},{0.84,5.38,4.89},{3.93,0.17,3.17},{1.58,0.79,0.94},{2.06,4.44,1.88},{5.66,5.51,0.79},{5.48,5.85,2.78},{2.24,5.12,5.96},{5.12,2.62,3.82},{1.61,0.67,0.9},{2.86,0.13,0.76},{5.25,4.98,5.},{4.14,1.94,2.16},{2.6,5.45,0.54},{3.07,4.13,3.25},{0.11,6.,3.96},{5.86,5.87,4.66},{4.1,2.66,4.95},{4.07,3.79,2.48},{2.,5.59,2.26},{5.11,5.69,1.94},{0.75,6.06,5.95},{3.64,1.45,3.87},{0.07,3.97,5.75},{1.07,3.84,3.44},{1.57,2.75,2.02},{2.58,0.29,2.11},{1.92,0.17,3.17},{2.28,4.75,3.09},{5.72,0.09,4.05},{2.26,3.05,5.02},{5.59,5.32,5.63},{1.04,1.04,4.68},{1.03,3.39,5.12},{3.72,4.51,2.84},{0.43,5.91,0.47},{1.73,5.75,2.25},{1.91,2.59,3.01},{4.17,5.08,5.52},{5.36,1.43,5.57},{3.79,3.06,6.27},{4.29,1.48,3.23},{1.05,0.07,1.27},{5.32,1.26,4.76},{0.75,1.51,5.22}};
+
+### [Input] (init)
+edgesNNI={{{0.11,1.15,4.74},{0.75,1.51,5.22}},{{0.11,1.15,4.74},{1.04,1.04,4.68}},{{0.11,1.15,4.74},{5.32,1.26,4.76}},{{0.11,1.15,4.74},{5.71,0.79,5.69}},{{0.11,1.15,4.74},{5.36,1.43,5.57}},{{0.11,1.15,4.74},{5.27,1.86,5.1}},{{0.11,1.15,4.74},{5.72,0.09,4.05}},{{0.11,1.15,4.74},{5.06,1.06,5.32}},{{4.16,5.33,3.1},{3.89,5.48,2.37}},{{4.16,5.33,3.1},{3.72,4.51,2.84}},{{4.16,5.33,3.1},{3.93,0.17,3.17}},{{4.16,5.33,3.1},{2.83,5.26,3.61}},{{4.16,5.33,3.1},{3.94,0.5,2.84}},{{4.06,6.25,4.24},{3.93,0.17,3.17}},{{0.7,2.93,2.94},{0.93,3.42,3.29}},{{0.7,2.93,2.94},{0.27,3.66,2.42}},{{0.7,2.93,2.94},{1.07,3.84,3.44}},{{0.7,2.93,2.94},{1.91,2.59,3.01}},{{0.7,2.93,2.94},{1.57,2.75,2.02}},{{5.27,1.86,5.1},{5.36,1.43,5.57}},{{5.27,1.86,5.1},{5.32,1.26,4.76}},{{5.27,1.86,5.1},{5.06,1.06,5.32}},{{5.27,1.86,5.1},{5.71,0.79,5.69}},{{5.27,1.86,5.1},{5.12,2.62,3.82}},{{2.83,5.26,3.61},{2.28,4.75,3.09}},{{2.83,5.26,3.61},{3.07,4.13,3.25}},{{2.83,5.26,3.61},{3.72,4.51,2.84}},{{0.53,6.1,3.9},{0.11,6.,3.96}},{{0.53,6.1,3.9},{0.26,5.36,4.49}},{{0.53,6.1,3.9},{5.75,6.17,3.8}},{{0.53,6.1,3.9},{5.72,0.09,4.05}},{{0.53,6.1,3.9},{6.25,5.7,2.92}},{{0.53,6.1,3.9},{5.86,5.87,4.66}},{{0.53,6.1,3.9},{0.84,5.38,4.89}},{{3.94,0.5,2.84},{3.93,0.17,3.17}},{{3.94,0.5,2.84},{4.08,1.11,2.39}},{{3.94,0.5,2.84},{4.29,1.48,3.23}},{{3.94,0.5,2.84},{3.45,1.65,2.51}},{{3.94,0.5,2.84},{3.89,5.48,2.37}},{{3.94,0.5,2.84},{3.64,1.45,3.87}},{{3.94,0.5,2.84},{4.29,1.8,3.43}},{{5.71,0.79,5.69},{5.36,1.43,5.57}},{{5.71,0.79,5.69},{5.06,1.06,5.32}},{{5.71,0.79,5.69},{5.32,1.26,4.76}},{{3.45,1.65,2.51},{4.14,1.94,2.16}},{{3.45,1.65,2.51},{4.08,1.11,2.39}},{{3.45,1.65,2.51},{4.29,1.48,3.23}},{{3.45,1.65,2.51},{4.29,1.8,3.43}},{{3.45,1.65,2.51},{3.64,1.45,3.87}},{{3.22,3.07,5.35},{2.26,3.05,5.02}},{{3.22,3.07,5.35},{4.1,2.66,4.95}},{{3.22,3.07,5.35},{3.79,3.06,6.27}},{{4.29,1.8,3.43},{4.29,1.48,3.23}},{{4.29,1.8,3.43},{3.64,1.45,3.87}},{{4.29,1.8,3.43},{4.08,1.11,2.39}},{{4.29,1.8,3.43},{4.14,1.94,2.16}},{{4.29,1.8,3.43},{4.11,1.85,4.9}},{{6.25,5.7,2.92},{5.48,5.85,2.78}},{{6.25,5.7,2.92},{0.11,6.,3.96}},{{6.25,5.7,2.92},{5.75,6.17,3.8}},{{6.25,5.7,2.92},{5.72,0.09,4.05}},{{5.06,1.06,5.32},{5.36,1.43,5.57}},{{5.06,1.06,5.32},{5.32,1.26,4.76}},{{6.17,3.53,4.72},{0.07,3.97,5.75}},{{6.17,3.53,4.72},{1.03,3.39,5.12}},{{0.26,5.36,4.49},{0.84,5.38,4.89}},{{0.26,5.36,4.49},{0.11,6.,3.96}},{{0.26,5.36,4.49},{5.86,5.87,4.66}},{{0.26,5.36,4.49},{5.75,6.17,3.8}},{{0.26,5.36,4.49},{0.98,4.58,3.65}},{{0.26,5.36,4.49},{5.72,0.09,4.05}},{{0.26,5.36,4.49},{5.59,5.32,5.63}},{{0.93,3.42,3.29},{1.07,3.84,3.44}},{{0.93,3.42,3.29},{0.27,3.66,2.42}},{{0.93,3.42,3.29},{0.98,4.58,3.65}},{{0.93,3.42,3.29},{1.18,4.62,3.28}},{{0.93,3.42,3.29},{1.91,2.59,3.01}},{{1.55,2.34,5.05},{2.26,3.05,5.02}},{{1.55,2.34,5.05},{0.75,1.51,5.22}},{{1.55,2.34,5.05},{1.03,3.39,5.12}},{{1.55,2.34,5.05},{1.04,1.04,4.68}},{{4.08,1.11,2.39},{4.14,1.94,2.16}},{{4.08,1.11,2.39},{4.29,1.48,3.23}},{{4.08,1.11,2.39},{3.93,0.17,3.17}},{{2.16,1.31,1.58},{1.58,0.79,0.94}},{{2.16,1.31,1.58},{1.61,0.67,0.9}},{{2.16,1.31,1.58},{2.58,0.29,2.11}},{{2.16,1.31,1.58},{1.59,2.27,1.06}},{{0.98,4.58,3.65},{1.18,4.62,3.28}},{{0.98,4.58,3.65},{1.07,3.84,3.44}},{{0.98,4.58,3.65},{2.28,4.75,3.09}},{{0.98,4.58,3.65},{0.84,5.38,4.89}},{{4.11,1.85,4.9},{4.1,2.66,4.95}},{{4.11,1.85,4.9},{3.64,1.45,3.87}},{{4.11,1.85,4.9},{2.94,1.4,4.29}},{{1.59,2.27,1.06},{1.14,2.55,1.54}},{{1.59,2.27,1.06},{1.57,2.75,2.02}},{{1.59,2.27,1.06},{1.58,0.79,0.94}},{{0.27,3.66,2.42},{1.07,3.84,3.44}},{{1.67,6.19,2.51},{1.73,5.75,2.25}},{{1.67,6.19,2.51},{2.,5.59,2.26}},{{1.67,6.19,2.51},{1.92,0.17,3.17}},{{1.67,6.19,2.51},{2.58,0.29,2.11}},{{1.67,6.19,2.51},{1.05,0.07,1.27}},{{2.75,4.06,5.68},{2.24,5.12,5.96}},{{5.22,5.22,1.74},{5.11,5.69,1.94}},{{5.22,5.22,1.74},{5.66,5.51,0.79}},{{2.94,1.4,4.29},{2.26,1.09,4.31}},{{2.94,1.4,4.29},{3.64,1.45,3.87}},{{5.14,1.22,3.36},{5.32,1.26,4.76}},{{5.14,1.22,3.36},{5.72,0.09,4.05}},{{5.14,1.22,3.36},{5.12,2.62,3.82}},{{2.26,1.09,4.31},{1.04,1.04,4.68}},{{2.26,1.09,4.31},{3.64,1.45,3.87}},{{2.26,1.09,4.31},{1.92,0.17,3.17}},{{3.77,3.37,3.07},{4.07,3.79,2.48}},{{3.77,3.37,3.07},{3.07,4.13,3.25}},{{3.77,3.37,3.07},{3.72,4.51,2.84}},{{4.26,2.32,0.38},{3.79,3.06,6.27}},{{1.14,2.55,1.54},{1.57,2.75,2.02}},{{3.89,5.48,2.37},{3.72,4.51,2.84}},{{3.89,5.48,2.37},{3.93,0.17,3.17}},{{5.75,6.17,3.8},{5.72,0.09,4.05}},{{5.75,6.17,3.8},{0.11,6.,3.96}},{{5.75,6.17,3.8},{5.86,5.87,4.66}},{{5.75,6.17,3.8},{5.48,5.85,2.78}},{{1.18,4.62,3.28},{1.07,3.84,3.44}},{{1.18,4.62,3.28},{2.28,4.75,3.09}},{{0.84,5.38,4.89},{0.75,6.06,5.95}},{{0.84,5.38,4.89},{0.11,6.,3.96}},{{0.84,5.38,4.89},{5.86,5.87,4.66}},{{3.93,0.17,3.17},{4.29,1.48,3.23}},{{3.93,0.17,3.17},{3.64,1.45,3.87}},{{1.58,0.79,0.94},{1.61,0.67,0.9}},{{1.58,0.79,0.94},{1.05,0.07,1.27}},{{1.58,0.79,0.94},{2.86,0.13,0.76}},{{2.06,4.44,1.88},{2.,5.59,2.26}},{{2.06,4.44,1.88},{2.28,4.75,3.09}},{{2.06,4.44,1.88},{1.73,5.75,2.25}},{{5.66,5.51,0.79},{0.43,5.91,0.47}},{{5.66,5.51,0.79},{5.11,5.69,1.94}},{{5.66,5.51,0.79},{5.59,5.32,5.63}},{{5.48,5.85,2.78},{5.11,5.69,1.94}},{{5.48,5.85,2.78},{5.72,0.09,4.05}},{{5.48,5.85,2.78},{0.11,6.,3.96}},{{2.24,5.12,5.96},{2.6,5.45,0.54}},{{1.61,0.67,0.9},{1.05,0.07,1.27}},{{1.61,0.67,0.9},{2.86,0.13,0.76}},{{2.86,0.13,0.76},{2.6,5.45,0.54}},{{2.86,0.13,0.76},{2.58,0.29,2.11}},{{5.25,4.98,5.},{5.59,5.32,5.63}},{{5.25,4.98,5.},{5.86,5.87,4.66}},{{4.14,1.94,2.16},{4.29,1.48,3.23}},{{3.07,4.13,3.25},{3.72,4.51,2.84}},{{3.07,4.13,3.25},{2.28,4.75,3.09}},{{3.07,4.13,3.25},{4.07,3.79,2.48}},{{0.11,6.,3.96},{5.72,0.09,4.05}},{{0.11,6.,3.96},{5.86,5.87,4.66}},{{5.86,5.87,4.66},{5.72,0.09,4.05}},{{5.86,5.87,4.66},{5.59,5.32,5.63}},{{4.1,2.66,4.95},{3.79,3.06,6.27}},{{4.07,3.79,2.48},{3.72,4.51,2.84}},{{2.,5.59,2.26},{1.73,5.75,2.25}},{{2.,5.59,2.26},{2.58,0.29,2.11}},{{2.,5.59,2.26},{2.28,4.75,3.09}},{{2.,5.59,2.26},{1.92,0.17,3.17}},{{0.75,6.06,5.95},{0.43,5.91,0.47}},{{3.64,1.45,3.87},{4.29,1.48,3.23}},{{0.07,3.97,5.75},{1.03,3.39,5.12}},{{1.57,2.75,2.02},{1.91,2.59,3.01}},{{2.58,0.29,2.11},{1.73,5.75,2.25}},{{2.58,0.29,2.11},{1.92,0.17,3.17}},{{1.92,0.17,3.17},{1.73,5.75,2.25}},{{2.28,4.75,3.09},{1.73,5.75,2.25}},{{2.28,4.75,3.09},{3.72,4.51,2.84}},{{5.72,0.09,4.05},{5.32,1.26,4.76}},{{2.26,3.05,5.02},{1.03,3.39,5.12}},{{1.04,1.04,4.68},{0.75,1.51,5.22}},{{0.43,5.91,0.47},{1.05,0.07,1.27}},{{1.73,5.75,2.25},{1.05,0.07,1.27}},{{5.36,1.43,5.57},{5.32,1.26,4.76}}};
+
+### [Input] (init)
+edgesNNadji={{80,68,79,9,75,5,65,14},{34,70,38,6,8},{38},{17,24,60,73,61},{1,75,79,14,9,44},{2,64,50,70},{51,16,35,65,13,52,37},{2,38,19,77,10,34,58,12},{1,5,75,14,79},{8,48,19,77,12,58},{66,53,76},{8,10,77,58,19,48,22},{7,42,51,35,65},{1,5,9,75,79},{59,69},{7,37,51,52,35,21,65,67},{4,60,24,21,36,73},{66,80,69,68},{8,10,12,48,77,38},{39,45,62,23},{16,17,36,60,64,37},{12,53,58,28},{20,33,61,39},{4,17,60},{72,55,63,62,78},{43},{56,41},{22,30,58},{79,65,44},{28,68,58,63},{54,50,70},{76},{23,61},{2,8,70,38},{7,13,16,65,51,52,42},{17,21,60,64},{7,16,21,57,51,52},{2,3,8,19,34,77,58},{20,23,45,78,46},{55,64,72},{27,71,56,67},{13,35,56,65,51},{26,49},{5,29},{20,39,78,46},{39,45,49,62},{67,52},{10,12,19,77},{43,46},{6,31,70,64,54},{7,13,16,35,37,42,65,52},{7,16,35,37,47,51,65,67},{11,22,76},{31,50,70},{25,40,72,62,64,63},{27,41,42},{37,71},{8,10,12,22,28,30,38,77},{15,69},{4,17,21,24,36},{4,23,33,73},{20,25,46,55,72,63},{25,30,55,62,72},{6,21,36,40,50,55,72,70},{1,7,13,16,29,35,42,51,52,79},{11,18,69},{16,41,47,52},{1,18,30,80},{15,18,59,66},{2,6,31,34,50,54,64},{41,57,78},{25,40,55,62,63,64,78},{4,17,61},{},{1,5,9,14,79},{11,32,53},{8,10,12,19,38,48,58},{25,39,45,71,72},{1,5,9,14,29,65,75},{1,18,68}};
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{totdist,w = 1/8,l=1,inCollision,inCollisionf,pObs3,pObs3a,pObs3b,obsRad =0.5,widtha = .05,pw = .25,
+qsni,qfni,path=-1,qsn={},qfn={},delta=.1,qs,robotq},
+
+If[restart,
+restart=False;pObsOlda= pObs3a;pObsOldb= pObs3b;
+badPts = {};goodPts={};pts={};edgesNN={};edgesNNadj={};
+];
+
+(* Enable torus property on the input sliders *)
+If[Theta1<0,Theta1 = 2π+Theta1];If[Theta1>2π,Theta1 = Theta1-2π];
+If[Theta2<0,Theta2 = 2π+Theta2];If[Theta2>2π,Theta2 = Theta2-2π];
+If[Theta3<0,Theta3 = 2π+Theta3];If[Theta3>2π,Theta3 = Theta3-2π];
+qs={Theta1,Theta2,Theta3};
+
+(*Set a random goal*)
+If[newgoal,newgoal = False;qf = RandomReal[{0,2π},3];  ]; 
+
+pObs3a = {Obstaxy[[1]],Obstaxy[[2]],Obstaz};
+pObs3b = {Obstbxy[[1]],Obstbxy[[2]],Obstbz};
+pObs3 = {pObs3a,pObs3b};
+inCollision   = detCollision[jointAngle2Origin[qs],pObs3,obsRad,widtha];
+inCollisionf = detCollision[jointAngle2Origin[qf],pObs3,obsRad,widtha];
+
+If[pObsOlda!= pObs3a || pObsOldb!= pObs3b,
+badPts = {};goodPts={};
+ Table[
+If[detCollision[jointAngle2Origin[pts[[i,;;]]],pObs3,obsRad,widtha],
+AppendTo[badPts,pts[[i]]],
+AppendTo[goodPts,pts[[i]]]],
+{i,1,Length[pts]}];
+rold = -1;
+If[pObsOlda!= pObs3a,pObsOlda= pObs3a;highResa = False;];
+If[pObsOldb!= pObs3b,pObsOldb= pObs3b;highResb = False;];
+];
+
+If[addPoints,
+addPoints = False;
+Module[{newpts,point2start},
+point2start = Length[goodPts]+1;
+newpts=RandomReal[{0,2π},{100,3}]; (* Generate random points in 3D *)
+pts = Join[pts,newpts];
+ Table[
+If[detCollision[jointAngle2Origin[newpts[[i,;;]]],pObs3,obsRad,widtha],
+AppendTo[badPts,newpts[[i]]],
+AppendTo[goodPts,newpts[[i]]]],
+{i,1,Length[newpts]}];
+(* Update the connected points *)
+If[  Length[goodPts] > point2start-1,
+edgesNNadj =Join[edgesNNadj,ConstantArray[{},Length[goodPts]-point2start+1]];
+If[r>0,{edgesNNadj,edgesNN}=connectPoints[goodPts,edgesNNadj,pObs3,obsRad,widtha,delta,edgesNN,point2start ,r]]];
+]];
+
+If[r!= rold && Length[goodPts]>5 ,
+rold = r;
+edgesNN = {};
+edgesNNadj =ConstantArray[{},Length[goodPts]];
+(* Build an adjacency list: *)
+If[r>0,
+{edgesNNadj,edgesNN}=connectPoints[goodPts,edgesNNadj,pObs3,obsRad,widtha,delta,edgesNN, 1,r];
+]];
+
+path=-1;(* Check if we can go straight from qs to qf: *)
+If[toroidDist[qs,qf]<r&& pathOKTrobot[qs,qf,pObs3,obsRad,widtha,delta],
+path=-2,
+If[!inCollision&&Length[goodPts]>5,(* Connect qs to the map *)
+Do[If[pathOKTrobot[qs,pe,pObs3,obsRad,widtha,delta],qsn = pe;Break[] ],
+   {pe, Quiet[Nearest[goodPts,qs,1,DistanceFunction->toroidDist]]}]];
+
+If[!inCollisionf&&Length[goodPts]>5,(* Connect qf to the map *)
+Do[If[pathOKTrobot[qf,pe,pObs3,obsRad,widtha,delta],qfn = pe;Break[] ],
+   {pe, Quiet[Nearest[goodPts,qf,1,DistanceFunction->toroidDist]]}]];
+];
+If[qfn!={} && qsn!={} && Length[ edgesNNadj]>1,
+qsni = Position[goodPts,qsn,1,1][[1,1]];
+qfni = Position[goodPts,qfn,1,1][[1,1]];
+path = myAstar[edgesNNadj,goodPts,qsni,qfni];
+];
+(* Calculate the robot progress *)
+robotq = qs;
+If[Length[path]==0&&path==-2,
+{totdist =toroidDist[ qs,qf];
+robotq = toroidPt[{qs,qf},progress]},
+If[Length[path]>0,
+Module[{dists,c, distT,mypath =Append[Prepend[goodPts[[path]],qs],qf] }, dists = Table[toroidDist[mypath[[i]],mypath[[i+1]]],{i,1,Length[mypath]-1}];
+totdist = Total[dists];
+distT = 0; c = 1; While[distT+dists[[c]]<progress*totdist, distT+= dists[[c]];c++];
+robotq=toroidPt[{mypath[[c]],mypath[[c+1]]},(progress*totdist- distT)/dists[[c]]]]]];
+
+If[showConfigObs,
+If[ !highResa,
+highResa=ControlActive[False,True];
+freeConfigSpacea=RegionPlot3D[
+detCollision[jointAngle2Origin[{a1,a2,a3}],{pObs3a},obsRad,widtha],
+{a1,0,2π},{a2,0,2π},{a3,0,2π},Mesh->None,PlotStyle->Directive[Blue,Opacity[0.5]]];
+];
+
+If[ !highResb,
+highResb=ControlActive[False,True];
+freeConfigSpaceb =RegionPlot3D[
+detCollision[jointAngle2Origin[{a1,a2,a3}],{pObs3b},obsRad,widtha],
+{a1,0,2π},{a2,0,2π},{a3,0,2π},Mesh->None,PlotStyle->Directive[Yellow,Opacity[0.5]] ];
+];,(*Else, remove the 3D plots of obstacles that are slow to compute*)
+freeConfigSpacea=RegionPlot3D[False,{a1,0,2π},{a2,0,2π},{a3,0,2π}];  
+freeConfigSpaceb = freeConfigSpacea; highResa = False;highResb = False; 
+];
+Row[{
+Graphics3D[{
+{ (* Start & end *)
+Opacity[0.2],EdgeForm[Gray],
+If[inCollision,Red,Brown],drawRobot[qs,widtha],
+If[inCollisionf,Red,Brown],drawRobot[qf,widtha]
+},
+If[inCollision,Red,Brown],
+drawRobot[robotq,widtha],
+{(* obstacle*)Blue,Specularity[White,10],Sphere[pObs3a,obsRad],
+                         Yellow,Specularity[White,10],Sphere[pObs3b,obsRad]}
+},LabelStyle->Black,
+PlotLabel->"\<robot workspace\>",
+PlotRange->{3.5{-1,1},3.5{-1,1},{-1.1,3.4}},Lighting->Automatic,
+ViewPoint->Dynamic[viewPoint1],ImageSize->{300,300}
+],Spacer[10],
+Show[Graphics3D[{PointSize[Large],
+Red,Point[badPts],Green, Point[goodPts],
+If[inCollision,Red,Brown],Point[qs],
+If[inCollisionf,Red,Brown],Point[qf],
+
+If[Length[path]==0&&path==-2,
+{Thickness[0.02],toroidLine[{qs,qf},Magenta]},
+If[Length[path]>0,{Thickness[0.02],
+toroidLine[{qs,qsn},Magenta],
+toroidLine[{qf,qfn},Magenta],
+Table[toroidLine[{goodPts[[path[[i]]]],goodPts[[path[[i+1]]]]},Orange,Purple],{i,1,Length[path]-1}],
+Black,Point[qs],Point[qf]
+},
+{If[qsn!={},  toroidLine[{qs,qsn},Magenta]],If[qfn!={},  toroidLine[{qf,qfn},Magenta]]} 
+]],
+Darker[Green],PointSize[Medium],Point[goodPts],Red,Point[badPts],
+toroidLines[edgesNN,Lighter[Brown],Brown],
+{(* Robot Progress *)Blue,PointSize[0.06],Cuboid[robotq-.1{1,1,1},robotq+.1{1,1,1}]
+(* Point[robotq]*)}
+},Axes->True,LabelStyle->Black, PlotLabel->StringForm["\<robot phase space
+``\>",
+If[Length[path]==0&&path==-1,Style["\<No path possible\>",Red],StringForm["\<path length = ``
+\>",Round[totdist,.01]]]]
+,AxesLabel->{Subscript["\<Theta\>","\<1\>"],Subscript["\<Theta\>","\<2\>"],Subscript["\<Theta\>","\<3\>"]},PlotRange->{{0,2π},{0,2π},{0,2π}},
+ViewPoint->Dynamic[viewPoint2],
+ImagePadding->None,PlotRangePadding->None,ImageMargins->None,ImageSize->{300,300}],freeConfigSpacea,freeConfigSpaceb]
+}]
+],(*Control variables*)
+Row[{
+Control@{{Theta1,.25,"\<\!\(\*SubscriptBox[\(Theta\), \(1\)]\)\>"},-.1,6.3,0.01,ImageSize->Small},Spacer[10],Control@{{Theta2,.25,"\<\!\(\*SubscriptBox[\(Theta\), \(2\)]\)\>"},-.1,6.3,0.01,ImageSize->Small},Spacer[10],Control@{{Theta3,.25,"\<\!\(\*SubscriptBox[\(Theta\), \(3\)]\)\>"},-.1,6.3,0.01,ImageSize->Small}}],
+
+(*the next are global variables to control how often freeConfigSpace is updated*)
+{freeConfigSpacea, {0,0,0},None},
+{freeConfigSpaceb, {0,0,0},None},
+{highResa, False,None},
+{highResb, False,None},
+{{pObsOlda,{-3,-2,-2}},None},
+{{pObsOldb,{-3,-2,-2}},None},
+Row[{Control[{{Obstaxy,{1,0},Subscript["\<blue\>",Style["\<xy\>",Italic]]},3{-1,-1},{1,1}}],
+Control[{{Obstaz,0,Subscript["\<blue\>",Style["\<z\>",Italic]]},0,2,ControlType->VerticalSlider,ImageSize->{Automatic,80}}],
+Control[{{Obstbxy,{0,-1},Subscript["\<yellow\>",Style["\<xy\>",Italic]]},3{-1,-1},{1,1}}],
+Control[{{Obstbz,1/2,"\<\!\(\*SubscriptBox[\(yellow\), \(z\)]\)\>"},0,2,ControlType->VerticalSlider,ImageSize->{Automatic,80}}],
+Control[{{showConfigObs,False,"\<show configuration
+ space obstacles\>"},{False,True}}]
+},Spacer[20]],
+{{viewPoint1,{1.3,-2.4,2}},None},
+{{viewPoint2,{1.3,-2.4,2}},None},
+{{pts,ptsI},None},
+{{addPoints,False},None},
+{{restart,False},None},
+{{newgoal,False},None},
+{{qf,{3.84,4.86,1.62}},None},
+Row[{Button["\<add 100 vertices\>",addPoints=True],
+Spacer[10],Button["\<restart\>",restart=True],Spacer[10],Button["\<new goal\>",newgoal=True],Spacer[10],Control[{{r,1.5,"\<radius\>"},0,12,0.01,Appearance->"\<Labeled\>"}]
+}],
+{{progress,0,"\<progress\>"},0,1,0.01,ControlType->Slider,ImageSize->500},
+{{path,-1},None},
+{{rold,-1},None},
+{{badPts,badPtsI},None},
+{{goodPts,goodPtsI},None},
+{{edgesNN,edgesNNI},None},
+{{edgesNNadj,edgesNNadj},None},
+SynchronousUpdating->False,
+ControlPlacement->Top,
+SaveDefinitions->True]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Item]
+Aaron T. Becker
+
+### [Item]
+Yitong Lu
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+The goal of robot motion planning is to find a continuous path from an initial configuration to a goal configuration that is collision free. A configuration is a complete specification of every point of the robot. This Demonstration uses a three-link robot with three rotational joints that can each rotate from 0 to 2π. The joints can each rotate independently either clockwise or counterclockwise. Obstacles in the robot's workspace map to obstacle regions in a 3D configuration space. The robot's joint angles are specified by Subscript[Theta, 1], Subscript[Theta, 2] and Subscript[Theta, 3]. You can adjust the two obstacle positions in 3D. The "restart" button removes all the sampled configurations, and the "new goal" button randomly assigns a new goal position.
+
+### [Text]
+\<Changing the obstacle positions requires rebuilding the roadmap. Longer radius values require more computation but result in a denser roadmap and shorter paths.\>
+
+### [Text]
+\<PRM was developed in 1996 by Lydia Kavraki et al.[1]. PRMs generate a roadmap that can be reused for subsequent motion-planning queries. PRM was designed for high-dimension configuration spaces (dimensions of 5 or more), but this Demonstration uses three dimensions for ease of visualization.\>
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] L. E. Kavraki, P. Svestka, J-C. Latombe and Mark H. Overmars, "Probabilistic Roadmaps for Path Planning in High-Dimensional Configuration Spaces," IEEE Transactions on Robotics and Automation, 12(4), 1996 pp. 566\[Dash]580. doi:10.1109/70.508439.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+motion planning
+
+### [Item]
+motion planner
+
+### [Item]
+robot
+
+### [Item]
+3D robot arm
+
+### [Item]
+3D configuration space
+
+### [Item]
+PRM
+
+### [Item]
+probabilistic roadmap
+
+### [Item]
+obstacle
+
+### [Item]
+path planning
+
+### [Item]
+path planner
+
+### [Item]
+robot arm
+
+### [Item]
+configuration space
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Rapidly Exploring Random Tree (RRT) and RRT*
+
+### [Text]
+Breadth-First Search Robot Motion Planning
+
+### [Text]
+Robot Motion with Obstacles
+
+### [Text]
+Joint Space and Tooling Space for Robot Motion Control
+
+### [Text]
+Dijkstra's and A* Search Algorithms for Pathfinding with Obstacles
+
+### [Text]
+Torus
+
+### [Text]
+Probabilistic Roadmap Method
+
+### [Text]
+Probabilistic Roadmap Method for Robot Arm
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2020-02-26
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

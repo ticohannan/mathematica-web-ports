@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.15 |
+| Code version: | 0.1.16 |
 | Document revision | 5 (2026-10-17) — §11 Errors in the original (R-C); checklist items as operator procedures (R-B) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Unit Balls for Different p-Norms in 2D and 3D", contributed by Aaron T. Becker and Ravi Patel, published December 29, 2020 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/UnitBallsForDifferentPNormsIn2DAnd3D/>. Readable source: [`docs/original-source/unit-balls.txt`](../../docs/original-source/unit-balls.txt) (the flattened `(…)^1/p` is `(…)^(1/p)` in the notebook); saved state: `tests/golden/unit-balls.original-state.json`; snapshots: `docs/original-snapshots/unit-balls-1…7.png` |
@@ -229,6 +229,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 3 | v0.1.13 | 2026-10-12 | no change to this app (collision beep with a mute checkbox in prm-seven-link; new `shared/beep.js` used only there) |
 | 4 | v0.1.14 | 2026-10-16 | golden tests on the seven snapshot states (`tests/golden/unit-balls.original-states.json`, `tools/extract_state.py --snapshots`): dimension, exact or machine p, label, selected setter button and slider text of each picture; N-UB-01 extended; no change to the app |
 | 5 | v0.1.15 | 2026-10-17 | §11 Errors in the original added (owner rule R-C); Mathematica checklist items rewritten as operator procedures (R-B); standalone bundle (owner rule R-A): §6.1, A-UB-07, tools/bundle-app.mjs; review fixes |
+| 6 | v0.1.16 | 2026-10-18 | version number only (batch B release); no change to this app |
 
 ## 10. Improvements to consider (not implemented)
 

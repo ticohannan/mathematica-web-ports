@@ -27,12 +27,12 @@ describe('tools/new-test-run.mjs', () => {
 
   it.each(DIRS)('writes the template for %s with every M- item of its checklist', (dir) => {
     const src = checklistSource(dir);
-    const ids = [...src.text.matchAll(/^### (M-[A-Z]+-\d+)\b/gm)].map((m) => m[1]);
+    const ids = [...src.text.matchAll(/^### (M-[A-Z][A-Z0-9]*-\d+)\b/gm)].map((m) => m[1]);
     expect(ids.length).toBeGreaterThan(5);
     expect(main([dir, '--date=2026-10-17', `--out=${tmp}`], quiet)).toBe(0);
     const out = fs.readFileSync(path.join(tmp, `2026-10-17_${dir}.md`), 'utf8');
     expect(out).toContain(`# Test run — ${dir} — 2026-10-17`);
-    expect([...out.matchAll(/^## (M-[A-Z]+-\d+)\b/gm)].map((m) => m[1])).toEqual(ids);
+    expect([...out.matchAll(/^## (M-[A-Z][A-Z0-9]*-\d+)\b/gm)].map((m) => m[1])).toEqual(ids);
     expect(out.match(/^Result: \[ \] PASS {2}\[ \] FAIL {2}\[ \] UNSURE$/gm)).toHaveLength(ids.length);
     for (const it of parseItems(src.text)) expect(out, it.id).toContain(`Record: ${it.record}`);
   });

@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.15 |
-| Document revision | 5 (2026-10-17) — §11 Errors in the original (R-C); checklist items as operator procedures (R-B) |
+| Code version: | 0.1.16 |
+| Document revision | 6 (2026-10-18) — `demos/common/prm-core.js` generalised to n dimensions (by prm-3d); no change to this app |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Probabilistic Roadmap Method", contributed by Aaron T. Becker and Yitong Lu, published January 13, 2020 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ProbabilisticRoadmapMethod/>. Readable source: [`docs/original-source/prm.txt`](../../docs/original-source/prm.txt); snapshots: `docs/original-snapshots/prm-*.png`; saved state: `tests/golden/prm.original-state.json` |
-| Port files | `model.js` (obstacles, the Manipulate body as one pure evaluation, the data of the picture), `main.js` (SVG drawing, locators, controls), `index.html`; shared with "PRM for Robot Arm": [`demos/common/prm-core.js`](../common/prm-core.js) (`toroidDist`, `angtest`, `ptInPoly`, `ptInPolys`, `pathOKT`, `myAstar`, `toroidLine(s)`, `toroidPt`, `connectPoints` core, the query and progress code, the `loc` icon) |
+| Port files | `model.js` (obstacles, the Manipulate body as one pure evaluation, the data of the picture), `main.js` (SVG drawing, locators, controls), `index.html`; shared with "PRM for Robot Arm" and "PRM in 3D" (generalised to n dimensions in v0.1.16): [`demos/common/prm-core.js`](../common/prm-core.js) (`toroidDist`, `angtest`, `ptInPoly`, `ptInPolys`, `pathOKT`, `myAstar`, `toroidLine(s)`, `toroidPt`, `connectPoints` core, the query and progress code, the `loc` icon) |
 | Role in the project | further demonstration (extra proof of concept alongside the motion-planning port); developed in a separate, unpublished repository and added to this site in v0.1.12 |
 
 ## 1. Purpose and background
@@ -205,6 +205,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 3 | v0.1.13 | 2026-10-12 | no change to this app (collision beep with a mute checkbox in prm-seven-link; new `shared/beep.js` used only there) |
 | 4 | v0.1.14 | 2026-10-16 | golden tests on the five snapshot states (`tests/golden/prm.original-states.json`, `tools/extract_state.py --snapshots`): snapshots 2–5 (200 samples, obstacles {4, 4, 4, 7} incl. the 7-gon) rebuilt bit for bit — polygons, classification, roadmaps of radius 0, 0.65 and 0.77 in order, paths and labels "no path possible", "path length = 4.4" and "4.36"; K-PR-03 note; no change to the app |
 | 5 | v0.1.15 | 2026-10-17 | §11 Errors in the original added (owner rule R-C); Mathematica checklist items rewritten as operator procedures (R-B); standalone bundle (owner rule R-A): §6.1, A-PR-08, tools/bundle-app.mjs; review fixes |
+| 6 | v0.1.16 | 2026-10-18 | `demos/common/prm-core.js` generalised to n dimensions by "Probabilistic Roadmap Method in 3D" (owner prm-3d, approved by the owner): `toroidDist`, `pathOKT`, `toroidLine` and `toroidPt` loop over the coordinates (sums from the first term, left to right, so every 2D result is the same double), one wrap `wrapto0to2pi` (the same double as the 2D sequential wrap on (−2π, 4π)), `toroidPt` option `zeroTest`, optional distance function / toroidPt parameters of `connectPoints`, `myAstar`, `planQuery` and `progressOnPath`, missing adjacency lists taken as empty in `connectPoints`; every export and its behaviour unchanged for this app — its unit and golden replays run unchanged and pass; bundle contents unchanged |
 
 ## 10. Improvements to consider (not implemented)
 

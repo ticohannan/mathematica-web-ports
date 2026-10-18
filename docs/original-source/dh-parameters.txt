@@ -1,0 +1,313 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Private reference (R-04). Extracted 2026-10-12 with tools/nbextract.py; cached outputs skipped.
+
+### [Title]
+Denavit-Hartenberg Parameters for a Three-Link Robot
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+\<The Denavit\[Dash]Hartenberg (DH) convention for assigning coordinate frames uses four variables to define the reference coordinate frame for each link in a robotic arm. This Demonstration lets you select a three-link combination of revolute (rotating) and prismatic (sliding) joints. You can then vary their DH parameters to create a variety of robot arms in different configurations.\>
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+(*drawing functions*)
+DrawZArrow[jr_]:=Line[{{{0,0,0},{0,0,2jr}}, (*mathematica's built-in 3D arrow sometimes draws poorly*)
+{{0,0,2jr},{1/32,0,3/2jr}},
+{{0,0,2jr},{-1/32,0,3/2jr}},
+{{0,0,2jr},{0,1/32,3/2jr}},
+{{0,0,2jr},{0,-1/32,3/2jr}}}];
+DrawCoordAxes[jr_]:= {Thick,{Red,DrawZArrow[jr]},
+{Blue,Rotate[DrawZArrow[jr],π/2,{0,1,0}]},
+{Green,Rotate[DrawZArrow[jr],-π/2,{1,0,0}]}}
+DrawJoint[ j_,d_,r_,Theta_]:=Module[{jr = 1/5,ar = 1/20},{
+(*draw coordinate axis*)
+DrawCoordAxes[jr],
+Opacity[1],
+(*draw z-axis*)
+{Opacity[0.5],Gray,If[j == "\<Prismatic\>",Cuboid[{-ar,-ar,-1+d-jr-.01},{ar,ar,d+.01}],Cylinder[{{0,0,Min[-ar,d-jr]-.01},{0,0,Max[ar,d]+.01}},ar]]},
+(*draw joint*)
+{LightBlue,If[j == "\<Prismatic\>",Cuboid[{-jr,-jr,-jr},{jr,jr,+jr}],
+{Cylinder[{{0,0,-jr},{0,0,+jr}},jr]
+}]},
+(*draw x(i+1) *)
+Rotate[{Opacity[0.5],Gray,Cuboid[{-ar,-ar,d-ar},{r,ar,d+ar}]},Theta,{0,0,1}]
+}];
+DrawGripper[g_,r_]:=Module[{jr = 1/5,ar = 1/20},{
+(*draw z-axis*)
+DrawCoordAxes[jr],
+If[r!= 0,
+{Gray,Cuboid[{-2ar,-ar,-4ar},{0,ar,4ar}],
+Cuboid[{0ar,-ar,g 2ar},{4ar,ar,2(1+g)ar}],
+Cuboid[{0ar,-ar,-g 2ar},{4ar,ar,-2(1+g)ar}]},
+(*looks better if hand points along d*)
+{Gray,
+Cuboid[{-4ar,-ar,-2ar},{4ar,ar,0}],
+Cuboid[{g 2ar,-ar,0ar},{2(1+g)ar,ar,4ar}],
+Cuboid[{-g 2ar,-ar,0ar},{-2(1+g)ar,ar,4ar}]}]
+}];
+(*math function to create a T matrix*)
+DHTransform[d_,r_,Theta_,Alpha_]:=RotationTransform[Theta,{0,0,1}].TranslationTransform[{0,0,d}].TranslationTransform[{r,0,0}].RotationTransform[Alpha,{1,0,0}];
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{jr = 1/10,ar = 1/40,
+T1 = DHTransform[d1,r1,Theta1,Alpha1], (* perform transformation between each joint*)
+T2 = DHTransform[d2,r2,Theta2,Alpha2],
+T3 = DHTransform[d3,r3,Theta3,Alpha3]
+},
+Graphics3D[{
+(*ground*)
+{LightBrown,Cylinder[{{0,0,-2/5},{0,0,-1/5-1/20}},2.2]},
+DrawJoint[ j1,d1,r1,Theta1],
+GeometricTransformation[DrawJoint[ j2,d2,r2,Theta2],T1],
+GeometricTransformation[DrawJoint[ j3,d3,r3,Theta3],T1.T2],
+GeometricTransformation[DrawGripper[g,r3],T1.T2.T3]
+},SphericalRegion->True,ImageSize->425,Boxed->False]],
+{{j1,"\<Revolute\>","\<\!\(\*SubscriptBox[\(j\), \(1\)]\)\>"},{"\<Revolute\>","\<Prismatic\>"}},
+{{Theta1,5π/32,"\<\!\(\*SubscriptBox[\(Theta\), \(1\)]\)\>"},-π,π,π/32,ImageSize->Small,Appearance->"\<Labeled\>"},
+{{d1,1,"\<\!\(\*SubscriptBox[\(d\), \(1\)]\)\>"},0,1,0.01,ImageSize->Small,Appearance->"\<Labeled\>"},
+{{r1,0,"\<\!\(\*SubscriptBox[\(r\), \(1\)]\)\>"},0,1,0.01,ImageSize->Small,Appearance->"\<Labeled\>"},{{Alpha1,π/2,"\<\!\(\*SubscriptBox[\(Alpha\), \(1\)]\)\>"},-π,π,π/32,ImageSize->Small,Appearance->"\<Labeled\>"},
+Delimiter,
+{{j2,"\<Revolute\>","\<\!\(\*SubscriptBox[\(j\), \(2\)]\)\>"},{"\<Revolute\>","\<Prismatic\>"}},
+{{Theta2,π/4,"\<\!\(\*SubscriptBox[\(Theta\), \(2\)]\)\>"},-π,π,π/32,ImageSize->Small,Appearance->"\<Labeled\>"},
+{{d2,0,"\<\!\(\*SubscriptBox[\(d\), \(2\)]\)\>"},0,1,0.01,ImageSize->Small,Appearance->"\<Labeled\>"},
+{{r2,1,"\<\!\(\*SubscriptBox[\(r\), \(2\)]\)\>"},0,1,0.01,ImageSize->Small,Appearance->"\<Labeled\>"},
+{{Alpha2,0,"\<\!\(\*SubscriptBox[\(Alpha\), \(2\)]\)\>"},-π,π,π/32,ImageSize->Small,Appearance->"\<Labeled\>"},
+Delimiter,
+{{j3,"\<Revolute\>","\<\!\(\*SubscriptBox[\(j\), \(3\)]\)\>"},{"\<Revolute\>","\<Prismatic\>"}},
+{{Theta3,-3π/8,"\<\!\(\*SubscriptBox[\(Theta\), \(3\)]\)\>"},-π,π,π/32,ImageSize->Small,Appearance->"\<Labeled\>"},
+{{d3,0,"\<\!\(\*SubscriptBox[\(d\), \(3\)]\)\>"},0,1,0.01,ImageSize->Small,Appearance->"\<Labeled\>"},
+{{r3,1,"\<\!\(\*SubscriptBox[\(r\), \(3\)]\)\>"},0,1,0.01,ImageSize->Small,Appearance->"\<Labeled\>"},
+{{Alpha3,0,"\<\!\(\*SubscriptBox[\(Alpha\), \(3\)]\)\>"},-π,π,π/32,ImageSize->Small,Appearance->"\<Labeled\>"},
+Delimiter,
+{{g,1,"\<grip\>"},0,1,0.01,ImageSize->Small,Appearance->"\<Labeled\>"},
+SaveDefinitions->True
+]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Aaron T. Becker
+
+### [Text]
+Mary Burbage
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+The Denavit\[Dash]Hartenberg (DH) convention is used to assign coordinate frames to each joint of a robot manipulator in a simplified and consistent fashion[1]. From these parameters, a homogeneous transformation matrix can be defined, which is useful for both forward and inverse kinematics of the manipulator. This homogeneous transformation is the product of four simpler transformations: (1) a rotation Theta about the z axis, (2) a translation d along the z axis, (3) a translation r along the x axis, and (4) a rotation Alpha about the x axis. Joints are either revolute or prismatic. For revolute joints, the variable of movement is Theta, and for prismatic joints, the variable of movement is d. Under the DH convention, coordinate frames are assigned using two rules: (1) The x axis of the current frame must be perpendicular to the z axis of the previous frame, and (2) the x axis of the current frame must intersect the z axis of the previous frame.
+
+### [Text]
+The homogeneous transformation between two coordinate frames with DH parameters Subscript[Theta, i], Subscript[d, i], Subscript[r, i], Subscript[Alpha, i] is
+
+### [Text]
+Subscript[A, i]=Subscript[rot, z,Subscript[Theta, i]]Subscript[trans, z,Subscript[d, i]]Subscript[trans, x,Subscript[r, i]]Subscript[rot, z,Subscript[Alpha, i]]=(<<Grid:Subscript[c, Subscript[Theta, i]]-Subscript[s, Subscript[Theta, i]] Subscript[c, Subscript[Alpha, i]]Subscript[s, Subscript[Theta, i]]Subscript[s, Subscript[Alpha, i]]Subscript[r, i]Subscript[c, Subscript[Theta, i]] | Subscript[s, Subscript[Theta, i]]Subscript[c, Subscript[Theta, i]] Subscript[c, Subscript[Alpha, i]]-Subscript[c, Subscript[Theta, i]]Subscript[s, Subscript[Alpha, i]]Subscript[r, i]Subscript[s, Subscript[Theta, i]] | 0 Subscript[s, Subscript[Alpha, i]]Subscript[c, Subscript[Alpha, i]]Subscript[d, i] | 0001>>), where Subscript[c, Theta]=cos Theta and Subscript[s, Theta]=sin Theta.
+
+### [Text]
+\<A video showing an animation explaining the assignment of DH parameters may be found at[2].\>
+
+### [Text]
+In this Demonstration, you can vary the four parameters to see the effect each has on the configuration of the robot. The code is modular and can easily be extended for n-link robots.
+
+### [Text]
+\<The default settings give a three-link anthropomorphic manipulator arm, so named because the joints map to a waist, shoulder, and elbow rotation:\>
+
+### [Text]
+<<Grid:DH parameterThetadrAlpha | Joint 1Subscript[Theta, 1]^*Subscript[d, 1]0π/2 | Joint 2Subscript[Theta, 2]^*000 | Joint 3Subscript[Theta, 3]^*000>>
+
+### [Text]
+\<(Here * indicates the moving joint variable, other parameters are constant.)\>
+
+### [Text]
+\<Anthropomorphic manipulator arms are often used in assembly lines for welding, painting, and construction.\>
+
+### [Text]
+The snapshots show, in order:
+
+### [Text]
+\<SCARA arm, the Selective Compliant Articulated Robot for Assembly, has two revolute joints and one prismatic joint:\>
+
+### [Text]
+<<Grid:DH parameterThetadrAlpha | Joint 1Subscript[Theta, 1]^*Subscript[d, 1]00 | Joint 2Subscript[Theta, 2]^*0Subscript[r, 2]π | Joint 30Subscript[d, 3]^*00>>
+
+### [Text]
+\<SCARA arms are often used for pick and place tasks on conveyor belts.\>
+
+### [Text]
+\<A three-link cylindrical robot, an early robot model with one revolute joint and two prismatic joints:\>
+
+### [Text]
+<<Grid:DH parameterThetadrAlpha | Joint 1Subscript[Theta, 1]^*Subscript[d, 1]00 | Joint 20Subscript[d, 2]^*0-π/2 | Joint 30Subscript[d, 3]^*00>>
+
+### [Text]
+\<One reason cylindrical robots were popular is because they have simple inverse kinematics that are specified in cylindrical coordinates.\>
+
+### [Text]
+A three-link planar revolute robot:
+
+### [Text]
+<<Grid:DH parameterThetadrAlpha | Joint 1Subscript[Theta, 1]^*0Subscript[r, 1]0 | Joint 2Subscript[Theta, 2]^*0Subscript[r, 2]0 | Joint 3Subscript[Theta, 3]^*0Subscript[r, 3]-π/2>>
+
+### [Text]
+\<Three-link planar robots have a disc-shaped workspace that they can reach. The extra joint enables them to achieve desired angles of the end effector (the robot hand) in a subspace of the reachable workspace. This subspace is called the dexterous workspace.\>
+
+### [Text]
+A spherical wrist:
+
+### [Text]
+<<Grid:DH parameterThetadrAlpha | Joint 1Subscript[Theta, 1]^*Subscript[d, 1]0-π/2 | Joint 2Subscript[Theta, 2]^*00π/2 | Joint 3Subscript[Theta, 3]^*Subscript[d, 3]00>>
+
+### [Text]
+A spherical wrist can be used to achieve any desired orientation of the end effector. Often a spherical wrist is attached to the end of a three-link robot such as a SCARA, anthropomorphic manipulator, or cylindrical robot. The first three joints are used for position control and the spherical wrist is used for orientation control.
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] M. W. Spong, S. Hutchinson, and M. Vidyasagar, Robot Modeling and Control, Hoboken, NJ: John Wiley & Sons, 2006.
+
+### [Text]
+[2] E. Tira\[Dash]Thompson, prod. Denavit-Hartenberg Reference Frame Layout[Video]. (Jun 15, 2016) www.youtube.com/watch?v=rA9tm0gTln8.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+DH parameters
+
+### [Item]
+Denavit-Hartenberg parameters
+
+### [Item]
+3-link robot
+
+### [Item]
+SCARA
+
+### [Item]
+cylindrical robot
+
+### [Item]
+manipulator
+
+### [Item]
+planar robot
+
+### [Item]
+anthropomorphic arm
+
+### [Item]
+dexterous workspace
+
+### [Item]
+reachable workspace
+
+### [Item]
+homogeneous transformation matrix
+
+### [Item]
+coordinate frames
+
+### [Item]
+serial robot
+
+### [Item]
+kinematic chain
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Forward Kinematics
+
+### [Text]
+Inverse Kinematics
+
+### [Text]
+Forward and Inverse Kinematics of the SCARA Robot
+
+### [Text]
+Inverse Kinematics for a Robot Manipulator with Six Degrees of Freedom
+
+### [Text]
+Model of an Industrial Robot Arm
+
+### [Text]
+Rotation Matrix
+
+### [Text]
+Translation
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2016-06-16
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

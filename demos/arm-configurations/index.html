@@ -1,0 +1,109 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstration by Mohammad Sultan and Aaron T. Becker
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Common Robot Arm Configurations</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <script src="../../shared/requirements.js" data-needs-webgl2></script>
+  <script type="importmap">{ "imports": { "three": "../../vendor/three/three.module.js", "three/addons/": "../../vendor/three/addons/" } }</script>
+  <style>
+    /* ControlPlacement -> Left: the controls in one column at the left, the picture and H in a centred column right */
+    .manipulate .controls { min-width: 0; max-width: 290px; gap: 6px; }
+    #controls .ctl-slider { flex-direction: row; align-items: center; gap: 8px; flex-wrap: wrap; }
+    #controls .ctl-anim { flex-basis: 100%; padding-left: 3em; }
+    #controls .ctl-label { min-width: 2.2em; text-align: right; }
+    #controls .ctl-slider .ctl-field { width: 3.6em; }
+    #grid .ctl-label { font-style: normal; }
+    #grid .ctl-label i { font-family: "Times New Roman", serif; font-size: 1.05rem; }
+    .ac-gap { height: 10px; }
+    #show .ctl-check { flex-direction: row-reverse; justify-content: flex-end; gap: 8px; }
+    .ac-caption { font-size: 0.9rem; margin-top: 4px; }
+    #graphic { flex: 1 1 440px; max-width: 470px; }
+    .ac-pane { border: 1px solid #bbb; background: #fff; padding: 6px 4px 10px; }
+    .ac-view { position: relative; width: 420px; max-width: 100%; margin: 0 auto; }
+    .dh-table { border-collapse: collapse; margin: 6px 0 10px; font-size: 0.85rem; }
+    .dh-table td { border: 1px solid #000; padding: 1px 5px; text-align: center; }
+    .h-line { display: flex; align-items: center; justify-content: center; gap: 2px; margin-top: 8px; font-size: 1rem; flex-wrap: wrap; }
+    .h-matrix { border-collapse: collapse; margin: 0 2px; }
+    .h-matrix td { padding: 1px 5px; text-align: left; }
+    .h-matrix td.last-col { border-left: 1.5px solid #000; }
+    .h-matrix tr.last-row td { border-top: 1.5px solid #000; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Common robot arm configurations</div>
+    <h1 class="demo-title">Common Robot Arm Configurations</h1>
+
+    <section class="manipulate" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls">
+        <div id="grid" aria-label="joint variables"></div>
+        <div class="ac-gap"></div>
+        <div id="grip"></div>
+        <div class="ac-gap"></div>
+        <div id="show"></div>
+        <div class="ac-gap"></div>
+        <div class="ac-caption">DH parameters for robot arm</div>
+        <div id="popup"></div>
+        <table class="dh-table" id="dh-table" data-testid="dh-table" aria-label="DH table of the chosen robot"></table>
+      </div>
+      <div class="graphic" id="graphic" data-testid="graphic">
+        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser with WebGL 2.</div></noscript>
+        <div class="ac-pane">
+          <div class="ac-view" id="view"></div>
+          <div class="h-line" id="h-line" aria-label="end-effector transform H">
+            <span><i>H</i> = TransformationFunction[(</span>
+            <table class="h-matrix" id="h-matrix" data-testid="h-matrix"></table>
+            <span>)]</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <p class="caption">Robot manipulators can be concisely described by a convention called the Denavit–Hartenberg
+      parameters (DH parameters) to assign one variable and three parameters to describe the distance and angular offset
+      between each joint. This Demonstration allows you to choose an arbitrary robot specified by DH parameters and animate
+      the degrees of freedom.</p>
+
+    <details class="details" data-testid="details">
+      <summary>Details</summary>
+      <p>This Demonstration creates a serial-link robot arm with some common configurations. You can manipulate each joint
+        using the sliders.</p>
+      <p>Degrees of freedom (DOF) is the number of joints that the robot has. The DOF is equal to the dimension of the
+        robot's configuration space.</p>
+      <p>The DH parameters are link length <i>r</i>, link twist α, link offset <i>d</i> and joint angle θ. These four
+        parameters are associated with link <i>i</i> and joint <i>i</i>.</p>
+      <p>Snapshot 1: arm with default values</p>
+      <p>Snapshot 2: arm after changing grip value and turning off "show robot"</p>
+      <p>Snapshot 3: planar elbow robot arm</p>
+      <p>Snapshot 4: elbow robot arm</p>
+      <p>Snapshot 5: CNC robot arm</p>
+      <p>References:<br>
+        [1] J. Nethery, M. W. Spong, M. Sultan and A. T. Becker. "Robotica." (Jun 27, 2017)
+        github.com/RoboticSwarmControl/robotica.<br>
+        [2] M. W. Spong, S. Hutchinson and M. Vidyasagar, <i>Robot Modeling and Control</i>, Hoboken: John Wiley and Sons,
+        2006.</p>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. Drag in the picture to rotate it. Each frame shows its
+      <i>x</i> (blue), <i>y</i> (green) and <i>z</i> (red) axes. Click a joint slider and use the arrow keys for single
+      steps (θ* in steps of π/32, <i>d</i>* in steps of 1/20). All computation runs in your browser.</p>
+    <div class="credits" data-testid="credits">
+      Adapted from <a href="https://demonstrations.wolfram.com/CommonRobotArmConfigurations/">"Common Robot Arm Configurations"</a>
+      by Mohammad Sultan and Aaron T. Becker, Wolfram Demonstrations Project (published June 28, 2017), licensed
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+      This JavaScript/WebGL translation by Tico Hannan (© 2026; produced with an AI code-generation tool) is released under the
+      same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

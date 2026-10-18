@@ -2,7 +2,7 @@
 
 **Live site:** <https://ticohannan.github.io/mathematica-web-ports/> · **Source:** <https://github.com/ticohannan/mathematica-web-ports>
 
-Twenty Mathematica `Manipulate` demonstrations re-implemented as a **static website**:
+Twenty-six Mathematica `Manipulate` demonstrations re-implemented as a **static website**:
 plain HTML + JavaScript (ES modules, no build step), SVG for 2D, three.js/WebGL for 3D.
 
 | Demo | Folder | Rendering | Interaction |
@@ -27,11 +27,19 @@ plain HTML + JavaScript (ES modules, no build step), SVG for 2D, three.js/WebGL 
 | Measuring Distance and Orientation Using Camera and Lasers | `demos/camera-lasers/` | SVG | drag the object, orientation dial, laser spacing and focal length sliders |
 | Minkowski Sum of Convex Robot and Obstacle | `demos/minkowski-sum/` | SVG | drag 10 vertex locators, robot/obstacle edges, show normals, move animation |
 | Configuration Space for Four-Bar Linkage | `demos/four-bar-linkage/` | SVG | drag in the configuration space, separation slider, link-length interval slider |
+| Denavit-Hartenberg Parameters for a Three-Link Robot | `demos/dh-parameters/` | WebGL 2 | joint type setters, θ, d, r, α sliders for three joints, grip slider |
+| Chart for a Torus | `demos/torus-chart/` | WebGL 2 + SVG dials | Torus → Plane slider with animation, two angle dials, rotate the 3D picture |
+| Manipulability Ellipsoid of a Robot Arm | `demos/manipulability-ellipsoid/` | WebGL 2 + SVG dials | three joint-angle dials (π/32 steps, arrow keys), rotate the 3D picture |
+| Common Robot Arm Configurations | `demos/arm-configurations/` | WebGL 2 | joint sliders (2–6, per robot), grip slider, show robot, popup of nine DH-table robots, DH table and end-effector transform H |
+| Robot Manipulator Workspaces | `demos/manipulator-workspaces/` | WebGL 2 | robot popup menu (14 robots), three joint sliders, three range (interval) sliders, rotate the 3D picture |
+| Probabilistic Roadmap Method in 3D | `demos/prm-3d/` | WebGL 2 | θ₁–θ₃ sliders, two sphere pads with height sliders, show C-obstacles, add 100 vertices, restart, new goal, radius, progress; rotate both 3D pictures |
 
-The apps came in three groups: the first three (motion planning, rotations, Euler angles); seven more from the
+The apps came in four groups: the first three (motion planning, rotations, Euler angles); seven more from the
 seven-link PRM to robot singularities, added in v0.1.12 as further proofs of concept (developed first in a separate,
-unpublished repository and added here in one commit); and the last ten, from two-link kinematics to the four-bar
-linkage, added in v0.1.15 as "batch A" (designed together, with common modules in `demos/common/`).
+unpublished repository and added here in one commit); ten, from two-link kinematics to the four-bar linkage, added in
+v0.1.15 as "batch A" (designed together, with common modules in `demos/common/`); and the last six, the 3D apps from
+Denavit-Hartenberg parameters to the PRM in 3D, added in v0.1.16 as "batch B" (sharing the DH-family modules moved
+from robot singularities to `demos/common/`).
 
 ## Where the code runs
 

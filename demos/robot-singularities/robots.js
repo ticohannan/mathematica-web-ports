@@ -6,12 +6,13 @@
 // o3coords (forward kinematics), the accumulated joint transforms Td, the hand-written linear and angular
 // velocity Jacobians myJacob / myJacobAngular, and the joint-variable handling of the Manipulate body.
 // No DOM. Names and order of operations follow the original (docs/original-source/robot-singularities.txt).
-import { mLess, mGreater, chop } from '../../shared/mma.js';
+// The generic DH chain (DOF, joints, dhTransform, jointTransform, makeO3coords, computeAd, computeTd) moved unchanged
+// to demos/common/dh-chain.js (v0.1.16, DH-family move) and is re-exported here, so imports and tests are unchanged.
+import { mLess, mGreater } from '../../shared/mma.js';
+
+export { DOF, joints, dhTransform, jointTransform, makeO3coords, computeAd, computeTd } from '../common/dh-chain.js';
 
 const { sin: Sin, cos: Cos, PI } = Math;
-
-/** dof (the Manipulate's {{dof, 3}, ..., ControlType -> None}) */
-export const DOF = 3;
 
 /** The popup menu {1 -> "planar robot arm", ...} (1-based like iType). */
 export const TYPE_NAMES = [
@@ -51,64 +52,6 @@ export const TYPES = [
 
 /** Type of robot iType (1..16), as the body's `Type = {...}[[iType]]`. */
 export const typeOf = (iType) => TYPES[iType - 1];
-
-/** Table[{jointtype[i], a[i], alpha[i], d[i], theta[i]} = Type[[;;, i]], {i, 1, dof}] (0-based array of joints). */
-export function joints(Type) {
-  const out = [];
-  for (let i = 0; i < DOF; i++) out.push({ jointtype: Type[0][i], a: Type[1][i], alpha: Type[2][i], d: Type[3][i], theta: Type[4][i] });
-  return out;
-}
-
-// ---- dhTransform ----------------------------------------------------------------------------------
-// Mathematica evaluates Cos/Sin of the table's exact angles (Pi/2, -Pi/2, Pi, 0) exactly; JS would give
-// 6.1e-17 for Math.cos(Math.PI / 2). The table constants are exactly these doubles, so they are recognised
-// and given exact values. Joint variables (params, machine reals in the original too) use Math.cos/sin.
-const EXACT = new Map([[0, [1, 0]], [PI / 2, [0, 1]], [-PI / 2, [0, -1]], [PI, [-1, 0]], [-PI, [-1, 0]]]);
-const cosSinConst = (x) => EXACT.get(x) ?? [Cos(x), Sin(x)];
-
-const mul4 = (A, B) => A.map((row) => [0, 1, 2, 3].map((j) => row[0] * B[0][j] + row[1] * B[1][j] + row[2] * B[2][j] + row[3] * B[3][j]));
-const rotZ = ([c, s]) => [[c, -s, 0, 0], [s, c, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]];
-const rotX = ([c, s]) => [[1, 0, 0, 0], [0, c, -s, 0], [0, s, c, 0], [0, 0, 0, 1]];
-const trans = (x, y, z) => [[1, 0, 0, x], [0, 1, 0, y], [0, 0, 1, z], [0, 0, 0, 1]];
-
-/**
- * dhTransform[d, r, Theta, Alpha] := RotationTransform[Theta, {0,0,1}] . TranslationTransform[{0,0,d}] .
- *   TranslationTransform[{r,0,0}] . RotationTransform[Alpha, {1,0,0}]
- * Returns the 4x4 matrix (row-major). `thetaIsConst` marks a theta taken from the Type table (exact in the original).
- */
-export function dhTransform(d, r, Theta, Alpha, thetaIsConst = false) {
-  const ct = thetaIsConst ? cosSinConst(Theta) : [Cos(Theta), Sin(Theta)];
-  return mul4(mul4(mul4(rotZ(ct), trans(0, 0, d)), trans(r, 0, 0)), rotX(cosSinConst(Alpha)));
-}
-
-/** The transform of joint i (0-based) for joint value v: If["p" == jointtype[i], dhTransform[v, a, theta, alpha], dhTransform[d, a, v, alpha]] */
-export function jointTransform(J, v) {
-  return J.jointtype === 'p' ? dhTransform(v, J.a, J.theta, J.alpha, true) : dhTransform(J.d, J.a, v, J.alpha);
-}
-
-/**
- * o3coords[p1_, p2_, p3_] = Module[{p = {p1,p2,p3}}, (Dot @@ Table[<joint transform>, {i, 1, dof}])[[1, 1;;3, 4]]]
- * (forward kinematics: the end point of the chain). Returns a function of (p1, p2, p3).
- */
-export function makeO3coords(Type) {
-  const J = joints(Type);
-  return (p1, p2, p3) => {
-    const p = [p1, p2, p3];
-    let M = jointTransform(J[0], p[0]);
-    for (let i = 1; i < DOF; i++) M = mul4(M, jointTransform(J[i], p[i]));
-    return [M[0][3], M[1][3], M[2][3]];
-  };
-}
-
-/** Ad = Table[<joint transform of params[[i]]>, {i, 1, dof}] */
-export const computeAd = (Type, params) => joints(Type).map((J, i) => jointTransform(J, params[i]));
-
-/** Td[1] = Ad[[1]]; Td[i] = Chop[Td[i-1] . Ad[[i]]] (i = 2..dof). Returns [Td1, Td2, Td3] (0-based array). */
-export function computeTd(Ad) {
-  const Td = [Ad[0]];
-  for (let i = 1; i < DOF; i++) Td.push(chop(mul4(Td[i - 1], Ad[i])));
-  return Td;
-}
 
 // ---- the joint variables --------------------------------------------------------------------------------
 /**

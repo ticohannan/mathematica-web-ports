@@ -13,7 +13,7 @@ import { harnessCase, captureOf, stepRecord, toJS } from '../support/harness-jso
 import {
   INITIAL, initialState, cloneState, evaluate, scene, VAR_NAMES, svd2, pseudoInverse2, matMul,
 } from '../../demos/two-link-kinematics/model.js';
-import { matrixRank } from '../../demos/robot-singularities/svd3.js';
+import { matrixRank } from '../../demos/common/svd3.js';
 import { normalizeCR } from '../../shared/mma-extra.js';
 
 const FIXTURE = 'tests/golden/two-link-kinematics.original-states.json';

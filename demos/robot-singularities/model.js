@@ -2,61 +2,22 @@
 // SPDX-FileCopyrightText: Original Wolfram Demonstration by Aaron T. Becker and Yitong Lu
 // SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // demos/robot-singularities/model.js — one evaluation of the Manipulate body of "Robot Singularities in
-// Three-Link Manipulators" (pure: no DOM, no three.js): the initialisation functions drawZArrow,
-// drawCoordAxes, drawJoint, drawWristCenter as Graphics3D data, the Manipulate variables and their initial
-// values, and `evaluate`, which returns the two graphics (workspace, phase space) as data.
-import { mUnequal, chop } from '../../shared/mma.js';
+// Three-Link Manipulators" (pure: no DOM, no three.js): the Manipulate variables and their initial values, the
+// robot drawing, and `evaluate`, which returns the two graphics (workspace, phase space) as data. The
+// initialisation functions drawZArrow, drawCoordAxes, drawJoint, drawWristCenter live in demos/common/robot-draw.js.
+import { chop } from '../../shared/mma.js';
 import {
   typeOf, joints, makeO3coords, wrapParams, computeAd, computeTd, jacobianFor, phaseOpt, defaultParams, DOF,
 } from './robots.js';
 import { singularspace3D, singularphasespace3D } from './singular-sets.js';
 import { manipEllip } from './svd3.js';
-import {
-  Graphics3D, Show, GeometricTransformation, Rotate, Line, Cuboid, Cylinder, Sphere, Point, PointSize, Opacity,
-  Thick, Red, Blue, Green, Gray, Orange, LightBlue, LightBrown, flatten, primitiveBounds,
-} from './g3d.js';
-
-const π = Math.PI;
+import { Graphics3D, Show, GeometricTransformation, Sphere, Opacity, Blue, LightBlue, flatten, primitiveBounds } from './g3d.js';
+import { drawZArrow, drawCoordAxes, drawJoint, drawWristCenter, GROUND } from '../common/robot-draw.js';
 
 // ---- Initialization code ---------------------------------------------------------------------------------
-/** drawZArrow[jr_] := Line[{{{0,0,0},{0,0,2jr}}, {{0,0,2jr},{1/32,0,3/2jr}}, ... 4 head strokes}] */
-export const drawZArrow = (jr) => [
-  Line([[0, 0, 0], [0, 0, 2 * jr]]),
-  Line([[0, 0, 2 * jr], [1 / 32, 0, (3 / 2) * jr]]),
-  Line([[0, 0, 2 * jr], [-1 / 32, 0, (3 / 2) * jr]]),
-  Line([[0, 0, 2 * jr], [0, 1 / 32, (3 / 2) * jr]]),
-  Line([[0, 0, 2 * jr], [0, -1 / 32, (3 / 2) * jr]]),
-];
-
-/** drawCoordAxes[jr_] := {Thick, {Red, drawZArrow[jr]}, {Blue, Rotate[drawZArrow[jr], π/2, {0,1,0}]}, {Green, Rotate[drawZArrow[jr], -π/2, {1,0,0}]}} */
-export const drawCoordAxes = (jr) => [Thick,
-  [Red, drawZArrow(jr)],
-  [Blue, Rotate(drawZArrow(jr), π / 2, [0, 1, 0])],
-  [Green, Rotate(drawZArrow(jr), -π / 2, [1, 0, 0])]];
-
-/**
- * drawJoint[j_, d_, r_, Theta_] := Module[{jr = 1/5, ar = 1/20, pr = 1/7, vr = 1/6}, {
- *   drawCoordAxes[jr],
- *   {Gray, If["p" == j, Cuboid[{-ar,-ar,-jr-.01}, {ar,ar,d+.01}], Cylinder[{{0,0,Min[-ar,d-jr]-.01}, {0,0,Max[ar,d]+.01}}, ar]]},
- *   {LightBlue, If[j == "p", {Cuboid[{-jr,-jr,-jr}, {jr,jr,jr-.1}], Cuboid[{-jr,-jr,jr}, {jr,jr,jr+.05}]}, {Cylinder[{{0,0,-jr-.05}, {0,0,jr+.05}}, .7 jr]}]},
- *   If[r != 0, Rotate[{Gray, Cuboid[{-ar,-ar,d-ar}, {r,ar,d+ar}]}, Theta, {0,0,1}]]}]
- */
-export function drawJoint(j, d, r, Theta) {
-  const jr = 1 / 5, ar = 1 / 20;
-  return [
-    drawCoordAxes(jr),
-    [Gray, j === 'p'
-      ? Cuboid([-ar, -ar, -jr - 0.01], [ar, ar, d + 0.01])
-      : Cylinder([[0, 0, Math.min(-ar, d - jr) - 0.01], [0, 0, Math.max(ar, d) + 0.01]], ar)],
-    [LightBlue, j === 'p'
-      ? [Cuboid([-jr, -jr, -jr], [jr, jr, jr - 0.1]), Cuboid([-jr, -jr, jr], [jr, jr, jr + 0.05])]
-      : [Cylinder([[0, 0, -jr - 0.05], [0, 0, jr + 0.05]], 0.7 * jr)]],
-    mUnequal(r, 0) ? Rotate([Gray, Cuboid([-ar, -ar, d - ar], [r, ar, d + ar])], Theta, [0, 0, 1]) : null,
-  ];
-}
-
-/** drawWristCenter[r_] := Module[{jr = 1/5, ar = 1/20}, {drawCoordAxes[jr], {PointSize[.02], Orange, Point[{0,0,0}]}}] */
-export const drawWristCenter = () => [drawCoordAxes(1 / 5), [PointSize(0.02), Orange, Point([0, 0, 0])]];
+// drawZArrow, drawCoordAxes, drawJoint (variant 'rs', the default), drawWristCenter and the ground moved unchanged
+// to demos/common/robot-draw.js (v0.1.16, DH-family move); re-exported here so imports and tests are unchanged.
+export { drawZArrow, drawCoordAxes, drawJoint, drawWristCenter };
 
 // ---- Manipulate variables -----------------------------------------------------------------------------------
 /**
@@ -88,8 +49,6 @@ export function selectType(st, iType) {
   if (iType === st.iType) return { ...st, params: st.params.slice() };
   return { ...st, iType, params: defaultParams(typeOf(iType)) };
 }
-
-const GROUND = () => [LightBrown, Cylinder([[0, 0, -2 / 5], [0, 0, -1 / 5 - 1 / 20]], 2.2)];
 
 /** The robot drawing of the workspace (If[showRobot, {...}]) for joint values params. */
 export function robotGraphics(Type, params, Td) {

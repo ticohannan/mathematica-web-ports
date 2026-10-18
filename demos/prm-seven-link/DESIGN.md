@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.15 |
+| Code version: | 0.1.16 |
 | Document revision | 6 (2026-10-17) — §11 Errors in the original (R-C); checklist items as operator procedures (R-B) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Probabilistic Roadmap Method with Seven-Link Articulated Robot", contributed by Aaron T. Becker and Yitong Lu, published April 29, 2020 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ProbabilisticRoadmapMethodWithSevenLinkArticulatedRobot/>. Readable source: [`docs/original-source/prm-seven-link.txt`](../../docs/original-source/prm-seven-link.txt); snapshots: `docs/original-snapshots/prm-seven-link-*.png` |
@@ -183,6 +183,7 @@ No open proposal (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)).
 | 4 | v0.1.13 | 2026-10-12 | P-SL-01 implemented: collision beep (F-SL-14, `shared/beep.js`) with a "mute beep" checkbox (A-SL-07, inventory `check-mute`); D-SL-02 reworded (the tone differs from the system alert sound); K-SL-02 resolved by the owner's observation (O-SL-03), no change to the model; M-SL-03 reworded |
 | 5 | v0.1.14 | 2026-10-16 | golden tests on the five snapshot states (`tests/golden/prm-seven-link.original-states.json`, `tools/extract_state.py --snapshots`): fixed points, link lengths, status lines of the pictures; note N-SL-03; no change to the app |
 | 6 | v0.1.15 | 2026-10-17 | §11 Errors in the original added (owner rule R-C); Mathematica checklist items rewritten as operator procedures (R-B); standalone bundle (owner rule R-A): §6.1, A-SL-08, tools/bundle-app.mjs; review fixes |
+| 7 | v0.1.16 | 2026-10-18 | version number only (batch B release); no change to this app |
 
 ## 10. Improvements to consider (not implemented)
 

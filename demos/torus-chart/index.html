@@ -1,0 +1,87 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstration by Aaron T. Becker and Haoran Zhao
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chart for a Torus</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <script src="../../shared/requirements.js" data-needs-webgl2></script>
+  <script type="importmap">{ "imports": { "three": "../../vendor/three/three.module.js", "three/addons/": "../../vendor/three/addons/" } }</script>
+  <style>
+    /* ControlPlacement -> Left: the λ row, then the θ and ϕ dials (label left of each); the picture (ImageSize 350) right */
+    .manipulate .controls { min-width: 0; max-width: 300px; gap: 12px; }
+    #controls .ctl-slider { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 6px; }
+    #controls .ctl-slider .ctl-anim { flex-basis: 100%; }
+    #controls .ctl-slider .ctl-label { white-space: nowrap; }
+    #controls .ctl-slider input[type=range] { flex: 0 0 100px; width: 100px; min-width: 100px; }
+    #controls .ctl-slider .ctl-field { width: 3.6em; }
+    #controls .ctl-dial .ctl-label { font: italic 16px "Times New Roman", serif; min-width: 1em; }
+    #graphic.tc-graphic { flex: 0 1 372px; max-width: 372px; padding: 8px 10px 10px; }
+    .tc-plotlabel { text-align: center; font: 12px system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: rgb(102, 102, 102); margin: 2px 0 0; }
+    .tc-view { position: relative; width: 350px; max-width: 100%; margin: 0 auto; }
+    .lbl.tc-tick { font: 10.5px system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #000; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Chart for a torus</div>
+    <h1 class="demo-title">Chart for a Torus</h1>
+
+    <section class="manipulate" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="graphic tc-graphic" id="graphic" data-testid="graphic">
+        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser with WebGL 2.</div></noscript>
+        <div class="tc-plotlabel" data-testid="plot-label"></div>
+        <div class="tc-view" id="view"></div>
+      </div>
+    </section>
+
+    <p class="caption">A torus (more precisely, a 2-torus) has the shape of the outer surface of a donut. A torus can be
+      parametrized by two angular variables (<i>θ</i>,<i>ϕ</i>), each in [0,2π). A dissected torus can be pictured as
+      equivalent to a rectangle in the two-dimensional Euclidean plane ℝ<sup>2</sup>, with opposite pairs of edges glued
+      together. Locally, the 2-torus resembles ℝ<sup>2</sup>, but there is no global continuous mapping since the Euclidean
+      plane extends to infinity. This Demonstration shows possible mappings from a 2-torus to ℝ<sup>2</sup>. The operation
+      necessarily introduces discontinuities, where small changes of <i>θ</i> or <i>ϕ</i> create large jumps in the planar
+      configuration. Two rotary dials determine a point (<i>θ</i>,<i>ϕ</i>) (highlighted in green) in the course of a
+      transformation.</p>
+
+    <details class="details" data-testid="details">
+      <summary>Details</summary>
+      <p>The 2-torus (or <i>T</i><sup>2</sup>) is a manifold that can be embedded in ℝ<sup>3</sup>, as illustrated by the 3D
+        plot. A manifold is a topological space that locally resembles <i>n</i>-dimensional Euclidean space
+        ℝ<sup><i>n</i></sup> in a neighborhood of each point. Locally, the neighborhood of any point on <i>T</i><sup>2</sup>
+        resembles one in ℝ<sup>2</sup> (the Euclidean plane).</p>
+      <p>Globally, a manifold can differ from a Euclidean space; for example, the surface of the sphere <i>S</i><sup>2</sup>
+        is not topologically equivalent to a Euclidean space. Likewise the surface of a torus. As shown in this
+        Demonstration, the torus can be split along its longest circumference to form a cylinder, and then this cylinder can
+        be opened up into a rectangle. Both operations introduce discontinuities where small changes of <i>θ</i> or
+        <i>ϕ</i> create large jumps in the configuration.</p>
+      <p>In the context of manifolds, these mappings are called charts. To avoid discontinuities, you can switch from one
+        chart to another, much like a pilot can switch from a map of North America to a map of the Pacific when flying from
+        New York to Tokyo. A collection of overlapping charts is called an atlas.</p>
+      <p>A fun problem: what is the minimum number of charts needed to construct a complete atlas of the torus?</p>
+      <p>Related links of the original: Compact Manifold; Torus; Topological Space; Robot Motion with Obstacles; Forward and
+        Inverse Kinematics of the SCARA Robot; Between Sphere and Torus; Configuration; Manifold; Embedding.</p>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. Press or drag in a dial to set an angle (the locator
+      stays on the rim); arrow keys turn a focused dial (Shift: five times as far). Drag in the 3D picture to rotate it.
+      All computation runs in your browser.</p>
+    <div class="credits" data-testid="credits">
+      Adapted from <a href="https://demonstrations.wolfram.com/ChartForATorus/">"Chart for a Torus"</a>
+      by Aaron T. Becker and Haoran Zhao, Wolfram Demonstrations Project (published May 2, 2016), licensed
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+      This JavaScript/WebGL translation by Tico Hannan (© 2026; produced with an AI code-generation tool) is released under the
+      same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
