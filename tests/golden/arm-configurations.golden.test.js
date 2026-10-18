@@ -13,7 +13,7 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import { parseLexical } from '../../tools/lib/json-lexical.mjs';
-import { harnessCase, captureOf, toJS, isMachineReal } from '../support/harness-json.js';
+import { harnessCase, captureOf, toJS, isMachineReal, exactDouble, sameDouble, g3dPrimitiveDifferences } from '../support/harness-json.js';
 import {
   ROBOTS, initialState, evaluate, stateFromSettings, valueText, fixedCamera, groundWidthPt, piValue, fracValue, exactInt,
   machine, origin,
@@ -182,7 +182,7 @@ function replay(scenario) {
 const matrixOf = (rec) => {
   const v = toJS(rec);
   if (Array.isArray(v)) return v;
-  if (v && v.head === 'TransformationFunction') return toJS(v.args[0]);
+  if (v && v.h === 'TransformationFunction') return v.a[0]; // HW-45 compound encoding {"h": head, "a": args}
   throw new Error(`not a transform: ${JSON.stringify(v).slice(0, 80)}`);
 };
 const closeM = (A, B, tol, what) => A.forEach((r, i) => r.forEach((x, j) => expect(Math.abs(x - B[i][j]), `${what}[${i}][${j}]`).toBeLessThanOrEqual(tol)));
@@ -194,6 +194,55 @@ const precisionKind = (p) => {
   return 'other';
 };
 
+/** a recorded matrix entry: its double and whether it is a machine real (HW-45: exact numbers are {"wl", "n"}) */
+const entryOf = (e) => ({ d: exactDouble(e), machine: isMachineReal(e) });
+/**
+ * Td entries against the record: machine entries bit for bit (Mathematica's packed Dot, mul4Fma), exact entries
+ * (the port computes them in doubles, D-AC-05) within 1e-15; the port's kind ('machine' or exact) as recorded.
+ */
+function sameTd(rec, port, kinds, what) {
+  rec.forEach((row, i) => row.forEach((e, j) => {
+    const r = entryOf(e);
+    expect(kinds[i][j] === 'machine', `${what}[${i + 1},${j + 1}] machine?`).toBe(r.machine);
+    if (r.machine) expect(sameDouble(port[i][j], r.d), `${what}[${i + 1},${j + 1}] ${port[i][j]} vs ${r.d}`).toBe(true);
+    else expect(Math.abs(port[i][j] - r.d), `${what}[${i + 1},${j + 1}]`).toBeLessThanOrEqual(1e-15);
+  }));
+}
+/** the 4 x 4 grid of number strings of the recorded ToBoxes[MatrixForm[N[Chop[Td[dof]], 2]]] ("-" RowBoxes joined) */
+function boxGrid(rec) {
+  const txt = (b) => (typeof b === 'string' ? b : b.h === 'RowBox' ? b.a[0].map(txt).join('') : JSON.stringify(b));
+  const outer = rec.a[0]; // TagBox[RowBox[{"TransformationFunction", "[", RowBox[{"(", TagBox[GridBox[…], …], ")"}], "]"}], …]
+  expect(outer.a[0][0]).toBe('TransformationFunction');
+  const grid = outer.a[0][2].a[0][1].a[0];
+  expect(grid.h).toBe('GridBox');
+  return grid.a[0].map((row) => row.map(txt));
+}
+/**
+ * What the front end shows for a number box string (independent of the port, R-16): a machine real "x`" with six
+ * significant digits, trailing zeros dropped, the point kept ("0.`" -> "0.", "0.0980171403295606`" -> "0.0980171");
+ * a precision-2 real "x`2." with two significant digits ("1.`2." -> "1.0"); an integer as written. null when the
+ * digits alone do not decide it (a two-digit tie such as "2.35`2.", K-AC-04, or another precision, P-AC-01).
+ */
+function shownText(box) {
+  if (/^-?\d+$/.test(box)) return box;
+  let m = box.match(/^(-?[\d.]+)`$/);
+  if (m) {
+    const x = Number(m[1]);
+    if (x !== 0 && Math.abs(x) < 1e-5) return null;
+    let t = x.toPrecision(6);
+    if (t.includes('e')) return null;
+    t = t.replace(/0+$/, '');
+    return t;
+  }
+  m = box.match(/^(-?)(\d+)\.(\d*)`2\.$/);
+  if (m) {
+    const digits = (m[2] + m[3]).replace(/^0+/, '');
+    if (digits.length > 2 && digits.slice(2) === '5') return null; // a decimal tie: the front end's rounding decides
+    return Number(`${m[1]}${m[2]}.${m[3]}`).toPrecision(2);
+  }
+  return null;
+}
+
 function check(ctx, id, extra = () => {}) {
   const h = harnessCase('arm-configurations', id);
   if (h.status !== 'ok') return ctx.skip(h.reason);
@@ -201,8 +250,17 @@ function check(ctx, id, extra = () => {}) {
   const last = runs[runs.length - 1].view;
   for (const name of h.scenario.capture) {
     if (name === 'dof') expect(toJS(captureOf(h.record, name))).toBe(last.dof);
-    if (name === 'wl:Table[Td[i],{i,1,dof}]') toJS(captureOf(h.record, name)).forEach((T, i) => closeM(last.Td[i], matrixOf(T), 1e-15, `Td[${i + 1}]`));
-    if (name === 'wl:Td[dof]') closeM(last.H, matrixOf(captureOf(h.record, name)), 1e-15, 'Td[dof]');
+    if (name === 'wl:Table[Td[i],{i,1,dof}]') captureOf(h.record, name).forEach((T, i) => { expect(T.h).toBe('TransformationFunction'); sameTd(T.a[0], last.Td[i], last.TdKinds[i], `Td[${i + 1}]`); });
+    if (name === 'wl:Td[dof]') { const T = captureOf(h.record, name); expect(T.h).toBe('TransformationFunction'); sameTd(T.a[0], last.H, last.HKinds, 'Td[dof]'); }
+    if (name === 'wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]') {
+      const grid = boxGrid(captureOf(h.record, name));
+      let compared = 0;
+      grid.forEach((row, i) => row.forEach((b, j) => {
+        const want = shownText(b);
+        if (want !== null) { compared++; expect(ascii(last.hStrings[i][j]), `H[${i + 1},${j + 1}] (box ${b})`).toBe(want); }
+      }));
+      expect(compared, 'entries decided by the boxes').toBeGreaterThanOrEqual(id === 'H-AC-10' ? 8 : 15);
+    }
     if (name === 'wl:Map[Precision, First[Td[dof]], {2}]') {
       const P = toJS(captureOf(h.record, name));
       P.forEach((row, i) => row.forEach((p, j) => {
@@ -211,7 +269,18 @@ function check(ctx, id, extra = () => {}) {
       }));
     }
     if (name === 'wl:N[Chop[Td[dof]],2]') closeM(last.H, matrixOf(captureOf(h.record, name)), 0.01, 'N[H, 2]');
-    if (name === '%plotRange') closeM(last.box, toJS(captureOf(h.record, name)), 1e-12, 'PlotRange');
+    if (name === '%g3d') {
+      // the Column's Graphics3D: Cuboids, Cylinders and Lines bit for bit (K-AC-10: -1+d-jr-.01 in written order)
+      const [g] = captureOf(h.record, name);
+      expect(g.h).toBe('Graphics3D');
+      expect(g3dPrimitiveDifferences(g.a[0], last.graphic.content).differences).toEqual([]);
+    }
+    if (name === '%plotRange') {
+      // %plotRange is one record per graphic: {head, value, method, tried, storedOption} (HW-50)
+      const recs = captureOf(h.record, name);
+      expect(recs.map((r) => r.head)).toEqual(['Graphics3D']);
+      closeM(last.box, toJS(recs[0].value), 0, 'PlotRange');
+    }
   }
   extra(runs, h, last);
   return undefined;
@@ -247,15 +316,36 @@ describe('arm-configurations golden: Mathematica harness records', () => {
   it('harness "H-AC-07"', (ctx) => check(ctx, 'H-AC-07'));
   it('harness "H-AC-08"', (ctx) => check(ctx, 'H-AC-08'));
   it('harness "H-AC-09"', (ctx) => check(ctx, 'H-AC-09'));
-  it('harness "H-AC-10"', (ctx) => check(ctx, 'H-AC-10'));
+  it('harness "H-AC-10"', (ctx) => check(ctx, 'H-AC-10', (runs, h, last) => {
+    // RECORDED DIFFERENCE (P-AC-01, K-AC-03): N[Chop[Td[dof]], 2] of this exact H does not give two-digit numbers in
+    // 15.0.1: N cannot certify the unsimplified zero H[1,4] (N::meprec, $MaxExtraPrecision = 50) and every
+    // non-integer entry comes back with precision ≈ 51 (shown with ~51 digits), the zero as 0``51.41 (accuracy 51.4).
+    // The port shows two-digit entries and "0" there; matching is proposal P-AC-01.
+    const grid = boxGrid(captureOf(h.record, 'wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]'));
+    expect(grid[0][3]).toBe('0``51.41433341922468');
+    expect(grid[0][0]).toMatch(/^-0\.38268343236508977\d+`51\.0878212339189$/);
+    expect(grid[1][2]).toBe('-1.`52.');
+    expect(captureOf(h.record, '%messages').map((m) => m.name)).toEqual(['N::meprec']);
+    expect(ascii(last.hStrings[0][3])).toBe('0');
+    expect(last.hStrings.map((r) => r.map(ascii))).toEqual([['-0.38', '-0.92', '0', '0'], ['0', '0', '-1.0', '0'], ['0.92', '-0.38', '0', '2.8'], ['0', '0', '0', '1.0']]);
+  }));
   it('harness "H-AC-11"', (ctx) => check(ctx, 'H-AC-11'));
   it('harness "H-AC-12"', (ctx) => check(ctx, 'H-AC-12', (runs, h, last) => {
     expect(last.HKinds.flat().includes('machine')).toBe(false); // exact two-digit display (Q-AC-06)
   }));
-  it('harness "H-AC-13"', (ctx) => check(ctx, 'H-AC-13'));
+  it('harness "H-AC-13"', (ctx) => check(ctx, 'H-AC-13', (runs, h, last) => {
+    // K-AC-04 stays open: the kernel's box is "2.35`2." (N[47/20, 2]); which of "2.3"/"2.4" the front end draws for it
+    // is front-end formatting the record does not contain (manual check M-AC-07). The port shows "2.4".
+    expect(boxGrid(captureOf(h.record, 'wl:ToBoxes[MatrixForm[N[Chop[Td[dof]],2]]]'))[2][3]).toBe('2.35`2.');
+    expect(ascii(last.hStrings[2][3])).toBe('2.4');
+  }));
   it('harness "H-AC-14"', (ctx) => check(ctx, 'H-AC-14', (runs, h) => {
     // K-AC-01: Chop leaves a TransformationFunction unchanged (the port does not chop Td)
-    expect(toJS(captureOf(h.record, 'wl:Chop[Td[dof]] === Td[dof]'))).toEqual({ sym: 'True' });
+    // K-AC-01 resolved: Chop DOES act inside a TransformationFunction (1.*^-17 -> 0), and the matrix stays machine (0.)
+    const c = captureOf(h.record, 'wl:Chop[TransformationFunction[{{1.,0.,0.,1.*^-17},{0.,1.,0.,0.},{0.,0.,1.,0.},{0.,0.,0.,1.}}]]');
+    expect(c.h).toBe('TransformationFunction');
+    expect(isMachineReal(c.a[0][0][3]) && exactDouble(c.a[0][0][3]) === 0).toBe(true);
+    expect(captureOf(h.record, 'wl:Chop[Td[dof]] === Td[dof]')).toBe(true); // True is JSON true (HW-45); nothing to chop here
   }));
   it('harness "H-AC-15"', (ctx) => check(ctx, 'H-AC-15', (runs) => {
     expect(runs[0].view.parts[2]).toEqual([]);

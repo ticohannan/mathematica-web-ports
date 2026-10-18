@@ -6,7 +6,7 @@ import { describe, it, expect } from 'vitest';
 import { parseLexical } from '../../tools/lib/json-lexical.mjs';
 import { scenarioSha256 } from '../../tools/harness/scenario-schema.mjs';
 import { harnessCase, captureOf, stepRecord, randomDraws, exactDouble, realOf, intOf, sameDouble, toJS, isExact,
-  isMachineReal, isInteger, isNotEvaluated, firstDifference, NO_DATA, loadHarnessGolden } from '../support/harness-json.js';
+  isMachineReal, isInteger, isNotEvaluated, isUnassignedLocal, firstDifference, NO_DATA, loadHarnessGolden } from '../support/harness-json.js';
 
 const FILE = parseLexical(`{"schema":"manipulate-harness/scenarios-1","app":"rrt","notebook":"N.nb","scenarios":[
   {"id":"H-RT-01","steps":[{"seed":101},{"press":"1"}],"captureEachStep":true,"capture":["verts","nodestoadd","cost","$RandomDraws"],"why":"w"},
@@ -40,8 +40,9 @@ describe('harnessCase', () => {
   it('throws for an id that is not in the scenario file', () => {
     expect(() => harnessCase('rrt', 'H-RT-77', { scenarioFile: FILE, golden: GOLDEN })).toThrow(/not in tests\/harness/);
   });
-  it('no golden file is committed yet for any app: loadHarnessGolden returns null', () => {
-    expect(loadHarnessGolden('rrt')).toBe(null);
+  it('the accepted golden files of harness run 2 load (16 apps); an app without one gives null', () => {
+    expect(loadHarnessGolden('rrt').schema).toBe('manipulate-harness/results-1');
+    expect(loadHarnessGolden('no-such-app')).toBe(null);
   });
 });
 
@@ -94,5 +95,39 @@ describe('captures and values (HW-45, HW-47)', () => {
   it('random draws for replay (HW-53)', () => {
     expect(randomDraws(record).map((d) => d.fn)).toEqual(['RandomReal']);
     expect(exactDouble(randomDraws(record)[0].value)).toBe(0.7);
+  });
+});
+
+describe('run-2 additions: numeric symbols and typeset strings', () => {
+  it('exactSymbols turns {"sym": "Pi"} into an exact number compared by value; other symbols stay', async () => {
+    const { exactSymbols, firstDifference: fd, sameValue: sv } = await import('../support/harness-json.js');
+    const rec = parseLexical('[[1.5, {"sym": "Pi"}], {"sym": "Automatic"}, {"h": "Rule", "a": [{"sym": "E"}, 2]}]');
+    const x = exactSymbols(rec);
+    expect(x[0][1]).toEqual({ wl: 'Pi', n: 3.141592653589793 });
+    expect(x[1]).toEqual({ sym: 'Automatic' });
+    expect(x[2].a[0]).toEqual({ wl: 'E', n: 2.718281828459045 });
+    expect(fd(x[0], [1.5, Math.PI])).toBe(null);
+    expect(sv(x[0][1], parseLexical('3.141592653589793'))).toBe(true);
+    expect(fd(rec[0], [1.5, Math.PI])).not.toBe(null); // without the conversion the symbol does not compare
+  });
+  it('kernelBoxString writes the linear box syntax with the private-use characters the kernel stores', async () => {
+    const { kernelBoxString } = await import('../support/harness-json.js');
+    expect(kernelBoxString('\\!\\(\\*SuperscriptBox[\\(RRT\\), \\(*\\)]\\)'))
+      .toBe('SuperscriptBox[RRT, *]'); // the RRT H-RT-06 input echo
+    expect(kernelBoxString('RRT')).toBe('RRT');
+  });
+});
+
+describe('isUnassignedLocal (HW-45: an unassigned Module local is recorded as null)', () => {
+  const rec = parseLexical(`{"id":"H-XX-01","resolved":{"resolution":{"kind":"local","name":"resolution","scope":1},"v":{"kind":"manipulate","name":"v"},"r2":{"kind":"local","name":"r2","scope":1}},
+    "capture":{"resolution":null,"v":null,"r2":2.0},"steps":[{"step":1,"capture":{"resolution":3,"v":null,"r2":null}}]}`);
+  it('null of a captured local is "unassigned"; null of a Manipulate variable is Null, not unassigned', () => {
+    expect(isUnassignedLocal(rec, 'resolution')).toBe(true);
+    expect(isUnassignedLocal(rec, 'v')).toBe(false);
+    expect(isUnassignedLocal(rec, 'r2')).toBe(false);
+  });
+  it('per step with { step }', () => {
+    expect(isUnassignedLocal(rec, 'resolution', { step: 1 })).toBe(false);
+    expect(isUnassignedLocal(rec, 'r2', { step: 1 })).toBe(true);
   });
 });

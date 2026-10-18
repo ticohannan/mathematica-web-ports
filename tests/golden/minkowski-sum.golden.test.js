@@ -11,6 +11,7 @@ import fs from 'node:fs';
 import { evaluate, initialSettings, robotAt, MOVE_VIEW, PLOT_RANGE } from '../../demos/minkowski-sum/minkowski.js';
 import { loadStates, plain } from '../../tools/lib/wl-json.mjs';
 import { harnessCase, captureOf, firstDifference, toJS } from '../support/harness-json.js';
+import { sortMma, mLess } from '../../shared/mma.js';
 import { LexNumber } from '../../tools/lib/json-lexical.mjs';
 
 const fx = loadStates('tests/golden/minkowski-sum.original-states.json');
@@ -163,7 +164,7 @@ function portValue(name, st, v) {
     case 'robotNormal': return v.robotNormal.map(entry);
     case 'obstacleNormal': return v.obstacleNormal.map(entry);
     case 'orderOfNormals': return v.orderOfNormals.map((r) => ({ key: r.key, value: [r.angle, ...entry(r)] }));
-    case '%plotRange': return PLOT_RANGE.map((r) => [...r]);
+    case '%plotRange': return [{ head: 'Graphics', value: PLOT_RANGE.map((r) => [...r]), method: 'AbsoluteOptions' }]; // one record per graphic (HW-50)
     default: return undefined; // %g, %messages: not compared here
   }
 }
@@ -172,7 +173,29 @@ function setValue(x) {
   return toJS(x);
 }
 const scenarios = JSON.parse(fs.readFileSync('tests/harness/minkowski-sum.scenarios.json', 'utf8')).scenarios;
-const K_MS_01 = new Set(['H-MS-06', 'H-MS-07', 'H-MS-08', 'H-MS-24']);
+// K-MS-01 (resolved by harness run 2): Sort[…, #1[[1]] < #2[[1]] &] treats the unevaluated `None < x` (and
+// `None < None`) as "in order": the None entry keeps its input place (first when it is the robot's, last when it is
+// the obstacle's), SequencePosition finds an α–β pair and the original draws a sum. The port still draws no sum
+// (D-MS-05); P-MS-01 proposes the original's behaviour. The recorded order is checked against that model (sortMma with
+// a predicate that is true whenever an angle is None) and the port's difference is asserted.
+const K_MS_01 = { 'H-MS-06': 1, 'H-MS-07': 3, 'H-MS-08': 1, 'H-MS-24': 2 }; // recorded pos
+// K-MS-11 (open): the order of the three-vector Plus. The port's rule reproduces 14 of 15 recorded `prev` sums and
+// every recorded `-oc + offset + p` except H-MS-12; the leaves listed here differ from the record by a few ulps.
+const K_MS_11 = {
+  'H-MS-12': ['minkRobotlinelist[0][0][1]', 'minkRobotlinelist[0][1][1]', 'minkRobotlinelist[1][0][1]', 'minkRobotlinelist[1][1][1]',
+    'minkRobotlinelist[2][0][1]', 'minkRobotlinelist[2][1][1]', 'minkObstlinelist[0][0][1]', 'minkObstlinelist[0][1][1]',
+    'minkObstlinelist[1][0][1]', 'minkObstlinelist[1][1][1]', 'minkObstlinelist[2][0][1]', 'minkObstlinelist[2][1][1]'],
+  'H-MS-22': ['shiftedMink[0][1]', 'shiftedMink[1][1]', 'shiftedMink[6][1]', 'minkowskiSidesNormalArrows[0][0][1]',
+    'minkowskiSidesNormalArrows[0][1][1]', 'minkowskiSidesNormalArrows[2][0][1]', 'minkowskiSidesNormalArrows[3][0][1]',
+    'minkowskiSidesNormalArrows[3][1][1]'],
+};
+/** every differing number leaf: [path, recorded, port] */
+function leafDifferences(rec, act, where, out = []) {
+  if (Array.isArray(rec)) { rec.forEach((x, i) => leafDifferences(x, act?.[i], `${where}[${i}]`, out)); return out; }
+  if (rec && typeof rec === 'object' && !isLex(rec)) { for (const k of Object.keys(rec)) leafDifferences(rec[k], act?.[k], `${where}.${k}`, out); return out; }
+  if (firstDifference(rec, act, where)) out.push([where, toJS(rec), act]);
+  return out;
+}
 
 // one golden test per harness scenario; the titles are cited by DESIGN.md ("golden \"minkowski-sum: harness H-MS-nn\"")
 const HARNESS_TITLES = [
@@ -217,19 +240,39 @@ describe('minkowski-sum golden: Mathematica harness', () => {
         if (step.setFrom) st = snap(Number(String(step.setFrom).split(':')[1]));
         ({ state: st, view } = evaluate(st));
       }
-      const posRec = h.record.capture.pos;
-      if (K_MS_01.has(sc.id) && posRec !== undefined) {
-        // K-MS-01: the port finds an α–β pair exactly when Mathematica's pos is an integer
-        expect(view.pos !== null, `${sc.id}: recorded pos ${JSON.stringify(toJS(posRec))}`).toBe(isLex(posRec));
-        if (!isLex(posRec)) return;
+      if (sc.id in K_MS_01) { // P-MS-01: the recorded sum exists, the port draws none
+        const recOrder = decode(captureOf(h.record, 'orderOfNormals')).map((r) => r.key);
+        expect(toJS(captureOf(h.record, 'pos')), `${sc.id}: recorded pos`).toBe(K_MS_01[sc.id]);
+        expect(captureOf(h.record, 'minkowskiPoints').length, `${sc.id}: the original's sum has vertices`).toBeGreaterThan(0);
+        const inputRank = (k) => (k[0] === 'α' ? 0 : 1000) + Number(k.slice(1)); // Join[robot…, obstacle…]
+        const input = view.orderOfNormals.slice().sort((x, y) => inputRank(x.key) - inputRank(y.key));
+        const model = sortMma(input, (x, y) => x.angle === null || y.angle === null || mLess(x.angle, y.angle));
+        expect(model.map((r) => r.key), `${sc.id}: None keeps its input place`).toEqual(recOrder);
+        expect(view.pos, `${sc.id}: the port finds no α–β pair (D-MS-05)`).toBe(null);
+        expect(view.minkowskiPoints).toEqual([]);
+        expect(view.orderOfNormals.map((r) => r.key), `${sc.id}: the port's order`).not.toEqual(recOrder);
+        return;
       }
       const skipped = [];
+      const known = K_MS_11[sc.id] ?? [];
+      const seen = [];
       for (const name of sc.capture) {
         const actual = portValue(name, st, view);
         if (actual === undefined) { skipped.push(name); continue; }
-        const diff = firstDifference(decode(captureOf(h.record, name)), actual, name);
+        let rec = decode(captureOf(h.record, name));
+        if (name === '%plotRange') rec = rec.map(({ head, value, method }) => ({ head, value, method })); // K-MS-07: the value, computed by the kernel
+        if (known.some((k) => k.startsWith(name))) { // K-MS-11: the listed leaves differ by a few ulps, the rest bit for bit
+          for (const [where, r, a] of leafDifferences(rec, actual, name)) {
+            seen.push(where);
+            expect(Math.abs(r - a), `${sc.id}: ${where}`).toBeLessThan(1e-15);
+            expect(r, `${sc.id}: ${where}`).not.toBe(a);
+          }
+          continue;
+        }
+        const diff = firstDifference(rec, actual, name);
         expect(diff, `${sc.id}: ${name}`).toBe(null);
       }
+      expect(seen, `${sc.id}: the K-MS-11 differences`).toEqual(known);
       ctx.task.meta.notCompared = skipped;
     });
   }

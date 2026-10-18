@@ -11,7 +11,8 @@ import {
   hDisplay, origin, isPrismatic, exactRatio,
 } from '../../demos/arm-configurations/model.js';
 import fs from 'node:fs';
-import { computeTd, computeAd } from '../../demos/common/dh-chain.js';
+import { computeTd, computeAd, mul4Fma } from '../../demos/common/dh-chain.js';
+import { chop } from '../../shared/mma.js';
 import { drawJoint, drawGripper } from '../../demos/common/robot-draw.js';
 import { flatten, cuboidCorners } from '../../demos/common/g3d.js';
 import { mmaGrid } from '../../shared/ui.js';
@@ -109,14 +110,14 @@ describe('arm-configurations: chain and exactness', () => {
     }
   });
 
-  it('dhTransform, Ad and Td are those of robot-singularities generalised to dof joints, without Chop', () => {
+  it('dhTransform, Ad and Td are those of robot-singularities generalised to dof joints, machine products are the fused Dot, chopped', () => {
     // robot-singularities' elbow arm through the common code (dof 3, chop on): its Td bit for bit as recorded before
     // the DH-family move (tests/unit/fixtures/robot-singularities.pre-move.json)
     const pre = JSON.parse(fs.readFileSync('tests/unit/fixtures/robot-singularities.pre-move.json', 'utf8'));
     const enc = (x) => JSON.parse(JSON.stringify(x, (k, v) => (Object.is(v, -0) ? '-0' : v)));
     const rob = pre.robots.find((r) => r.iType === 2);
     for (const row of rob.rows) expect(enc(computeTd(computeAd(typeOf(2), row.c, 3))), `elbow arm ${row.c}`).toEqual(row.Td);
-    // the anthropomorphic chain with dof 6 and chop off equals the NumPy product; no entry is replaced by 0
+    // the anthropomorphic chain with dof 6 equals the NumPy product
     const st = initialState();
     [3, -5, 7, 11, -2, 9].forEach((n, i) => { st.params[i] = piValue(n); });
     const v = evaluate(st);
@@ -125,19 +126,19 @@ describe('arm-configurations: chain and exactness', () => {
       [-0.9914077250150849, 0.10116891484001302, -0.08291907772345161, 0.5417294276727035],
       [0.04560704163789395, -0.3267831305322528, -0.943998296265719, 0.01610547675484808]];
     closeM(H3(v), numpyH, 1e-14, 'anthropomorphic');
-    const chopped = computeTd(v.Ad, { chop: true });
-    const unchopped = computeTd(v.Ad, { chop: false });
-    expect(unchopped).toEqual(v.Td);
-    expect(chopped).toEqual(unchopped); // no entry of magnitude below 10^-10 here: Chop would change nothing
-    // a residue that Chop would remove stays (K-AC-02, Q-AC-05)
+    // Td[i] = Chop[Td[i-1].Ad[[i]]] with machine matrices: entry = fma(a3,b3, fma(a2,b2, fma(a1,b1, a0 b0))), then
+    // |x| < 10^-10 -> 0 (K-AC-01: Chop acts, H-AC-14; the fused Dot: H-AC-11)
+    for (let i = 1; i < 6; i++) expect(v.Td[i]).toEqual(chop(mul4Fma(v.Td[i - 1], v.Ad[i])));
+    // the residues of the plain product are chopped: H[2,3] is 0. (was 1.66533×10^-16 before v0.1.17, K-AC-02)
     const r = initialState();
     [-11, -27, 19, 0, -8, 8].forEach((n, i) => { r.params[i] = piValue(n); });
     const vr = evaluate(r);
-    expect(Math.abs(vr.H[1][2])).toBeGreaterThan(0);
-    expect(Math.abs(vr.H[1][2])).toBeLessThan(1e-15);
-    const vrChopped = computeTd(vr.Ad, { chop: true });
-    expect(vrChopped[vrChopped.length - 1][1][2]).toBe(0); // Chop would remove it
-    expect(computeTd(vr.Ad, { chop: false })[vrChopped.length - 1][1][2]).toBe(vr.H[1][2]);
+    const plain = computeTd(vr.Ad, { chop: false });
+    expect(Math.abs(plain[5][1][2])).toBeGreaterThan(0);
+    expect(Math.abs(plain[5][1][2])).toBeLessThan(1e-15);
+    expect(vr.H[1][2]).toBe(0);
+    expect(vr.H[0][2]).toBe(0);
+    expect(ascii(vr.hStrings)[1][2]).toBe('0.');
   });
 
   it('exactness at the reset values: H is exact for the elbow robot and for exact prismatic values, all machine as soon as a machine number enters (1.5, 0.75, 0.5, the 0.5 reset)', () => {
@@ -171,21 +172,17 @@ describe('arm-configurations: chain and exactness', () => {
     expect(residues).toBe(0);
   }, 60000); // 5^6 = 15625 evaluations
 
-  it('per-entry exactness away from the reset values follows the provisional rule of the design (to be replaced by H-AC-18)', () => {
-    // CONDITIONAL (K-AC-09): the provisional rule of DESIGN §6.4. At θ*1 = π/32 Ad[1] holds Cos[π/32] (symbolic), so
-    // the products are formed entry by entry; Ad[4] (d = 0.75) and Ad[6] (d = 0.5) are numeric Dots and all machine, so
-    // every entry of Td[4] … Td[6] gets a machine term: H is all machine under this rule.
+  it('a TransformationFunction with one machine entry is all machine, also away from the reset values (K-AC-09, H-AC-18)', () => {
+    // Mathematica 15.0.1 (H-AC-18, H-AC-11): every Td[i] of the anthropomorphic arm is a machine matrix from Td[1] = Ad[[1]]
+    // on (its d = 1.5), so H is all machine (six-digit display) and its exact-looking entries print "0." and "1."
     const st = initialState();
     st.params[0] = piValue(1);
     const v = evaluate(st);
-    expect(v.AdKinds[0][0][0]).toBe('symbolic');
-    expect(v.AdKinds[0][2][3]).toBe('machine');
-    expect(v.AdKinds[0][3]).toEqual(['zero', 'zero', 'zero', 'plain']);
-    expect(v.TdKinds[2][3]).toEqual(['zero', 'zero', 'zero', 'plain']); // bottom row exact up to Td[3]
-    expect(v.TdKinds[2][0][0]).toBe('symbolic');
-    expect(v.HKinds.flat().every((k) => k === 'machine')).toBe(true);
+    for (const K of [...v.AdKinds.slice(0, 1), ...v.TdKinds]) expect(K.flat().every((k) => k === 'machine')).toBe(true);
     expect(ascii(v.hStrings)[0]).toEqual(['0.995185', '0.0980171', '0.', '1.99037']);
-    // elbow robot (all exact): exact H with symbolic entries at 3π/8, π/4 (two-digit display)
+    expect(ascii(v.hStrings)[3]).toEqual(['0.', '0.', '0.', '1.']);
+    // elbow robot (all exact): exact H with symbolic entries at 3π/8, π/4 (two-digit display; the original shows
+    // ~51-digit numbers here, P-AC-01)
     const e = reset(idx('elbow robot'));
     e.params[1] = piValue(12); e.params[2] = piValue(8);
     const ve = evaluate(e);
@@ -256,10 +253,11 @@ describe('arm-configurations: graphics', () => {
     expect([r12(pr[2].min), r12(pr[2].max)]).toEqual([[-0.2, -0.2, 0.2], [0.2, 0.2, 0.25]]);
   });
 
-  it('prismatic axis -1+d-jr-.01 in COMMON-DECISIONS §7 order: an exact slider value k/20 joins the exact terms, a machine value is added first', () => {
+  it('prismatic axis -1+d-jr-.01 in written order: an exact slider value k/20 joins the exact terms, a machine value is added term by term', () => {
     expect([exactRatio(fracValue(11)), exactRatio(exactInt(1)), exactRatio(machine(0.5)), exactRatio(piValue(3))]).toEqual([[11, 20], [1, 1], null, null]);
     const z0 = (d, dExact) => flatten(drawJoint('p', d, 0, 0, { variant: 'ac', dExact })).filter((p) => p.type === 'cuboid')[0].min[2];
-    // hand-worked doubles: exact 11/20: -1 + 11/20 - 1/5 = -13/20 exactly, then -0.01 + -0.65; machine 0.55: (0.55 + -0.01) + -1.2
+    // hand-worked doubles: exact 11/20: -1 + 11/20 - 1/5 = -13/20 exactly, then -0.01 + -0.65; machine 0.55:
+    // ((-1 + 0.55) + -0.2) + -0.01 (the order H-DH-02/03/07 record; here equal to (0.55 + -0.01) + -1.2)
     expect(z0(11 / 20, [11, 20])).toBe(-0.66);
     expect(z0(0.55, null)).toBe(-0.6599999999999999);
     expect(drawShaft('p', 0.55, 0, 0)[1][2].min[2]).toBe(-0.6599999999999999); // the unreachable drawShaft follows the same rule
@@ -286,8 +284,8 @@ describe('arm-configurations: graphics', () => {
       const link = rest.pop();
       expect(axis.opacity).toBe(0.5);
       expect(axis.color).toEqual(GRAY);
-      // -1+d-jr-.01 in COMMON-DECISIONS §7 order (machine d, -.01 first, then the exact -1 - 1/5 = -6/5; K-AC-10)
-      if (axisPrismatic) expect([axis.type, axis.min, axis.max]).toEqual(['cuboid', [-ar, -ar, (d + -0.01) + -6 / 5], [ar, ar, d + 0.01]]);
+      // -1+d-jr-.01 added in written order, ((-1 + d) + -1/5) + -0.01 (K-AC-10 resolved by dh-parameters' H-DH-02/03/07)
+      if (axisPrismatic) expect([axis.type, axis.min, axis.max]).toEqual(['cuboid', [-ar, -ar, ((-1 + d) + -1 / 5) + -0.01], [ar, ar, d + 0.01]]);
       else expect([axis.type, axis.p1, axis.p2, axis.radius]).toEqual(['cylinder', [0, 0, Math.min(-ar, d - jr) - 0.01], [0, 0, Math.max(ar, d) + 0.01], ar]);
       for (const b of rest) { expect(b.opacity).toBe(1); expect(b.color.map((c) => Math.round(c * 100) / 100)).toEqual(LIGHTBLUE); }
       if (bodyPrismatic) {

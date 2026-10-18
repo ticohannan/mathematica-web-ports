@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.16 |
+| Code version: | 0.1.17 |
 | Document revision | 1 (2026-10-17) — first implementation |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Distance Norms in Robot Workspace and Phase Space", contributed by Aaron T. Becker and Benedict Isichei, published 2017-12-13 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/DistanceNormsInRobotWorkspaceAndPhaseSpace/>. Readable source: [`docs/original-source/distance-norms.txt`](../../docs/original-source/distance-norms.txt); saved states: `tests/golden/distance-norms.original-states.json` (`states[0]` = the output cell's saved state, `snapshots[1…6]` = the six snapshot cells' `Settings`, raw notebook lines 2407, 3613, 4818, 6021, 7213, 8429; `specs` = the initial settings; exact values kept as `{"wl": …}`); snapshots: `docs/original-snapshots/distance-norms-1…6.png` (the notebook's snapshot cells 7 and 8 are the Wolfram icon placeholder, N-DN-05) |
@@ -185,7 +185,7 @@ are read as π). `shared/svg-frame.js`: `frameLayout`, `drawFrame`, `clipToRange
    gives radius ≥ 2 cos 0.104 = 1.989), so the fold edge looks outlined there in both; H-DN-04 records Mathematica's lines.
 6. Degenerate arms (r1 = 0 or r2 = 0, tested exactly in phase-space mode): F has rank 1, the image of B has zero area,
    so the model gives every sheet the area 0 and nothing is filled (D-DN-08); the boundary runs back and forth on the
-   circle of radius 2 — the same result `ParametricPlot` would give with zero-area triangles (K-DN-02, H-DN-07/08).
+   circle of radius 2 — as the original, whose `ParametricPlot` adds only invisible chord slivers (K-DN-02, H-DN-07/08).
 
 **State model.** Manipulate variables in `main.js`, `evaluate` pure. The body assigns nothing, so there is no feedback
 between evaluations. Exact initial numbers (1/2, 1, the dial vectors) are machine numbers in the port (D-DN-04).
@@ -253,11 +253,11 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 | D-DN-05 | deviation | LocatorPane picking (12 px no-jump zone) for the dials and the invisible locator, as D-CP-06. |
 | D-DN-06 | deviation | One evaluation per animation frame during drags; the original re-samples the `ParametricPlot` in the kernel on every update and is slower (cf. O-PA-01). |
 | D-DN-07 | deviation | Arc arrowheads, point sizes, text and line widths approximate Mathematica's (D-TK-04), fitted to snapshot 1 at 2.19 px/pt: points 2.4 pt across, arrowheads a filled triangle 0.03 of the image width long (`drawArcArrow` of `dial-control.js`), θ labels `Medium` = 12 pt, "Robot Arm" (Graphics' default text) 9 pt — the measured length of "Robot Arm" (0.68 plot units in snapshot 6) — tick labels 10 pt, edges and outline 1 pt. Font: Helvetica/Arial instead of Mathematica's. |
-| D-DN-08 | deviation | Degenerate arms (r1 = 0 or r2 = 0 exactly, phase-space mode): the rank-1 map has an image of zero area; the mapped sheet polygons would still enclose slivers of about 10⁻⁶ from the chords of the sampled curve, so the model sets every sheet's area to 0 and fills nothing; only the outline (on the circle of radius 2) is drawn. What the original shows is K-DN-02. |
+| D-DN-08 | deviation | Degenerate arms (r1 = 0 or r2 = 0 exactly, phase-space mode): the rank-1 map has an image of zero area; the model sets every sheet's area to 0 and fills nothing; only the outline (on the circle of radius 2) is drawn. The original (H-DN-07, H-DN-08, harness run 2) draws the same outline and sheet polygons whose vertices all lie on the circle of radius 2: chord slivers of total area 9·10⁻¹⁵ (r1 = 0) and 2.0·10⁻⁴ (r1 = 2), about 1 px² in all — not visible, so the deviation is kept (K-DN-02). |
 | D-DN-09 | deviation | At a fold the image of the ball boundary meets the fold circle tangentially; the chords of the two sampled curves (each segment ≤ 0.01 units, chord depth ≤ 6·10⁻⁶ units) may cross each other there, so a sheet polygon is simple only up to that depth near the fold circles (unit test "sheet areas add up to the integral of r1 r2 abs(sin(theta2 + theta2d))" checks this). Invisible at any zoom the page offers. |
-| K-DN-01 | known issue (lead) | Does Mathematica draw overlapping parts of a folded region darker (each triangle blended separately) or uniformly? No snapshot shows a large overlap (snapshot 6's double-covered strip is 0.011 units, about 1.5 px, wide). Harness H-DN-05 records whether the output polygons overlap; M-DN-04 compares by eye with d = π. |
-| K-DN-02 | known issue (lead) | Degenerate arms (r1 = 0 or 2): whether the original shows the boundary line on the circle of radius 2, nothing, or an error. Harness H-DN-07, H-DN-08; M-DN-05. |
-| K-DN-03 | known issue (lead) | A dial press exactly at its centre gives p1 = {0., 0.} and `ArcTan[0., 0.]` (as K-TK-04). Port: the update is ignored (D-TK-07). Harness H-DN-11. |
+| K-DN-01 | known issue (lead) — kernel side answered (harness run 2) | Does Mathematica draw overlapping parts of a folded region darker (each triangle blended separately) or uniformly? No snapshot shows a large overlap (snapshot 6's double-covered strip is 0.011 units, about 1.5 px, wide). Harness H-DN-05 records whether the output polygons overlap; M-DN-04 compares by eye with d = π. H-DN-05: the output holds the overlapping sheets as separate translucent polygons (total polygon area 25.11, the annulus covered twice); whether the front end blends them darker is not in a kernel record (M-DN-04). |
+| K-DN-02 | known issue (lead) — **resolved** (harness run 2) | Degenerate arms (r1 = 0 or 2): no message; the original shows the boundary line on the circle of radius 2 plus invisible chord slivers (H-DN-07: area 9·10⁻¹⁵; H-DN-08: 2.0·10⁻⁴; every vertex on the circle to 1e-15); the Robot Arm label is on link 1 for r1 = 2. The port draws the outline only (D-DN-08). Golden "H-DN-07", "H-DN-08". M-DN-05 not needed for the shape. |
+| K-DN-03 | known issue (lead) — **answered** (harness run 2); port change proposed (P-DN-01) | A dial press exactly at its centre gives p1 = {0., 0.} and `ArcTan[0., 0.]` = 0. without a message (H-DN-11: Theta1 = 0., the arm drawn at θ1 = 0; as torus-chart H-TC-11). Port: the shared dial ignores the update (D-TK-07); following the original is proposal P-DN-01 (= torus-chart P-TC-02). |
 | K-DN-04 | known issue (lead) | Snapshot 2 shows a small blue dot after "Robot Arm" that no primitive draws (as K-TK-06); not reproduced. M-DN-02. |
 | K-DN-05 | known issue (lead) | The d slider ends at π, but its 0.01 grid from 0.01 ends at 3.14: whether the original's slider can reach π itself is unknown (port: π is the range end, values snap to the grid; the ⊕ field accepts π). |
 | K-DN-06 | known issue (lead) | Typed d ≤ 0 makes the parameter range invalid (`{Theta1d, 0, 0}` or reversed); what the original shows is unknown; the port clamps to 0.01 … π. M-DN-08. |
@@ -271,10 +271,11 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 
 ## 8. Proposed changes
 
-No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
+Open proposal (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
 
 | ID | Status | Requested by / date | Change | Reason | Acceptance criteria |
 |----|--------|---------------------|--------|--------|---------------------|
+| P-DN-01 | proposed 2026-10-18 (awaiting the owner; same change as torus-chart P-TC-02, `dial-control.js`, owner two-link-kinematics) | harness run 2, K-DN-03 / 2026-10-18 | let a dial press at the exact centre through (drop the (0, 0) guard of D-TK-07): θ1 = 0 as `ArcTan[0., 0.] = 0.` | H-DN-11 records Theta1 = 0. without a message | a press exactly at the dial centre puts link 1 along +x; e2e of the dial apps |
 
 ## 9. Revision history
 
@@ -282,6 +283,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 |----------|--------------|------|--------|
 | 1 | v0.1.15 | 2026-10-17 | first implementation of the design draft of 2026-10-12 (approved by the owner 2026-10-17, DEC-17; COMMON-DECISIONS §6 and owner rules R-A/R-B/R-C applied). Changes against the draft: harness references written as golden test titles (`golden "harness H-DN-nn"`, the harness comparisons live in `tests/golden/distance-norms.golden.test.js` and skip until the harness data exist); D-DN-07 made concrete, D-DN-08, D-DN-09, N-DN-07 added; E-DN-03 and E-DN-04 added to §11; the picture layout and styles are data in `model.js` (§6); review fixes |
 | 2 | v0.1.16 | 2026-10-18 | version number only (batch B release); no change to this app |
+| 3 | v0.1.17 | 2026-10-18 | harness run 2: no change to the app's code; K-DN-02 resolved (H-DN-07/08, D-DN-08 kept: invisible slivers), K-DN-01 and K-DN-03 answered for the kernel (H-DN-05, H-DN-11), P-DN-01 proposed (dial centre); golden H-DN-08 asserts the recorded slivers, H-DN-14 reads the `%plotRange` record as encoded |
 
 ## 10. Improvements to consider (not implemented)
 

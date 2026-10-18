@@ -19,7 +19,9 @@
 //             true for every non-zero number);
 //   discretizeLineRev1  N@EuclideanDistance vs EuclideanDistance of machine points (same number).
 // art-gallery's own `vector` takes its edge as {{x1,y1},{x2,y2}} (second minus first) and stays in visibility.js.
-import { mUnequal, add, scale, mean, total, euclid } from '../../shared/mma.js';
+// v0.1.17 (minkowski-sum harness run 2, K-MS-08): the vector Total of centroidOfPoly is pairwise (totalPairwise) and its
+// Mean a true division (meanMma), as Mathematica 15.0.1 computes them; motion-planning's and art-gallery's tests unchanged.
+import { mUnequal, add, scale, total, euclid } from '../../shared/mma.js';
 
 /** lineList[list] := Partition[Append[list, First[list]], 2, 1] — the closed polygon's edges. */
 export function lineList(list) {
@@ -46,15 +48,34 @@ export const centroidCal = ([[x1, y1], [x2, y2]]) => {
   return [(x1 + x2) * c, (y1 + y2) * c];
 };
 
+/**
+ * Total of a list of machine numbers or of equal-length vectors, added as Mathematica 15.0.1 adds them: pairwise, the
+ * list split at ceil(n/2) (n = 3: (x1 + x2) + x3; 4: (x1 + x2) + (x3 + x4); 5: ((x1 + x2) + x3) + (x4 + x5)).
+ * Evidence: harness run 2 of minkowski-sum, the 12 recorded centroids rc/oc (polygons of 3, 4 and 5 vertices) bit for
+ * bit; left-to-right addition gives 7 of 9 non-degenerate ones, compensated summation 4 (K-MS-08).
+ */
+export function totalPairwise(xs) {
+  if (xs.length === 1) return xs[0];
+  const k = Math.ceil(xs.length / 2);
+  const a = totalPairwise(xs.slice(0, k)), b = totalPairwise(xs.slice(k));
+  return Array.isArray(a) ? add(a, b) : a + b;
+}
+/** Mean[list] = Total[list]/Length[list] with a true division (harness run 2: Mean of three collinear vertices,
+ *  H-MS-11, H-MS-12; v·(1/n) is 1 ulp off there) and the pairwise Total. */
+export function meanMma(xs) {
+  const t = totalPairwise(xs);
+  return Array.isArray(t) ? t.map((x) => x / xs.length) : t / xs.length;
+}
+
 /** centroidOfPoly[poly] := If[area != 0, Total@(centroidCal /@ lineList@poly)/(6 area), Mean@poly] — the polygon
- *  centroid, or the vertex mean for zero area. The vector Total adds left to right (minkowski-sum K-MS-08). */
+ *  centroid, or the vertex mean for zero area. The vector Total is pairwise (totalPairwise, K-MS-08), `a/b` = a·(1/b). */
 export function centroidOfPoly(poly) {
   const area = areaOfPoly(poly);
   if (mUnequal(area, 0.0)) {
-    const t = lineList(poly).reduce((s, e) => add(s, centroidCal(e)), [0, 0]);
+    const t = totalPairwise(lineList(poly).map(centroidCal));
     return scale(t, 1 / (6.0 * area));
   }
-  return mean(poly);
+  return meanMma(poly);
 }
 
 /**

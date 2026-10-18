@@ -92,6 +92,10 @@ export function piecewisePnear([l1, l2, l3, l4]) {
   return [PI / 2, PI / 2];
 }
 
+/** Cos and Sin of the Piecewise's exact angles 0 and π (exact results; other arguments: the machine functions). */
+const exactCos = (t) => (t === 0 ? 1 : t === PI ? -1 : Math.cos(t));
+const exactSin = (t) => (t === 0 || t === PI ? 0 : Math.sin(t));
+
 /**
  * The sampler — PORT DEVIATION (D-FB-01), stands in for
  *   Reap@Plot[{Φpos[θ, l], Φneg[θ, l]}, {θ, -π, π}, EvaluationMonitor :> Sow[{{θ, Φpos[θ, l]}, {θ, Φneg[θ, l]}}]]
@@ -289,8 +293,12 @@ export function evaluate(stateIn, { sampler = plotSamples } = {}) {
     st.pnear = nearestSample(st.pvals, st.p.map(mod2pi));
   }
   const [Thetav, Phiv] = st.pnear;
+  // The Piecewise of the impossible branch gives EXACT angles (0, Pi): Cos and Sin of them are exact (Sin[Pi] = 0, not
+  // 1.2e-16), and an exact 0 times a machine length is 0 (harness H-FB-06: α = 0 for pnear {Pi, 0}). Sampled angles are
+  // machine numbers (the exact Pi of If[φ == -π, φ = π] inside pvals is a machine π in the port, D-FB-11).
+  const cosE = impossibleLinks ? exactCos : Math.cos, sinE = impossibleLinks ? exactSin : Math.sin;
   const Alpha = impossibleLinks && mEqual(st.pnear, [PI / 2, PI / 2]) ? 0
-    : arcTan(lenlengths[2] * Math.cos(Phiv) - lenlengths[0] * Math.cos(Thetav) + st.spacing, lenlengths[2] * Math.sin(Phiv) - lenlengths[0] * Math.sin(Thetav));
+    : arcTan(lenlengths[2] * cosE(Phiv) - lenlengths[0] * cosE(Thetav) + st.spacing, lenlengths[2] * sinE(Phiv) - lenlengths[0] * sinE(Thetav));
   const linkage = linkageGeometry({ lenlengths, spacing: st.spacing, Thetav, Phiv, Alpha });
   return { state: st, view: { lenlengths, impossibleLinks, Thetav, Phiv, Alpha, resampled, linkage } };
 }

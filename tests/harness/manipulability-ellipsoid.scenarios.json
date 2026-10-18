@@ -80,10 +80,10 @@
     {
       "id": "H-ME-11",
       "captureEachStep": true,
-      "steps": [{"set":{"p1":"wl:Nearest[Table[{Cos[a],Sin[a]},{a,-Pi,Pi,Pi/32}],{Cos[Pi/64],Sin[Pi/64]}][[1]]"}},{"set":{"p2":"wl:Nearest[Table[{Cos[a],Sin[a]},{a,-Pi,Pi,Pi/32}],{0.,0.}][[1]]"}}],
-      "capture": ["p1","θ1","p2","θ2","wl:Nearest[Table[{Cos[a],Sin[a]},{a,-Pi,Pi,Pi/32}],{0.,0.}]"],
-      "why": "Nearest ties: midpoint between two table points, and the centre, where machine distances are not all equal (K-ME-05)",
-      "source": "{\"id\":\"H-ME-11\",\"captureEachStep\":true,\"steps\":[{\"set\":{\"p1\":\"wl:Nearest[Table[{Cos[a],Sin[a]},{a,-Pi,Pi,Pi/32}],{Cos[Pi/64],Sin[Pi/64]}][[1]]\"}},{\"set\":{\"p2\":\"wl:Nearest[Table[{Cos[a],Sin[a]},{a,-Pi,Pi,Pi/32}],{0.,0.}][[1]]\"}}],\"capture\":[\"p1\",\"θ1\",\"p2\",\"θ2\",\"wl:Nearest[Table[{Cos[a],Sin[a]},{a,-Pi,Pi,Pi/32}],{0.,0.}]\"],\"why\":\"Nearest ties: midpoint between two table points, and the centre, where machine distances are not all equal (K-ME-05)\"}"
+      "steps": [{"drag":{"p1":"wl:N[{Cos[Pi/64],Sin[Pi/64]}]"}},{"drag":{"p2":[0.0,0.0]}}],
+      "capture": ["p1","θ1","p2","θ2","wl:Nearest[Table[{Cos[a],Sin[a]},{a,-Pi,Pi,Pi/32}],N[{Cos[Pi/64],Sin[Pi/64]}]]","wl:Nearest[Table[{Cos[a],Sin[a]},{a,-Pi,Pi,Pi/32}],{0.,0.}]"],
+      "why": "Nearest ties through the stored dial setter with machine pointers (as the front end gives them): the machine midpoint between k = 0 and k = 1 (equal squared machine distances 0.0024090875896552147, unequal square roots) and the centre, where machine distances are not all equal (K-ME-05; an exact midpoint makes Nearest::mepcmp)",
+      "source": "{\"id\":\"H-ME-11\",\"captureEachStep\":true,\"steps\":[{\"drag\":{\"p1\":\"wl:N[{Cos[Pi/64],Sin[Pi/64]}]\"}},{\"drag\":{\"p2\":[0.0,0.0]}}],\"capture\":[\"p1\",\"θ1\",\"p2\",\"θ2\",\"wl:Nearest[Table[{Cos[a],Sin[a]},{a,-Pi,Pi,Pi/32}],N[{Cos[Pi/64],Sin[Pi/64]}]]\",\"wl:Nearest[Table[{Cos[a],Sin[a]},{a,-Pi,Pi,Pi/32}],{0.,0.}]\"],\"why\":\"Nearest ties through the stored dial setter with machine pointers (as the front end gives them): the machine midpoint between k = 0 and k = 1 (equal squared machine distances 0.0024090875896552147, unequal square roots) and the centre, where machine distances are not all equal (K-ME-05; an exact midpoint makes Nearest::mepcmp)\"}"
     },
     {
       "id": "H-ME-12",

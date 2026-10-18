@@ -26,8 +26,9 @@
 //
 // Variants as options of makeDialControl (all other code identical):
 //   setter  'normalize' (pt = Normalize[#], shared/mma-extra.js normalizeCR, K-TK-11) | 'nearest32' (the 65-point
-//           table of exact multiples of π/32 as machine numbers from shared/exact-pi.js; Euclidean distance, ties in
-//           table order: shared/mma-extra.js nearest, K-TK-12)
+//           table of exact multiples of π/32 as machine numbers from shared/exact-pi.js; SQUARED Euclidean distance
+//           in machine arithmetic, ties in table order: shared/mma-extra.js nearest with sqDistance, K-TK-12; harness
+//           H-CL-16, see nearest32Index)
 //   arc     'myArrowArc2' (in the dial's colour; ang is a Dynamic object, never SameQ to 0: always an Arrow, at ang = 0
 //           a zero-length one with its head along +x, Q-TK-05) | 'arrowArcCircle' (torus chart: black
 //           arrowArc[Circle[cent, 0.3, {0, ang}]] with ang in (−π, π], the 2π `If` never fires, Q-TC-01)
@@ -65,16 +66,26 @@ export const HAND = makeHand(7, 7 / 3, 0.1, 0.3);
 /** Table[{Cos@a, Sin@a}, {a, -π, π, π/32}]: 65 points, index i ↔ k = i − 32 (a = kπ/32); the first and last are {−1, 0}. */
 export const DIAL_TABLE_32 = Array.from({ length: 65 }, (_, i) => cosSinPi(i - 32, 32));
 
-/** k (−32 … 32) of the table point Nearest returns for p (Euclidean distance; ties: the first in table order). */
+/** (x − p)·(x − p) in machine arithmetic (no square root, which would merge distances 1 ulp apart). */
+export const sqDistance = (a, b) => (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2;
+/**
+ * k (−32 … 32) of the table point Nearest[table, p][[1]] returns: the least squared Euclidean distance, ties the first
+ * in table order. Evidence (Mathematica 15.0.1, harness H-CL-16, p = {0., 0.}): Nearest of the machine table returns
+ * exactly the four points ±1/√2 (squared norm 0.9999999999999998, the least; with √ eight more tie at
+ * 0.9999999999999999), and Nearest of the exact table (the setter's) returns 11 points, first k = −24 ({−1/√2, −1/√2},
+ * Position 9) — the squared-distance rule gives k = −24, the √-distance rule k = −29. The exact table's full tie set
+ * (−24, −19, −13, −8, −3, 3, 8, 13, 19, 24, 29: the √ set without −29) is not reproduced; only its first point is
+ * used by the setter (K-CL-09, K-ME-05).
+ */
 export function nearest32Index(p) {
-  const q = nearest(DIAL_TABLE_32, p)[0];
+  const q = nearest(DIAL_TABLE_32, p, {}, sqDistance)[0];
   return DIAL_TABLE_32.indexOf(q) - 32;
 }
 
 /** The setter of the LocatorPane's Dynamic: 'normalize' → Normalize[#]; 'nearest32' → Nearest[table, #][[1]]. */
 export function dialSetter(kind = 'normalize') {
   if (kind === 'normalize') return (p) => normalizeCR(p);
-  if (kind === 'nearest32') return (p) => nearest(DIAL_TABLE_32, p)[0].slice();
+  if (kind === 'nearest32') return (p) => nearest(DIAL_TABLE_32, p, {}, sqDistance)[0].slice();
   throw new RangeError(`dial-control: setter 'normalize' | 'nearest32', got ${kind}`);
 }
 

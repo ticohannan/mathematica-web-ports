@@ -5,7 +5,7 @@
 // Three-Link Robot" (pure: no DOM, no three.js): the Manipulate variables and their initial values, T1, T2, T3
 // (DHTransform with the exact angles nπ/32), the Graphics3D content in the original's order, and its plot range.
 // Names and order of operations follow the original (docs/original-source/dh-parameters.txt).
-import { dhTransform, mul4 } from '../common/dh-chain.js';
+import { dhTransform, mul4, mul4Fma } from '../common/dh-chain.js';
 import { drawJoint, drawGripper, GROUND } from '../common/robot-draw.js';
 import { Graphics3D, GeometricTransformation, flatten, primitiveBounds } from '../common/g3d.js';
 
@@ -54,10 +54,24 @@ export const jointT = (st, i) => dhTransform(st.d[i], st.r[i], angleOf(st.theta[
  * 1-3 and the gripper), prims (all, in order), box}: box = the bounds of all primitives
  * (automatic PlotRange, D-DH-01).
  */
+/**
+ * Whether DHTransform of joint i holds a machine matrix: a TransformationFunction with one machine entry is all machine
+ * (arm-configurations K-AC-09); the angles are always exact, so it is machine exactly when d_i or r_i is (a moved
+ * slider, Q-DH-05).
+ */
+export const isMachineT = (st, i) => !st.exact.d[i] || !st.exact.r[i];
+/**
+ * T . U as Mathematica 15.0.1 composes TransformationFunctions: with a machine factor the fused machine Dot
+ * (mul4Fma; harness H-DH-02, H-DH-04, H-DH-05: T1.T2.T3 bit for bit); two exact factors multiply exactly in the
+ * original, in doubles here (mul4).
+ */
+const compose = (T, tm, U, um) => ((tm || um) ? mul4Fma(T, U) : mul4(T, U));
+
 export function evaluate(st) {
   const T1 = jointT(st, 0), T2 = jointT(st, 1), T3 = jointT(st, 2);
-  const T12 = mul4(T1, T2);
-  const T123 = mul4(T12, T3);
+  const m = [0, 1, 2].map((i) => isMachineT(st, i));
+  const T12 = compose(T1, m[0], T2, m[1]);
+  const T123 = compose(T12, m[0] || m[1], T3, m[2]);
   const θ = st.theta.map(angleOf);
   // an exact d (the default 1 or 0, a typed whole number) enters -1+d-jr-.01 as an exact integer (K-DH-06)
   const opt = (i) => ({ variant: 'dh', dExact: st.exact.d[i] && Number.isInteger(st.d[i]) ? [st.d[i], 1] : null });

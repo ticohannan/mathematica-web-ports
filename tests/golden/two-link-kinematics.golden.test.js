@@ -9,9 +9,9 @@
 //    tests/support/harness-json.js). These SKIP with the documented reason until the owner's harness run exists.
 import { describe, it, expect } from 'vitest';
 import { loadStates, plain } from '../../tools/lib/wl-json.mjs';
-import { harnessCase, captureOf, stepRecord, toJS } from '../support/harness-json.js';
+import { harnessCase, captureOf, stepRecord, toJS, realOf } from '../support/harness-json.js';
 import {
-  INITIAL, initialState, cloneState, evaluate, scene, VAR_NAMES, svd2, pseudoInverse2, matMul,
+  INITIAL, initialState, cloneState, evaluate, scene, VAR_NAMES, svd2, pseudoInverse2, matMul, matVec, transpose,
 } from '../../demos/two-link-kinematics/model.js';
 import { matrixRank } from '../../demos/common/svd3.js';
 import { normalizeCR } from '../../shared/mma-extra.js';
@@ -158,7 +158,14 @@ function compareRecord(h, { bits = [] } = {}) {
       if (pv === undefined || pv === null) continue; // not compared, or a local the step did not assign (vNorm)
       const rec = each ? captureOf(h.record, name, { step: k }) : captureOf(h.record, name);
       if (bits.includes(name)) expect(toJS(rec), `${name} bit for bit (K-TK-10)`).toEqual(pv);
-      else expectClose(rec, pv, `${h.scenario.id} step ${k} ${name}`);
+      else if (name === 'jointVel' && runs[k - 1].locals.velocity === 'inverse') {
+        // jointVel = J⁺.(pVel - pEnd): the difference cancels, so one ulp of pEnd (Mathematica's Sin[π/4] is
+        // 0.7071067811865476, V8's 0.7071067811865475, K-TK-08) is several ulps of jointVel (H-TK-05: 5.3). Allowed:
+        // 4 ulps, or 4 ulps of max |pEnd| through ‖J⁺‖ = 1/σmin (as N-TK-08 for pVel)
+        const L = runs[k - 1].locals, smin = L.S[1] > 0 ? L.S[1] : L.S[0];
+        const absTol = 4 * Number.EPSILON * Math.max(...runs[k - 1].state.pEnd.map(Math.abs)) / smin;
+        toJS(rec).forEach((v, i) => { if (Math.abs(v - pv[i]) > absTol) withinUlps(pv[i], v, 4, `${h.scenario.id} step ${k} jointVel[${i}]`); });
+      } else expectClose(rec, pv, `${h.scenario.id} step ${k} ${name}`);
     }
   }
   return runs;
@@ -198,10 +205,32 @@ describe('two-link-kinematics golden: Mathematica harness records', () => {
   it('two-link-kinematics: harness H-TK-13 (a dial press exactly at its centre: ArcTan[0., 0.])', (ctx) => {
     const h = harnessCase('two-link-kinematics', 'H-TK-13');
     if (h.status !== 'ok') return ctx.skip(h.reason);
-    expect(JSON.stringify(captureOf(h.record, '%messages'))).toMatch(/ArcTan::indet|Indeterminate/);
+    // ArcTan[0., 0.] is 0. without a message (K-TK-04): FK with θ1 = 0, the arm drawn (D-TK-07 does not apply). The
+    // port's model does the same (Theta1, pEnd, pVel compared); the page's dial ignores a (0, 0) setter result instead
+    // (demos/common/dial-control.js), P-TK-01
+    expect(toJS(captureOf(h.record, '%messages'))).toEqual([]);
+    expect(realOf(captureOf(h.record, 'Theta1'))).toBe(0);
+    const runs = compareRecord(h);
+    expect(runs[0].indeterminate).toBe(false);
+    expect(runs[0].locals.kinematics).toBe('FK');
   });
-  it('two-link-kinematics: harness H-TK-14 (inverse velocity inside the ellipse; jointVel bit for bit)', plainCase('H-TK-14', () => {}, { bits: ['jointVel'] }));
-  it('two-link-kinematics: harness H-TK-15 (inverse velocity outside the ellipse; jointVel bit for bit)', plainCase('H-TK-15', () => {}, { bits: ['jointVel'] }));
+  // K-TK-10: Mathematica's V.{{1/Σ11, 0}, {0, 1/Σ22}}.Transpose[U].(pVel - pEnd) is reproduced bit for bit by the
+  // port's left-to-right Dot from the RECORDED U, Σ, V; the port's own SVD (svd2, D-TK-03) differs from LAPACK's in the
+  // last bits of U and V, which moves jointVel by up to 2 ulps (P-TK-02)
+  const jointVelCase = (id) => plainCase(id, (runs, h) => {
+    const rec = (n) => toJS(captureOf(h.record, n, { step: 2 }));
+    const U = rec('U'), V = rec('V'), pVel = rec('pVel');
+    const d = [pVel[0] - 1, pVel[1] - 1]; // pEnd = {1., 1.} (inside the workspace, not clamped)
+    // Σ of the pose (pEnd {1., 1.}, r1 1) as recorded in H-TK-14; the port's svd2 gives the same bits
+    const Sig = toJS(captureOf(harnessCase('two-link-kinematics', 'H-TK-14').record, SIGMA, { step: 2 }));
+    const S = [Sig[0][0], Sig[1][1]];
+    expect(runs[1].locals.S).toEqual(S);
+    const jv = matVec(matMul(matMul(V, [[1 / S[0], 0], [0, 1 / S[1]]]), transpose(U)), d);
+    expect(jv, 'left-to-right Dot of the recorded factors').toEqual(toJS(captureOf(h.record, 'jointVel')));
+    toJS(captureOf(h.record, 'jointVel')).forEach((v, i) => withinUlps(runs[1].state.jointVel[i], v, 2, `port jointVel[${i}] (P-TK-02)`));
+  });
+  it('two-link-kinematics: harness H-TK-14 (inverse velocity inside the ellipse; jointVel bit for bit)', jointVelCase('H-TK-14'));
+  it('two-link-kinematics: harness H-TK-15 (inverse velocity outside the ellipse; jointVel bit for bit)', jointVelCase('H-TK-15'));
   it('two-link-kinematics: harness H-TK-16 (forward velocity from the pad)', plainCase('H-TK-16'));
   it('two-link-kinematics: harness H-TK-17 (zero joint velocities: Points instead of arc arrows)', plainCase('H-TK-17', (runs) => {
     const r = runs[0];
@@ -224,8 +253,19 @@ describe('two-link-kinematics golden: Mathematica harness records', () => {
     const sv1 = cap(0), sv2 = cap(1);
     expect(sv1[1][1][1]).toBe(svd2([[1, 0], [1, 1e-14]]).S[1]); // exactly 0 (K-TK-01)
     expectClose(sv2[1][1][1], svd2([[1, 0], [1, 1e-13]]).S[1], 'Σ22 kept');
-    expectClose(cap(2), pseudoInverse2([[1, 0], [1, 1e-14]]), 'PseudoInverse');
-    expect(cap(3)).toEqual([matrixRank([1, 1e-14]), matrixRank([1, 1e-13])]);
+    // PseudoInverse is the truncated SVD V.Σ⁺.Transpose[U] of the recorded decomposition (σ2 = 0 below the tolerance);
+    // the port's rank-1 formula Jᵀ/‖J‖²_F is the same only for an exactly singular J: here it gives {{0.5, 0.5}, {0,
+    // 5e-15}} against the record's {{0.5, 0.5}, {2.5e-15, 2.5e-15}} (a difference of the size σ2/σ1, D-TK-03)
+    const [Ur, Sr, Vr] = sv1;
+    expectClose(cap(2), matMul(matMul(Vr, [[1 / Sr[0][0], 0], [0, 0]]), transpose(Ur)), 'PseudoInverse = V.Σ⁺.Uᵀ', 1);
+    expect(pseudoInverse2([[1, 0], [1, 1e-14]])).toEqual([[0.5, 0.5], [0, 5e-15]]);
+    cap(2).flat().forEach((v, i) => expect(Math.abs(v - pseudoInverse2([[1, 0], [1, 1e-14]]).flat()[i])).toBeLessThanOrEqual(2.6e-15));
+    // MatrixRank[{{1., 0.}, {0., 1.*^-14}}] = 1: the rank tolerance is at least 1e-14 relative, like the SVD's. The
+    // port applies matrixRank to svd2's singular values, which svd2 has already set to 0 below 100·2^-53 (K-TK-01);
+    // the shared matrixRank's own tolerance 3·2^-52 (K-RS-05) alone would give 2
+    expect(cap(3)).toEqual([1, 2]);
+    expect([matrixRank(svd2([[1, 0], [0, 1e-14]]).S), matrixRank(svd2([[1, 0], [0, 1e-13]]).S)]).toEqual([1, 2]);
+    expect(matrixRank([1, 1e-14])).toBe(2);
     const a = [[0.3, 0.7], [-0.2, 0.9]], b = [[1.1, 0], [0, 3.7]], c = [[0.6, -0.8], [0.8, 0.6]], d = [0.123, -0.456];
     const m = matMul(matMul(a, b), c);
     expect(cap(4)[0]).toEqual([m[0][0] * d[0] + m[0][1] * d[1], m[1][0] * d[0] + m[1][1] * d[1]]); // left to right (K-TK-10)

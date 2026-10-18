@@ -184,7 +184,7 @@ function portValue(name, v) {
 /** replay a scenario through the port (start: the initial settings); random draws come from the record (HW-53) */
 function replay(scenario, record) {
   const reals = [];
-  for (const d of randomDraws(record)) reals.push(...[toJS(d.value)].flat(Infinity));
+  for (const d of drawsOf(scenario, record)) reals.push(...[toJS(d.value)].flat(Infinity));
   const rng = replayRng({ reals });
   let state = initialState();
   const runs = [];
@@ -198,6 +198,30 @@ function replay(scenario, record) {
     runs.push(r);
   }
   return { runs, rng };
+}
+/**
+ * The recorded draws of a scenario. A scenario without a "$RandomDraws" capture and without captureEachStep has only
+ * per-step draw COUNTS in its record (HW-52), not the values. H-P3-19 is H-P3-18 (which captures $RandomDraws) plus a
+ * final `set`: same start, same steps and seeds, so the generator gives the same draws (HW-22: SeedRandom before each
+ * seeded press). The donor is used only after checking exactly that, step by step, including the draw counts (N-P3-08).
+ */
+const DRAWS_FROM = { 'H-P3-19': 'H-P3-18' };
+function drawsOf(scenario, record) {
+  const own = randomDraws(record);
+  const counted = (record.steps ?? []).reduce((n, s) => n + toJS(s.randomDraws ?? 0), 0);
+  if (own.length === counted) return own;
+  const donorId = DRAWS_FROM[scenario.id];
+  if (!donorId) throw new Error(`${scenario.id}: ${counted} draws counted, ${own.length} recorded`);
+  const donor = harnessCase('prm-3d', donorId);
+  if (donor.status !== 'ok') throw new Error(`${scenario.id}: draw donor ${donorId} ${donor.status}`);
+  const dSteps = donor.scenario.steps;
+  expect(scenario.start ?? 'initial', 'same start').toBe(donor.scenario.start ?? 'initial');
+  expect(JSON.stringify(scenario.steps.slice(0, dSteps.length)), `${donorId} steps are a prefix`).toBe(JSON.stringify(dSteps));
+  expect(record.steps.slice(0, dSteps.length).map((s) => toJS(s.randomDraws)), 'same draw counts').toEqual(donor.record.steps.map((s) => toJS(s.randomDraws)));
+  expect(record.steps.slice(dSteps.length).every((s) => !toJS(s.randomDraws)), 'no draws after the shared prefix').toBe(true);
+  const d = randomDraws(donor.record);
+  expect(d.length).toBe(counted);
+  return d;
 }
 const LOCALS = ['path', 'qsn', 'qfn', 'totdist', 'robotq', 'inCollision', 'inCollisionf'];
 /** the port's value of a capture name after a run */
@@ -220,6 +244,7 @@ function compareCapture(rec, port, name, bitForBit) {
 function compareVolume(rec, desc, name) {
   const m = storedMesh(toJS(rec));
   if (!desc) { expect(m.verts, `${name}: no volume`).toHaveLength(0); return; }
+  expect(m.verts.length, `${name}: recorded volume read (not vacuous)`).toBeGreaterThan(0);
   const v = cObstacle(desc.c, 48);
   const tol = gridCellChange(v);
   for (const p of m.verts) {
@@ -228,7 +253,7 @@ function compareVolume(rec, desc, name) {
     if (!(onFace && f <= tol)) expect(Math.abs(f), `${name} vertex ${p}`).toBeLessThanOrEqual(tol);
   }
 }
-const BIT_FOR_BIT = new Set(['H-P3-01', 'H-P3-21']); // totdist (K-P3-02)
+const BIT_FOR_BIT = new Set(['H-P3-01', 'H-P3-19', 'H-P3-21']); // totdist (K-P3-02)
 function check(ctx, id) {
   const h = harnessCase('prm-3d', id);
   if (h.status !== 'ok') return ctx.skip(h.reason);
@@ -274,22 +299,27 @@ describe('prm-3d golden: Mathematica harness records', () => {
 });
 
 // ---- helpers ------------------------------------------------------------------------------------------------------
-/** vertices, polygons and boundary-line styles of a stored RegionPlot3D graphic (GraphicsComplex form) */
+/**
+ * vertices, polygons and boundary-line styles of a stored RegionPlot3D graphic (GraphicsComplex form). Compound
+ * expressions are {head, args} in the original-states fixtures (extract_state.py) and {h, a} in harness records (HW-45).
+ */
 function storedMesh(g) {
   const out = { verts: [], polys: 0, lineStyle: [] };
   const list = (a) => (typeof a[0] === 'number' ? [a] : a);
+  const hd = (x) => (x && typeof x === 'object' && !Array.isArray(x) ? (x.h ?? x.head) : undefined);
+  const ar = (x) => x.a ?? x.args;
   const inner = (x, base) => {
     if (Array.isArray(x)) { x.forEach((y) => inner(y, base)); return; }
-    if (!x || typeof x !== 'object' || !x.head) return;
-    if (x.head === 'Polygon') out.polys += list(x.args[0]).length;
-    else if (x.head === 'GrayLevel') { if (!out.lineStyle.includes(x.args[0])) out.lineStyle.push(x.args[0]); } else if (x.head !== 'Rule' && x.head !== 'Line') x.args.forEach((y) => inner(y, base));
+    if (!hd(x)) return;
+    if (hd(x) === 'Polygon') out.polys += list(ar(x)[0]).length;
+    else if (hd(x) === 'GrayLevel') { if (!out.lineStyle.includes(ar(x)[0])) out.lineStyle.push(ar(x)[0]); } else if (hd(x) !== 'Rule' && hd(x) !== 'Line') ar(x).forEach((y) => inner(y, base));
   };
   const outer = (x) => {
     if (Array.isArray(x)) { x.forEach(outer); return; }
-    if (!x || typeof x !== 'object' || !x.head) return;
-    if (x.head === 'GraphicsComplex') { const base = out.verts.length; out.verts.push(...x.args[0]); inner(x.args[1], base); } else x.args.forEach(outer);
+    if (!hd(x)) return;
+    if (hd(x) === 'GraphicsComplex') { const base = out.verts.length; out.verts.push(...ar(x)[0]); inner(ar(x)[1], base); } else ar(x).forEach(outer);
   };
-  if (g && g.head === 'Graphics3D') outer(g.args[0]);
+  if (hd(g) === 'Graphics3D') outer(ar(g)[0]);
   return out;
 }
 /** the largest change of the port field between neighbouring nodes of its grid (the grid tolerance) */

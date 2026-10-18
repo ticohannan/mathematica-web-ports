@@ -7,6 +7,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   lineList, vector, areaCalulation, areaOfPoly, centroidCal, centroidOfPoly, discretizeLineRev1, sameQ, sameRealQ,
+  totalPairwise, meanMma,
 } from '../../demos/common/polygon-core.js';
 import * as planner from '../../demos/motion-planning/planner.js';
 import * as visibility from '../../demos/art-gallery/visibility.js';
@@ -53,5 +54,21 @@ describe('polygon-core', () => {
     expect(visibility.lineList).toBe(lineList);
     expect(visibility.vector).not.toBe(vector); // art-gallery's own vector: second point minus first
     expect(visibility.vector([[3, 5], [1, 1]])).toEqual([-2, -4]);
+  });
+  it('totalPairwise adds as Mathematica 15.0.1 Total: pairwise, split at ceil(n/2) (minkowski-sum K-MS-08)', () => {
+    const h = 2 ** -53; // half an ulp of 1
+    // 5 terms: ((1 + h) + h) + (h + h) = 1 + 2^-52 (left to right: 1, every h lost to round-half-even)
+    expect(totalPairwise([1, h, h, h, h])).toBe(1 + 2 * h);
+    expect([1, h, h, h, h].reduce((a, b) => a + b)).toBe(1);
+    // 4 terms: (1 + h) + (h + h) = 1 + 2^-52; 3 terms: (1 + h) + h = 1
+    expect(totalPairwise([1, h, h, h])).toBe(1 + 2 * h);
+    expect(totalPairwise([1, h, h])).toBe(1);
+    expect(totalPairwise([[1, 0], [h, 1], [h, 2], [h, 3], [h, 4]])).toEqual([1 + 2 * h, 10]);
+    expect(totalPairwise([7])).toBe(7);
+  });
+  it('meanMma divides the pairwise Total by the length: the recorded Mean of three collinear vertices (H-MS-11)', () => {
+    expect(meanMma([[1, 1.6], [1, 2.4], [1, 3.1]])).toEqual([1, 2.3666666666666667]); // harness run 2, rc of H-MS-11
+    expect(7.1 * (1 / 3)).toBe(2.3666666666666663); // the multiplication by 1/3 is one ulp lower
+    expect(meanMma([2, 4])).toBe(3);
   });
 });

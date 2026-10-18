@@ -10,10 +10,10 @@
 //    tests/support/harness-json.js). These SKIP with the documented reason until the owner's harness run exists.
 import { describe, it, expect } from 'vitest';
 import { loadStates, plain } from '../../tools/lib/wl-json.mjs';
-import { harnessCase, captureOf, toJS, sameDouble } from '../support/harness-json.js';
+import { harnessCase, captureOf, toJS, toJSNumeric, sameDouble } from '../support/harness-json.js';
 import { readPng } from '../support/png.js';
 import { initialState, initialSettings, evaluate, plotLabel } from '../../demos/torus-chart/model.js';
-import { sampleManifold } from '../../demos/torus-chart/surface.js';
+import { sampleManifold, meshLevels } from '../../demos/torus-chart/surface.js';
 import { dialGraphics } from '../../demos/common/dial-control.js';
 
 const DIR = 'torus-chart';
@@ -127,7 +127,8 @@ describe('torus-chart golden: snapshot 1 picture', () => {
 
 // ------------------------------------------------------------------------------------------- Mathematica harness
 /** a scenario value as JS: "wl:-0." (a machine minus zero typed in the front end) becomes the number */
-const jsValue = (v) => (Array.isArray(v) ? v.map(jsValue) : typeof v === 'string' && v.startsWith('wl:') ? Number(v.slice(3)) : v);
+const jsValue = (v) => (Array.isArray(v) ? v.map(jsValue) : typeof v === 'string' && v.startsWith('wl:') ? Number(v.slice(3))
+  : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, jsValue(x)])) : v);
 /** Replay: the initial settings, then each step (set: assign and evaluate once; setFrom: snapshot k's Settings). */
 function replay(scenario) {
   let state = scenario.start === 'live' ? { ...live } : initialSettings();
@@ -135,29 +136,32 @@ function replay(scenario) {
   for (const st of scenario.steps) {
     const next = st.setFrom ? snap(Number(String(st.setFrom).split(':')[1])) : { ...state, ...jsValue(toJS(st.set)) };
     r = evaluate(next);
-    if (!r.indeterminate) state = next;
+    state = next;
   }
   return { state, r };
 }
-/** all numbers inside a recorded value (e.g. the Sphere centre inside the config Graphics3D) */
-const numbersIn = (v) => {
-  const j = toJS(v);
-  const out = [];
-  (function walk(x) { if (typeof x === 'number') out.push(x); else if (Array.isArray(x)) x.forEach(walk); else if (x && typeof x === 'object') Object.values(x).forEach(walk); })(j);
-  return out;
-};
+/** the centre of the first Sphere in a recorded graphic, as JS numbers (exact values by their double, Pi as π) */
+function sphereCentre(v) {
+  let c = null;
+  (function walk(x) {
+    if (c) return;
+    if (Array.isArray(x)) x.forEach(walk);
+    else if (x && typeof x === 'object' && x.h === 'Sphere') c = toJSNumeric(x.a[0]);
+    else if (x && typeof x === 'object') Object.values(x).forEach(walk);
+  })(v);
+  return c;
+}
 function compare(h, { ulp = 1 } = {}) {
   const { state, r } = replay(h.scenario);
   for (const name of h.scenario.capture) {
-    if (name === 'θ' || name === 'φ') withinUlps(r[name], toJS(captureOf(h.record, name)), ulp, `${h.scenario.id} ${name}`);
+    if (name === 'θ' || name === 'φ') withinUlps(r[name], toJSNumeric(captureOf(h.record, name)), ulp, `${h.scenario.id} ${name}`);
     if (name === 'config') {
-      const nums = numbersIn(captureOf(h.record, name));
-      // Graphics3D[{RGBColor[0, 1, 0], Sphere[{x, y, z}, 1/5]}]: the three centre coordinates follow the colour
+      // Graphics3D[{RGBColor[0, 1, 0], Sphere[{x, y, z}, 1/5]}] (HW-45 {"h", "a"}): the Sphere's first argument
+      const rec = sphereCentre(captureOf(h.record, name));
+      expect(rec, `${h.scenario.id} ball centre in the record`).toHaveLength(3);
       const c = r.config.center;
-      const i = nums.findIndex((_, k) => k + 2 < nums.length && Math.abs(nums[k] - c[0]) < 1e-9 && Math.abs(nums[k + 1] - c[1]) < 1e-9);
-      expect(i, `${h.scenario.id} ball centre in the record`).toBeGreaterThanOrEqual(0);
-      // bit for bit (0 and -0 equal): the order of operations of TorusToPlane is lead K-TC-09, decided here
-      const diffs = c.map((x, k) => (sameDouble(x, nums[i + k]) ? null : `[${k}] ${x} (port) vs ${nums[i + k]} (recorded)`)).filter(Boolean);
+      // bit for bit (0 and -0 equal): the order of operations of TorusToPlane (K-TC-09, resolved by these records)
+      const diffs = c.map((x, k) => (sameDouble(x, rec[k]) ? null : `[${k}] ${x} (port) vs ${rec[k]} (recorded)`)).filter(Boolean);
       expect(diffs, `${h.scenario.id} ball bit for bit (K-TC-09)`).toEqual([]);
     }
     if (name.startsWith('%options') && name.includes('PlotLabel')) {
@@ -171,11 +175,43 @@ const plainCase = (id, extra = () => {}) => (ctx) => {
   if (h.status !== 'ok') return ctx.skip(h.reason);
   extra(compare(h), h);
 };
+/**
+ * The recorded z levels of the theme's mesh (K-TC-02): the Line primitives of the manifold's GraphicsComplex whose
+ * vertices all have one z, sorted (rounded to 1e-9 to merge the pieces of one contour).
+ */
+function recordedMeshLevels(h) {
+  let gc = null;
+  (function walk(x) {
+    if (gc) return;
+    if (Array.isArray(x)) x.forEach(walk);
+    else if (x && typeof x === 'object' && x.h === 'GraphicsComplex') gc = x;
+    else if (x && typeof x === 'object') Object.values(x).forEach(walk);
+  })(captureOf(h.record, 'manifold'));
+  const coords = toJS(gc.a[0]);
+  const levels = new Set();
+  (function walk(x) {
+    if (Array.isArray(x)) x.forEach(walk);
+    else if (x && typeof x === 'object' && x.h === 'Line') {
+      const a = toJS(x.a[0]);
+      for (const seg of Number.isInteger(a[0]) ? [a] : a) {
+        const zs = new Set(seg.map((k) => Math.round(coords[k - 1][2] * 1e9) / 1e9));
+        if (zs.size === 1) levels.add([...zs][0] + 0);
+      }
+    } else if (x && typeof x === 'object' && Array.isArray(x.a)) x.a.forEach(walk);
+  })(gc.a[1]);
+  const zs = coords.map((q) => q[2]);
+  return { levels: [...levels].sort((a, b) => a - b), zRange: [Math.min(...zs), Math.max(...zs)] };
+}
 /** recorded manifold vertices: every port grid point lies within tol of a recorded polygon vertex set (coarse check) */
 function manifoldNear(h, λ, tol) {
-  const nums = numbersIn(captureOf(h.record, 'manifold'));
-  const pts = [];
-  for (let k = 0; k + 2 < nums.length; k += 3) pts.push(nums.slice(k, k + 3));
+  // the vertex list: first argument of the GraphicsComplex (HW-45 {"h": "GraphicsComplex", "a": [coords, prims, opts…]})
+  let pts = null;
+  (function walk(x) {
+    if (pts) return;
+    if (Array.isArray(x)) x.forEach(walk);
+    else if (x && typeof x === 'object' && x.h === 'GraphicsComplex') pts = toJS(x.a[0]);
+    else if (x && typeof x === 'object') Object.values(x).forEach(walk);
+  })(captureOf(h.record, 'manifold'));
   expect(pts.length).toBeGreaterThan(100);
   // each recorded point lies on the port's surface: near some sampled point of a fine grid
   const s = sampleManifold(λ, 144);
@@ -188,7 +224,24 @@ function manifoldNear(h, λ, tol) {
 }
 
 describe('torus-chart golden: Mathematica harness records', () => {
-  it('torus-chart: harness H-TC-01 the saved state', plainCase('H-TC-01'));
+  it('torus-chart: harness H-TC-01 the saved state', plainCase('H-TC-01', (_, h) => {
+    // K-HW-03: Charting`ResolvePlotTheme exists in 15.0.1; the "Business" theme's mesh is MeshFunctions -> {#3 &} with
+    // MeshStyle GrayLevel[0.2] (as the port, K-TC-02)
+    const theme = JSON.stringify(captureOf(h.record, 'wl:Charting`ResolvePlotTheme["Business", ParametricPlot3D]'));
+    expect(theme).toContain('{"h":"Rule","a":[{"sym":"MeshFunctions"},{"h":"Function","a":[{"h":"Slot","a":[3]}]}]}');
+    expect(theme).toContain('{"h":"Rule","a":[{"sym":"MeshStyle"},{"h":"Directive","a":[{"h":"GrayLevel","a":[0.2]}]}]}');
+    // K-TC-01: the output's lights are an ambient GrayLevel 0.35 and three directional GrayLevel 0.37 at ImageScaled
+    // {2,0,2}, {2,2,2}, {0,2,2}, with BaseStyle Specularity[GrayLevel[0.5], 30] — NOT the port's fitted white lights
+    // (D-TC-02); rebuilding them is proposal P-TC-01 (a visible change), so this pins the recorded values only
+    const opts = captureOf(h.record, '%options:Lighting,PlotLabel,LabelStyle,BoxRatios')[0].options;
+    expect(toJS(opts.Lighting[0].a[1])).toEqual([
+      ['Ambient', { h: 'RGBColor', a: [[0.35, 0.35, 0.35]] }],
+      ['Directional', { h: 'RGBColor', a: [[0.37, 0.37, 0.37]] }, { h: 'ImageScaled', a: [[2, 0, 2]] }],
+      ['Directional', { h: 'RGBColor', a: [[0.37, 0.37, 0.37]] }, { h: 'ImageScaled', a: [[2, 2, 2]] }],
+      ['Directional', { h: 'RGBColor', a: [[0.37, 0.37, 0.37]] }, { h: 'ImageScaled', a: [[0, 2, 2]] }],
+    ]);
+    expect(theme).toContain('{"h":"Rule","a":[{"sym":"BaseStyle"},{"h":"Specularity","a":[{"h":"GrayLevel","a":[0.5]},30]}]}');
+  }));
   it('torus-chart: harness H-TC-02 the initial settings', plainCase('H-TC-02', ({ r }) => {
     expect([r.θ, r.φ]).toEqual([0, 0]);
     expect(r.label).toBe('2-Torus');
@@ -197,7 +250,18 @@ describe('torus-chart golden: Mathematica harness records', () => {
     const hs = ['H-TC-03', 'H-TC-04', 'H-TC-05'].map((id) => harnessCase(DIR, id));
     const missing = hs.find((h) => h.status !== 'ok');
     if (missing) return ctx.skip(missing.reason);
-    hs.forEach((h, i) => { compare(h); manifoldNear(h, [0.13, 0.56, 1.45][i], 0.2); });
+    hs.forEach((h, i) => {
+      compare(h);
+      manifoldNear(h, [0.13, 0.56, 1.45][i], 0.2);
+      // K-TC-02: the theme's mesh (MeshFunctions -> {#3 &}, Mesh -> Automatic) is 15 equally spaced z levels strictly
+      // inside the z range of the plot's own points: the port's rule meshLevels gives them from the recorded range
+      const rec = recordedMeshLevels(h);
+      expect(rec.levels, `${h.scenario.id} mesh levels`).toHaveLength(15);
+      closeV(meshLevels(...rec.zRange), rec.levels, 1e-8, `${h.scenario.id} mesh level (recorded range)`);
+      // the port's range comes from its fixed grid (D-TC-01): where the extreme z lies inside the parameter square
+      // (λ = 0.13: v ≈ 1.42) Mathematica's sampling misses it by 0.0022 at each end (range 2.1631 vs the port's 2.1676)
+      closeV(sampleManifold([0.13, 0.56, 1.45][i], 144).zRange, rec.zRange, 2.5e-3, `${h.scenario.id} z range`);
+    });
   });
   it('torus-chart: harness H-TC-06 lambda = 1 at the branch boundary', plainCase('H-TC-06'));
   it('torus-chart: harness H-TC-07 to H-TC-10 plot labels at and around 1/2 and 1.2', (ctx) => {
@@ -206,12 +270,11 @@ describe('torus-chart golden: Mathematica harness records', () => {
     if (missing) return ctx.skip(missing.reason);
     hs.forEach((h) => compare(h));
   });
-  it('torus-chart: harness H-TC-11 a dial point at the exact centre', (ctx) => {
-    const h = harnessCase(DIR, 'H-TC-11');
-    if (h.status !== 'ok') return ctx.skip(h.reason);
-    expect(replay(h.scenario).r.indeterminate).toBe(true); // the port keeps the previous state (K-TC-03)
-    expect(JSON.stringify(captureOf(h.record, '%messages'))).toMatch(/ArcTan::indet|Indeterminate/);
-  });
+  it('torus-chart: harness H-TC-11 a dial point at the exact centre', plainCase('H-TC-11', ({ r }, h) => {
+    // ArcTan[0., 0.] = 0. without a message (K-TC-03): the port evaluates as for any other point
+    expect(toJS(captureOf(h.record, '%messages'))).toEqual([]);
+    expect([r.θ, r.φ]).toEqual([0, 0]);
+  }));
   it('torus-chart: harness H-TC-12 dial points on the axes give 0, π and 3π/2', plainCase('H-TC-12', ({ r }) => {
     expect(r.θ).toBe(Math.PI);
     expect(r.φ).toBe(4.71238898038469);

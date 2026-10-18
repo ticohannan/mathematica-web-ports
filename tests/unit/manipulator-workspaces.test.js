@@ -83,13 +83,15 @@ describe('manipulator workspaces: joint values and DH tables', () => {
     const v = evaluate({ ...initialState(), Type: 2, TypeOld: 2 }).view;
     near3(v.o3, col, 0);
   });
-  it('Td is not chopped: machine zeros stay (Chop does not act on a TransformationFunction)', () => {
-    // elbow arm, pm = (π/2, 0, 0): cos(π/2) = 6.1e-17 survives in Td (Q-MW-09)
+  it('Td[1] = Ad[[1]] keeps its residues, Td[2] and Td[3] are chopped (Chop acts on a TransformationFunction, H-AC-14)', () => {
+    // elbow arm, pm = (π/2, 0, 0): cos(π/2) = 6.1e-17 survives in Td[1] = Ad[[1]] (not chopped in the original either)
+    // and is removed from the chopped products Td[i] = Chop[Td[i-1].Ad[[i]]] (Q-MW-09)
     const st = { ...initialState(), Type: 2, TypeOld: 2, params: [0, 0, 0], r1: [Math.PI / 2, 2], r2: [0, 1], r3: [0, 1] };
     const { Td } = evaluate(st).view;
-    const tiny = Td.flat(2).filter((x) => x !== 0 && Math.abs(x) < 1e-15);
-    expect(tiny.length).toBeGreaterThan(0);
     expect(Math.abs(Td[0][0][0])).toBe(cos(Math.PI / 2)); // 6.123233995736766e-17, not 0
+    const tiny = Td.slice(1).flat(2).filter((x) => x !== 0 && Math.abs(x) < 1e-10);
+    expect(tiny).toEqual([]);
+    expect(Td[2][0][0]).toBe(0);
   });
 });
 

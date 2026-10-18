@@ -18,6 +18,7 @@
 //     rational multiple nπ/den; cos/sin from shared/exact-pi.js (exact zeros, ±1, ±1/2 and octant symmetries).
 //     The numeric Theta / Alpha arguments are then ignored for that angle.
 import { chop } from '../../shared/mma.js';
+import { fma } from '../../shared/mma-exact.js';
 import { cosSinPi } from '../../shared/exact-pi.js';
 
 const { sin: Sin, cos: Cos, PI } = Math;
@@ -43,6 +44,13 @@ const cosSinConst = (x) => EXACT.get(x) ?? [Cos(x), Sin(x)];
 
 /** 4x4 matrix product (row-major) */
 export const mul4 = (A, B) => A.map((row) => [0, 1, 2, 3].map((j) => row[0] * B[0][j] + row[1] * B[1][j] + row[2] * B[2][j] + row[3] * B[3][j]));
+/**
+ * 4x4 machine-matrix product as Mathematica 15.0.1 computes Dot of two machine (packed) TransformationFunction
+ * matrices: every entry is the fused multiply-add chain fma(a3, b3, fma(a2, b2, fma(a1, b1, a0*b0))) (the dgemm
+ * kernel). Evidence: harness H-AC-11 (arm-configurations, anthropomorphic at {-11,-27,19,0,-8,8} π/32): Td[3] … Td[6]
+ * bit for bit, where the plain left-to-right sum (mul4) differs in the last bit of 3 entries.
+ */
+export const mul4Fma = (A, B) => A.map((row) => [0, 1, 2, 3].map((j) => fma(row[3], B[3][j], fma(row[2], B[2][j], fma(row[1], B[1][j], row[0] * B[0][j]))) + 0));
 const rotZ = ([c, s]) => [[c, -s, 0, 0], [s, c, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]];
 const rotX = ([c, s]) => [[1, 0, 0, 0], [0, c, -s, 0], [0, s, c, 0], [0, 0, 0, 1]];
 const trans = (x, y, z) => [[1, 0, 0, x], [0, 1, 0, y], [0, 0, 1, z], [0, 0, 0, 1]];
@@ -86,13 +94,15 @@ export const computeAd = (Type, params, dof = DOF) => joints(Type, dof).map((J, 
 
 /**
  * Td[1] = Ad[[1]]; Td[i] = Chop[Td[i-1] . Ad[[i]]] (i = 2..n, n = Ad.length). Returns [Td1, …, Tdn] (0-based).
- * opts.chop (default true, robot-singularities' stored code): false computes Td[i-1] . Ad[[i]] without Chop
- * (arm-configurations, manipulator-workspaces).
+ * opts.chop (default true, robot-singularities' stored code): false computes Td[i-1] . Ad[[i]] without Chop.
+ * opts.fma (default false): the product of machine matrices as Mathematica 15.0.1's Dot (mul4Fma; harness H-AC-11,
+ * H-MW-04, H-MW-06, H-MW-23); manipulator-workspaces uses {chop: true, fma: true} (Chop acts on a
+ * TransformationFunction, H-AC-14).
  */
-export function computeTd(Ad, { chop: doChop = true } = {}) {
+export function computeTd(Ad, { chop: doChop = true, fma: useFma = false } = {}) {
   const Td = [Ad[0]];
   for (let i = 1; i < Ad.length; i++) {
-    const M = mul4(Td[i - 1], Ad[i]);
+    const M = (useFma ? mul4Fma : mul4)(Td[i - 1], Ad[i]);
     Td.push(doChop ? chop(M) : M);
   }
   return Td;

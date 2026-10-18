@@ -9,7 +9,7 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import { initialState, evaluate } from '../../demos/dubins-path/dubins.js';
 import { loadStates, plain, isIntegerLiteral } from '../../tools/lib/wl-json.mjs';
-import { harnessCase, captureOf, toJS, isExact } from '../support/harness-json.js';
+import { harnessCase, captureOf, toJS, isExact, isInteger, isMachineReal as isLexReal } from '../support/harness-json.js';
 import { readPng } from '../support/png.js';
 
 const FIXTURE = 'tests/golden/dubins-path.original-states.json';
@@ -41,13 +41,14 @@ describe('dubins-path golden: the saved states', () => {
       expect(s['goalθloc'].map((v) => v.wl)).toEqual(['(2) + ((2)^(1/2))', '(2) + (-((2)^(1/2)))']);
     }
     for (const ptr of [['specs', 'goalXY', 0], ['specs', 'minRadius'], ['states', 0, 'goalXY', 1]]) expect(isIntegerLiteral(fxText, ptr)).toBe(true);
-    // N[{2 + √2, 2 - √2}] correctly rounded (the fixture's "n" is Python's 2 - sqrt(2), one ulp below)
-    expect(init.goalThetaloc).toEqual([3.414213562373095, 0.585786437626905]);
-    withinUlps(init.goalThetaloc[1], fx.specs['goalθloc'][1].n, 1);
+    // N[{2 + √2, 2 - √2}] as Mathematica 15.0.1 gives it (harness H-DP-01, H-DP-25: "n" 0.5857864376269049, one ulp
+    // below the correctly rounded 0.585786437626905; the same double as the fixture's Python 2 - sqrt(2)) (D-DP-09)
+    expect(init.goalThetaloc).toEqual([3.414213562373095, 0.5857864376269049]);
+    expect(init.goalThetaloc[1]).toBe(fx.specs['goalθloc'][1].n);
     const { state } = evaluate(init);
     expect(state.Theta).toBe(-0.7853981633974483);
     withinUlps(state.goalThetaloc[0], 3.414213562373095, 2);
-    expect(state.goalThetaloc[1]).toBe(0.585786437626905); // exact opening kept (D-DP-09)
+    expect(state.goalThetaloc[1]).toBe(0.5857864376269049); // exact opening kept (D-DP-09)
     expect(state.goalXY).toEqual([2, 2]);
     expect(state.goalXYold).toEqual([2, 2]);
   });
@@ -136,7 +137,8 @@ describe('dubins-path golden: the snapshot pictures', () => {
 // reals within 1e-12 (TESTPLAN T-DP-31…T-DP-36). They skip until tests/golden/dubins-path.harness.json exists.
 const NAME = { Theta: 'Theta', 'θ': 'Theta', goalThetaloc: 'goalThetaloc', 'goalθloc': 'goalThetaloc', goalTheta: 'goalTheta', 'goalθ': 'goalTheta' };
 function wlValue(v) {
-  if (typeof v !== 'string') return Array.isArray(v) ? v.map(wlValue) : v;
+  // scenario values are read lexically (LexNumber for 2 and 2.0 alike): plain doubles for the port
+  if (typeof v !== 'string') return Array.isArray(v) ? v.map(wlValue) : toJS(v);
   if (!v.startsWith('wl:')) return v;
   const e = v.slice(3);
   if (!/^[-+*/ ().0-9Pi]+$/.test(e)) throw new Error(`unsupported wl value ${v}`);
@@ -147,6 +149,8 @@ function replay(scenario) {
   const out = [];
   for (const step of scenario.steps) {
     if (step.setFrom) state = snap(Number(step.setFrom.split(':')[1]));
+    // a fresh object per step: the state of an earlier step stays as it was evaluated (captureEachStep scenarios)
+    state = { ...state };
     if (step.set) for (const [k, v] of Object.entries(step.set)) state[NAME[k] ?? k] = wlValue(v);
     if (step.settle) { for (let i = 0; i < 50; i++) { const n = evaluate(state).state; const same = JSON.stringify(n) === JSON.stringify(state); state = n; if (same) break; } }
     res = evaluate(state);
@@ -171,7 +175,7 @@ function compareCapture(name, rec, at) {
   if (name === 'shortestPath') {
     const [len, drawing] = rec;
     expect(Math.abs(num(len) - at.view.shortestPath[0])).toBeLessThanOrEqual(4 * ulp(num(len)));
-    const col = drawing?.[0]?.args?.map((a) => Number(toJS(a).toFixed(6))).join(',');
+    const col = (drawing?.[0]?.a ?? drawing?.[0]?.args)?.map((a) => Number(toJS(a).toFixed(6))).join(',');
     if (col in COLOUR_WORD) expect(at.view.word).toBe(COLOUR_WORD[col]);
     else expect(['RSR', 'RLR']).toContain(at.view.word); // Darker[Yellow] / Darker[Green]: told apart by the length
     return;
@@ -229,6 +233,29 @@ describe('dubins-path golden: Mathematica harness', () => {
         for (const name of h.scenario.capture) {
           const rec = captureOf(h.record, name, each ? { step: i + 1 } : {});
           if (id === 'H-DP-20' && !['%messages'].includes(name)) continue; // recorded for K-DP-03, compared by hand
+          if (id === 'H-DP-07' && name === 'shortestPath') {
+            // P-DP-01 (proposed): with exact integer inputs dLSL and dRSR are the exact integer 8, dLSR and dRSL the
+            // machine 8.; Sort puts 8 before 8. and Darker[Yellow] {2/3, 2/3, 0} before Pink, so the original draws
+            // RSR. The port has machine numbers only and draws LSR (the colour order of Q-DP-01). Unreachable with
+            // the mouse (dragged locators are machine reals).
+            expect(isInteger(rec[0]) && toJS(rec[0])).toBe(8);
+            expect(rec[1][0].a.map((a) => toJS(a))).toEqual([2 / 3, 2 / 3, 0]);
+            expect(isInteger(captureOf(h.record, 'dRSR')[0]) && isInteger(captureOf(h.record, 'dLSL')[0])).toBe(true);
+            expect(isLexReal(captureOf(h.record, 'dLSR')[0]) && isLexReal(captureOf(h.record, 'dRSL')[0])).toBe(true);
+            expect(at.view.word).toBe('LSR');
+            expect(at.view.shortestPath[0]).toBe(8);
+            continue;
+          }
+          if (id === 'H-DP-07' && ['angP', 'xyP', 'Alpha'].includes(name)) {
+            // P-DP-01: the original's car is on the zero-length first arc of RSR (exact: xyP {0, 0}, angP the symbol
+            // Pi = Pi/2 + Sign[0 + 10^-6] Pi/2, the backwards car of Q-DP-02); the port's car is on LSR's, which is
+            // the car H-DP-06 recorded for the same pose in machine numbers.
+            const want = { angP: { sym: 'Pi' }, xyP: [0, 0], Alpha: 0 }[name];
+            expect(toJS(rec)).toEqual(want);
+            const machine = captureOf(harnessCase('dubins-path', 'H-DP-06').record, name);
+            compareCapture(name, machine, at);
+            continue;
+          }
           compareCapture(name, rec, at);
         }
       });

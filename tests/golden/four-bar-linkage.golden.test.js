@@ -15,7 +15,7 @@ import * as F from '../../demos/four-bar-linkage/fourbar.js';
 import { arcTan } from '../../shared/mma-exact.js';
 import { mEqual, mGreaterEq } from '../../shared/mma.js';
 import { loadStates, plain } from '../../tools/lib/wl-json.mjs';
-import { harnessCase, captureOf, firstDifference, toJS } from '../support/harness-json.js';
+import { harnessCase, captureOf, firstDifference, toJS, exactSymbols } from '../support/harness-json.js';
 
 const TABLE = JSON.parse(fs.readFileSync('demos/four-bar-linkage/recorded-samples.json', 'utf8'));
 F.useRecordedSamples(TABLE);
@@ -24,7 +24,11 @@ const snap = (k) => plain(fx.snapshots[k - 1]);
 const PI = Math.PI;
 const NAMES = ['p', 'spacing', 'links', 'spacingOld', 'linksOld', 'pnear', 'pvals'];
 
-/** the Lines of a stored plot (fixture encoding {head, args}), with the index of the curve colour before each */
+// Plot's default curve colours: the 2018 notebook's (stored plots, F.CURVE_COLOURS) and Mathematica 15.0.1's (harness
+// run 2: RGBColor[0.24, 0.6, 0.8] and RGBColor[0.95, 0.627, 0.1425] inside Directive[Opacity[1], …, AbsoluteThickness[2],
+// Thickness[Large]] — a version difference of Plot's default theme, N-FB-03).
+const COLOURS_1501 = [[0.24, 0.6, 0.8], [0.95, 0.627, 0.1425]];
+/** the Lines of a stored or recorded plot ({head, args} or {h, a}), with the index of the curve colour before each */
 function plotLinesOf(plot) {
   const out = [];
   let colour = -1;
@@ -32,8 +36,17 @@ function plotLinesOf(plot) {
     if (Array.isArray(v)) { v.forEach(walk); return; }
     if (!v || typeof v !== 'object') return;
     const h = v.head ?? v.h, a = v.args ?? v.a;
-    if (h === 'RGBColor') { colour = F.CURVE_COLOURS.findIndex((c) => c.every((x, i) => x === toJS(a[i]))); return; }
-    if (h === 'Line') { out.push({ colour, pts: toJS(a[0]) }); return; }
+    if (h === 'RGBColor') {
+      const rgb = a.map(toJS);
+      const same = (c) => c.every((x, i) => x === rgb[i]);
+      colour = Math.max(F.CURVE_COLOURS.findIndex(same), COLOURS_1501.findIndex(same));
+      return;
+    }
+    if (h === 'Line') { // one segment {{x, y}, …} or several {{{x, y}, …}, …}
+      const pts = toJS(a[0]);
+      for (const seg of pts.length && Array.isArray(pts[0][0]) ? pts : [pts]) out.push({ colour, pts: seg });
+      return;
+    }
     if (a) a.forEach(walk);
   };
   walk(plot);
@@ -298,36 +311,85 @@ const HARNESS_TITLES = [
 ];
 const setValue = (x) => (typeof x === 'string' && x.startsWith('wl:') ? { 'wl:True': true, 'wl:False': false }[x] : toJS(x));
 
+// K-FB-02 (resolved by harness run 2, 15.0.1): a fresh Plot does NOT reproduce the 2018 records. At the four recorded
+// settings the port keeps the 2018 samples (DESIGN §6.3); the records of a fresh 15.0.1 Plot there have these lengths
+// (2018: 100, 103, 80, 130). The port's difference is asserted exactly (P-FB-01 proposes the 15.0.1 records instead).
+const FRESH_1501_LENGTHS = { 'H-FB-01': 474, 'H-FB-02': 255, 'H-FB-03': 463, 'H-FB-04': 613, 'H-FB-10': 474 };
+// A scenario that does not capture pvals replays those of a scenario with the same fresh Plot (same lengths, Plot is
+// deterministic): H-FB-15 has H-FB-02's settings (separation 0.5, links {1, 2}).
+const REPLAY_FROM = { 'H-FB-15': 'H-FB-02' };
+// The port's pnear with the 2018 samples (independent: Euclidean nearest of snapshot 2's stored records to {3.1, -3.1}).
+const PNEAR_2018 = { 'H-FB-15': [0.18473107635407357, -2.4147644922571487] };
+// K-FB-03 / K-FB-11 (resolved by harness run 2): when Plot records nothing, `{plot, {pvals}} = Reap@Plot[…]` assigns
+// plot = the new, empty Graphics and fails only for {pvals} (Set::shape): pvals and pnear keep their old values, the
+// curve disappears. The port keeps the old curve too (P-FB-02 proposes the original's empty plot).
+const NO_RECORDS = new Set(['H-FB-09', 'H-FB-12']);
+
+/** Run the scenario's steps on the port; replay = the recorded pvals stand in for Plot (and the 2018 table is off). */
+function runPort(h, sc, { replay = null } = {}) {
+  let st = F.initialSettings(), view = null;
+  const sampler = replay ?? F.plotSamples;
+  if (replay) F.useRecordedSamples({ ...TABLE, settings: [] }); // the replayed records replace every Plot
+  try {
+    for (const step of h.scenario.steps) {
+      if (step.set) for (const [k, x] of Object.entries(step.set)) st[k] = setValue(x);
+      if (step.setFrom) st = F.fromSettings(snap(Number(String(step.setFrom).split(':')[1])));
+      ({ state: st, view } = F.evaluate(st, { sampler }));
+    }
+  } finally { F.useRecordedSamples(TABLE); }
+  return { st, view };
+}
+
 describe('four-bar golden: Mathematica harness', () => {
   for (const title of HARNESS_TITLES) {
     const sc = scenarios.find((x) => x.id === title.slice(-7));
     it(`${title}: ${sc.why ?? ''}`, (ctx) => {
       const h = harnessCase('four-bar-linkage', sc.id);
       if (h.status !== 'ok') return ctx.skip(h.reason);
-      const cap = (n) => (sc.capture.includes(n) ? captureOf(h.record, n) : undefined);
-      const recPvals = cap('pvals'), recPlot = cap('plot');
+      const cap = (n) => (sc.capture.includes(n) ? exactSymbols(captureOf(h.record, n)) : undefined);
+      const src = REPLAY_FROM[sc.id] ? harnessCase('four-bar-linkage', REPLAY_FROM[sc.id]) : null;
+      if (src && src.status !== 'ok') return ctx.skip(src.reason);
+      const recPvals = cap('pvals') ?? (src && exactSymbols(captureOf(src.record, 'pvals')));
+      const recPlot = cap('plot') ?? (src && exactSymbols(captureOf(src.record, 'plot')));
       const replay = () => {
         const records = toJS(recPvals ?? []);
         const lines = recPlot ? plotLinesOf(recPlot) : [];
         const curve1 = lines.filter((l) => l.colour === 0).reduce((n, l) => n + l.pts.length, 0) || records.length;
         return { records, curve1, nulls: [[], []] };
       };
-      const sampler = OWN_SAMPLER.has(sc.id) || recPvals === undefined ? F.plotSamples : replay;
-      let st = F.initialSettings(), view = null;
-      for (const step of h.scenario.steps) {
-        if (step.set) for (const [k, x] of Object.entries(step.set)) st[k] = setValue(x);
-        if (step.setFrom) st = F.fromSettings(snap(Number(String(step.setFrom).split(':')[1])));
-        ({ state: st, view } = F.evaluate(st, { sampler }));
+      // 1. the port as it runs (own sampler, or the 2018 table at the four recorded settings)
+      const own = runPort(h, sc);
+      const fromTable = own.view.resampled?.recorded != null;
+      if (fromTable && recPvals !== undefined) { // K-FB-02, P-FB-01: the 2018 records, not 15.0.1's
+        const t = TABLE.settings.find((x) => x.snapshot === own.view.resampled.recorded);
+        expect(own.st.pvals, `${sc.id}: port keeps the 2018 samples`).toBe(t.pvals);
+        expect(recPvals.length, `${sc.id}: 15.0.1 records`).toBe(FRESH_1501_LENGTHS[sc.id] ?? FRESH_1501_LENGTHS[REPLAY_FROM[sc.id]]);
+        if (FRESH_1501_LENGTHS[sc.id]) expect(firstDifference(recPvals, own.st.pvals, 'pvals')).toBe(`pvals: length ${FRESH_1501_LENGTHS[sc.id]} vs ${t.pvals.length}`);
+        if (PNEAR_2018[sc.id]) expect(own.st.pnear, `${sc.id}: pnear from the 2018 samples (P-FB-01)`).toEqual(PNEAR_2018[sc.id]);
       }
+      if (NO_RECORDS.has(sc.id)) { // K-FB-03: no record; Set::shape; pvals stale, plot = an empty Graphics
+        expect(toJS(cap('%messages')).filter((m) => m.name === 'Set::shape').length).toBe(1);
+        expect(firstDifference(recPvals, F.initialSettings().pvals, 'pvals')).toBe(null);
+        expect(plotLinesOf(recPlot), `${sc.id}: the recorded plot has no Line`).toEqual([]);
+        expect(own.view.resampled.count, `${sc.id}: the port's sampler finds no record either`).toBe(0);
+        expect(own.st.plot.lines, `${sc.id}: the port keeps the old curve (P-FB-02)`).toEqual(F.initialSettings().plot.lines);
+        expect(firstDifference(recPvals, own.st.pvals, 'pvals')).toBe(null);
+        expect(firstDifference(cap('pnear'), own.st.pnear, 'pnear')).toBe(null);
+      }
+      // 2. everything downstream of the samples, bit for bit, with the recorded samples replayed (except H-FB-09/10's
+      //    own-sampler checks: there only what does not depend on the samples is compared)
+      const useReplay = recPvals !== undefined && !OWN_SAMPLER.has(sc.id);
+      const { st, view } = useReplay ? runPort(h, sc, { replay }) : own;
       const port = {
         lenlengths: view.lenlengths, impossibleLinks: view.impossibleLinks, pnear: st.pnear, 'θv': view.Thetav, 'φv': view.Phiv,
         'α': view.Alpha, spacingOld: st.spacingOld, linksOld: st.linksOld, pvals: st.pvals,
       };
       for (const name of sc.capture) {
         if (!(name in port)) continue;
-        expect(firstDifference(captureOf(h.record, name), port[name], name), `${sc.id}: ${name}`).toBe(null);
+        if (OWN_SAMPLER.has(sc.id) && !NO_RECORDS.has(sc.id) && ['pvals', 'pnear', 'θv', 'φv', 'α'].includes(name)) continue; // the port's own samples
+        expect(firstDifference(cap(name), port[name], name), `${sc.id}: ${name}`).toBe(null);
       }
-      if (recPlot !== undefined && st.plot.text === null) { // the drawn points of each curve
+      if (recPlot && st.plot.text === null && !OWN_SAMPLER.has(sc.id) && !NO_RECORDS.has(sc.id)) { // the drawn points of each curve
         const lines = plotLinesOf(recPlot);
         for (const c of [0, 1]) {
           const rec = lines.filter((l) => l.colour === c).flatMap((l) => l.pts).sort((a, b) => a[0] - b[0]);

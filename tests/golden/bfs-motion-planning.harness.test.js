@@ -12,7 +12,7 @@
 // for its numbers only.
 import { describe, it, expect } from 'vitest';
 import { loadStates, plain } from '../../tools/lib/wl-json.mjs';
-import { harnessCase, loadScenarioFile, captureOf, toJS, isNotEvaluated, NO_DATA } from '../support/harness-json.js';
+import { harnessCase, loadScenarioFile, captureOf, toJS, isNotEvaluated, isUnassignedLocal, NO_DATA } from '../support/harness-json.js';
 import { evaluate } from '../../demos/bfs-motion-planning/model.js';
 
 const DIR = 'bfs-motion-planning';
@@ -41,7 +41,7 @@ const PORT_VALUE = {
 /** a recorded value as plain JS: Infinity (DirectedInfinity[1]) as Infinity, colours (non-numbers) as null */
 const rec = (v) => {
   if (Array.isArray(v)) return v.map(rec);
-  if (v && typeof v === 'object' && (v.wl === 'Infinity' || v.sym === 'Infinity' || v.head === 'DirectedInfinity')) return Infinity;
+  if (v && typeof v === 'object' && (v.wl === 'Infinity' || v.sym === 'Infinity' || v.h === 'DirectedInfinity')) return Infinity;
   const j = toJS(v);
   return typeof j === 'number' || typeof j === 'boolean' ? j : null;
 };
@@ -57,6 +57,8 @@ function check(ctx, id) {
     if (name.startsWith('%')) continue; // front-end texts: compared by the manual checks
     const recorded = captureOf(h.record, name);
     const actual = PORT_VALUE[name] ? PORT_VALUE[name](r) : r.state[name];
+    // an unassigned Body local is recorded as null (HW-45); the port leaves the view field undefined
+    if (isUnassignedLocal(h.record, name)) { expect(actual, `${id} ${name}: unassigned in Mathematica`).toBeUndefined(); continue; }
     if (isNotEvaluated(recorded)) { expect(actual, `${id} ${name}: not evaluated in Mathematica`).toBeUndefined(); continue; }
     expect(same(rec(recorded), portComparable(actual)), `${id} ${name}`).toBe(true);
   }

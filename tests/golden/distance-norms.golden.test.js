@@ -14,7 +14,7 @@ import {
 } from '../../demos/distance-norms/model.js';
 import { framePrimitives, frameLayout } from '../../shared/svg-frame.js';
 import { loadStates, plain } from '../../tools/lib/wl-json.mjs';
-import { harnessCase, captureOf, toJS, exactDouble } from '../support/harness-json.js';
+import { harnessCase, captureOf, toJS, exactDouble, plotRanges } from '../support/harness-json.js';
 
 const fixture = loadStates('tests/golden/distance-norms.original-states.json');
 const inputs = (s) => ({ ...initialState(), ...plain(s) });
@@ -367,7 +367,16 @@ describe('distance-norms golden: Mathematica harness (skipped until tests/golden
     expect(toJS(captureOf(rec, 'r2'))).toBe(0);
     expect(evaluate(s).arm.robotArm.link).toBe(1);
     compareArm(captureOf(rec, 'arm'), s);
-    expect(recordedRegion(gOf(rec)).area).toBeLessThan(1e-6);
+    // K-DN-02: Mathematica draws the degenerate map without a message: every vertex of the sheet lies on the circle of
+    // radius 2 and the sheet polygons are chord slivers of total area 2.0043e-4 (r1 = 0, H-DN-07: 9e-15) — invisible
+    // (about 1 px² in all) but not zero; the port fills nothing and draws the outline only (D-DN-08)
+    const r = recordedRegion(gOf(rec));
+    expect(captureOf(rec, '%messages')).toEqual([]);
+    expect(r.area).toBeGreaterThan(1e-4);
+    expect(r.area).toBeLessThan(3e-4);
+    for (const gc of findAll(gOf(rec), 'GraphicsComplex')) for (const q of toJS(gc.a[0])) expect(Math.abs(Math.hypot(q[0], q[1]) - 2)).toBeLessThan(1e-15);
+    expect(evaluate(s).region.totalArea).toBe(0);
+    expect(hausdorff(evaluate(s).region.boundary, r.lines)).toBeLessThanOrEqual(0.01);
   });
   H('harness H-DN-09: Robot Arm label on link 1 (r2 < 1) and on link 2 (r2 >= 1) with machine r1', (rec, sc) => {
     [1, 2].forEach((step) => {
@@ -384,8 +393,10 @@ describe('distance-norms golden: Mathematica harness (skipped until tests/golden
     expect(pts.some((q) => ulpDiff(q[0], a.arcs.theta2.at[0]) <= 4 && ulpDiff(q[1], a.arcs.theta2.at[1]) <= 4)).toBe(true);
   });
   H('harness H-DN-11: dial pressed exactly at its centre: ArcTan[0., 0.] (K-DN-03)', (rec) => {
-    // records the outcome only; the port ignores a dial press at the exact centre (D-TK-07)
-    expect(captureOf(rec, '%messages')).toBeDefined();
+    // ArcTan[0., 0.] = 0. without a message: the original draws link 1 along +x; the port's shared dial ignores a
+    // press at the exact centre (D-TK-07) — the recorded difference, proposal P-DN-01
+    expect(captureOf(rec, '%messages')).toEqual([]);
+    expect(exactDouble(captureOf(rec, 'Theta1'))).toBe(0);
   });
   H('harness H-DN-12: theta1 = pi/4 up to rounding: the tolerant Abs[theta1] > pi/4 hides the label', (rec, sc) => {
     const s = stateAfter(sc);
@@ -402,7 +413,11 @@ describe('distance-norms golden: Mathematica harness (skipped until tests/golden
     const s = stateAfter(sc);
     compareLocals(rec, s);
     compareRegion(gOf(rec), s, { area: 1 });
-    expect(toJS(captureOf(rec, '%plotRange'))).toEqual([[-2.5, 2.5], [-2.5, 2.5]]);
+    // %plotRange (HW-50): one entry per graphic, {head, value, method, …}; the stored PlotRange, also as AbsoluteOptions
+    const [g, ...more] = plotRanges(captureOf(rec, '%plotRange'));
+    expect(more).toEqual([]);
+    expect([g.head, g.method]).toEqual(['Graphics', 'AbsoluteOptions']);
+    expect(g.value).toEqual([[-2.5, 2.5], [-2.5, 2.5]]);
   });
   H('harness H-DN-15: all six snapshot Settings, including cORw = configuration (Q-DN-07)', (rec, sc) => {
     for (let k = 1; k <= 6; k++) {

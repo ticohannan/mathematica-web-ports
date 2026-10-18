@@ -12,7 +12,7 @@
 //    tests/support/harness-json.js). These SKIP with the documented reason until the owner's harness run exists.
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
-import { harnessCase, captureOf, toJS } from '../support/harness-json.js';
+import { harnessCase, captureOf, toJS, asHeadArgs, exactDouble, isMachineReal, sameDouble } from '../support/harness-json.js';
 import {
   TYPES, initialState, initialSettings, evaluate, workspaceSurfaces, sampleSpeedSurface, typeOf, typeIndexOfStored,
   jointLabels, fitCamera, groundWidthFraction, MW_ZOOM, MESH_STYLE, BOUNDARY_STYLE, TYPE_NAMES, selectType,
@@ -279,7 +279,7 @@ function replay(scenario) {
 }
 /** a captured TransformationFunction or matrix → 4x4 numbers */
 const matrixOf = (rec) => {
-  const v = toJS(rec);
+  const v = asHeadArgs(rec); // HW-45 {"h", "a"} → {head, args}
   if (Array.isArray(v) && Array.isArray(v[0][0])) return v;
   if (Array.isArray(v)) return v;
   if (v && v.head === 'TransformationFunction') return toJS(v.args[0]);
@@ -288,12 +288,22 @@ const matrixOf = (rec) => {
 const closeM = (A, B, tol, what) => A.forEach((r, i) => r.forEach((x, j) => expect(Math.abs(x - B[i][j]), `${what}[${i}][${j}]`).toBeLessThanOrEqual(tol)));
 /** every vertex of a recorded workspace3D lies on the port surfaces of that evaluation (grid vertices within 1e-14) */
 function checkWorkspace(rec, view, what) {
-  const g = storedGraphic(toJS(rec));
+  const g = storedGraphic(asHeadArgs(rec)); // HW-45 {"h", "a"} → the fixtures' {head, args}
   const port = { fs: workspaceSurfaces(typeOf(view.wsType), ...view.wsRanges), s: view.ws.surfaces };
+  // K-MW-07 (resolved by the 21 recorded workspaces): "Speed" sampling always gives 1105 vertices (9 × 121 grid
+  // points + 16 on surface 1's mesh lines), also for full and wrapping ranges (H-MW-19, H-MW-21); D-MW-01 holds
+  expect(g.verts, what).toHaveLength(1105);
   const c = classify(g.verts, port);
+  expect(c.grid + c.near, `${what}: vertices at the port grid (2e-15) or near it (1e-6)`).toBeGreaterThanOrEqual(1081);
+  expect(c.rest.length, what).toBeLessThanOrEqual(24);
   for (const r of c.rest) expect(r.d, `${what}: vertex ${JSON.stringify(r.p)}`).toBeLessThan(1e-6);
   return c;
 }
+/** a recorded machine number against the port's double, bit for bit */
+const sameReal = (rec, x, what) => {
+  expect(isMachineReal(rec), `${what} is a machine real`).toBe(true);
+  expect(sameDouble(exactDouble(rec), x), `${what}: ${exactDouble(rec)} (recorded) vs ${x}`).toBe(true);
+};
 function check(ctx, id, extra = () => {}) {
   const h = harnessCase('manipulator-workspaces', id);
   if (h.status !== 'ok') return ctx.skip(h.reason);
@@ -304,12 +314,19 @@ function check(ctx, id, extra = () => {}) {
   for (const [run, step] of steps) {
     const cap = (name) => captureOf(h.record, name, { step });
     for (const name of h.scenario.capture) {
-      if (name === 'pm') toJS(cap(name)).forEach((v, i) => expect(Math.abs(v - run.view.pm[i]), `pm[${i}]`).toBeLessThanOrEqual(1e-15));
-      if (name === 'wl:Table[Td[i],{i,1,dof}]') toJS(cap(name)).forEach((T, i) => closeM(run.view.Td[i], matrixOf(T), 1e-15, `Td[${i + 1}]`));
+      if (name === 'pm') cap(name).forEach((v, i) => sameReal(v, run.view.pm[i], `pm[${i + 1}]`));
+      // Td bit for bit: Chop acts (H-AC-14) and the products are Mathematica's fused machine Dot (Q-MW-09)
+      if (name === 'wl:Table[Td[i],{i,1,dof}]') {
+        cap(name).forEach((T, i) => {
+          expect(T.h).toBe('TransformationFunction');
+          T.a[0].forEach((row, r) => row.forEach((e, c) => sameReal(e, run.view.Td[i][r][c], `Td[${i + 1}][${r + 1},${c + 1}]`)));
+        });
+      }
       if (['r1old', 'r2old', 'r3old'].includes(name)) expect(toJS(cap(name))).toEqual(run.st[name]);
       if (name === 'TypeOld') expect(typeIndexOfStored(toJS(cap(name)))).toBe(run.st.TypeOld);
       if (name === 'workspace3D') checkWorkspace(cap(name), run.view, `${id} workspace3D`);
-      if (name === 'wl:Chop[Td[dof]] === Td[dof]') expect(toJS(cap(name)), 'Q-MW-09: Chop does not act on Td[dof]').toBe(true);
+      // True here only because Td[dof] is already chopped (Td[i] = Chop[…]); Chop does act on a TransformationFunction (H-AC-14)
+      if (name === 'wl:Chop[Td[dof]] === Td[dof]') expect(cap(name)).toBe(true);
     }
   }
   extra(runs, h);
@@ -352,19 +369,36 @@ describe('manipulator-workspaces golden: Mathematica harness records', { timeout
   it('harness "H-MW-16"', (ctx) => check(ctx, 'H-MW-16', recomputedLast));
   it('harness "H-MW-10"', (ctx) => check(ctx, 'H-MW-10', (runs) => expect(runs[0].view.recomputed).toBe(false)));
   it('harness "H-MW-17"', (ctx) => check(ctx, 'H-MW-17', (runs, h) => {
-    // the recorded Cuboid primitives: the port's corners before normalisation (K-MW-03)
-    const rec = JSON.stringify(toJS(captureOf(h.record, '%primitives')));
+    // %primitives records heads and dimensions only (HW-43 §6.1), not coordinates, so the reversed Cuboid corners of
+    // K-MW-03 are not in the record (N-MW-09; a %g3d capture would decide it). What it does decide: the robot's
+    // primitives in order — ground Cylinder, per joint the coordinate axes (Line, Rotate[Line], Rotate[Line]) and
+    // three Cuboids (joints 2 and 3 in a GeometricTransformation), the wrist centre (axes and Point, transformed) — as
+    // the port draws them.
+    const prims = captureOf(h.record, '%primitives');
+    const robot = prims.list.slice(0, prims.list.findIndex((p) => p.h === 'Point') + 1);
+    const axes = ['Line', 'Rotate', 'Line', 'Rotate', 'Line'], joint = [...axes, 'Cuboid', 'Cuboid', 'Cuboid'], GT = 'GeometricTransformation';
+    expect(robot.map((p) => p.h)).toEqual(['Cylinder', ...joint, GT, ...joint, GT, ...joint, GT, ...axes, 'Point']); // wrapper before its content
+    expect(robot.filter((p) => p.h === 'Line').every((p) => JSON.stringify(toJS(p.dims)) === '[5,2,3]')).toBe(true);
+    const cnt = (t) => runs[0].view.robotPrims.filter((p) => p.type === t).length;
+    expect([cnt('cylinder'), cnt('cuboid'), cnt('point'), cnt('line')]).toEqual([1, 9, 1, 12 * 5]);
     const cub = runs[0].view.robotPrims.filter((p) => p.type === 'cuboid');
-    expect(cub.length).toBeGreaterThan(0);
-    for (const c of cub.filter((p) => !p.matrix)) expect(rec.includes(JSON.stringify(c.max[2]).slice(0, 8)), `corner ${c.max[2]}`).toBe(true);
-    expect(cub.some((c) => cuboidCorners(c).min[2] !== c.min[2])).toBe(true); // a reversed corner pair exists
+    expect(cub.some((c) => cuboidCorners(c).min[2] !== c.min[2])).toBe(true); // the port's reversed corner pair (K-MW-03 open)
   }));
   it('harness "H-MW-18"', (ctx) => check(ctx, 'H-MW-18', (runs) => expect(runs[0].view.recomputed).toBe(false)));
   it('harness "H-MW-19"', (ctx) => check(ctx, 'H-MW-19'));
   it('harness "H-MW-20"', (ctx) => check(ctx, 'H-MW-20', (runs, h) => {
-    const opts = JSON.stringify(toJS(captureOf(h.record, '%options:Axes,Boxed,SphericalRegion,ImageSize,PlotRange')));
-    expect(opts.includes('"Axes"') && /"Axes"[^}]*true/.test(opts), 'K-MW-02: no Axes -> True').toBe(false);
+    // K-MW-02 resolved: the Show graphic has Axes -> False, Boxed -> False, SphericalRegion -> True (the first graphic's
+    // options; workspace3D's Axes -> True does not survive), ImageSize {425, 425}
+    const [o] = captureOf(h.record, '%options:Axes,Boxed,SphericalRegion,ImageSize,PlotRange');
+    expect(o.head).toBe('Graphics3D');
+    const val = (k) => toJS(o.options[k][0].a[1]);
+    expect([val('Axes'), val('Boxed'), val('SphericalRegion'), val('ImageSize')]).toEqual([false, false, true, [425, 425]]);
     expect(runs[0].view.graphic.options).toEqual({ SphericalRegion: true, ImageSize: 425, Boxed: false });
+    // PlotRange All → the kernel's computed range = the port's bounding box of all shown objects (D-MW-04 input)
+    const [pr] = captureOf(h.record, '%plotRange');
+    expect([pr.method, toJS(pr.storedOption)]).toEqual(['AbsoluteOptions', { sym: 'All' }]);
+    closeM(runs[0].view.box, toJS(pr.value), 0, 'PlotRange');
+    expect(val('PlotRange')).toEqual(toJS(pr.value));
   }));
   it('harness "H-MW-21"', (ctx) => check(ctx, 'H-MW-21'));
   it('harness "H-MW-22"', (ctx) => check(ctx, 'H-MW-22', (runs) => expect(runs.map((r) => [r.st.TypeOld, r.view.recomputed])).toEqual([[1, true], [2, true]])));

@@ -84,6 +84,15 @@ const numKey = (v) => ('n' in v ? 'n' : 'value' in v ? 'value' : null);
 export const isExact = (v) => v !== null && typeof v === 'object' && !(v instanceof LexNumber) && !Array.isArray(v) && typeof v.wl === 'string';
 export const isInteger = (v) => isLexInteger(v) || (isExact(v) && /^-?\d+$/.test(v.wl) && numKey(v) === null);
 export const isNotEvaluated = (v) => v !== null && typeof v === 'object' && (v.notEvaluated === true || v.notReached === true);
+/**
+ * True when capture `name` of a record is a Body local that was never assigned: HW-45 writes an unassigned Module
+ * local as JSON null (mp-original rule). JSON null is also Mathematica's Null, so the capture must resolve to a local
+ * (record.resolved[name].kind === 'local'); for a Manipulate variable or global, null stays Null and this is false.
+ */
+export function isUnassignedLocal(record, name, { step = null } = {}) {
+  const r = record.resolved && record.resolved[name];
+  return !!r && r.kind === 'local' && captureOf(record, name, { step }) === null;
+}
 
 /** The double of a machine real, or of an exact value's "n"/"value" (e.g. {"wl":"Pi/2","n":1.5707963267948966}). */
 export function exactDouble(v) {
@@ -132,6 +141,23 @@ export function toJS(v) {
   if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, toJS(x)]));
   return v;
 }
+/**
+ * Numeric symbols and exact infinities as doubles (HW-45 writes a bare symbol as {"sym": "Pi"} and Infinity as
+ * {"wl": "Infinity"} without "n"). Added for harness run 2 (Circle[{r, 0}, r, {Pi, …}] in dubins-isochrons).
+ */
+export const NUMERIC_SYMBOLS = Object.freeze({ Pi: Math.PI, E: Math.E, Degree: Math.PI / 180, GoldenRatio: (1 + Math.sqrt(5)) / 2, EulerGamma: 0.5772156649015329, Catalan: 0.915965594177219, Infinity: Infinity });
+const WL_INFINITY = Object.freeze({ Infinity: Infinity, '-Infinity': -Infinity, 'DirectedInfinity[1]': Infinity, 'DirectedInfinity[-1]': -Infinity });
+/** true for {"sym": S} with S a key of NUMERIC_SYMBOLS, or an exact ±Infinity */
+export const isNumericSymbol = (v) => v !== null && typeof v === 'object' && !(v instanceof LexNumber) && !Array.isArray(v)
+  && ((typeof v.sym === 'string' && Object.hasOwn(NUMERIC_SYMBOLS, v.sym)) || (isExact(v) && numKey(v) === null && Object.hasOwn(WL_INFINITY, v.wl)));
+/** toJS, and in addition numeric symbols and exact infinities as doubles (isNumericSymbol); other values as toJS. */
+export function toJSNumeric(v) {
+  if (isNumericSymbol(v)) return typeof v.sym === 'string' ? NUMERIC_SYMBOLS[v.sym] : WL_INFINITY[v.wl];
+  if (v instanceof LexNumber || isExact(v)) return toJS(v);
+  if (Array.isArray(v)) return v.map(toJSNumeric);
+  if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, toJSNumeric(x)]));
+  return v;
+}
 /** Deep bit-exact comparison of a recorded value with a JS value (numbers by sameDouble). Returns the first difference or null. */
 export function firstDifference(recorded, actual, where = '') {
   if (recorded instanceof LexNumber || isExact(recorded)) {
@@ -150,4 +176,124 @@ export function firstDifference(recorded, actual, where = '') {
     return null;
   }
   return recorded === actual ? null : `${where || '.'}: ${JSON.stringify(recorded)} vs ${JSON.stringify(actual)}`;
+}
+
+/**
+ * HW-45 compound expressions {"h": head, "a": [args]} (harness records) → the {head, args} form of the
+ * original-states fixtures (tools/extract_state.py), recursively, so one reader serves both. Numbers and exact values
+ * are converted as toJS does (machine/exact distinction lost); {"sym": …} and strings stay as they are.
+ */
+export function asHeadArgs(v) {
+  if (Array.isArray(v)) return v.map(asHeadArgs);
+  if (v && typeof v === 'object' && !(v instanceof LexNumber) && !isExact(v) && typeof v.h !== 'undefined' && Array.isArray(v.a) && Object.keys(v).length === 2) {
+    return { head: asHeadArgs(v.h), args: v.a.map(asHeadArgs) };
+  }
+  if (v && typeof v === 'object' && !(v instanceof LexNumber) && !isExact(v)) return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, asHeadArgs(x)]));
+  return toJS(v);
+}
+
+/**
+ * Every compound expression {"h", "a"} with a head in `heads` inside a recorded value (e.g. a %g3d graphic), depth
+ * first in expression order, not descending into a match: findHeads(g, ['Cuboid', 'Cylinder']). Values stay lexical.
+ */
+export function findHeads(v, heads, out = []) {
+  const set = heads instanceof Set ? heads : new Set(heads);
+  if (Array.isArray(v)) { for (const x of v) findHeads(x, set, out); return out; }
+  if (v && typeof v === 'object' && !(v instanceof LexNumber) && typeof v.h === 'string' && Array.isArray(v.a)) {
+    if (set.has(v.h)) out.push(v);
+    else for (const x of v.a) findHeads(x, set, out);
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------- graphics primitives (HW-45 %g3d against g3d.js)
+// g3dPrimitiveDifferences(recordedGraphicOrList, portContent) -> {counts, differences}: compares, in expression order,
+// Cuboid corners, Cylinder end points and radius, Line point lists (a recorded Line of several polylines counts as
+// that many) with a port content tree built with demos/common/g3d.js (untransformed, as the record holds them inside
+// GeometricTransformation/Rotate), by value bit for bit (exact recorded numbers by their double). Rotate angles and
+// directives are not compared. portPrimitives(content) lists the port's cuboid/cylinder/line primitives.
+const G3D_HEADS = ['Cuboid', 'Cylinder', 'Line'];
+const G3D_PORT = { cuboid: 'Cuboid', cylinder: 'Cylinder', line: 'Line' };
+
+/** the port's cuboid/cylinder/line primitives of a g3d.js content tree, g3dDepth first, untransformed */
+export function portPrimitives(g, out = []) {
+  if (Array.isArray(g)) { for (const x of g) portPrimitives(x, out); return out; }
+  if (g && typeof g === 'object') {
+    if (g.prim && G3D_PORT[g.prim]) out.push(g);
+    else if (g.content !== undefined) portPrimitives(g.content, out);
+  }
+  return out;
+}
+
+const g3dArgsOf = (p) => (p.prim === 'cuboid' ? [p.min, p.max] : p.prim === 'cylinder' ? [[p.p1, p.p2], p.radius] : [p.points]);
+const g3dDepth = (v) => (Array.isArray(v) ? 1 + g3dDepth(v[0]) : 0);
+/**
+ * Line primitives as a list of polylines: a recorded Line[{{p, q}, {p, q}, …}] (several lines in one primitive) is
+ * split into its polylines, so that it compares with the port's one Line per polyline.
+ */
+function g3dLineParts(list, recorded) {
+  return list.flatMap((p) => {
+    const pts = recorded ? p.a[0] : p.points;
+    return g3dDepth(pts) === 3 ? pts.map((x) => ({ pts: x })) : [{ pts }];
+  });
+}
+
+/** {counts, differences}: differences lists "Cuboid #k: recorded … vs port …" for every primitive that differs */
+export function g3dPrimitiveDifferences(recorded, portContent) {
+  const rec = findHeads(recorded, G3D_HEADS);
+  const port = portPrimitives(portContent);
+  const recLines = g3dLineParts(rec.filter((p) => p.h === 'Line'), true), portLines = g3dLineParts(port.filter((p) => p.prim === 'line'), false);
+  const count = (list, f, lines) => ({ ...Object.fromEntries(G3D_HEADS.map((h) => [h, list.filter((p) => f(p) === h).length])), Line: lines.length });
+  const counts = { recorded: count(rec, (p) => p.h, recLines), port: count(port, (p) => G3D_PORT[p.prim], portLines) };
+  const differences = [];
+  if (JSON.stringify(counts.recorded) !== JSON.stringify(counts.port)) differences.push(`counts (Line = polylines) ${JSON.stringify(counts.recorded)} vs ${JSON.stringify(counts.port)}`);
+  recLines.forEach((l, k) => {
+    if (portLines[k] && !sameValue(l.pts, portLines[k].pts)) differences.push(`Line #${k + 1}: recorded ${JSON.stringify(toJS(l.pts))} vs port ${JSON.stringify(portLines[k].pts)}`);
+  });
+  for (const h of ['Cuboid', 'Cylinder']) {
+    const r = rec.filter((p) => p.h === h), q = port.filter((p) => G3D_PORT[p.prim] === h);
+    r.forEach((p, k) => {
+      if (!q[k]) return;
+      const a = p.a.slice(0, h === 'Cylinder' ? 2 : h === 'Cuboid' ? 2 : 1), b = g3dArgsOf(q[k]);
+      if (h === 'Cylinder' && a.length === 1) a.push(1); // Cylinder[{p, q}] = radius 1
+      if (!sameValue(a, b)) differences.push(`${h} #${k + 1}: recorded ${JSON.stringify(toJS(a))} vs port ${JSON.stringify(b)}`);
+    });
+  }
+  return { counts, differences };
+}
+
+// ---------------------------------------------------------------- numeric constants encoded as symbols (run 2)
+// HW-45 encodes a bare exact constant such as `Pi` as a Symbol ({"sym": "Pi"}), not as {"wl", "n"} (that form is only
+// for compound exact numbers like Pi/2). NUMERIC_SYMBOLS lists the constants and their doubles (N[c] in 15.0.1);
+// exactSymbols(v) returns a copy of a recorded value with each of them replaced by the exact-number form
+// {"wl": "Pi", "n": 3.141592653589793}, so the other helpers (exactDouble, sameValue, toJS, firstDifference) compare
+// them by value. Other symbols are left unchanged.
+// NUMERIC_SYMBOLS: defined above (Pi, E, Degree, Infinity).
+export function exactSymbols(v) {
+  if (Array.isArray(v)) return v.map(exactSymbols);
+  if (v === null || typeof v !== 'object' || v instanceof LexNumber) return v;
+  const keys = Object.keys(v);
+  if (keys.length === 1 && keys[0] === 'sym' && Object.hasOwn(NUMERIC_SYMBOLS, v.sym)) return { wl: v.sym, n: NUMERIC_SYMBOLS[v.sym] };
+  return Object.fromEntries(keys.map((k) => [k, exactSymbols(v[k])]));
+}
+
+// ---------------------------------------------------------------- typeset strings (run 2)
+// A string written in a notebook with the linear box syntax ("\!\(\*SuperscriptBox[\(RRT\), \(*\)]\)") holds, in the
+// kernel, private-use characters instead of the escapes; the harness records the kernel string (RRT H-RT-06 inputEcho:
+// \! = U+F7C1, \( = U+F7C9, \* = U+F7C8, \) = U+F7C0). kernelBoxString(s) turns the notebook spelling into the kernel
+// string, so it compares with a recorded value.
+const BOX_ESCAPES = { '!': '', '(': '', '*': '', ')': '' };
+export const kernelBoxString = (s) => s.replace(/\\([!(*)])/g, (_, c) => BOX_ESCAPES[c]);
+
+// ---------------------------------------------------------------- numeric symbols, plot ranges (harness run 2)
+/** exactDouble, also for numeric symbols ({"sym":"Pi"} → Math.PI, see NUMERIC_SYMBOLS / isNumericSymbol above). */
+export function numericDouble(v) {
+  return isNumericSymbol(v) ? toJSNumeric(v) : exactDouble(v);
+}
+/**
+ * The %plotRange capture (HW-50): one entry per graphic of %g/%g3d, {head, value, method, tried, storedOption}.
+ * Returns [{head, value (plain JS numbers, or null when no method worked), method, stored (plain JS or undefined)}].
+ */
+export function plotRanges(rec) {
+  return [].concat(rec).map((g) => ({ head: g.head, value: g.value == null ? null : toJS(g.value), method: g.method, stored: g.storedOption === undefined ? undefined : toJS(g.storedOption) }));
 }

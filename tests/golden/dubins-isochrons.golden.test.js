@@ -12,7 +12,7 @@ import {
   initialState, evaluate, greyPolygons, isochronCurves, reachRegions, carState, FORMULAS, PLOT_ORDER, PLOT_COLOURS,
 } from '../../demos/dubins-isochrons/isochrons.js';
 import { loadStates, plain } from '../../tools/lib/wl-json.mjs';
-import { harnessCase, captureOf, toJS } from '../support/harness-json.js';
+import { harnessCase, captureOf, toJS, toJSNumeric } from '../support/harness-json.js';
 import { readPng } from '../support/png.js';
 
 const fx = loadStates('tests/golden/dubins-isochrons.original-states.json');
@@ -21,10 +21,16 @@ const PI = Math.PI;
 const SCALAR = ['r', 'rold', 't', 'told', 'set', 'setold', 'path', 'τ', 'p'];
 const toPort = (s) => ({ r: s.r, rold: s.rold, t: s.t, told: s.told, set: s.set, setold: s.setold, path: s.path, tau: s['τ'], p: s.p });
 
-/** every head h inside a fixture expression, in order */
+/**
+ * every head h inside an expression, in order; the fixture writes {head, args}, the harness record {h, a} (HW-45):
+ * both are returned as {head, args}
+ */
 function findHeads(v, h, out = []) {
   if (Array.isArray(v)) v.forEach((x) => findHeads(x, h, out));
-  else if (v && typeof v === 'object' && v.head) { if (v.head === h) out.push(v); else (v.args ?? []).forEach((x) => findHeads(x, h, out)); }
+  else if (v && typeof v === 'object' && (typeof v.head === 'string' || typeof v.h === 'string')) {
+    const e = typeof v.head === 'string' ? v : { head: v.h, args: v.a };
+    if (e.head === h) out.push(e); else (e.args ?? []).forEach((x) => findHeads(x, h, out));
+  }
   return out;
 }
 const colourKey = (c) => c.map((v) => v.toFixed(6)).join(',');
@@ -58,14 +64,56 @@ function savedRegions(plotReach) {
   }
   return out;
 }
-/** minimum distance from p to the parametric curve g(u), u in [0, 1] (dense sampling, then ternary refinement) */
+/**
+ * minimum distance from p to the parametric curve g(u), u in [0, 1]: dense sampling (cached per curve), then a
+ * refinement around every sampled local minimum within one chord (the longest distance between neighbouring samples)
+ * of the best sample. A curve with many turns or a self-crossing passes near p on several arcs, and where it folds back
+ * at a cusp the distance is not unimodal between two samples; refining only the best sample by ternary search can land
+ * in the wrong basin (harness H-DI-11, H-DI-12, H-DI-13, H-DI-17), so a miss is retried by a beam search.
+ */
+const samplesCache = new WeakMap();
+function curveSamples(g, n) {
+  let byN = samplesCache.get(g);
+  if (!byN) samplesCache.set(g, (byN = new Map()));
+  if (!byN.has(n)) {
+    const pts = Array.from({ length: n + 1 }, (_, k) => g(k / n));
+    let chord = 0;
+    for (let k = 1; k <= n; k++) chord = Math.max(chord, Math.hypot(pts[k][0] - pts[k - 1][0], pts[k][1] - pts[k - 1][1]));
+    byN.set(n, { pts, chord });
+  }
+  return byN.get(n);
+}
 function distToCurve(p, g, n = 4000) {
-  let best = 0, bd = Infinity;
-  for (let k = 0; k <= n; k++) { const q = g(k / n), d = Math.hypot(q[0] - p[0], q[1] - p[1]); if (d < bd) { bd = d; best = k; } }
-  let a = Math.max(0, (best - 1) / n), b = Math.min(1, (best + 1) / n);
   const D = (u) => { const q = g(u); return Math.hypot(q[0] - p[0], q[1] - p[1]); };
-  for (let i = 0; i < 200; i++) { const m1 = a + (b - a) / 3, m2 = b - (b - a) / 3; if (D(m1) < D(m2)) b = m2; else a = m1; }
-  return Math.min(bd, D((a + b) / 2));
+  const { pts, chord } = curveSamples(g, n);
+  const d = pts.map((q) => Math.hypot(q[0] - p[0], q[1] - p[1]));
+  let bd = Infinity;
+  for (const v of d) if (v < bd) bd = v;
+  let out = bd;
+  const near = [];
+  for (let k = 0; k <= n; k++) if (d[k] <= bd + chord) near.push(k);
+  for (const k of near) { // ternary search around the sampled local minima
+    if ((k > 0 && d[k] > d[k - 1]) || (k < n && d[k] > d[k + 1])) continue;
+    let a = Math.max(0, (k - 1) / n), b = Math.min(1, (k + 1) / n);
+    for (let i = 0; i < 200; i++) { const m1 = a + (b - a) / 3, m2 = b - (b - a) / 3; if (D(m1) < D(m2)) b = m2; else a = m1; }
+    out = Math.min(out, D((a + b) / 2));
+  }
+  // every curve point lies within half a chord of a sample: if even that is farther than 1e-9, no refinement helps
+  if (out <= 1e-12 || bd - chord > 1e-9) return out;
+  for (const k of near) { // beam search around every sample within a chord: 16 sub-samples, the best 3 kept
+    let beams = [[Math.max(0, (k - 1) / n), Math.min(1, (k + 1) / n)]];
+    for (let i = 0; i < 20; i++) {
+      const cand = [];
+      for (const [x0, x1] of beams) {
+        const w = (x1 - x0) / 16;
+        for (let j = 0; j <= 16; j++) { const u = x0 + w * j; cand.push([D(u), Math.max(0, u - w), Math.min(1, u + w)]); }
+      }
+      cand.sort((x, y) => x[0] - y[0]);
+      out = Math.min(out, cand[0][0]);
+      beams = cand.slice(0, 3).map(([, x0, x1]) => [x0, x1]);
+    }
+  }
+  return out;
 }
 const segDist = (p, a, b) => {
   const dx = b[0] - a[0], dy = b[1] - a[1];
@@ -95,10 +143,13 @@ describe('dubins-isochrons golden: the saved state and its cached plot', () => {
       const m = mine[k][i][j];
       n++;
       if (m === v || (m === 0 && v === 0)) same++;
-      else expect(Math.abs(m - v), `polygon ${k + 1} point ${i} coordinate ${j}`).toBeLessThanOrEqual(2 * ulp(v)); // K-DI-03
+      // within one ulp of the terms' scale t = 10 (K-DI-03, K-DI-04): the saved cache was computed by the authoring
+      // session's Mathematica with the products t (τ-1) X nested as t·((τ-1)·X); 15.0.1 and the port multiply from
+      // left to right (harness H-DI-01: 50 of the 612 saved coordinates differ from 15.0.1's, by 1 ulp of 10 at most)
+      else expect(Math.abs(m - v), `polygon ${k + 1} point ${i} coordinate ${j}`).toBeLessThanOrEqual(ulp(10));
     })));
     expect(n).toBe(612);
-    expect(same).toBeGreaterThan(0.9 * n); // glibc: all but 4; V8's Math.sin/Math.cos: all but about 20
+    expect(same).toBeGreaterThanOrEqual(0.9 * n); // V8's Math.sin/Math.cos and the left-to-right products: 556 of 612
   });
   it("dubins-isochrons: every point of the saved isochron lines lies on the port's curve", () => {
     const { lines, colours } = savedIsochrons(fx.live.plotReach);
@@ -245,7 +296,8 @@ describe('dubins-isochrons golden: the snapshot pictures', () => {
 // curves and regions geometrically (point-on-curve 1e-9, region coverage as T-DI-26) (TESTPLAN T-DI-29…T-DI-34).
 // They skip until tests/golden/dubins-isochrons.harness.json exists.
 function wlValue(v) {
-  if (typeof v !== 'string') return v;
+  // scenario values are read lexically (LexNumber for 2 and 2.0 alike): plain doubles for the port
+  if (typeof v !== 'string') return Array.isArray(v) ? v.map(wlValue) : toJS(v);
   if (!v.startsWith('wl:')) return v;
   const e = v.slice(3);
   if (e === '"\\[LessEqual]"') return '≤';
@@ -257,17 +309,21 @@ const NAME = { 'τ': 'tau' };
 function replay(scenario) {
   let state = initialState();
   const out = [];
+  let everRecomputed = false, fromSnapshot = false;
   for (const step of scenario.steps) {
     if (step.setFrom) {
+      fromSnapshot = true;
       const s = fx.snapshots[Number(step.setFrom.split(':')[1]) - 1];
       // the snapshot's cached plot is kept as it is (the port recomputes only by the cache rule)
       state = { ...toPort(s), plotReach: plain(s.plotReach) };
     }
+    state = { ...state }; // a fresh object per step: earlier steps keep their evaluated state (captureEachStep)
     if (step.set) for (const [k, v] of Object.entries(step.set)) state[NAME[k] ?? k] = wlValue(v);
     const before = state.plotReach;
     const res = evaluate(state);
     state = res.state;
-    out.push({ state, view: res.view, changed: state.plotReach !== before, controlActive: step.controlActive === true });
+    everRecomputed ||= state.plotReach !== before;
+    out.push({ state, view: res.view, changed: state.plotReach !== before, controlActive: step.controlActive === true, everRecomputed, fromSnapshot });
   }
   return out;
 }
@@ -275,11 +331,39 @@ const tol = (b) => Math.max(2 * ulp(b), 1e-15);
 function compare(name, rec, at) {
   const v = toJS(rec);
   if (name === 'plotReach') {
+    // P-DI-01 (proposed): a plot recomputed by Mathematica 15.0.1 has its default style, curves and regions in
+    // RGBColor[0.24, 0.6, 0.8], [0.95, 0.627, 0.1425], [0.455, 0.7, 0.21], [0.922526, 0.385626, 0.209179] with
+    // AbsoluteThickness[2]; the notebook's saved plots (the authoring version) and the port use ColorData[97]'s first
+    // four colours and AbsoluteThickness[1.6]
+    if (!at.everRecomputed && !at.fromSnapshot) expect(findHeads(rec, 'RGBColor').slice(0, 4).map((c) => toJS(c.args))).toEqual(PLOT_ORDER.map((w) => PLOT_COLOURS[w]));
+    else if (at.changed || at.everRecomputed) {
+      expect(findHeads(rec, 'RGBColor').slice(0, 4).map((c) => toJS(c.args))).toEqual([[0.24, 0.6, 0.8], [0.95, 0.627, 0.1425], [0.455, 0.7, 0.21], [0.922526, 0.385626, 0.209179]]);
+      expect(toJS(findHeads(rec, 'AbsoluteThickness')[0].args)).toEqual([2]);
+      expect(PLOT_ORDER.map((w) => PLOT_COLOURS[w])[0]).toEqual([0.368417, 0.506779, 0.709798]);
+    }
     if (at.state.plotReach.polygons) {
       const polys = findHeads(rec, 'Polygon').map((p) => toJS(p.args[0]));
       const mine = at.state.plotReach.polygons;
       if (polys.length === 2 && typeof polys[0][0][0] === 'number') {
-        polys.forEach((P, k) => { expect(P.length, `polygon ${k + 1} length`).toBe(mine[k].length); P.forEach((pt, i) => pt.forEach((x, j) => expect(Math.abs(mine[k][i][j] - x)).toBeLessThanOrEqual(Math.max(ulp(x), 1e-15)))); });
+        // bit for bit except the last bits of Math.sin/Math.cos (K-DI-03): at least 95 % of the coordinates identical,
+        // the others within one ulp of the terms' scale max(t, r) (harness run 2: at most 1 ulp of it, 3.5 % differ)
+        const scale = ulp(Math.max(at.state.t, at.state.r));
+        // not recomputed since the start (H-DI-14 steps 1–4, H-DI-22): the record holds the notebook's saved cache,
+        // computed by the authoring session's Mathematica (bit for bit the fixture's), so the rule of the saved-polygon
+        // test applies (at least 90 % identical)
+        const cached = !at.everRecomputed && !at.fromSnapshot;
+        if (cached) expect(polys).toEqual(savedIsochrons(fx.live.plotReach).polygons);
+        let n = 0, same = 0;
+        polys.forEach((P, k) => {
+          expect(P.length, `polygon ${k + 1} length`).toBe(mine[k].length);
+          P.forEach((pt, i) => pt.forEach((x, j) => {
+            const m = mine[k][i][j];
+            n++;
+            if (m === x || (m === 0 && x === 0)) same++;
+            else expect(Math.abs(m - x), `polygon ${k + 1} point ${i} coordinate ${j}`).toBeLessThanOrEqual(Math.max(ulp(x), scale));
+          }));
+        });
+        expect(same, 'bit-identical polygon coordinates').toBeGreaterThanOrEqual((cached ? 0.9 : 0.95) * n);
       }
       const lines = findHeads(rec, 'Line').map((l) => toJS(l.args[0]));
       lines.forEach((line, k) => { const f = (s) => FORMULAS[PLOT_ORDER[k]](s, at.state.t, at.state.r); for (const p of line) expect(distToCurve(p, f, 2000)).toBeLessThanOrEqual(1e-9); });
@@ -299,7 +383,7 @@ function compare(name, rec, at) {
     return;
   }
   if (name === 'pathGraphics') {
-    const circles = findHeads(rec, 'Circle').map((c) => toJS(c.args));
+    const circles = findHeads(rec, 'Circle').map((c) => toJSNumeric(c.args)); // Circle[{r, 0}, r, {Pi, …}]: the symbol Pi
     const mine = at.view.pathGraphics.pieces.filter((p) => p.kind === 'arc');
     expect(circles.length).toBe(mine.length);
     circles.forEach(([c, r, [a1, a2]], i) => { [...c, r, a1, a2].forEach((x, j) => expect(Math.abs([...mine[i].c, mine[i].r, mine[i].a1, mine[i].a2][j] - x)).toBeLessThanOrEqual(tol(x))); });

@@ -165,12 +165,11 @@ describe('camera-lasers model', () => {
     expect(nearest32Index(at(-100))).toBe(-18);
   });
 
-  it('a press at the dial centre: regression pin of the nearest32 setter until the harness answers (K-CL-09)', () => {
-    // REGRESSION PIN: the table of dial-control.js holds the machine values of the exact {Cos[kπ/32], Sin[kπ/32]}
-    // (shared/exact-pi.js); with them the first point at the least distance from {0, 0} is k = −29 (the draft's −31 was
-    // computed with a = −π + kπ/32 in doubles, a different table). Replaced by the answer of H-CL-16.
-    expect(nearest32Index([0, 0])).toBe(-29);
-    expect(dialPointer([0, 0], { setter: 'nearest32' })).toEqual(dial(-29));
+  it('a press at the dial centre: the nearest32 setter picks k = −24 as Mathematica does (K-CL-09, harness H-CL-16)', () => {
+    // Mathematica 15.0.1 (H-CL-16): Nearest[Table[{Cos@a, Sin@a}, {a, -Pi, Pi, Pi/32}], {0., 0.}] returns 11 points, the
+    // first {−1/√2, −1/√2} (Position 9 of 65, a = −3π/4)
+    expect(nearest32Index([0, 0])).toBe(-24);
+    expect(dialPointer([0, 0], { setter: 'nearest32' })).toEqual(dial(-24));
   });
 
   it('θ label only for θ >= π/16 (tolerant), so for every clockwise dial position', () => {

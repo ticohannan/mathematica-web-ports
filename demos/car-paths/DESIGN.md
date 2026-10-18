@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.16 |
+| Code version: | 0.1.17 |
 | Document revision | 5 (2026-10-17) — §11 Errors in the original (R-C); checklist items as operator procedures (R-B) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Shortest Path for Forward and Reverse Motion of a Car", contributed by Francesco Bernardini and Aaron T. Becker, published January 4, 2023 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ShortestPathForForwardAndReverseMotionOfACar/>. Readable source: [`docs/original-source/car-paths.txt`](../../docs/original-source/car-paths.txt); snapshots: `docs/original-snapshots/car-paths-*.png` |
@@ -213,6 +213,7 @@ Open proposal (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
 | 4 | v0.1.14 | 2026-10-16 | golden tests on the four snapshot states stored in the notebook (`tests/golden/car-paths.original-states.json`, `tools/extract_state.py --snapshots`): snapshots 2 and 4 bit for bit, snapshot 3 within 1 ulp, labels 26.47 / 18.18 / 56.43; K-CP-01 resolved (snapshot 4); new lead K-CP-11 (order of Theta + π/2 + a; one skipped test); K-CP-07 and O-CP-02 updated; no change to the app |
 | 5 | v0.1.15 | 2026-10-17 | §11 Errors in the original added (owner rule R-C); Mathematica checklist items rewritten as operator procedures (R-B); standalone bundle (owner rule R-A): §6.1, A-CP-07, tools/bundle-app.mjs; review fixes |
 | 6 | v0.1.16 | 2026-10-18 | version number only (batch B release); no change to this app |
+| 7 | v0.1.17 | 2026-10-18 | version number only (harness run 2 accepted); no change to this app |
 
 ## 10. Improvements to consider (not implemented)
 

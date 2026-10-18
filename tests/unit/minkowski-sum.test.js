@@ -328,7 +328,7 @@ describe('minkowski-sum model', () => {
 
   // ---- plot range (F-MS-18) ----
   it('plot range: the square 7 CirclePoints[4] bounds the default picture, a spread-out robot and obstacle extend it', () => {
-    expect(FRAME_HALF).toBe(4.949747468305833);
+    expect(FRAME_HALF).toBe(4.949747468305832); // N[7/Sqrt[2]] in 15.0.1 (harness run 2, H-MS-25 %g)
     const coords = (scene) => scene.flatMap((x) => (x.pts ?? []).concat((x.segs ?? []).flat(), (x.arrows ?? []).flat(), x.at ? [x.at] : [], x.c ? [[x.c[0] + x.r, x.c[1] + x.r], [x.c[0] - x.r, x.c[1] - x.r]] : []));
     const spread = withPts({ 1: [1.34704, 2.4], 2: [3.249, 1.489], 3: [3.249, 3.298], 6: [-1.34704, 2.4], 7: [-3.249, 1.489], 8: [-3.249, 3.298] }, { a: true, n: 3 });
     for (const { view } of [run({ a: true }), spread, run({ stableOrMove: MOVE_VIEW, s: 500 })]) {

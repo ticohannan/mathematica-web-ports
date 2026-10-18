@@ -233,7 +233,7 @@ export function initialState() {
   return {
     goalXY: [2, 2], goalXYold: [2, 2],
     Theta: -PI / 4,
-    goalThetaloc: [3.414213562373095, 0.585786437626905], // N[{2 + √2, 2 - √2}], correctly rounded
+    goalThetaloc: [3.414213562373095, 0.5857864376269049], // N[{2 + √2, 2 - √2}] as Mathematica gives it (H-DP-01, H-DP-25; D-DP-09)
     goalTheta: 0, // {{goalTheta, 0}, -π, π, None}: never used (Q-DP-03)
     progress: 0.25,
     minRadius: 3,

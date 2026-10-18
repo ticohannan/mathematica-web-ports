@@ -8,9 +8,9 @@ import { describe, it, expect } from 'vitest';
 import { reducePi, trigPi, cosPi, sinPi, cosSinPi, octantForm, piOver, piFrac } from '../../shared/exact-pi.js';
 
 describe('first-octant reduction', () => {
-  it('octant table of shared/exact-pi.js: cos 19π/32 is the double of -sin 3π/32 and cos π/4 = sin π/4 = 0.7071067811865475 (bits provisional until H-ME-12)', () => { // T-ME-06
+  it('octant table of shared/exact-pi.js: cos 19π/32 is the double of -sin 3π/32 and cos π/4 = sin π/4 = 0.7071067811865475 (bits as recorded by H-ME-12)', () => { // T-ME-06
     expect(cosPi(19, 32)).toBe(-sinPi(3, 32));
-    expect(cosPi(19, 32)).toBe(-0.29028467725446233); // = -Math.sin(3π/32); PROVISIONAL (K-ME-02)
+    expect(cosPi(19, 32)).toBe(-0.29028467725446233); // = -Math.sin(3π/32); H-ME-12 records -0.29028467725446233 for Cos[19π/32]
     expect(Math.cos((19 * Math.PI) / 32)).toBe(-0.29028467725446216); // plain trig is 7 ulp off
     expect(cosPi(8, 32)).toBe(0.7071067811865475);
     expect(sinPi(8, 32)).toBe(0.7071067811865475);
@@ -23,9 +23,9 @@ describe('first-octant reduction', () => {
     expect(octantForm(3, 8).cos).toEqual({ fn: 'sin', sign: 1, base: { num: 1, den: 8 } });
     expect(octantForm(-5, 8).sin).toEqual({ fn: 'cos', sign: -1, base: { num: 1, den: 8 } }); // Sin[-5π/8] = -Cos[π/8]
   });
-  it('π/8 uses the radicals ½√(2+√2), ½√(2−√2) in machine arithmetic (manipulability-ellipsoid §6.4)', () => {
+  it('π/8 gives the correctly rounded N[Cos[π/8]], N[Sin[π/8]] of Mathematica 15.0.1 (H-ME-12, H-DH-07)', () => {
     expect(cosPi(1, 8)).toBe(0.9238795325112867);
-    expect(sinPi(1, 8)).toBe(0.3826834323650897); // Python: sqrt(2 - sqrt(2))/2 (math.sin(π/8) is 1 ulp larger)
+    expect(sinPi(1, 8)).toBe(0.3826834323650898); // = Math.sin(π/8); sqrt(2 - sqrt(2))/2 is 1 ulp smaller
     expect(cosPi(12, 32)).toBe(sinPi(4, 32));
   });
 });
@@ -75,7 +75,7 @@ describe('piOver: N[Pi/n] for an exact integer n', () => {
   });
 });
 
-describe('piFrac: N[num Pi/den] for exact integers num, den', () => {
+describe('piFrac: the correctly rounded num·π/den for exact integers num, den (not Mathematica\'s N, see H-ME-01)', () => {
   // an independent π: Machin's formula π = 16·arctan(1/5) − 4·arctan(1/239) in BigInt fixed point, 400 bits + 20 guard bits
   const atanInv = (x, one) => {
     let sum = 0n, term = one / x, k = 1n, sgn = 1n;

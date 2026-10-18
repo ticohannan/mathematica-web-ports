@@ -41,9 +41,10 @@ describe('dial-control.js: hand and setters', () => {
     expect(nearest32Index([-1.2, 0])).toBe(-32); // −π and π are the same point: the first in table order
     expect(nearest32Index(set([0.5, -0.5]))).toBe(-8);
     expect(nearest32Index(set([0.02, 1.5]))).toBe(16);
-    // a press exactly at the centre: not "all equidistant" in machine arithmetic — REGRESSION PIN of the port's
-    // rule (K-TK-12; to be replaced by the harness answers H-CL-16 / H-ME-11)
-    expect(nearest32Index(set([0, 0]))).toBe(-29);
+    // a press exactly at the centre: not "all equidistant" in machine arithmetic. Mathematica 15.0.1 (harness H-CL-16):
+    // Nearest[exact table, {0., 0.}] returns 11 points, the first {−1/√2, −1/√2} at Position 9, i.e. k = −24
+    expect(nearest32Index(set([0, 0]))).toBe(-24);
+    expect(nearest32Index([0, 0])).toBe(-24);
     expect(() => dialSetter('round')).toThrow(RangeError);
   });
 });

@@ -183,7 +183,7 @@ const wsKey = (st) => JSON.stringify([st.TypeOld, st.r1old, st.r2old, st.r3old])
 /**
  * One evaluation of the Manipulate body, in its order: (1) pm; (2) the joints of Type; (3) If[TypeOld != Type ||
  * r1old != r1 || …] (tolerant Unequal on the range lists, Q-MW-03; Type compared by index, N-MW-04) updates TypeOld
- * and r…old and recomputes workspace3D; (4) Ad and Td from pm (no Chop, Q-MW-09); (5) Show[{Graphics3D[{ground,
+ * and r…old and recomputes workspace3D; (4) Ad and Td from pm (Td chopped, the fused machine Dot, Q-MW-09); (5) Show[{Graphics3D[{ground,
  * joints, wrist centre}, …], workspace3D}].
  * cache: {key, ws} of the previous evaluation (the original keeps workspace3D in a variable) or null. The workspace is
  * that of (TypeOld, r1old, r2old, r3old); when the cache does not hold it (the opening, "Initial settings") the port
@@ -209,17 +209,20 @@ export function evaluate(stIn, cache = null) {
   if (!recomputed && cache && cache.key === key) ws = cache.ws;
   else { ws = workspace3D(typeOf(st.TypeOld), st.r1old, st.r2old, st.r3old); computed = true; }
   const Ad = computeAd(Type, pm);
-  const Td = computeTd(Ad, { chop: false });
+  const Td = computeTd(Ad, { chop: true, fma: true }); // Chop acts (H-AC-14, Q-MW-09); Mathematica's machine Dot (H-MW-04)
+  // the originals' jr = 1/5 is exact: 3/2 jr = 3/10 is drawn as 0.3 (as dh-parameters' H-DH-01 records; MW's own
+  // record has no coordinates of the robot, N-MW-09)
+  const X = { exactJr: true };
   const robotContent = [
     GROUND(),
-    J[0].jointtype === 'r' ? drawJoint(J[0].jointtype, J[0].d, J[0].a, pm[0]) : drawJoint(J[0].jointtype, pm[0], J[0].a, J[0].theta),
+    J[0].jointtype === 'r' ? drawJoint(J[0].jointtype, J[0].d, J[0].a, pm[0], X) : drawJoint(J[0].jointtype, pm[0], J[0].a, J[0].theta, X),
   ];
   for (let i = 1; i < DOF; i++) {
     robotContent.push(J[i].jointtype === 'r'
-      ? GeometricTransformation(drawJoint(J[i].jointtype, J[i].d, J[i].a, pm[i]), Td[i - 1])
-      : GeometricTransformation(drawJoint(J[i].jointtype, pm[i], J[i].a, J[i].theta), Td[i - 1]));
+      ? GeometricTransformation(drawJoint(J[i].jointtype, J[i].d, J[i].a, pm[i], X), Td[i - 1])
+      : GeometricTransformation(drawJoint(J[i].jointtype, pm[i], J[i].a, J[i].theta, X), Td[i - 1]));
   }
-  robotContent.push(GeometricTransformation(drawWristCenter(0), Td[DOF - 1])); // Chop[Td[dof]] = Td[dof] (Q-MW-09)
+  robotContent.push(GeometricTransformation(drawWristCenter(0, X), Td[DOF - 1])); // Chop[Td[dof]] = Td[dof]: Td[3] is chopped already (Q-MW-09)
   const robot = Graphics3D(robotContent, { SphericalRegion: true, ImageSize: 425, Boxed: false });
   const graphic = showFirstOptions(robot, ws.graphic);
   const robotPrims = flatten(robot);

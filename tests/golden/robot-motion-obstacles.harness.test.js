@@ -11,7 +11,7 @@
 // (%text) are not compared here.
 import { describe, it, expect } from 'vitest';
 import { loadStates, plain } from '../../tools/lib/wl-json.mjs';
-import { harnessCase, loadScenarioFile, captureOf, toJS, isNotEvaluated, NO_DATA } from '../support/harness-json.js';
+import { harnessCase, loadScenarioFile, captureOf, toJS, isNotEvaluated, isUnassignedLocal, NO_DATA } from '../support/harness-json.js';
 import { evaluate } from '../../demos/robot-motion-obstacles/model.js';
 
 const DIR = 'robot-motion-obstacles';
@@ -47,6 +47,8 @@ function check(ctx, id) {
     if (name.startsWith('%')) continue; // front-end texts: compared by the manual checks
     const rec = captureOf(h.record, name);
     const actual = PORT_VALUE[name] ? PORT_VALUE[name](r) : r.state[name];
+    // an unassigned Body local is recorded as null (HW-45); the port leaves the view field undefined
+    if (isUnassignedLocal(h.record, name)) { expect(actual, `${id} ${name}: unassigned in Mathematica`).toBeUndefined(); continue; }
     if (isNotEvaluated(rec)) { expect(actual, `${id} ${name}: not evaluated in Mathematica`).toBeUndefined(); continue; }
     expect(same(toJS(rec), actual), `${id} ${name}`).toBe(true);
   }

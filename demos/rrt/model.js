@@ -13,7 +13,7 @@
 // RandomReal[{-20., 20.}, 2] unless the attempt is biased to the goal, then RandomInteger[{1, n}] for the Random Tree.
 import { mLess, mGreater, mEqual, roundTo } from '../../shared/mma.js';
 import { norm } from '../../shared/mma-exact.js';
-import { euclidean, mmaNumberString, normalizeDnrm2 } from '../../shared/mma-extra.js';
+import { euclidean, mmaNumberString, normalizeDnrm2, normalizeCR } from '../../shared/mma-extra.js';
 import { angtest, ptInPoly } from '../common/prm-core.js';
 import { Gamma, lineIntersectionPoint as lineIntersectionPointCommon, segmentIntersectionQ as segmentIntersectionQCommon, isExactSegment } from '../common/segments.js';
 
@@ -78,8 +78,80 @@ export function inCollision(nv, np, obsedges) {
 // ------------------------------------------------------------------------------------------------ helpers
 const sub = (a, b) => [a[0] - b[0], a[1] - b[1]];
 const add = (a, b) => [a[0] + b[0], a[1] + b[1]];
-/** EuclideanDistance[u, v] = Norm[u - v], the BLAS dnrm2 Norm (F-RT-16). */
-export const euclideanDistance = (u, v) => norm(sub(u, v));
+// ---- extended-precision length (K-RT-02) ------------------------------------------------------------------------
+// Exact binary values {m, e} = m·2^e with BigInt m >= 0 (lengths only need magnitudes).
+const DV = new DataView(new ArrayBuffer(8));
+function decode(x) {
+  DV.setFloat64(0, Math.abs(x));
+  const bits = DV.getBigUint64(0), ex = Number((bits >> 52n) & 0x7ffn);
+  const m = (bits & 0xfffffffffffffn) | (ex ? 0x10000000000000n : 0n);
+  return { m, e: (ex || 1) - 1075 };
+}
+const bitLength = (m) => m.toString(2).length;
+/** round {m, e} to p significant bits, to nearest, ties to even; `sticky` = discarded non-zero bits below m */
+function roundBits({ m, e }, p, sticky = false) {
+  const drop = bitLength(m) - p;
+  if (drop <= 0) return { m, e };
+  let q = m >> BigInt(drop);
+  const rem = m - (q << BigInt(drop)), half = 1n << BigInt(drop - 1);
+  if (rem > half || (rem === half && (sticky || (q & 1n)))) q += 1n;
+  return { m: q, e: e + drop };
+}
+function addBits(a, b) {
+  if (a.m === 0n) return b;
+  if (b.m === 0n) return a;
+  const e = Math.min(a.e, b.e);
+  return { m: (a.m << BigInt(a.e - e)) + (b.m << BigInt(b.e - e)), e };
+}
+function isqrtBits(n) {
+  let x = BigInt(Math.floor(Math.sqrt(Number(n))));
+  while (x * x > n) x -= 1n;
+  while ((x + 1n) * (x + 1n) <= n) x += 1n;
+  return x;
+}
+/** √{m, e} rounded to p bits (correct rounding of the exact root) */
+function sqrtBits({ m, e }, p) {
+  if (m === 0n) return { m, e };
+  if (e % 2 !== 0) { m <<= 1n; e -= 1; }
+  const shift = Math.max(0, p + 4 - (bitLength(m) >> 1));
+  m <<= BigInt(2 * shift);
+  const r = isqrtBits(m);
+  return roundBits({ m: r, e: e / 2 - shift }, p, r * r !== m);
+}
+const toDouble = ({ m, e }) => Number(m) * 2 ** e; // m has at most 53 bits here
+/**
+ * Norm of a 2-vector as Mathematica 15.0.1 (Windows x86-64) computes it in Normalize: in x87 extended precision —
+ * x², y², their sum and the square root each rounded to 64 significant bits — and then rounded to a double (double
+ * rounding). Evidence: harness run 2, all 902 recorded unit steps of the RRT replays; the correctly rounded length gives
+ * 901 (H-RT-05 node 812, a near-halfway case), dnrm2 511, the plain double formula 719 (K-RT-02).
+ */
+export function lengthExtended([x, y]) {
+  const sq = (t) => { const d = decode(t); return roundBits({ m: d.m * d.m, e: 2 * d.e }, 64); };
+  const s = roundBits(addBits(sq(x), sq(y)), 64);
+  return toDouble(roundBits(sqrtBits(s, 64), 53));
+}
+/** Normalize[v] = v·(1/lengthExtended(v)) */
+export function normalizeExtended(v) {
+  const len = lengthExtended(v);
+  if (len === 0) return v.map(() => 0);
+  const r = 1 / len;
+  return v.map((x) => x * r);
+}
+
+/**
+ * The numerics of Normalize and EuclideanDistance (K-RT-02, resolved by harness run 2):
+ *  MODEL_1501 — Mathematica 15.0.1 (the owner's version; the port's default): Normalize[v] = v·(1/extended-precision
+ *    length) (normalizeExtended), EuclideanDistance[u, v] = Sqrt[(u1 - v1)^2 + (u2 - v2)^2] rounded step by step in
+ *    doubles (`euclidean`); every random-draw replay (H-RT-02, H-RT-04 … H-RT-12, H-RT-16, H-RT-17) is reproduced
+ *    bit for bit with it;
+ *  MODEL_2018 — the version that saved the notebook's snapshots: both through the BLAS dnrm2 length (`norm`); the six
+ *    saved trees fit it (golden tests), not MODEL_1501.
+ * `length` is the Norm of the step test Norm[p - nv] > 1 (the records cannot tell the models apart there).
+ */
+export const MODEL_1501 = Object.freeze({ normalize: normalizeExtended, distance: (w) => euclidean(w, [0, 0]), length: norm });
+export const MODEL_2018 = Object.freeze({ normalize: normalizeDnrm2, distance: norm, length: norm });
+/** EuclideanDistance[u, v] = distance(u - v) (default MODEL_1501). */
+export const euclideanDistance = (u, v, distance = MODEL_1501.distance) => distance(sub(u, v));
 const deepClone = (x) => (Array.isArray(x) ? x.map(deepClone) : x);
 const isStarType = (t) => t === 'RRT*' || t === RRT_STAR_TYPESET;
 
@@ -153,10 +225,10 @@ export function pickNode(verts, treeType, p, rng) {
   return { nv, parent: positionOf(verts, nv) };
 }
 
-/** np = nv + If[Norm[p - nv] > 1, 1 Normalize[p - nv], p - nv] (tolerant Greater; Normalize = v·(1/dnrm2 length)). */
-export function extend(nv, p, { normalize = normalizeDnrm2 } = {}) {
+/** np = nv + If[Norm[p - nv] > 1, 1 Normalize[p - nv], p - nv] (tolerant Greater; Normalize: MODEL_1501 by default). */
+export function extend(nv, p, { normalize = MODEL_1501.normalize, length = MODEL_1501.length } = {}) {
   const v = sub(p, nv);
-  return add(nv, mGreater(norm(v), 1) ? normalize(v) : v);
+  return add(nv, mGreater(length(v), 1) ? normalize(v) : v);
 }
 
 /**
@@ -164,10 +236,10 @@ export function extend(nv, p, { normalize = normalizeDnrm2 } = {}) {
  * dists = cost of the first node at each location; indexMinDist = First@Ordering[dists + eucDist, 1] (the first
  * minimum); parent = the first node at nvs[[indexMinDist]], nv = its location. Returns {nvs, eucDist, parent, nv}.
  */
-export function rrtStarChooseParent(verts, np, obsedges) {
+export function rrtStarChooseParent(verts, np, obsedges, { distance = MODEL_1501.distance } = {}) {
   const locs = locations(verts);
   const nvs = nearestWithin(locs, np, RRT_DIST).map((i) => locs[i]);
-  const eucDist = nvs.map((vs) => (!inCollision(vs, np, obsedges) ? euclideanDistance(vs, np) : Infinity));
+  const eucDist = nvs.map((vs) => (!inCollision(vs, np, obsedges) ? euclideanDistance(vs, np, distance) : Infinity));
   const dists = nvs.map((vs) => verts[positionOf(verts, vs) - 1][3]);
   let indexMinDist = 0;
   for (let i = 1; i < nvs.length; i++) if (dists[i] + eucDist[i] < dists[indexMinDist] + eucDist[indexMinDist]) indexMinDist = i;
@@ -179,8 +251,8 @@ export function rrtStarChooseParent(verts, np, obsedges) {
  * AppendTo[verts, {np, parent, Length[verts] + 1, verts[[parent, 4]] + EuclideanDistance[nv, np], {}}];
  * verts[[parent, 5]] = Append[verts[[parent, 5]], Length[verts]]. Mutates verts.
  */
-export function appendNode(verts, np, parent, nv) {
-  verts.push([np, parent, verts.length + 1, verts[parent - 1][3] + euclideanDistance(nv, np), []]);
+export function appendNode(verts, np, parent, nv, { distance = MODEL_1501.distance } = {}) {
+  verts.push([np, parent, verts.length + 1, verts[parent - 1][3] + euclideanDistance(nv, np, distance), []]);
   verts[parent - 1][4].push(verts.length);
 }
 
@@ -188,13 +260,13 @@ export function appendNode(verts, np, parent, nv) {
  * updateCostToGo[index]: cost = parent's cost + EuclideanDistance[parent location, own location], then the same for
  * each child in its stored order (iterative here; the original recurses). Nothing happens for the root (parent 0).
  */
-export function updateCostToGo(verts, index) {
+export function updateCostToGo(verts, index, { distance = MODEL_1501.distance } = {}) {
   const stack = [index];
   while (stack.length) {
     const i = stack.pop();
     const parent = verts[i - 1][1];
     if (parent === 0) continue;
-    verts[i - 1][3] = verts[parent - 1][3] + euclideanDistance(verts[parent - 1][0], verts[i - 1][0]);
+    verts[i - 1][3] = verts[parent - 1][3] + euclideanDistance(verts[parent - 1][0], verts[i - 1][0], distance);
     const ch = verts[i - 1][4];
     for (let k = ch.length - 1; k >= 0; k--) stack.push(ch[k]);
   }
@@ -206,7 +278,7 @@ export function updateCostToGo(verts, index) {
  * as parent and newdist as cost, is appended to the new node's children, and updateCostToGo[nn]. Mutates verts;
  * returns the number of rewired neighbours.
  */
-export function rrtStarRewire(verts, nvs, eucDist) {
+export function rrtStarRewire(verts, nvs, eucDist, opts = {}) {
   let count = 0;
   const N = verts.length;
   nvs.forEach((vs, n) => {
@@ -218,7 +290,7 @@ export function rrtStarRewire(verts, nvs, eucDist) {
       verts[nn - 1][1] = N;
       verts[nn - 1][3] = newdist;
       verts[N - 1][4].push(nn);
-      updateCostToGo(verts, nn);
+      updateCostToGo(verts, nn, opts);
       count++;
     }
   });
@@ -228,7 +300,7 @@ export function rrtStarRewire(verts, nvs, eucDist) {
 /**
  * addNode[treeType, obsedges] on state.verts (mutated): attempts until a step is free of collisions, then append (and
  * rewire for RRT*). Returns p (the sample of the successful attempt), which the body stores in newrand.
- * opts: {normalize} (default normalizeDnrm2, K-RT-02).
+ * opts: the numerics model {normalize, distance, length} (default MODEL_1501, K-RT-02).
  */
 export function addNode(state, treeType, obsedges, rng, opts = {}) {
   const { verts } = state;
@@ -238,10 +310,10 @@ export function addNode(state, treeType, obsedges, rng, opts = {}) {
     let { nv, parent } = pickNode(verts, treeType, p, rng);
     const np = extend(nv, p, opts);
     let nvs = null, eucDist = null;
-    if (star) ({ nvs, eucDist, parent, nv } = rrtStarChooseParent(verts, np, obsedges));
+    if (star) ({ nvs, eucDist, parent, nv } = rrtStarChooseParent(verts, np, obsedges, opts));
     if (!inCollision(nv, np, obsedges)) {
-      appendNode(verts, np, parent, nv);
-      if (star) rrtStarRewire(verts, nvs, eucDist);
+      appendNode(verts, np, parent, nv, opts);
+      if (star) rrtStarRewire(verts, nvs, eucDist, opts);
       return p;
     }
   }
@@ -294,7 +366,7 @@ export function goalCheck(s) {
 /**
  * One evaluation of the Manipulate body: the goal-change check, the reset check, If[nodestoadd > 0, …],
  * While[nodestoadd > 5, …], the goal check. Returns {state (a new object), view, treeChanged}.
- * opts: {normalize} for addNode.
+ * opts: the numerics model for addNode (default MODEL_1501).
  */
 export function evaluate(stateIn, rng, opts = {}) {
   const s = {};

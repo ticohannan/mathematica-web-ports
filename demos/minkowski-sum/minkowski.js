@@ -12,11 +12,11 @@
 // (K-MS-03); a/b = a·(1/b); sums of several terms in written order.
 // Quirks of the ORIGINAL are reproduced and marked "ORIGINAL QUIRK (Q-MS-nn)"; places where the port cannot do what
 // the original does are marked "PORT DEVIATION (D-MS-nn)".
-import { mLess, mGreater, mLessEq, mEqual, chop, sortMma, mean } from '../../shared/mma.js';
+import { mLess, mGreater, mLessEq, mEqual, chop, sortMma } from '../../shared/mma.js';
 import { arcTan } from '../../shared/mma-exact.js';
 import { normalizeCR } from '../../shared/mma-extra.js';
 import {
-  lineList, vector, areaCalulation, areaOfPoly, centroidCal, centroidOfPoly, discretizeLineRev1, sameQ,
+  lineList, vector, areaCalulation, areaOfPoly, centroidCal, centroidOfPoly, discretizeLineRev1, sameQ, meanMma as mean,
 } from '../common/polygon-core.js';
 
 export { lineList, vector, areaCalulation, areaOfPoly, centroidCal, centroidOfPoly, discretizeLineRev1 };
@@ -30,8 +30,10 @@ export const STEP = 0.01;
 export const X_LIMIT = 1.34704;
 /** Locator range {{-3.249, 1.489}, {3.249, 3.298}}. */
 export const LOCATOR_BOX = Object.freeze([[-3.249, 1.489], [3.249, 3.298]]);
-/** Half side of the frame square 7 CirclePoints[4] (exact 7/Sqrt[2], drawn as the correctly rounded double). */
-export const FRAME_HALF = 7 / Math.sqrt(2);
+/** Half side of the frame square 7 CirclePoints[4]: exact 7/Sqrt[2], whose machine value N[7/Sqrt[2]] =
+ *  7·(1/√2) = 4.949747468305832 in 15.0.1 (harness run 2: the recorded %g's {"wl": "7/Sqrt[2]", "n": 4.949747468305832}
+ *  and the recorded PlotRange of H-MS-01 and H-MS-22), one ulp below the correctly rounded 4.949747468305833. */
+export const FRAME_HALF = 7 * (1 / Math.sqrt(2));
 /** The frame square 7 CirclePoints[4] in CirclePoints order (first vertex at -45 degrees). */
 export const FRAME_SQUARE = Object.freeze([[FRAME_HALF, -FRAME_HALF], [FRAME_HALF, FRAME_HALF], [-FRAME_HALF, FRAME_HALF], [-FRAME_HALF, -FRAME_HALF]]);
 /** The plot range Mathematica takes from all primitives: the square (DESIGN §6.5, K-MS-07). */
@@ -214,7 +216,13 @@ export function evaluate(stateIn) {
     const keys = orderOfNormals.map((r) => r.key);
     view.orderOfNormalsKeys = rotateLeft(keys, pos);
     // prev = rc + sortedVectors[[pos+1]][[5]][[1]] - sortedVectors[[pos]][[5]][[1]]
-    const prev = sub2(add2(rc, orderOfNormals[pos].edge[0]), orderOfNormals[pos - 1].edge[0]);
+    // Plus[rc, a, -b] of three 2-vectors: the order of addition is EMPIRICAL (K-MS-11, harness run 2): (rc + a) - b
+    // (written) when the robot's point list robopts (before the hull) has 4 or 5 points — also when the hull then has
+    // only 3 vertices (H-MS-16) — and (a - b) + rc when it has at most 3. This reproduces 14 of the 15 recorded sums
+    // (all but H-MS-22). Hypothesis (not checked): Plus adds its packed-array operands first; which operands are packed
+    // depends on how the hull was built.
+    const a = orderOfNormals[pos].edge[0], b = orderOfNormals[pos - 1].edge[0];
+    const prev = rltemp >= 4 ? sub2(add2(rc, a), b) : add2(sub2(a, b), rc);
     view.prev = prev;
     // ORIGINAL QUIRK (Q-MS-06): Chop applies to the stored vertex; the running sum keeps its small values.
     // ORIGINAL QUIRK (Q-MS-07): no DeleteDuplicates of the sum's vertices.

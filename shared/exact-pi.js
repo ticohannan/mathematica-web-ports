@@ -13,11 +13,14 @@
 //   b = 1/4  → (1/√2, 1/√2) = 0.7071067811865475 (the value in the motion-planning original's cached data and
 //              shared/mma.js; Math.SQRT1_2 is 1 ulp larger)
 //   b = 1/6  → (√3/2, 1/2)                  Mathematica: Cos[π/6] = √3/2, Sin[π/6] = 1/2 (exact)
-//   b = 1/8  → (½√(2+√2), ½√(2−√2))         Mathematica evaluates Cos[π/8], Sin[π/8] to these radicals; the
-//              machine evaluation of the radicals is used (manipulability-ellipsoid draft §6.4)
+//   b = 1/8  → Mathematica keeps Cos[π/8], Sin[π/8] unevaluated (harness H-ME-04 records p1 = {Cos[Pi/8], -Sin[Pi/8]});
+//              N gives the correctly rounded 0.9238795325112867, 0.3826834323650898 (H-ME-12, H-DH-07). They are stored
+//              as constants (not Math.cos/Math.sin, whose last bit differs between browser engines; the machine
+//              radical ½√(2−√2) is 0.3826834323650897, 1 ulp below)
 //   other b  → Math.cos(pπ/q), Math.sin(pπ/q)
-// The bit patterns of the irrational values are PROVISIONAL (lead K-ME-02, harness H-ME-12: N[Table[{Cos[kπ/32],
-// Sin[kπ/32]}, {k, 0, 32}]]); the exactness of zeros, ±1, ±1/2 and the symmetries does not depend on them.
+// Bit patterns checked against Mathematica 15.0.1 (harness H-ME-12: N[Table[{Cos[kπ/32], Sin[kπ/32]}, {k, 0, 32}]]
+// equals cosSinPi(k, 32) for every k = 0 … 32; K-ME-02 resolved); the exactness of zeros, ±1, ±1/2 and the symmetries
+// does not depend on them.
 
 const gcd = (a, b) => { a = Math.abs(a); b = Math.abs(b); while (b) [a, b] = [b, a % b]; return a; };
 
@@ -33,7 +36,9 @@ const SQRT2 = Math.sqrt(2);
 const BASE = new Map([
   ['1/4', [1 / SQRT2, 1 / SQRT2, false, false]],
   ['1/6', [Math.sqrt(3) / 2, 0.5, false, true]],
-  ['1/8', [Math.sqrt(2 + SQRT2) / 2, Math.sqrt(2 - SQRT2) / 2, false, false]],
+  // N[{Cos[Pi/8], Sin[Pi/8]}] in Mathematica 15.0.1 = the correctly rounded values (harness H-ME-12, H-DH-07):
+  // 0.9238795325112867 = ½√(2+√2) in machine arithmetic, but 0.3826834323650898 = Math.sin(π/8), 1 ulp above ½√(2−√2)
+  ['1/8', [0.9238795325112867, 0.3826834323650898, false, false]],
 ]);
 /** [cos, sin, cosRational, sinRational] of bπ for b = p/q in [0, 1/4] (reduced). */
 function base(p, q) {
@@ -123,10 +128,11 @@ export function piOver(n) {
 
 // ---- N[num π/den] ----------------------------------------------------------------------------------------------------
 /**
- * The machine number nearest to the exact num·π/den for integers num, den ≠ 0 (what N[num Pi/den] gives for an exact
- * angle such as Mathematica's ArcTan of an exact dial point, 19π/32 → 1.8653206380689398; manipulability-ellipsoid
- * K-ME-09). num·Math.PI/den rounds twice (Math.PI, then the product) and is 1 ulp off for some num/den, e.g. 19π/32
- * (1.8653206380689396). The candidate doubles around num·Math.PI/den are compared with π·10^67 (error below 10^-67,
+ * The machine number nearest to the exact num·π/den for integers num, den ≠ 0 (the correctly rounded value, e.g. 19π/32
+ * → 1.8653206380689398; Python Fraction arithmetic, tools/extract_state.py). NOT what Mathematica's N gives: the
+ * harness (15.0.1, H-ME-01, H-ME-04) records N[19π/32] = 1.8653206380689396 and N[15π/8] = 5.890486225480862, i.e.
+ * (num/den)·N[π] with one rounding of the product, which is num·Math.PI/den for a power-of-two den; manipulability-
+ * ellipsoid K-ME-09 therefore uses that product and no longer this function. The candidate doubles around num·Math.PI/den are compared with π·10^67 (error below 10^-67,
  * far below the distance of these angles to a rounding midpoint). Non-integers or den = 0: RangeError.
  */
 export function piFrac(num, den = 1) {

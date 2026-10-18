@@ -281,16 +281,16 @@ describe('dubins-path Manipulate body', () => {
   });
   it('initial state is the live state and the Input-cell values give the same state after one evaluation', () => {
     const s = initialState();
-    expect(s).toEqual({ goalXY: [2, 2], goalXYold: [2, 2], Theta: -0.7853981633974483, goalThetaloc: [3.414213562373095, 0.585786437626905], goalTheta: 0, progress: 0.25, minRadius: 3 });
+    expect(s).toEqual({ goalXY: [2, 2], goalXYold: [2, 2], Theta: -0.7853981633974483, goalThetaloc: [3.414213562373095, 0.5857864376269049], goalTheta: 0, progress: 0.25, minRadius: 3 });
     const a = evaluate(s).state;
     const b = evaluate({ ...s, Theta: PI / 2, goalThetaloc: [4, 0] }).state;
     expect(a.Theta).toBe(-0.7853981633974483);
-    expect(a.goalThetaloc).toEqual([3.414213562373095, 0.585786437626905]); // exact opening kept (D-DP-09)
+    expect(a.goalThetaloc).toEqual([3.414213562373095, 0.5857864376269049]); // exact opening kept (D-DP-09, harness H-DP-25)
     // From the Input-cell values the port recomputes goalThetaloc with the engine's Math.sin/cos, whose last bit
     // differs between browsers (D-DP-09); in Mathematica those inputs are exact. Same state within 1 ulp.
     expect(b.Theta).toBe(-0.7853981633974483);
     expect(b.goalThetaloc[0]).toBe(3.414213562373095);
-    expect(Math.abs(b.goalThetaloc[1] - 0.585786437626905)).toBeLessThanOrEqual(1.2e-16);
+    expect(Math.abs(b.goalThetaloc[1] - 0.5857864376269049)).toBeLessThanOrEqual(2.3e-16); // ...049 (Firefox, WebKit, Mathematica) or ...051 (V8)
     expect(evaluate(b).view.word).toBe('LSL');
   });
   it('evaluation is idempotent to the last bit', () => {

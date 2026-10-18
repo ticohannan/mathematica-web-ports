@@ -12,9 +12,11 @@
 //         config = Graphics3D[{Green, Sphere[TorusToPlane[λ, Theta, Phi], 2/10]}];
 //         PlotLabel -> If[λ < 1/2, "2-Torus", If[λ < 1.2, "Cylinder", "Plane"]]
 //
-// Order of operations (K-TC-09, COMMON-DECISIONS §7): in each Plus the machine terms are added in written order and the
-// exact constants last; an exact constant times machine numbers uses the constant's double (1/3 and π as machine
-// numbers, multiplied left to right). The harness records of the manifold decide (H-TC-02 … H-TC-06).
+// Order of operations (K-TC-09, resolved by the harness records H-TC-01 … H-TC-14, bit for bit): every Plus is added
+// left to right in the written order, its exact constant included where it is written (-2 - λ + (λ-1) Cos[v] =
+// (-2 + -λ) + (λ-1)·Cos v); in (1)/(3) π (…) the numbers are multiplied first and the constant π last:
+// ((…)·N[1/3])·N[π]. Refuted by the records: the exact constants added last (H-TC-03 y) and (1/3·π)·(…) (H-TC-03, H-TC-04,
+// H-TC-12, H-TC-14).
 import { mLess, mLessEq } from '../../shared/mma.js';
 import { arcTan } from '../../shared/mma-exact.js';
 
@@ -36,13 +38,13 @@ export const initialState = () => copy(SAVED_STATE);
 export const initialSettings = () => copy(INITIAL_SETTINGS);
 export const cloneState = copy;
 
-/** TorusToPlane[λ, u, v] (tolerant λ <= 1), term by term as the source. */
+/** TorusToPlane[λ, u, v] (tolerant λ <= 1), term by term as the source, in Mathematica's evaluation order (K-TC-09). */
 export function TorusToPlane(λ, u, v) {
   if (mLessEq(λ, 1)) {
     const lm1 = λ + -1; // (λ-1)
-    const P = (-λ + lm1 * Math.cos(v)) + -2; // -2 - λ + (λ-1) Cos[v]: machine terms first, then the exact -2
-    const x = THIRD * PI * (-(Math.cos(u) * P) + 3);
-    const y = THIRD * PI * (-(P * Math.sin(u)) + 3);
+    const P = (-2 + -λ) + lm1 * Math.cos(v); // -2 - λ + (λ-1) Cos[v], left to right (H-TC-03)
+    const x = (-(Math.cos(u) * P) + 3) * THIRD * PI; // (1)/(3) π (3 - Cos[u] P): the numbers first, π last
+    const y = (-(P * Math.sin(u)) + 3) * THIRD * PI;
     const z = -(λ * (v + -PI)) + (-λ + 1) * Math.sin(v);
     return [nz(x), nz(y), nz(z)];
   }
@@ -78,12 +80,11 @@ export const OPACITY = 0.8;
 
 /**
  * One evaluation of the Manipulate body for the state {λ, p1, p2}: the two angles, the ball (config) and the label.
- * indeterminate: a dial point (0, 0) (ArcTan[0, 0]; K-TC-03) — the caller keeps the previous state.
+ * A dial point (0, 0) (Normalize[{0, 0}] at the exact centre) is no special case: ArcTan[0., 0.] = 0. without a message
+ * (harness H-TC-11, K-TC-03 resolved), so θ = 0 like a point on the positive x axis.
  */
 export function evaluate(st) {
-  const indeterminate = (st.p1[0] === 0 && st.p1[1] === 0) || (st.p2[0] === 0 && st.p2[1] === 0);
-  if (indeterminate) return { indeterminate: true };
   const θ = angleOf(st.p1);
   const φ = angleOf(st.p2);
-  return { indeterminate: false, θ, φ, config: { center: TorusToPlane(st.λ, θ, φ), radius: BALL_RADIUS }, label: plotLabel(st.λ) };
+  return { θ, φ, config: { center: TorusToPlane(st.λ, θ, φ), radius: BALL_RADIUS }, label: plotLabel(st.λ) };
 }

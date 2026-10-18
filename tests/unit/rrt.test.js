@@ -8,8 +8,10 @@ import { describe, it, expect } from 'vitest';
 import {
   OBSEDGES, ptInPoly, inCollision, samplePoint, pickNode, extend, euclideanDistance, rrtStarChooseParent, appendNode,
   rrtStarRewire, addNode, evaluate, initialSettings, goalCheck, labelText, tooltipText, makeView, STYLE, nearestFirst,
-  nearestWithin, positionOf, ROOT,
+  nearestWithin, positionOf, ROOT, MODEL_1501, MODEL_2018, lengthExtended, normalizeExtended,
 } from '../../demos/rrt/model.js';
+import { lengthCR } from '../../shared/mma-extra.js';
+const add2 = (a, b) => [a[0] + b[0], a[1] + b[1]];
 import { replayRng, createRng } from '../../shared/random.js';
 import { normalizeCR, nearest } from '../../shared/mma-extra.js';
 
@@ -110,7 +112,8 @@ describe('rrt sampling and the step', () => {
     expect(euclideanDistance([0, 0], [0.6000000000000001, 0.8])).toBe(1);
     const np = extend([0, 0], [-19.56, 6.3]);
     expect(np).toEqual([-0.9518461175258359, 0.3065762034975852]);
-    expect(euclideanDistance([0, 0], np)).toBe(1.0000000000000002);
+    expect(euclideanDistance([0, 0], np)).toBe(1); // MODEL_1501: Sqrt of the plain sum of squares
+    expect(euclideanDistance([0, 0], np, MODEL_2018.distance)).toBe(1.0000000000000002); // dnrm2
   });
 
   it('extension: a sample within 1 (Norm <= 1, tolerant) is reached exactly', () => {
@@ -122,19 +125,34 @@ describe('rrt sampling and the step', () => {
     expect(euclideanDistance([17.3, -17.5], np)).toBe(0.8602325267042621);
   });
 
-  it('EuclideanDistance is the dnrm2 Norm of the difference: 1.8027756377319948 for {1, 1.5}', () => {
+  it('EuclideanDistance in 15.0.1 is the square root of the plain sum of squares: 1.8027756377319946 for {1, 1.5} (2018: dnrm2)', () => {
     expect(dnrm2([1, 1.5])).toBe(1.8027756377319948);
     expect(Math.sqrt(1 + 2.25)).toBe(1.8027756377319946); // one rounding of the square root: a different double
-    expect(euclideanDistance([0, 0], [1, 1.5])).toBe(1.8027756377319948);
+    expect(euclideanDistance([0, 0], [1, 1.5])).toBe(1.8027756377319946); // MODEL_1501 (harness run 2, K-RT-02)
+    expect(euclideanDistance([0, 0], [1, 1.5], MODEL_2018.distance)).toBe(1.8027756377319948); // the 2018 snapshots
     expect(euclideanDistance([2, 2], [1, 1.5])).toBe(1.118033988749895);
   });
 
-  it('Normalize multiplies by the reciprocal of the dnrm2 length by default (model switch available)', () => {
+  it('Normalize in 15.0.1 uses the length in x87 extended precision, rounded twice: 27.93101735161234 for a near-halfway vector', () => {
+    // H-RT-05 node 812 (harness run 2): the step from (-1.9678377716108368, -1.4729567900744631) towards (17.15, 18.89);
+    // the exact length 27.9310173516123416711… lies almost halfway between two doubles: the correctly rounded one is
+    // 27.931017351612343 (mpmath), the 64-bit intermediate rounds first to the halfway point and then to even.
+    const v = [19.117837771610837, 20.362956790074463];
+    expect(lengthCR(v)).toBe(27.931017351612343);
+    expect(lengthExtended(v)).toBe(27.93101735161234);
+    expect(add2([-1.9678377716108368, -1.4729567900744631], normalizeExtended(v))).toEqual([-1.2833715550407754, -0.7439122109338828]); // the recorded node
+    expect(lengthExtended([3, 4])).toBe(5);
+    expect(lengthExtended([0, 0])).toBe(0);
+    expect(lengthExtended([1, 1.5])).toBe(1.8027756377319946); // = Sqrt[3.25] rounded once
+  });
+
+  it('Normalize multiplies by the reciprocal of the extended-precision length by default (15.0.1, 2018: dnrm2)', () => {
     const p = [-19.56, 6.3], nv = [-1.8898591462436376, -2.38593178139027];
     const v = [p[0] - nv[0], p[1] - nv[1]];
-    expect(dnrm2(v)).toBe(19.689573095995637);
-    expect(extend(nv, p)).toEqual([-2.7872956100819533, -1.944788048154288]); // the saved newest node of snapshot 2
-    expect(extend(nv, p, { normalize: normalizeCR })[1]).toBe(-1.9447880481542879); // correctly rounded length 19.689573095995634
+    expect(dnrm2(v)).toBe(19.689573095995637); // correctly rounded length 19.689573095995634 (mpmath)
+    expect(extend(nv, p)).toEqual([-2.7872956100819533, -1.9447880481542879]); // MODEL_1501 (here equal to normalizeCR)
+    expect(extend(nv, p, MODEL_2018)).toEqual([-2.7872956100819533, -1.944788048154288]); // the saved newest node of snapshot 2
+    expect(extend(nv, p, { normalize: normalizeCR })).toEqual(extend(nv, p, MODEL_1501));
   });
 
   it('RRT and RRT* expand the nearest node, ties go to the earlier node', () => {
@@ -191,29 +209,30 @@ describe('rrt RRT* parent choice and rewiring', () => {
   // root (0,0) cost 0; A (2,0) child of root, cost 2.; B (2,2) child of A, cost 4.; C (3,2.5) child of B
   const rows = () => tree([[[0, 0], 0, 0], [[2, 0], 1, 2], [[2, 2], 2, 4], [[3, 2.5], 3, 5.118033988749895]]);
   const np = [1, 1.5];
+  const M = MODEL_2018; // the hand-derived costs below use the dnrm2 distances (the logic is the same in MODEL_1501)
 
   it('RRT* chooses the neighbour within 3 with the least cost plus distance, colliding neighbours count as infinity', () => {
-    const a = rrtStarChooseParent(rows(), np, []);
+    const a = rrtStarChooseParent(rows(), np, [], M);
     expect(a.nvs).toEqual([[2, 2], [0, 0], [2, 0], [3, 2.5]]); // B, root, A, C (root and A tie at 1.80…: list order)
     expect(a.parent).toBe(1);
     const va = rows();
-    appendNode(va, np, a.parent, a.nv);
+    appendNode(va, np, a.parent, a.nv, M);
     expect(va[4][3]).toBe(1.8027756377319948);
     const obstacle = [[[0.4, 0.5], [0.6, 0.5], [0.6, 0.7], [0.4, 0.7]]];
-    const b = rrtStarChooseParent(rows(), np, obstacle);
+    const b = rrtStarChooseParent(rows(), np, obstacle, M);
     expect(b.eucDist[1]).toBe(Infinity);
     expect(b.parent).toBe(2);
     const vb = rows();
-    appendNode(vb, np, b.parent, b.nv);
+    appendNode(vb, np, b.parent, b.nv, M);
     expect(vb[4][3]).toBe(3.802775637731995);
-    expect(rrtStarRewire(vb, b.nvs, b.eucDist)).toBe(0);
+    expect(rrtStarRewire(vb, b.nvs, b.eucDist, M)).toBe(0);
   });
 
   it('RRT* rewires a neighbour through the new node when that is shorter and updates the costs of its subtree', () => {
     const v = rows();
-    const a = rrtStarChooseParent(v, np, []);
-    appendNode(v, np, a.parent, a.nv);
-    expect(rrtStarRewire(v, a.nvs, a.eucDist)).toBe(1);
+    const a = rrtStarChooseParent(v, np, [], M);
+    appendNode(v, np, a.parent, a.nv, M);
+    expect(rrtStarRewire(v, a.nvs, a.eucDist, M)).toBe(1);
     expect(v[2][1]).toBe(5);
     expect(v[2][3]).toBe(2.9208096264818897);
     expect(v[3][3]).toBe(4.038843615231785);
@@ -222,9 +241,9 @@ describe('rrt RRT* parent choice and rewiring', () => {
 
   it('RRT* does not rewire on equal or tolerantly equal cost (Greater is tolerant)', () => {
     const v = rows();
-    const a = rrtStarChooseParent(v, np, []);
-    appendNode(v, np, a.parent, a.nv);
-    rrtStarRewire(v, a.nvs, a.eucDist);
+    const a = rrtStarChooseParent(v, np, [], M);
+    appendNode(v, np, a.parent, a.nv, M);
+    rrtStarRewire(v, a.nvs, a.eucDist, M);
     expect(1.8027756377319948 + 2.23606797749979).toBe(4.038843615231785); // C's direct newdist equals its new cost
     expect(v[3][1]).toBe(3); // C keeps parent B
     // a synthetic neighbour with cost newdist·(1 + 2^-50): strict IEEE ">" would rewire it, Mathematica's Greater not

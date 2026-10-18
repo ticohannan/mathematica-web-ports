@@ -175,7 +175,7 @@ test.describe('dubins path', () => {
     expect(s.goalXY).toEqual([2, 2]);
     expect(s.goalXYold).toEqual([2, 2]);
     expect(s.Theta).toBe(-0.7853981633974483);
-    expect(s.goalThetaloc).toEqual([3.414213562373095, 0.585786437626905]); // exact opening kept in every engine (D-DP-09)
+    expect(s.goalThetaloc).toEqual([3.414213562373095, 0.5857864376269049]); // exact opening kept in every engine (D-DP-09, harness H-DP-25)
     expect([s.progress, s.minRadius]).toEqual([0.25, 3]);
     await expect(page.getByTestId('value-progress')).toHaveValue('0.25');
     await expect(page.getByTestId('value-minRadius')).toHaveValue('3');

@@ -23,7 +23,7 @@
 import { mUnequal } from '../../shared/mma.js';
 import { arcTan, det } from '../../shared/mma-exact.js';
 import { engineeringForm, engineeringParts } from '../../shared/mma-extra.js';
-import { cosSinPi, piFrac } from '../../shared/exact-pi.js';
+import { cosSinPi } from '../../shared/exact-pi.js';
 import { manipEllip, svd3, matrixRank } from '../common/svd3.js';
 import {
   Graphics3D, GeometricTransformation, affine, flatten, Cylinder, Point, Line, PointSize, Arrowheads, EdgeForm, Thick,
@@ -50,9 +50,11 @@ export const POINT_SIZE = { Default: 0.008, Medium: 0.01, Large: 0.013 };
 
 // ---- angles ---------------------------------------------------------------------------------------------------------
 export const isExact = (a) => Number.isInteger(a);
-/** the double of an angle: an exact kπ/32 as N[kπ/32], the correctly rounded double (piFrac; k·π/32 is 1 ulp off for
- *  30 of the 129 dial angles, K-ME-09), a machine angle as it is */
-export const angleValue = (a) => (isExact(a) ? piFrac(a, DEN) : a.r);
+/** the double of an angle: an exact kπ/32 as N[kπ/32] = (k/32)·N[π], ONE rounding of the product (k/32 is exact in
+ *  binary) — not the correctly rounded kπ/32, which differs by 1 ulp for 30 of the 129 dial angles (K-ME-09, resolved
+ *  by the harness: H-ME-01 records N[19π/32] = 1.8653206380689396, H-ME-04 N[15π/8] = 5.890486225480862); a machine
+ *  angle as it is */
+export const angleValue = (a) => (isExact(a) ? (a / DEN) * PI : a.r);
 export const cosA = (a) => (isExact(a) ? cosSinPi(a, DEN)[0] : Math.cos(a.r));
 export const sinA = (a) => (isExact(a) ? cosSinPi(a, DEN)[1] : Math.sin(a.r));
 /** θ2 + θ3: exact when both are exact (k2 + k3), otherwise machine */
@@ -188,7 +190,7 @@ export function armPlaneRotation(t1) {
 export function robotContent(angles, pts) {
   const [t1, t2, t3] = angles;
   const { o0, o1, o2, oc, z1 } = pts;
-  const th1 = angleValue(t1), th2 = angleValue(t2), th23 = angleValue(t2) + angleValue(t3);
+  const th1 = angleValue(t1), th2 = angleValue(t2), th23 = angleValue(addA(t2, t3)); // θ2 + θ3 exact when both are
   const R = armPlaneRotation(t1);
   const q = scale3(z1, 1 / 4);
   const floorPt = (a) => [Math.cos(a), Math.sin(a), 0];

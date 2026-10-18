@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.16 |
+| Code version: | 0.1.17 |
 | Document revision | 6 (2026-10-17) — polygon helpers moved to `demos/common/polygon-core.js`; §11 Errors in the original (R-C); checklist items as operator procedures (R-B) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Motion Planning for Robot Path around Obstacles" by Shreyas Poyrekar, Aaron T. Becker and Arifa Sultana (CC BY-NC-SA 3.0); author notebook made with Mathematica 10.2. Readable source: [`docs/original-source/motion-planning.txt`](../../docs/original-source/motion-planning.txt) |
@@ -253,6 +253,7 @@ No open proposal. Template for a request: copy a row (see [`docs/DESIGN_PROCESS.
 | 5 | v0.1.15 | 2026-10-17 | §11 Errors in the original added (owner rule R-C); Mathematica checklist items rewritten as operator procedures (R-B); standalone bundle (owner rule R-A): §6.1, A-MP-08, tools/bundle-app.mjs |
 | 6 | v0.1.15 | 2026-10-17 | `lineList`, `vector`, `areaOfPoly`, `centroidOfPoly`, `discretizeLineRev1` moved unchanged to `demos/common/polygon-core.js` (shared with minkowski-sum, COMMON-DECISIONS §3); `planner.js` re-exports them; no behaviour change (unit, golden and parity tests unchanged and green); §6 and the §6.1 bundle table updated; review fixes |
 | 7 | v0.1.16 | 2026-10-18 | version number only (batch B release); no change to this app |
+| 8 | v0.1.17 | 2026-10-18 | version number only (harness run 2 accepted); no change to this app |
 
 ## 10. Improvements to consider (not implemented)
 

@@ -223,7 +223,6 @@ function update(partial) {
   const next = { ...cloneState(state), ...partial };
   const r = evaluate(next);
   evaluations++;
-  if (r.indeterminate) { syncControls(); return; } // K-TC-03: a point (0, 0) keeps the previous state
   state = next;
   result = r;
   syncControls();

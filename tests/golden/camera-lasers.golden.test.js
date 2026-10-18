@@ -11,10 +11,10 @@
 import { describe, it, expect } from 'vitest';
 import { loadStates, plain } from '../../tools/lib/wl-json.mjs';
 import { evaluate, initialSettings, fromSaved, Q, N, isExact } from '../../demos/camera-lasers/model.js';
-import { nearest32Index } from '../../demos/common/dial-control.js';
+import { nearest32Index, DIAL_TABLE_32 } from '../../demos/common/dial-control.js';
 import { numberText } from '../../shared/mma-text.js';
 import { cosPi, sinPi } from '../../shared/exact-pi.js';
-import { harnessCase, stepRecord, toJS } from '../support/harness-json.js';
+import { harnessCase, stepRecord, toJS, toJSNumeric } from '../support/harness-json.js';
 
 const fixture = loadStates('tests/golden/camera-lasers.original-states.json');
 const snaps = fixture.snapshots.map((s) => fromSaved(plain(s)));
@@ -143,6 +143,7 @@ function replay(scenario) {
   let state = initialSettings();
   const out = [];
   for (const step of scenario.steps) {
+    state = { ...state }; // a fresh object per step: the previous step's result is kept in `out` and must not change
     for (const [k, v] of Object.entries(step.set ?? {})) state[portName(k)] = typeof v === 'string' && v.startsWith('wl:') ? wlValue(v) : toJS(v);
     const r = evaluate(state);
     state = r.state;
@@ -160,29 +161,45 @@ function numericDiff(rec, act, where) {
   const tol = Math.abs(rec) > 100 ? 1e-9 : 1e-12;
   return Math.abs(rec - a) <= tol * Math.max(1, Math.abs(rec)) ? null : `${where}: ${rec} vs ${a}`;
 }
-/** The InputForm-like texts of the port's pictures (labels: "1/2", "-1/2", reals by value). */
+/**
+ * The %text capture (HW-45 §6.1): one {input, plain, boxes, pos} per Text[…] of the Body's value. `input` is the
+ * InputForm of the first argument: a string ("\"λ\""), Style["top view", Medium], or a tick label (1/2, -1/2 exact;
+ * 0.8, -0.8 machine). Every recorded text must be drawn by the port at the recorded position (1e-12), labels with the
+ * same exactness, and the port must draw no other text.
+ */
 function textsMatch(recTexts, view) {
-  const portLabels = view.cam.filter((c) => c.role === 'tick-label').map((c) => c.value);
-  const others = [...view.top, ...view.cam].filter((c) => c.kind === 'text').map((c) => c.text);
+  const port = [...view.top, ...view.cam].filter((c) => c.kind === 'text' || c.role === 'tick-label')
+    .map((c) => ({ c, used: false }));
+  const posOk = (a, b) => a.length === b.length && a.every((x, i) => Math.abs(x - b[i]) <= 1e-12 * Math.max(1, Math.abs(b[i])));
   for (const t of recTexts) {
-    const m = String(t).match(/^(-?\d+)\/(\d+)$|^(-?\d+)$|^(-?\d*\.\d*(?:\*\^-?\d+)?)$/);
+    const input = String(t.input);
+    const pos = toJS(t.pos);
+    let m = input.match(/^Style\["(.*)", Medium\]$|^"(.*)"$/);
+    let match;
     if (m) {
+      const text = m[1] ?? m[2];
+      match = (c) => c.kind === 'text' && c.text === text;
+    } else if ((m = input.match(/^(-?\d+)\/(\d+)$|^(-?\d+)$|^(-?\d*\.\d*(?:\*\^-?\d+)?)$/))) {
       const exact = m[1] !== undefined || m[3] !== undefined;
       const val = m[1] !== undefined ? Number(m[1]) / Number(m[2]) : Number(String(m[3] ?? m[4]).replace('*^', 'e'));
-      if (!portLabels.some((x) => isExact(x) === exact && Math.abs(N(x) - val) <= 1e-12 * Math.max(1, Math.abs(val)))) return `text ${t} not drawn with that exactness`;
-    } else if (!others.includes(t)) return `text ${t} not drawn`;
+      match = (c) => c.role === 'tick-label' && isExact(c.value) === exact && Math.abs(N(c.value) - val) <= 1e-12 * Math.max(1, Math.abs(val));
+    } else return `text ${input}: unknown form`;
+    const hit = port.find((x) => !x.used && match(x.c) && posOk(x.c.at, pos));
+    if (!hit) return `text ${input} at ${JSON.stringify(pos)} not drawn (with that exactness, at that position)`;
+    hit.used = true;
   }
-  return null;
+  const extra = port.filter((x) => !x.used);
+  return extra.length ? `port draws ${extra.length} text(s) the original does not: ${extra.map((x) => x.c.text ?? N(x.c.value)).join(', ')}` : null;
 }
 function compare(scenario, record, results) {
   const diffs = [];
   const check = (caps, { state, view }, where) => {
     for (const [name, rec] of Object.entries(caps ?? {})) {
       if (name === '%primitives' || name === '%g' || name === '%messages' || name.startsWith('wl:')) continue; // drawn data: checked by the unit tests
-      if (name === '%text') { const d = textsMatch(toJS(rec), view); if (d) diffs.push(`${where}: ${d}`); continue; }
+      if (name === '%text') { const d = textsMatch(rec, view); if (d) diffs.push(`${where}: ${d}`); continue; }
       const actual = { sc: view.sc, 'θ': view.theta, objectPts: view.objectPts, InterPt1: view.InterPt1, InterPt2: view.InterPt2,
         InterPt3D1: view.InterPt3D1, InterPt3D2: view.InterPt3D2, p: state.p, pFixed: state.pFixed }[name];
-      const d = numericDiff(toJS(rec), actual, `${where} ${name}`);
+      const d = numericDiff(toJSNumeric(rec), actual, `${where} ${name}`);
       if (d) diffs.push(d);
     }
   };
@@ -195,12 +212,33 @@ function harnessTest(id, title) {
     const h = harnessCase('camera-lasers', id);
     if (h.status !== 'ok') return ctx.skip(h.reason);
     if (id === 'H-CL-16') {
-      // which of the 65 points Nearest returns for the dial centre; dial-control.js pins k = −29 (K-CL-09)
-      const pos = toJS(h.record.capture['wl:Position[Table[{Cos@a,Sin@a},{a,-Pi,Pi,Pi/32}],First@Nearest[Table[{Cos@a,Sin@a},{a,-Pi,Pi,Pi/32}],{0.,0.}]]']);
-      expect(pos.flat()[0] - 33, 'k of the point Mathematica returns').toBe(nearest32Index([0, 0]));
+      // which of the 65 points Nearest returns for the dial centre (K-CL-09): the setter takes [[1]] of the EXACT table
+      const T = 'Table[{Cos@a,Sin@a},{a,-Pi,Pi,Pi/32}]';
+      const pos = toJS(h.record.capture[`wl:Position[${T},First@Nearest[${T},{0.,0.}]]`]);
+      expect(pos, 'Position of the first point').toEqual([[9]]);
+      expect(pos[0][0] - 33, 'k of the point Mathematica returns').toBe(nearest32Index([0, 0]));
+      // the machine table: Mathematica returns exactly the points at the least SQUARED machine distance (the port's rule)
+      const machine = toJS(h.record.capture[`wl:Nearest[N[${T}],{0.,0.}]`]);
+      const sq = DIAL_TABLE_32.map(([x, y]) => x * x + y * y), least = Math.min(...sq);
+      expect(machine).toEqual(DIAL_TABLE_32.filter((_, i) => sq[i] === least));
+      // the exact table: 11 points (the √-distance ties without k = −29); only the first is used by the setter
+      const exact = toJS(h.record.capture[`wl:Nearest[${T},{0.,0.}]`]);
+      expect(exact.map((q) => nearest32Index(q))).toEqual([-24, -19, -13, -8, -3, 3, 8, 13, 19, 24, 29]);
       return;
     }
     expect(compare(h.scenario, h.record, replay(h.scenario))).toEqual([]);
+    if (id === 'H-CL-11') {
+      // K-CL-03 (kernel side): a face at x = 0 makes Power::infy and Greater::nord messages and leaves ComplexInfinity
+      // in the picture: 3 Points and 7 Polygons (3 more than at x = 0.05) where the port draws no laser dot and no
+      // degenerate face (unit test "an object face at x = 0 …"); what the front end shows of them is M-CL-08 (N-CL-05)
+      [1, 2].forEach((step) => {
+        const c = stepRecord(h.record, step).capture;
+        expect([...new Set(c['%messages'].map((m) => m.name))].sort(), `step ${step} messages`).toEqual(['Greater::nord', 'Power::infy']);
+        expect(toJS(c['%primitives'].counts), `step ${step} primitives`).toMatchObject({ Point: 3, Polygon: 7 });
+      });
+      expect(stepRecord(h.record, 3).capture['%messages']).toEqual([]);
+      expect(toJS(stepRecord(h.record, 3).capture['%primitives'].counts)).toMatchObject({ Point: 3, Polygon: 4 });
+    }
   });
 }
 

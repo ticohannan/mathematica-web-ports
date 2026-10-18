@@ -12,7 +12,7 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import { parseLexical } from '../../tools/lib/json-lexical.mjs';
-import { harnessCase, captureOf, toJS } from '../support/harness-json.js';
+import { harnessCase, captureOf, toJS, exactDouble, isMachineReal, sameDouble, g3dPrimitiveDifferences } from '../support/harness-json.js';
 import {
   initialState, evaluate, stateFromSettings, fitCamera, groundWidthFraction, DH_ZOOM, angleOf,
 } from '../../demos/dh-parameters/model.js';
@@ -135,11 +135,23 @@ function replay(scenario) {
 const matrixOf = (rec) => {
   const v = toJS(rec);
   if (Array.isArray(v)) return v;
-  if (v && v.head === 'TransformationFunction') return toJS(v.args[0]);
+  if (v && v.h === 'TransformationFunction') return v.a[0]; // HW-45 compound encoding {"h": head, "a": args}
   throw new Error(`not a transform: ${JSON.stringify(v).slice(0, 80)}`);
 };
 const closeM = (A, B, tol, what) => A.forEach((r, i) => r.forEach((x, j) => expect(Math.abs(x - B[i][j]), `${what}[${i}][${j}]`).toBeLessThanOrEqual(tol)));
 const boxOf = (rec) => toJS(rec);
+
+/**
+ * A recorded TransformationFunction against the port's matrix: machine entries bit for bit (the fused machine Dot,
+ * F-DH-09), exact entries within 4e-16 (the port computes exact entries in doubles: D-DH-08).
+ */
+function sameT(rec, M, what) {
+  expect(rec.h, what).toBe('TransformationFunction');
+  rec.a[0].forEach((row, i) => row.forEach((e, j) => {
+    if (isMachineReal(e)) expect(sameDouble(exactDouble(e), M[i][j]), `${what}[${i + 1},${j + 1}]: ${exactDouble(e)} vs ${M[i][j]}`).toBe(true);
+    else expect(Math.abs(exactDouble(e) - M[i][j]), `${what}[${i + 1},${j + 1}] (exact ${e.wl ?? e})`).toBeLessThanOrEqual(4e-16);
+  }));
+}
 
 function check(ctx, id, extra = () => {}) {
   const h = harnessCase('dh-parameters', id);
@@ -147,9 +159,20 @@ function check(ctx, id, extra = () => {}) {
   const runs = replay(h.scenario);
   const last = runs[runs.length - 1].view;
   for (const name of h.scenario.capture) {
-    if (['T1', 'T2', 'T3'].includes(name)) closeM(last[name], matrixOf(captureOf(h.record, name)), 1e-12, name);
-    if (name === 'wl:T1.T2.T3') closeM(last.T123, matrixOf(captureOf(h.record, name)), 1e-12, name);
-    if (name === '%plotRange') closeM(last.box, boxOf(captureOf(h.record, name)), 1e-9, 'PlotRange');
+    if (['T1', 'T2', 'T3'].includes(name)) sameT(captureOf(h.record, name), last[name], name);
+    if (name === 'wl:T1.T2.T3') sameT(captureOf(h.record, name), last.T123, name);
+    if (name === '%plotRange') {
+      // one record per graphic {head, value, method, …} (HW-50): PlotRange -> All computed by the kernel = the bounds of
+      // all primitives without padding, as the port's box (K-DH-03: the box is not the cause of the framing difference)
+      const [pr] = captureOf(h.record, name);
+      expect([pr.head, pr.method, toJS(pr.storedOption)]).toEqual(['Graphics3D', 'AbsoluteOptions', { sym: 'All' }]);
+      closeM(last.box, boxOf(pr.value), id === 'H-DH-01' ? 4e-16 : 0, 'PlotRange'); // H-DH-01: exact bounds, D-DH-08
+    }
+    if (name === '%g3d') {
+      const [g] = captureOf(h.record, name);
+      expect(g.h).toBe('Graphics3D');
+      expect(g3dPrimitiveDifferences(g.a[0], last.graphic.content).differences).toEqual([]);
+    }
   }
   extra(runs, h);
   return undefined;
@@ -167,7 +190,7 @@ describe('dh-parameters golden: Mathematica harness records', () => {
     runs.forEach((r, k) => {
       const palm = flatten(drawGripper(r.st.g, r.st.r[2])).filter((p) => p.type === 'cuboid')[0];
       expect(palm.min[2] === -0.2, `step ${k + 1}`).toBe(k === 2);
-      expect(captureOf(h.record, 'wl:DrawGripper[g, r3]', { step: k + 1 })).toBeTruthy();
+      expect(g3dPrimitiveDifferences(captureOf(h.record, 'wl:DrawGripper[g, r3]', { step: k + 1 }), drawGripper(r.st.g, r.st.r[2])).differences, `step ${k + 1}`).toEqual([]);
     });
   }));
   it('harness "H-DH-07"', (ctx) => check(ctx, 'H-DH-07'));
@@ -178,5 +201,8 @@ describe('dh-parameters golden: Mathematica harness records', () => {
     expect(angleOf(runs[0].st.theta[0])).toBe(Math.PI);
   }));
   it('harness "H-DH-09"', (ctx) => check(ctx, 'H-DH-09'));
-  it('harness "H-DH-10"', (ctx) => check(ctx, 'H-DH-10'));
+  it('harness "H-DH-10"', (ctx) => check(ctx, 'H-DH-10', (runs, h) => {
+    // finger cuboids for g = 0 and g = 1 (corner order as written, N-DH-06)
+    runs.forEach((r, k) => expect(g3dPrimitiveDifferences(captureOf(h.record, 'wl:DrawGripper[g, r3]', { step: k + 1 }), drawGripper(r.st.g, r.st.r[2])).differences, `step ${k + 1}`).toEqual([]));
+  }));
 });

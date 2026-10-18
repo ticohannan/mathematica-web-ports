@@ -129,13 +129,16 @@ describe('the drawing (DrawJoint, DrawGripper, ground)', () => {
       expect(body.min).toEqual([-jr, -jr, -jr]); expect(body.max).toEqual([jr, jr, jr]); expect(body.color).toEqual(NAMED.LightBlue);
     }
   });
-  it('DrawJoint prismatic axis: -1+d-jr-.01 in COMMON-DECISIONS §7 order (machine d and -.01 first, then the exact -6/5; an exact d joins the exact terms)', () => {
-    // values of the rule worked by hand in IEEE doubles: (1.2 + -0.01) + -1.2 = 1.19 + -1.2; the written order
-    // ((-1 + 1.2) + -0.2) + -0.01 would give -0.010000000000000056
+  it('DrawJoint prismatic axis: -1+d-jr-.01 added in written order, ((-1 + d) + -1/5) + -0.01 (H-DH-02, H-DH-03, H-DH-07); an exact d joins the exact terms', () => {
+    // the recorded values (harness H-DH-02, H-DH-03, H-DH-07, Mathematica 15.0.1); the reading of COMMON-DECISIONS §7
+    // used before v0.1.17, (d + -0.01) + N[-6/5], gives -0.3999999999999999, -0.47, -0.31999999999999995, -0.20999999999999996
     const z0 = (d, dExact = null) => byType(flatten(drawJoint('Prismatic', d, 0, 0, { variant: 'dh', dExact })), 'cuboid')[0].min[2];
-    expect(z0(1.2)).toBe(-0.010000000000000009);
-    expect(z0(0.81)).toBe(-0.3999999999999999);
-    expect(z0(1)).toBe(-0.20999999999999996); // machine 1.: 0.99 + -1.2
+    expect(z0(0.81)).toBe(-0.39999999999999997);
+    expect(z0(0.74)).toBe(-0.47000000000000003);
+    expect(z0(0.89)).toBe(-0.32);
+    expect(z0(0.5)).toBe(-0.71);
+    expect(z0(1)).toBe(-0.21000000000000002); // machine 1.: ((-1 + 1.) + -0.2) + -0.01
+    expect(z0(0, [0, 1])).toBe(-1.21); // exact 0: -0.01 + N[-6/5] (H-DH-07)
     expect(z0(1, [1, 1])).toBe(-0.21000000000000002); // exact 1: -0.01 + N[-1/5]
     // through the model: the exact default d1 = 1 against the machine 1. after a move
     const st = initialState();
@@ -143,7 +146,7 @@ describe('the drawing (DrawJoint, DrawGripper, ground)', () => {
     const axisZ = (s) => byType(evaluate(s).parts[1], 'cuboid')[0].min[2];
     expect(axisZ(st)).toBe(-0.21000000000000002);
     st.exact.d[0] = false;
-    expect(axisZ(st)).toBe(-0.20999999999999996);
+    expect(axisZ(st)).toBe(-0.21000000000000002); // the machine 1. gives the same double here
     // robot-singularities' variant has no such sum: its prismatic axis starts at -jr-.01 for every d
     expect(byType(flatten(drawJoint('p', 1.2, 0, 0)), 'cuboid')[0].min[2]).toBe(-0.2 - 0.01);
   });

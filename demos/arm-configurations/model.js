@@ -3,10 +3,11 @@
 // SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // demos/arm-configurations/model.js — one evaluation of the Manipulate body of "Common Robot Arm Configurations"
 // (pure: no DOM, no three.js): the Manipulate variables and the opening state, the slider-grid reset of a robot
-// change, Ad and Td (dhTransform with the exact angles nπ/32, no Chop), the Graphics3D content in the original's
+// change, Ad and Td (dhTransform with the exact angles nπ/32; Chop acts on machine Td, K-AC-01), the Graphics3D content in the original's
 // order (drawShaft transcribed but unreachable), the exactness of every entry of H and its display strings.
 // Names and order of operations follow the original (docs/original-source/arm-configurations.txt).
-import { dhTransform, computeTd } from '../common/dh-chain.js';
+import { dhTransform, mul4, mul4Fma } from '../common/dh-chain.js';
+import { chop } from '../../shared/mma.js';
 import { drawJoint, drawGripper, GROUND, axisBottomZ } from '../common/robot-draw.js';
 import { Graphics3D, GeometricTransformation, Cuboid, Cylinder, Opacity, Gray, flatten } from '../common/g3d.js';
 import { trigPi } from '../../shared/exact-pi.js';
@@ -80,7 +81,10 @@ export function selectRobot(st, index) {
   return next;
 }
 
-// ---- exactness of matrix entries (F-AC-10, §6.4, provisional rule K-AC-09) ------------------------------------
+// ---- exactness of matrix entries (F-AC-10, §6.4, K-AC-09 resolved by H-AC-11/H-AC-18) ---------------------------
+// A TransformationFunction matrix with one machine entry is all machine (Mathematica 15.0.1 record: H-AC-11 and
+// H-AC-18 give MachinePrecision for all 16 entries of H and machine reals 0., 1. in every Td[i] already from Td[1]
+// = Ad[[1]], whose d = 1.5 is the only machine number): allMachine() applies this after every product.
 // kinds: 'zero' (exact 0), 'plain' (a non-zero exact rational), 'symbolic' (an exact number with Cos/Sin of a
 // non-right-angle multiple of π/32), 'machine'.
 const plainKind = (v) => (v === 0 ? 'zero' : 'plain');
@@ -91,6 +95,8 @@ const trigKinds = (e) => {
   return [t.cosRational ? plainKind(t.cos) : 'symbolic', t.sinRational ? plainKind(t.sin) : 'symbolic'];
 };
 const has = (K, k) => K.some((row) => row.includes(k));
+/** a TransformationFunction with a machine entry holds a machine matrix (K-AC-09, H-AC-11, H-AC-18) */
+export const allMachine = (K) => (has(K, 'machine') ? K.map((row) => row.map(() => 'machine')) : K);
 /**
  * Kinds of the entries of the product A.B (values V = the product's values): a numeric Dot (neither matrix holds a
  * symbolic entry) is all machine as soon as one machine number occurs, else exact; otherwise each entry is formed
@@ -136,7 +142,7 @@ export function dhKinds(d, r, Theta, Alpha) {
   const VRx = [[1, 0, 0, 0], [0, cav.cos, -cav.sin, 0], [0, cav.sin, cav.cos, 0], [0, 0, 0, 1]];
   let K = Rz, V = VRz;
   for (const [KB, VB] of [[Tz, VTz], [Tx, VTx], [Rx, VRx]]) { V = mul(V, VB); K = dotKinds(K, KB, V); }
-  return K;
+  return allMachine(K);
 }
 
 /** dhTransform[d, r, Theta, Alpha] with exact angles through the explicit exact-angle path of demos/common/dh-chain.js */
@@ -173,7 +179,7 @@ export const VIEWPOINT = [1.3, -2.4, 2];
  *   dof = DHdim[[2]]; Table[{jointtype[i] = ToString[…[[1,i]]], a[i] = …, alpha[i] = …, d[i] = …, theta[i] = …}, …];
  *   Ad = Table[If[MemberQ[{"Prismatic","prismatic","P","p"}, ToString[DHParameters[[1,i]]]],
  *     dhTransform[params[[i]], a[i], theta[i], alpha[i]], dhTransform[d[i], a[i], params[[i]], alpha[i]]], {i, 1, DHdim[[2]]}];
- *   Td[1] = Ad[[1]]; Table[Td[i] = Chop[Td[i-1].Ad[[i]]], {i, 2, DHdim[[2]]}];   (Chop: no effect, Q-AC-05)
+ *   Td[1] = Ad[[1]]; Table[Td[i] = Chop[Td[i-1].Ad[[i]]], {i, 2, DHdim[[2]]}];   (Chop acts on machine entries, K-AC-01)
  *   Column[{Graphics3D[{ground, joint 1, If[dof == 1, gripper, If[showRobot, joints 2 … dof], <drawShaft>],
  *     GeometricTransformation[drawGripper[g, 0], Chop[Td[dof]]]}, …], Text@Row[{"H", " = ", MatrixForm[N[Chop[Td[dof]], 2]]}]}]]
  * (jr, ar unused, N-AC-04). Returns {dof, joints, Ad, Td, AdKinds, TdKinds, H, HKinds, hStrings, graphic, parts
@@ -194,9 +200,16 @@ export function evaluate(st) {
     Ad.push(dhT(d, J.a, Theta, J.alpha));
     AdKinds.push(dhKinds(d, J.a, Theta, J.alpha));
   }
-  const Td = computeTd(Ad, { chop: false });
-  const TdKinds = [AdKinds[0]];
-  for (let i = 1; i < dof; i++) TdKinds.push(dotKinds(TdKinds[i - 1], AdKinds[i], Td[i]));
+  // Td[1] = Ad[[1]]; Td[i] = Chop[Td[i-1].Ad[[i]]]: a machine product is Mathematica's packed Dot (fused
+  // multiply-add chain, mul4Fma) and Chop replaces its entries below 10^-10 by 0 (shown "0.": the
+  // TransformationFunction keeps a machine matrix; H-AC-14, K-AC-01); Chop leaves exact entries alone.
+  const Td = [Ad[0]], TdKinds = [AdKinds[0]];
+  for (let i = 1; i < dof; i++) {
+    const machineDot = has(TdKinds[i - 1], 'machine') || has(AdKinds[i], 'machine');
+    const M = machineDot ? chop(mul4Fma(Td[i - 1], Ad[i])) : mul4(Td[i - 1], Ad[i]);
+    Td.push(M);
+    TdKinds.push(allMachine(dotKinds(TdKinds[i - 1], AdKinds[i], M)));
+  }
 
   // the Graphics3D content
   const g = st.g.v;

@@ -8,8 +8,9 @@
 // slider variable, the formulas' first argument s; α → Alpha, β → Beta, θ → Theta).
 //
 // Path pieces as data: { kind: 'arc', c, r, a1, a2 } (Circle[c, r, {a1, a2}]) and { kind: 'line', from, to }.
-// Numerics (DESIGN §6): a/b of machine numbers as a·(1/b), p/100 t as (p/100)·t, the products −t(τ−1)X as
-// -(t·((s−1)·X)) and +t(τ−1)X as (t·(s−1))·X (N-DI-07), tolerant comparisons of reals (shared/mma.js).
+// Numerics (DESIGN §6): a/b of machine numbers as a·(1/b), p/100 t as (p/100)·t, the products ∓t(τ−1)X from left to
+// right, (t·(s−1))·X, as Mathematica 15.0.1 evaluates them (harness run 2, K-DI-04, N-DI-07), tolerant comparisons of
+// reals (shared/mma.js).
 import { mLess, mLessEq, mUnequal } from '../../shared/mma.js';
 
 const PI = Math.PI;
@@ -19,12 +20,12 @@ const PI = Math.PI;
 /** mRS[τ, t, r]: turn right for τ·t, then straight. */
 export function mRS(s, t, r) {
   const Alpha = (s * t) * (1 / r);
-  return [r * (1 - Math.cos(Alpha)) - (t * ((s - 1) * Math.sin(Alpha))), r * Math.sin(Alpha) - (t * ((s - 1) * Math.cos(Alpha)))];
+  return [r * (1 - Math.cos(Alpha)) - (t * (s - 1)) * Math.sin(Alpha), r * Math.sin(Alpha) - (t * (s - 1)) * Math.cos(Alpha)];
 }
 /** mLS[τ, t, r]: turn left for τ·t, then straight. */
 export function mLS(s, t, r) {
   const Alpha = (s * t) * (1 / r);
-  return [-(r * (1 - Math.cos(Alpha))) + (t * (s - 1)) * Math.sin(Alpha), r * Math.sin(Alpha) - (t * ((s - 1) * Math.cos(Alpha)))];
+  return [-(r * (1 - Math.cos(Alpha))) + (t * (s - 1)) * Math.sin(Alpha), r * Math.sin(Alpha) - (t * (s - 1)) * Math.cos(Alpha)];
 }
 /** mRL[τ, t, r]: turn right for τ·t, then left. */
 export function mRL(s, t, r) {

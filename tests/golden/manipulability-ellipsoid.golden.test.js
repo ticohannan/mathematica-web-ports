@@ -13,7 +13,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { loadStates, isExact as isExactWl, exactDouble } from '../../tools/lib/wl-json.mjs';
-import { harnessCase, captureOf, toJS } from '../support/harness-json.js';
+import { harnessCase, captureOf, toJS, toJSNumeric, isNumericSymbol, plotRanges } from '../support/harness-json.js';
 import { readPng } from '../support/png.js';
 import {
   initialState, evaluate, updateAngles, angleValue, pointXY, ellipsoidSummary, robotContent, splineArcAngles,
@@ -228,7 +228,17 @@ function replay(scenario) {
   const views = [];
   for (const step of scenario.steps) {
     if (step.setFrom) state = snap(Number(String(step.setFrom).split(':')[1]));
-    else {
+    else if (step.drag) {
+      // drag (HW-25): the stored setter Nearest[table, #][[1]] applied to the machine pointer value
+      state = JSON.parse(JSON.stringify(state));
+      for (const [name, v] of Object.entries(step.drag)) {
+        const [key, i] = VAR[name];
+        if (key !== 'm') throw new Error(`drag of ${name}: not a dial point`);
+        const pointer = typeof v === 'string' ? wlNumber(v.slice(3).replace(/^N\[(.*)\]$/, '$1')) : toJS(v);
+        const k = nearest32Index(pointer);
+        state.m[i] = k === -32 ? 32 : k;
+      }
+    } else {
       const set = toJS(step.set);
       state = JSON.parse(JSON.stringify(state));
       for (const [name, v] of Object.entries(set)) {
@@ -271,7 +281,8 @@ function compareCaptures(h, view, step = null) {
       // in ulps (an absolute 4e-16 is below one ulp for |θ| ≥ 2): an exact recorded angle kπ/32 is N of the exact value,
       // the correctly rounded double (K-ME-09), so 0 ulps; machine values (ArcTan of a machine point) within 1 ulp
       if (key === 'm') pointXY(view.state.m[i]).forEach((x, c) => withinUlps(x, toJS(rec)[c], 1, `${id} ${name}[${c}]`));
-      else withinUlps(angleValue(view.state[key][i]), toJS(rec), isExactWl(rec) ? 0 : 1, `${id} ${name}`);
+      // an exact angle that is a bare symbol (θ3 = ArcTan[-1, 0] = Pi) is encoded {"sym": "Pi"} (HW-45)
+      else withinUlps(angleValue(view.state[key][i]), toJSNumeric(rec), isExactWl(rec) || isNumericSymbol(rec) ? 0 : 1, `${id} ${name}`);
     } else if (name === 'Σfull' || name === 'Σ') {
       const M = toJS(rec);
       [0, 1, 2].forEach((j) => {
@@ -301,7 +312,13 @@ function compareCaptures(h, view, step = null) {
         else close(view.J[i][j], J[i][j], 4.5e-16, `${id} J[${i}][${j}] (bits: K-ME-02)`);
       }
     } else if (name === '%text') expect(muTextRecorded(toJS(rec), view.text), `${id} μ text ${view.text} in ${JSON.stringify(toJS(rec))}`).toBe(true);
-    else if (name === '%plotRange') expect(toJS(rec), `${id} plot range`).toEqual(PLOT_RANGE);
+    else if (name === '%plotRange') {
+      // one Graphics3D; its absolute PlotRange (kernel AbsoluteOptions, HW-50) is the stored option, unchanged by the overshoot
+      const [g, ...more] = plotRanges(rec);
+      expect(more, `${id} one graphic`).toEqual([]);
+      expect([g.head, g.method], `${id} plot range method`).toEqual(['Graphics3D', 'AbsoluteOptions']);
+      expect(g.value, `${id} plot range`).toEqual(PLOT_RANGE);
+    }
     else expect(rec, `${id} ${name} recorded`).toBeDefined(); // %messages, %primitives, splineCircle, Nearest: inspected by hand
   }
 }
@@ -349,10 +366,20 @@ describe('manipulability-ellipsoid golden: Mathematica harness records', () => {
     expect(numbers(captureOf(h.record, 'wl:splineCircle[{0,0,0},1/2,{0,θ2}]')).length).toBeGreaterThan(6);
     expect(r.state.k.slice(1)).toEqual([-16, -8]);
   }));
-  it('harness "H-ME-11"', (ctx) => check(ctx, 'H-ME-11', (h) => {
-    const rec = toJS(captureOf(h.record, 'wl:Nearest[Table[{Cos[a],Sin[a]},{a,-Pi,Pi,Pi/32}],{0.,0.}]', { step: 2 }));
-    // K-ME-05: the port's rule (first minimal machine distance in table order) against Mathematica's choice
-    expect(rec[0]).toEqual(DIAL_TABLE_32[nearest32Index([0, 0]) + 32]);
+  it('harness "H-ME-11"', (ctx) => check(ctx, 'H-ME-11', (h, r) => {
+    // K-ME-05, through the stored setter with machine pointers (TESTPLAN line of harness run 2: the exact midpoint of
+    // run 1 made Nearest::mepcmp). The port's rule: least squared machine distance, ties first in table order (H-CL-16).
+    const T = 'Table[{Cos[a],Sin[a]},{a,-Pi,Pi,Pi/32}]';
+    // the midpoint pointer: the port assumes N[Cos[Pi/64]] = Math.cos(π/64) (the recorded input echo must say so, else
+    // the tie premise of this scenario does not hold and the expectations below must be re-derived)
+    const echo = h.record.inputEcho.find((e) => e.step === 1 && e.name === 'p1');
+    expect(toJS(echo.value), 'H-ME-11 midpoint pointer').toEqual([Math.cos(PI / 64), Math.sin(PI / 64)]);
+    const mid = toJS(captureOf(h.record, `wl:Nearest[${T},N[{Cos[Pi/64],Sin[Pi/64]}]]`, { step: 1 }));
+    expect(mid[0], 'H-ME-11 first point at the midpoint').toEqual(DIAL_TABLE_32[32 + nearest32Index([Math.cos(PI / 64), Math.sin(PI / 64)])]);
+    expect(r.views[0].state.m[0], 'H-ME-11 p1 after the drag').toBe(0);
+    const centre = toJS(captureOf(h.record, `wl:Nearest[${T},{0.,0.}]`, { step: 2 }));
+    expect(centre[0], 'H-ME-11 first point at the centre').toEqual(DIAL_TABLE_32[nearest32Index([0, 0]) + 32]);
+    expect(r.views[1].state.m[1], 'H-ME-11 p2 after the drag').toBe(-24);
   }));
   it('harness "H-ME-12"', (ctx) => check(ctx, 'H-ME-12', (h) => {
     // K-ME-02: N[{Cos[kπ/32], Sin[kπ/32]}] bit for bit against the octant table of shared/exact-pi.js
