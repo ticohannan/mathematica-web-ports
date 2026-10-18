@@ -1,0 +1,298 @@
+# Design document: Rapidly Exploring Random Tree (RRT) and RRT*
+
+| | |
+|---|---|
+| Code version: | 0.1.15 |
+| Document revision | 1 (2026-10-17) — first implementation |
+| Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
+| Original | Wolfram Demonstrations Project, "Rapidly Exploring Random Tree (RRT) and RRT*", contributed by Aaron T. Becker and Li Huang, published 2018-01-16 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/RapidlyExploringRandomTreeRRTAndRRT/>. Readable source: [`docs/original-source/rrt.txt`](../../docs/original-source/rrt.txt); snapshots: `docs/original-snapshots/rrt-1.png` … `rrt-6.png` (pictures 7 and 8 of the extraction are the Wolfram logo placeholder, not snapshots); saved states (COMMON-DECISIONS §1): [`tests/golden/rrt.original-states.json`](../../tests/golden/rrt.original-states.json), written by `python3 tools/extract_state.py --snapshots`, with `states[0]` = the live output-cell state, `snapshots[1…6]` = the six snapshot cells' `"Settings"` (raw notebook lines 3360, 4786, 9538, 16507, 21317, 24564) and `specs` = the initial settings (see §6, *Golden data*) |
+| Port files | `model.js` (obstacles, the Initialization functions, `addNode` and `updateCostToGo`, one evaluation of the Manipulate body, the data of the picture; pure, no DOM), `main.js` (SVG drawing, goal locator, controls, the self-triggered re-evaluation loop), `index.html`; shared: [`demos/common/prm-core.js`](../../demos/common/prm-core.js) (`angtest`, `ptInPoly`), `demos/common/segments.js` (created and owned by this app, COMMON-DECISIONS §3; prm-seven-link's export names `Gamma` — the original's `λ` —, `lineIntersectionPoint`, `segmentIntersectionQ`; also used by camera-lasers), `shared/mma-extra.js` `normalizeDnrm2` |
+| Role in the project | further demonstration (batch A) |
+
+## 1. Purpose and background
+
+A rapidly exploring random tree (RRT, LaValle 1998; LaValle and Kuffner 2001) grows a tree from a start node by
+repeatedly picking a sample point and extending the tree toward it. The Demonstration compares three growth rules in a
+2D square workspace (−20…20)² with blue obstacles: a **Random Tree** (a random node is extended in the direction of a
+random sample), an **RRT** (the node nearest to the sample is extended by at most 1 unit toward it) and **RRT\***
+(Karaman and Frazzoli 2011: the new node is attached to the neighbour within distance 3 that gives the cheapest
+path, and neighbours are rewired through the new node when that shortens their path). The root is at (0, 0); the user
+drags a goal locator with a goal disk around it, and the Demonstration draws the cheapest tree path into the disk and
+its length. An exploration-bias slider makes a fraction of the samples equal to the goal.
+
+## 2. Scope
+
+In scope: the original's controls (tree type, obstacle type, the five "number of nodes to add" buttons, exploration
+bias, goal radius), the goal locator, the four obstacle sets, the three growth rules exactly as coded (sampling,
+nearest node, step, collision test, RRT\* parent choice and rewiring, cost update), the batch rule of the buttons
+(the last five nodes one per update), the goal check and path, the picture with its label and per-node tooltips.
+Out of scope (would need a design entry first): other step sizes or neighbourhood radii, other obstacles or a drawn
+obstacle editor, saving/loading trees in the UI, path smoothing, a real-time animation of whole batches.
+
+## 3. Users and use cases
+
+| ID | User | Use case |
+|----|------|----------|
+| UC-RT-01 | student | grow a Random Tree, an RRT and an RRT\* in the same obstacles and compare how far they explore (Details text, snapshots 2–4) |
+| UC-RT-02 | student | move the goal and the goal radius and read off the path length; see that RRT\* paths are shorter than RRT paths |
+| UC-RT-03 | student | bias the sampling toward the goal and see the effect |
+| UC-RT-04 | student | hover a node to read its distance from the root along the tree (Details text) |
+| UC-RT-05 | tester | compare the port with the original's saved trees (six snapshot states) and with the Mathematica harness (replayed random numbers) |
+
+## 4. Features
+
+### 4.1 Controls
+
+| ID | Feature | Reason | Since | Verified by |
+|----|---------|--------|-------|-------------|
+| F-RT-01 | "tree type" setter bar (`{{treeType, "RRT", ""}, {"Random Tree", "RRT", "RRT*"}}`; the third label is the typeset string `"\!\(\*SuperscriptBox[\(RRT\), \(*\)]\)"`, shown as RRT with a superscript \*), default RRT; a change resets the tree (F-RT-08) | choose the growth rule (UC-RT-01) | v0.1.15 | e2e "has the controls of the original with their defaults: RRT, narrow passage, five add buttons, bias 0, goal radius 1"; e2e "the tree type setter and the obstacle popup reset the tree to 1 node"; unit "changing tree type or obstacles resets verts, path, newrand and reachGoal but keeps cost"; M-RT-04 |
+| F-RT-02 | "obstacle type" popup menu (`{{obstacles, "narrow passage", ""}, {"none", "sparse", "narrow passage", "concave"}, ControlType -> PopupMenu}`), default narrow passage; a change resets the tree | choose the workspace (UC-RT-01) | v0.1.15 | e2e "has the controls of the original with their defaults: RRT, narrow passage, five add buttons, bias 0, goal radius 1"; e2e "the obstacle popup draws 4, 4, 1 and 0 obstacle polygons"; e2e "the tree type setter and the obstacle popup reset the tree to 1 node"; M-RT-04 |
+| F-RT-03 | "number of nodes to add:" `ButtonBar[{"1" :> (nodestoadd += 1), "10" :> (nodestoadd += 10), "100" :> …, "200" :> …, "500" :> …}]` (one segmented row of five buttons) | grow the tree in batches (UC-RT-01) | v0.1.15 | e2e "pressing 10 grows the tree to 11 nodes (seeded)"; unit "a press of 10 adds 5 nodes in the first evaluation and one per evaluation after that"; golden "H-RT-03"; M-RT-03 |
+| F-RT-04 | "exploration bias" slider 0…0.9, step 0.05, default 0 (`{{explorationBias, 0, ""}, 0, .9, 0.05, ControlType -> Slider, ImageSize -> 80, Appearance -> "Labeled"}`): a plain slider with its value as text on the right and **no** ⊕ animation panel (ControlType Slider, snapshot 1); port: `shared/ui.js` `Controls.slider` with `plus: false` and `steps: 'mma'` (values 0 + k·0.05, COMMON-DECISIONS §4); the value text comes from `steps: 'mma'`, which prints the value as Mathematica does (`0` before the first move, then `0.`, `0.05`, `0.15000000000000002` as `0.15`) | goal-biased sampling (UC-RT-03) | v0.1.15 | e2e "the sliders show their values as text: 0 at start, 0.05 after one step"; unit "exploration bias: a biased attempt samples finalGoal itself and adds duplicate nodes once a node sits on the goal"; golden "H-RT-10"; M-RT-06; M-RT-10 |
+| F-RT-05 | "goal radius" slider 0…5, step 0.1, default 1, same appearance and port control (`{{goalRadius, 1, ""}, 0, 5, 0.1, ControlType -> Slider, ImageSize -> 80, Appearance -> "Labeled"}`; values 0 + k·0.1, snapshots 2–6 save 2.5) | size of the goal region (UC-RT-02) | v0.1.15 | e2e "the sliders show their values as text: 0 at start, 0.05 after one step"; unit "moving the goal or changing goalRadius resets reachGoal and path and recomputes the path"; unit "goalRadius 0: only a node exactly on the goal reaches it"; golden "H-RT-11"; M-RT-11 |
+| F-RT-06 | Goal locator `{{finalGoal, {18, -18}}, {-19, -19}, {19, 19}, ControlType -> Locator}`: default locator glyph (drawn as measured in the RM/BF snapshots: black lines and a dark translucent ring, `shared/svg-plot.js` `darkLocatorGlyph`), positions limited to −19…19 in both coordinates; Manipulate Locator controls are LocatorPane locators: a press anywhere in the picture moves the locator there (shared `addLocators`, `pickAnywhere: true`) | choose the goal (UC-RT-02) | v0.1.15 | e2e "dragging the goal locator with the mouse moves the goal disk"; e2e "a press away from the goal locator moves it there (LocatorPane)"; e2e "dragging the goal onto the root turns the disk green and reads 1 node, path length 0"; M-RT-05 |
+| F-RT-07 | Layout `ControlPlacement -> Left`: text lines "tree type", "obstacle type", "number of nodes to add:", "exploration bias", "goal radius" above their controls, with the original's empty-string spacers | same arrangement as the original (snapshot 1) | v0.1.15 | inventory; M-RT-02 |
+
+### 4.2 Model (`model.js`)
+
+| ID | Feature | Reason | Since | Verified by |
+|----|---------|--------|-------|-------------|
+| F-RT-08 | Manipulate variables and the two change checks at the top of the body. Initial values exactly as the Manipulate's stored `"Variables"`: `verts = {{0., 0.}, 0, 1, 0, {}}` (a single vertex record, not a list of them, Q-RT-13), `finalGoal = {18, -18}`, `finalGoalOld = {10, 10}`, `goalRadius = 1`, `goalRadiusOld = -1`, `treeType = "RRT"`, `treeTypeOld = 0`, `obstacles = "narrow passage"`, `obstaclesold = {}`, `explorationBias = 0`, `newrand = {}`, `path = {}`, `cost = {}`, `nodestoadd = 0`, `reachGoal = False`. (1) `If[finalGoalOld != finalGoal \|\| goalRadiusOld != goalRadius, reachGoal = False; path = {}; finalGoalOld = finalGoal; goalRadiusOld = goalRadius]`; (2) `If[treeTypeOld != treeType \|\| obstaclesold != obstacles, treeTypeOld = treeType; obstaclesold = obstacles; verts = {{{0.0, 0.0}, 0, 1, 0, {}}}; path = {}; newrand = {}; reachGoal = False]` — `cost` is not reset (Q-RT-06). Vertex record: `{xyloc, parent, IDnum, cost2go, childrenlist}` with 1-based indexes, parent 0 for the root. The live state (one node, `treeTypeOld = "RRT"`, `obstaclesold = "narrow passage"`, `finalGoalOld` = `finalGoal`, `goalRadiusOld = 1`; raw line 1846) differs from these initial settings (COMMON-DECISIONS §6): the port opens in the live state, reached by one evaluation of the initial settings, and its "Initial settings" restores the stored `"Variables"` (A-RT-01, Q-RT-13) | same state and the same first picture as the original | v0.1.15 | golden "rrt: the saved state is the state after the first evaluation of the initial settings"; golden "rrt: re-evaluating each snapshot state keeps tree, path, cost and reachGoal"; unit "the first evaluation of the Variables initial values resets the tree (treeTypeOld 0, verts of the wrong shape)"; unit "changing tree type or obstacles resets verts, path, newrand and reachGoal but keeps cost"; unit "moving the goal or changing goalRadius resets reachGoal and path and recomputes the path"; golden "rrt: snapshot 2 keeps a stale cost while the goal is not reached"; golden "H-RT-01"; golden "H-RT-14"; golden "H-RT-15" |
+| F-RT-09 | Obstacles `obsedges = Piecewise[…]` with the original's exact integer vertex lists: narrow passage = four rectangles `{{5,10},{6,10},{6,21},{5,21}}`, `{{5,5},{6,5},{6,-21},{5,-21}}`, `{{-5,-7},{-6,-7},{-6,21},{-5,21}}`, `{{-5,-9},{-6,-9},{-6,-21},{-5,-21}}` (gaps at x 5…6, y 5…10 and x −6…−5, y −9…−7); sparse = four 16 × 16 squares `{{1,1},{1,17},{17,17},{17,1}}`, `{{-1,1},{-1,17},{-17,17},{-17,1}}`, `{{1,-1},{1,-17},{17,-17},{17,-1}}`, `-{{1,1},{1,17},{17,17},{17,1}}`; concave = one C-shaped octagon `{{5,3},{-6,3},{-6,4},{6,4},{6,-4},{-6,-4},{-6,-3},{5,-3}}` around the root; none = `{}`. The outer walls are drawn but are not obstacles (Q-RT-03) | the original's workspaces | v0.1.15 | unit "obstacle sets are the original's vertex lists (narrow passage 4, sparse 4, concave 1, none 0)"; unit "obstacles none: an empty obstacle list never collides"; e2e "the obstacle popup draws 4, 4, 1 and 0 obstacle polygons"; golden "H-RT-09" |
+| F-RT-10 | Collision test `inCollision[nv, np, obsedges]` as written: first, for each obstacle in order, `ptInPoly[obstacle, np]` (prm-core `angtest`/`ptInPoly`: all adjacent vertex pairs on the same side — a convex test, Q-RT-01); then, while no collision, `segmentIntersectionQ[{{nv, np}, edge}]` for every edge of each closed obstacle polygon: `Det[{a-b, c-d}] == 0` (exact zero) → no intersection, else `lineIntersectionPoint` and `0 <= λ <= 1` for both segments (tolerant, inclusive ends) | the original's free-space test | v0.1.15 | unit "ptInPoly on the obstacles: inside a wall is True, on an edge depends on the polygon orientation"; unit "ptInPoly never reports a point inside the concave obstacle (convex test, original quirk)"; unit "inCollision: a step into a wall collides, a step through the narrow passage does not"; unit "inCollision: touching an obstacle edge with the end point collides (inclusive 0 <= λ <= 1)"; unit "inCollision: a step lying on the edge of a clockwise wall does not collide (parallel edges are ignored)"; unit "inCollision: entering a bar of the concave obstacle collides through the segment test"; golden "rrt: no saved edge collides with the obstacles of its snapshot" |
+| F-RT-11 | Sampling in `addNode` (inside `While[success == False, …]`): `If[RandomReal[] < explorationBias, p = finalGoal, p = Round[RandomReal[{-20.0, 20.0}, 2], 0.01]]`; `Round[x, a]` = a · Round[x/a] with halves to even (`shared/mma.js` `roundTo`); a colliding attempt is repeated with new random numbers | the original's samples | v0.1.15 | unit "Round[x, 0.01] is 0.01 Round[x/0.01] with halves to even: -12.7849 gives -12.780000000000001"; unit "draw order per attempt: RandomReal[] always, then RandomReal[{-20, 20}, 2] unless biased, then RandomInteger for Random Tree"; unit "a colliding attempt is retried with new random numbers until a step is free"; golden "rrt: short steps are nv + (p - nv) with p = k 0.01, as Round[x, 0.01] gives"; golden "H-RT-02"; golden "H-RT-16" |
+| F-RT-12 | Node to expand: RRT and RRT\*: `nv = First@Nearest[verts[[;;, 1]], p]` (ties: the earlier node, K-RT-01); Random Tree: `nv = verts[[RandomInteger[{1, Length[verts]}], 1]]`; then `parent = First@Flatten@Position[verts[[;;, 1]], nv]` — the FIRST node at that location (Q-RT-05) | the three growth rules (UC-RT-01) | v0.1.15 | unit "RRT and RRT* expand the nearest node, ties go to the earlier node"; unit "Random Tree expands the node drawn by RandomInteger, a duplicate location resolves to its first copy"; golden "rrt: in the RRT snapshots every node's parent is the nearest earlier node"; golden "H-RT-05"; golden "H-RT-12" |
+| F-RT-13 | Extension `np = nv + If[Norm[p - nv] > 1, 1 Normalize[p - nv], p - nv]`: step length 1, or the sample itself when it is within 1 (tolerant `>`); `Norm` = dnrm2 (`shared/mma-exact.js` `norm`); `Normalize[v]` = v · (1/length) with the **dnrm2** length (`shared/mma-extra.js` `normalizeDnrm2`) — the model that reproduces the original's saved trees (307 nodes decide it, K-RT-02); the model takes the Normalize function as an option so that `normalizeCR` can be used for comparisons with Mathematica 15.0.1 | the RRT step | v0.1.15 | unit "extension: a sample farther than 1 gives a unit step nv + Normalize[p - nv]"; unit "extension: a sample within 1 (Norm <= 1, tolerant) is reached exactly"; unit "Normalize multiplies by the reciprocal of the dnrm2 length by default (model switch available)"; golden "rrt: every unit step is nv + Normalize[p - nv] for a 0.01-grid sample with the dnrm2 length (307 nodes need it)"; golden "rrt: the newest node of each snapshot comes from its newrand"; golden "H-RT-04" |
+| F-RT-14 | RRT\* parent choice (before the collision test): `nvs = Nearest[locations, np, {All, rrtDist}]` with `rrtDist = 3` (inclusive radius, nearest first, equal distances in list order); `eucDist = If[!inCollision[vs, np, obsedges], EuclideanDistance[vs, np], ∞]` for each; `dists` = cost of the first node at each location; `indexMinDist = First@Ordering[dists + eucDist, 1]` (first minimum); `parent` = first node at that location, `nv` = its location; then `success = !inCollision[nv, np, obsedges]` (fails only when every neighbour collides) | RRT\* attaches to the cheapest reachable neighbour | v0.1.15 | unit "RRT* chooses the neighbour within 3 with the least cost plus distance, colliding neighbours count as infinity"; unit "RRT*: if every neighbour collides the attempt fails and new numbers are drawn"; golden "rrt: inserting the node locations of snapshot 4 with the RRT* rules reproduces the saved tree bit for bit"; golden "rrt: inserting the node locations of snapshot 5 (concave) with the RRT* rules reproduces the saved tree bit for bit"; golden "H-RT-06"; golden "H-RT-07" |
+| F-RT-15 | Append and rewire: `AppendTo[verts, {np, parent, Length[verts] + 1, verts[[parent, 4]] + EuclideanDistance[nv, np], {}}]`, the new index appended to the parent's children; RRT\* only: for each `vs` of `nvs` in order, `nn` = first node at `vs`, `newdist = verts[[-1, 4]] + eucDist[[n]]`; if `verts[[nn, 4]] > newdist` (tolerant Greater): delete `nn` from its old parent's children (`Position`/`Delete`), parent of `nn` = new node, its cost = newdist, `nn` appended to the new node's children, then `updateCostToGo[nn]` (recursively: cost = parent's cost + EuclideanDistance[parent location, own location], then each child in its stored order); `addNode` returns `p` | RRT\* rewiring toward shortest paths | v0.1.15 | unit "RRT* rewires a neighbour through the new node when that is shorter and updates the costs of its subtree"; unit "RRT* does not rewire on equal or tolerantly equal cost (Greater is tolerant)"; golden "rrt: snapshot trees are consistent: ids, parents and children lists"; golden "rrt: inserting the node locations of snapshot 4 with the RRT* rules reproduces the saved tree bit for bit"; golden "rrt: inserting the node locations of snapshot 5 (concave) with the RRT* rules reproduces the saved tree bit for bit"; golden "H-RT-17" |
+| F-RT-16 | `EuclideanDistance[u, v]` = dnrm2 `Norm[u - v]` (not √ of the sum of squares): reproduces all 4 000 saved costs of the non-root nodes of the five snapshot trees (1000 + 1000 + 1000 + 500 + 500) bit for bit, including RRT\* costs after rewiring | identical costs, tooltips and path lengths | v0.1.15 | unit "EuclideanDistance is the dnrm2 Norm of the difference: 1.8027756377319948 for {1, 1.5}"; golden "rrt: every saved cost is the parent's cost plus EuclideanDistance (dnrm2), bit for bit" |
+| F-RT-17 | Batch rule of one body evaluation: `If[nodestoadd > 0, newrand = addNode[treeType, obsedges]; nodestoadd -= 1; reachGoal = False]; While[nodestoadd > 5, newrand = addNode[…]; nodestoadd -= 1]` — a press of k adds k − 5 nodes at once (k ≥ 6) and the last five one per front-end update, because the body changes variables it depends on and the front end evaluates it again (Q-RT-12, K-RT-04) | the original's growth "animation" at the end of a batch | v0.1.15 | unit "a press of 10 adds 5 nodes in the first evaluation and one per evaluation after that"; unit "a press of 1 adds one node in one evaluation, 100 adds 95 then 5 single nodes"; golden "H-RT-03"; M-RT-03 |
+| F-RT-18 | Goal check, only while `reachGoal == False`: `idx = Nearest[verts[[;;, 1]] -> Automatic, finalGoal, {All, goalRadius}]` (indexes, nearest first, inclusive radius); if not empty: `cost = 10000`, then the `For` loop (body written in the increment slot, Q-RT-08) keeps the first node with `verts[[idx[[i]], 4]] < cost` (tolerant Less, Q-RT-07) as `waypoint = verts[[…, 1 ;; 2]]`; `path` = the `{location, parent}` pairs from the waypoint up to the root; `reachGoal = True` | the path into the goal region (UC-RT-02) | v0.1.15 | unit "goal check: the cheapest node within goalRadius is the waypoint, ties and near ties go to the node nearer the goal"; unit "goal check: the path follows the parents to the root as {location, parent} pairs"; unit "goal check runs only while reachGoal is False and a new node resets reachGoal"; unit "goalRadius 0: only a node exactly on the goal reaches it"; golden "rrt: the goal check of each snapshot gives the saved path, cost and reachGoal"; golden "H-RT-13" |
+| F-RT-19 | Randomness through an injectable `rng` ([`shared/random.js`](../../shared/random.js)): `createRng({seed: null})` (unseeded by default, like the original — `createRng()` alone would be seeded with 1; `?seed=N` gives `createRng({seed: N})`, A-RT-07) or `replayRng` (draws recorded by the Mathematica harness). Calls per attempt in the original's order: `rng.randomReal([0, 1])` for `RandomReal[]` (always, also at bias 0), `rng.randomReal([-20, 20], 2)` unless biased, `rng.randomInteger([1, n])` for Random Tree only | same tree as the original for the same random numbers; reproducible tests | v0.1.15 | unit "draw order per attempt: RandomReal[] always, then RandomReal[{-20, 20}, 2] unless biased, then RandomInteger for Random Tree"; golden "H-RT-04"; golden "H-RT-05"; golden "H-RT-06"; golden "H-RT-08"; M-RT-12 |
+
+### 4.3 Graphics (SVG)
+
+| ID | Feature | Reason | Since | Verified by |
+|----|---------|--------|-------|-------------|
+| F-RT-20 | Picture in the original's order: White `Rectangle[-20 {1, 1}, 20 {1, 1}]`; goal `Disk[finalGoal, goalRadius]` Yellow, Green once reached; Yellow `PointSize[Large]` `Point[finalGoal]`; Blue walls `Rectangle[{-21,-21},{-20,21}]`, `{{20,-21},{21,21}}`, `{{-21,-21},{21,-20}}`, `{{-21,20},{21,21}}` and the obstacle polygons; Thin Black edges node → parent for nodes 2…n; if more than one node: Dashed Black line from the newest node to `newrand` and a Blue Large point on the newest node; Red `PointSize[Medium]` points for all nodes (with tooltips, F-RT-22); Green Large `Point[newrand]` (nothing while `newrand = {}`); if reached: Thick `Darker[Green]` `Line[path[[;;, 1]]]`; `PlotRange -> {{-21, 21}, {-21, 23}}` (no padding, measured), `ImageSize -> 400`; the goal locator glyph on top | the original's picture (snapshots 1–6) | v0.1.15 | unit "view: picture elements in the original's order, colours and sizes"; unit "view: dashed line and blue point only when there is more than one node"; golden "rrt: goal disk colours and the newest-node marks in the snapshot pictures"; e2e "loads without errors and shows 1 node, goal not yet reached with the goal at (18, -18)"; M-RT-02 |
+| F-RT-21 | Label `Text[Style[StringForm["``, ``", If[Length[verts] == 1, "1 node", StringForm["`` nodes", Length[verts]]], If[reachGoal, StringForm["path length ``", Round[cost, 0.01]], "goal not yet reached"]], 18], {0, 22}]`, Black; numbers printed as Mathematica prints them ("47.", "40.39"; `shared/mma-extra.js` `mmaNumberString`) | the result of the search (UC-RT-02) | v0.1.15 | unit "label: 1 node / n nodes, goal not yet reached / path length Round[cost, 0.01] as Mathematica prints it"; unit "a root inside the goal disk gives path length 0 (regression pin, K-RT-06)"; golden "rrt: the labels of the six snapshots"; e2e "loads without errors and shows 1 node, goal not yet reached with the goal at (18, -18)"; M-RT-08 |
+| F-RT-22 | Tooltip on every node: `Tooltip[Point[verts[[n, 1]]], verts[[n, 4]]]` — the node's cost as Mathematica prints it (root `0`, a unit step `1.`, `3.41421`), as an SVG `<title>` | the Details text: "each node on the tree has a tooltip that reports the total distance to this node from the root" (UC-RT-04) | v0.1.15 | unit "tooltips show each node's cost as Mathematica prints it: root 0, unit step 1., 3.41421"; e2e "every node carries its cost as a tooltip"; M-RT-07 |
+| F-RT-23 | Title, caption, Details text and the four references of the original | explains the Demonstration | v0.1.15 | M-RT-01 |
+
+### 4.4 Port additions
+
+| ID | Feature | Reason | Since | Verified by |
+|----|---------|--------|-------|-------------|
+| A-RT-01 | "Initial settings" button: all variables back to the Manipulate's `"Variables"` values, then one evaluation (root only, goal (18, −18), RRT, narrow passage, bias 0, radius 1) | stands in for the Manipulate ⊕ menu → Initial Settings | v0.1.15 | e2e "Initial settings restores the opening state" |
+| A-RT-02 | Arrow keys move the focused goal locator (0.1 units; Shift = 0.5), one evaluation per key press, limited to −19…19 | keyboard access | v0.1.15 | e2e "arrow keys move the focused goal locator (port addition)" |
+| A-RT-03 | `window.__demo` automation hook: `getState`, `view`, `setRng` (seeded or replayed numbers), `loadState` (e.g. a saved snapshot state), `evaluate`, `moveLocator`, `worldToClient` | automated tests, comparison with the saved states | v0.1.15 | e2e "the saved snapshot states load through the automation hook and show the snapshot labels" |
+| A-RT-04 | "All demos" link | site navigation | v0.1.15 | inventory; M-GEN-01 |
+| A-RT-05 | Credit footer: original title, authors, licence, adaptation notice | required by CC BY-NC-SA 3.0 | v0.1.15 | e2e "attribution on" |
+| A-RT-06 | Start-up notice (watchdog, `<noscript>`) when the page cannot start (DEC-22) | a clear message instead of an empty page | v0.1.15 | e2e "start-up notice when" |
+| A-RT-07 | URL parameter `?seed=N` (whole number): reproducible trees (default: unseeded, like the original) | reproducible runs for testing and teaching | v0.1.15 | e2e "?seed=N gives reproducible trees (port addition)"; e2e "pressing 10 grows the tree to 11 nodes (seeded)" |
+| A-RT-08 | standalone bundle (owner rule R-A): `npm run bundle -- rrt` builds `dist/rrt/` with exactly the files the app imports, the licences, a generated README and a root `index.html` (§6, "Building and deploying this app alone") | anyone can host this one app elsewhere without the rest of the site (owner rule R-A, 2026-10-17) | v0.1.15 | e2e "bundle: rrt runs from its own folder" |
+
+## 5. UI inventory
+
+Every interactive element of the page, identified by its `data-testid` (or that of the nearest ancestor); `*`
+matches any text. Checked by the browser test "every control on … is specified in its design document".
+
+| data-testid | Feature |
+|-------------|---------|
+| `setter-treeType-*` | F-RT-01 |
+| `popup-obstacles` | F-RT-02 |
+| `button-add-1` | F-RT-03 |
+| `button-add-10` | F-RT-03 |
+| `button-add-100` | F-RT-03 |
+| `button-add-200` | F-RT-03 |
+| `button-add-500` | F-RT-03 |
+| `slider-explorationBias` | F-RT-04 |
+| `value-explorationBias` | F-RT-04 |
+| `slider-goalRadius` | F-RT-05 |
+| `value-goalRadius` | F-RT-05 |
+| `locator-finalGoal` | F-RT-06, A-RT-02 |
+| `reset` | A-RT-01 |
+| `crumbs` | A-RT-04 |
+| `details` | F-RT-23 |
+| `credits` | A-RT-05 |
+
+No `plus-`, `play-`, `stepback-`, `stepfwd-` entries: both sliders are `ControlType -> Slider` without the ⊕ panel.
+
+## 6. Design
+
+- **Files.** `model.js` holds every function of the original under its name, in the original's order of operations:
+  the Initialization functions (`λ`, `lineIntersectionPoint`, `segmentIntersectionQ`, `angtest`, `ptInPoly`,
+  `inCollision`), the body-local `addNode(treeType, obsedges)` and `updateCostToGo(index)`, the constant
+  `OBSEDGES` (the Piecewise), `rrtDist = 3`, and `evaluate(state, rng, {normalize})`, which performs exactly one evaluation of the
+  Manipulate body and returns `{state, view, treeChanged}` (`treeChanged`: a node was added or the tree was reset;
+  `main.js` redraws the edges and nodes only then). `addNode` is split into named steps that the golden tests call on
+  their own, in the same order as the original: `samplePoint`, `pickNode`, `extend`, `rrtStarChooseParent`,
+  `appendNode`, `rrtStarRewire`. No DOM; unit-tested in Node. `main.js` keeps the Manipulate variables, the controls
+  and the SVG; `index.html` the page chrome.
+- **Reused code** (exact imports): `model.js`: `shared/mma.js` `mLess`, `mGreater`, `mEqual`, `roundTo`;
+  `shared/mma-exact.js` `norm` (dnrm2); `shared/mma-extra.js` `euclidean` (with the rule of `nearest`: stable ties,
+  inclusive radius — K-PR-01 answer; `model.js` `nearestFirst` and `nearestWithin` apply it by one linear scan, a unit
+  test compares them with `nearest`), `mmaNumberString`, `normalizeDnrm2`; `demos/common/prm-core.js` `angtest`,
+  `ptInPoly` (the identical definitions of the PRM Demonstrations by the same author); `demos/common/segments.js`
+  `Gamma`, `lineIntersectionPoint`, `segmentIntersectionQ`, `isExactSegment`. `main.js`: `shared/ui.js` `Controls`
+  (`setterBar`, `slider` with `plus: false` and `steps: 'mma'`); `shared/ui-extra.js` `addPopup`, `addButton`, `addRow`
+  (the ButtonBar as one row); `shared/svg-plot.js` `createPlot` (padding 0), `addLocators` (`pickAnywhere: true`),
+  `svgNode`, `darkLocatorGlyph` (`POINT_SIZE` is **not** used: sizes below); `shared/mma-colors.js` `NAMED`, `darker`;
+  `shared/random.js` `createRng`, `replayRng`. `index.html`: `shared/requirements.js`. (`det` of `shared/mma-exact.js`
+  is used through `segments.js`.)
+- **New code.** (1) `demos/common/segments.js` (CC BY-NC-SA 3.0, owned by this app, COMMON-DECISIONS §3) with
+  prm-seven-link's export names: `Gamma` (the original's `λ[{a, b}][p]`; `model.js` imports it as `λ`),
+  `lineIntersectionPoint`, `segmentIntersectionQ`, with division as `a*(1/b)` (Times[a, Power[b, -1]]) and `Det`
+  exact for integer pairs (obstacle vertices) and `mma-exact.js det` for machine numbers; camera-lasers uses the same
+  functions (its `γ`, `LineIntersectionPoint`, `SegmentIntersectionQ`); prm-seven-link keeps its own copy with `/`
+  until its golden tests settle that difference. (2) The model and picture of this app. The plain slider
+  (`plus: false`) and `normalizeDnrm2` come from the shared modules listed above (COMMON-DECISIONS §3).
+- **State model.** The Manipulate variables under their original names: `finalGoal`, `finalGoalOld`, `treeType`,
+  `treeTypeOld`, `newrand`, `verts`, `path`, `cost`, `nodestoadd`, `reachGoal`, `obstacles`, `obstaclesold`,
+  `explorationBias`, `goalRadius`, `goalRadiusOld`. `verts` keeps the original's records `[[x, y], parent, id, cost,
+  children]` with 1-based indexes, so states compare directly with the saved ones (JSON equality). `treeType` uses the
+  values `"Random Tree"`, `"RRT"`, `"RRT*"`; the loader of saved states maps the typeset string
+  `"\!\(\*SuperscriptBox[\(RRT\), \(*\)]\)"` to `"RRT*"`. Exactness that the display needs is tracked explicitly: the
+  root's cost is the exact integer 0 (tooltip `0`, label K-RT-06); every other cost is a machine real.
+- **Evaluation order** (one call of `evaluate`): goal-change check; reset check; `If[nodestoadd > 0, …]`;
+  `While[nodestoadd > 5, …]`; goal check; view. `main.js` calls `evaluate` after every control change (one evaluation
+  per animation frame while the locator is dragged) and, as long as an evaluation changed `nodestoadd` and left it
+  above 0, schedules the next evaluation for the next animation frame — this reproduces the front end's
+  self-triggered re-evaluation (F-RT-17, D-RT-02). A button press while nodes are still pending simply adds to
+  `nodestoadd`, as in the original.
+- **Performance.** `Position[verts[[;;, 1]], x]` is a linear search in the original; the port keeps a map from the
+  exact location to the FIRST index (same result as Position except for two different locations within 1 ulp, which
+  random samples practically never give — note N-RT-03). `Nearest` stays a linear scan with stable ties (results
+  must not depend on a spatial index; I-RT-01).
+- **Numerics.** Tolerant `==`, `!=`, `<`, `>`, `<=` wherever the original compares reals; `Det == 0` is a test for
+  exact zero; `a/b` = `a·b⁻¹` in `λ` and `lineIntersectionPoint`; `Norm` and `EuclideanDistance` = dnrm2;
+  `Normalize` = v·(1/dnrm2 length) (`normalizeDnrm2`); `Round[x, 0.01]` = `0.01·Round[x/0.01]` (half to even);
+  `Infinity` + x = `Infinity`; `Ordering[…, 1]` = first minimum.
+- **Sizes and colours.** `PointSize[Medium]` 5 px and `PointSize[Large]` 7.5 px absolute (measured in the snapshots at
+  ImageSize 400: red nodes 10 px and the green sample 15 px in the 2× pictures), `Thin` = 0.25 px, `Thick` = 2 px,
+  `Dashed` as the other ports; colours from `NAMED` (`Darker[Green]` = `darker(Green)`); label font 18 px.
+- **Golden data.** The extracted `states/*.json` contains only the live state (one node). The notebook's six snapshot
+  cells store their full `"Settings"` (TaggingRules) — including five complete trees (1001, 1001, 1001, 501, 501
+  nodes) with every location, parent, child list and cost. The fixture `tests/golden/rrt.original-states.json`
+  holds the live state, these six settings and the initial settings (COMMON-DECISIONS §1; written by
+  `tools/extract_state.py --snapshots`, which reads `TaggingRules -> {"Settings" :> {…}}`; raw notebook lines 3360,
+  4786, 9538, 16507, 21317, 24564). Because a node's location is all the RRT\* rules need, the snapshot trees
+  can be rebuilt **without** the original's random numbers (golden tests in the test plan); bit-for-bit replay of
+  whole runs uses random numbers recorded by the Mathematica harness.
+
+### 6.1 Building and deploying this app alone
+
+Owner rule R-A (2026-10-17): this one app can be taken out of the repository and hosted anywhere.
+
+- Command, in the repository folder: `npm run bundle -- rrt` → `dist/rrt/` (with `--zip` also `dist/rrt.zip`;
+  `npm run bundle -- --all` bundles every app). `tools/bundle-app.mjs` follows every file the page loads (HTML, import
+  map, static and literal dynamic imports, stylesheets, pictures) and copies exactly those, keeping the repository's
+  folder layout, so no path is rewritten; it stops with a list of problems if a reference cannot be resolved.
+- Contents (generated with `node tools/bundle-app.mjs rrt --update-docs`; unit "bundle contents listed in DESIGN.md
+  match the collector" keeps the table current):
+
+<!-- bundle-contents:begin (generated by `npm run bundle -- --update-docs`; do not edit by hand) -->
+| Area | Files | Files loaded by the page |
+|---|---|---|
+| the app (`demos/rrt/`) | 3 | `index.html`, `main.js`, `model.js` |
+| `shared/` | 10 | `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-plot.js`, `ui-extra.js`, `ui.js` |
+| `demos/common/` | 2 | `prm-core.js`, `segments.js` |
+| added by the bundler | 7 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/rrt/DESIGN.md` |
+<!-- bundle-contents:end -->
+
+- Added files: `index.html` opens the app (the app's "All demos" link, `../../index.html`, leads back to it and links
+  to the app), a generated `README.md` (title, the credits of the footer, licence summary, how to serve and test),
+  `.nojekyll` (GitHub Pages), this document, `LICENSE.md` and the `LICENSES/` texts of the SPDX identifiers found in the
+  copied files (CC BY-NC-SA 3.0 for this app and the `demos/common/` modules, MIT for the `shared/` modules).
+- Requirements: any static web server (`npx serve`, `python -m http.server`, GitHub Pages); not `file://` (browsers
+  block ES modules there); a browser with ES modules (Firefox, Chromium, WebKit); no WebGL needed (SVG only). No
+  server-side code.
+- Checked by e2e "bundle: rrt runs from its own folder" (A-RT-08, `tests/e2e/bundle.spec.js`): the bundle folder alone
+  is served, its root page must open the app, the app must start (`window.__demo.ready`) without page errors, every
+  request must stay inside the folder and succeed, and every script and stylesheet of the bundle must be loaded.
+
+## 7. Deviations (D), quirks kept (Q), known issues (K) and notes (N)
+
+| ID | Kind | Description |
+|----|------|-------------|
+| Q-RT-01 | quirk kept | The collision test is made for convex polygons. `ptInPoly` (all adjacent vertex pairs on the same side) never reports a point inside the concave obstacle: for (0, 3.5), (5.5, 0) and (0, −3.5), inside its three bars, it gives False. Points exactly on an edge count as inside for counter-clockwise polygons (narrow-passage walls 1 and 4, sparse squares 2 and 3) and as outside for clockwise ones (walls 2 and 3, squares 1 and 4, the concave obstacle). Segments parallel to an edge (`Det == 0`) never intersect it. Consequences: a step that enters an obstacle is still refused by the segment test (it crosses an edge), but a step lying ON an edge of a clockwise obstacle, e.g. (5, −1) → (5, −2) on wall 2, is accepted, while the same step on wall 1's edge, (5, 12) → (5, 13), is refused. |
+| Q-RT-02 | quirk kept | With exploration bias, `p = finalGoal`; once a node sits exactly on the goal (a step to a sample within 1 lands on it exactly), every further biased sample adds a **duplicate** node at the same place (zero-length edge, cost + 0), counted in "n nodes". `Nearest` returns all copies, `First` takes one, `Position` the first copy, so duplicates always hang from the first copy. |
+| Q-RT-03 | quirk kept | The blue outer walls are drawn but are not obstacles; the tree stays inside (−20…20)² only because samples do and steps never go past their sample. |
+| Q-RT-04 | quirk kept | `RandomReal[]` for the bias test is drawn on every attempt, also at bias 0, and the bias applies to the Random Tree too (its sample direction then points at the goal from a random node). |
+| Q-RT-05 | quirk kept | Random Tree: the drawn node index is turned into a location and back into an index with `Position`, so with duplicate locations the FIRST copy is expanded, not the drawn one. |
+| Q-RT-06 | quirk kept | `cost` is not reset with the tree: after a reset it keeps the last path length (snapshot 2 saves `cost = 45.80017118569193` with `reachGoal = False`); it is shown only when the goal is reached, so the picture is unaffected. |
+| Q-RT-07 | quirk kept | Several nodes in the goal disk with the same cost: the one nearest to the goal wins (`Nearest` order and strict, tolerant `<`). Costs of unit-step trees are often whole numbers (969 of 1001 in snapshot 2, Random Tree; 358 of 1001 in snapshot 3, RRT), so equal costs do occur; costs within Mathematica's tolerance (2⁻⁴⁶ relative) count as equal. |
+| Q-RT-08 | quirk kept | `For[i = 0, i < Length[idx], i++; If[…]]` puts the loop body into the increment argument; it still visits i = 1…Length[idx] once each. Kept as a loop over the Nearest order. |
+| Q-RT-09 | quirk kept | Numbers in the label and the tooltips are printed as Mathematica prints machine reals: "path length 47." (snapshot 3), tooltip "1." for a unit step, six significant digits. |
+| Q-RT-10 | quirk kept | The goal may be dragged into an obstacle (locator range ±19); it can then never be reached, and with bias most attempts aim at it and collide, so batches get slow (they still end: bias ≤ 0.9). |
+| Q-RT-11 | quirk kept | The dashed line and the blue point mark the newest node and its sample `p`, not its parent: for RRT\* the dashed line starts at the new node even when the node hangs from another neighbour; for the Random Tree it points to a random sample far away (snapshot 2). |
+| Q-RT-12 | quirk kept | Buttons add k − 5 nodes in one evaluation and the last five one per front-end update (`While[nodestoadd > 5, …]`), so the end of each batch is visible as single steps. |
+| Q-RT-13 | quirk kept | The Manipulate's stored initial value of `verts` is a single record `{{0., 0.}, 0, 1, 0, {}}` (the control spec `{verts, {{{0.0,0.0},0,1,0,{}}}, None}` is read as a one-value setter), and `finalGoalOld = {10, 10}`, `goalRadiusOld = -1`, `treeTypeOld = 0`, `obstaclesold = {}` force both change checks in the first evaluation, which replaces `verts` by the correct one-node tree. The port starts from the same values (also for "Initial settings"). |
+| Q-RT-14 | quirk kept | RRT\*: `eucDist` is computed for every neighbour within 3, colliding ones get `∞`; `dists + eucDist` with `∞` is `∞`. If all are `∞`, `Ordering` picks the first (nearest), the collision test of that pair fails and the whole attempt is repeated with new random numbers. RRT\* edges can be up to 3 long (snapshot 4: longest 2.9993). |
+| Q-RT-15 | quirk kept | Drawing order puts the goal disk under the walls and obstacles and the yellow goal point on the yellow disk (invisible until the disk turns green). |
+| D-RT-01 | deviation | JavaScript cannot reproduce Mathematica's random numbers: trees differ from the original's (as the original's own runs differ from each other). Tests replay numbers recorded by the Mathematica harness (`replayRng`), or rebuild the saved snapshot trees from their node locations. |
+| D-RT-02 | deviation | Update timing: the port runs the self-triggered re-evaluations (last five nodes of a batch) once per animation frame; the front end decides its own rate. The port has no evaluation time limit; whether the original's front end aborts very large RRT\* batches is open (K-RT-05). |
+| D-RT-03 | deviation | Sizes approximate Mathematica's: `PointSize[Medium]` 5 px and `PointSize[Large]` 7.5 px (measured in the snapshots), `Thin` 0.25 px, `Thick` 2 px, the dash pattern of `Dashed`, the label font (18 px, browser sans-serif). |
+| D-RT-04 | deviation | Controls are the shared port controls (setter bar, popup, a row of buttons for the ButtonBar, plain sliders `plus: false` whose value is shown in the shared editable field — Mathematica's label is not editable); the RRT\* setter label is HTML "RRT<sup>\*</sup>". A whole number typed into a slider's field stays exact and shows without a point ("0", "1"), as Mathematica keeps a typed Integer (shared `ui.js` since the review of v0.1.15; before it showed "0."). |
+| D-RT-05 | deviation | Tooltips are SVG `<title>` elements: the browser decides delay and look. |
+| D-RT-06 | deviation | Locator picking (shared/svg-plot.js): a press within 12 px of the goal locator grabs it in place (offset kept), a press farther away makes it jump to the press point (LocatorPane). The no-jump distance of Mathematica is unknown (as D-CP-06). |
+| K-RT-01 | known issue (lead) | `Nearest[list, x]` without n returns ALL elements at the minimal distance; the port takes the first in list order, and for `{All, r}` keeps list order on equal distances with an inclusive radius (K-PR-01 answer for prm, assumed to hold for the default distance on 2D points). Exact ties need two distinct nodes at exactly the same distance from a sample; none occurred in the 1 500 RRT nodes of snapshots 3 and 6. Harness scenarios with duplicates (H-RT-10, H-RT-11) check it. |
+| K-RT-02 | known issue (lead) | `Normalize` length. The snapshots (Mathematica of 2018) show `Normalize[v]` = v·(1/dnrm2 Norm[v]): 307 unit-step nodes are reproduced only with the dnrm2 length, none needs the correctly rounded length (all 1 897 unit steps of snapshots 2, 3 and 6 checked by a search over the possible 0.01-grid samples). Art-gallery (K-AG-03) found the correctly rounded length in Mathematica 15.0.1 and the 2019 snapshots, and the dnrm2 length in a 14.1 state. Possible cause: packed vs unpacked vectors (`p − nv` here mixes a packed `Round[RandomReal[…]]` with an unpacked `verts` row). The port uses `normalizeDnrm2` (snapshot data; COMMON-DECISIONS §3 records this as a version difference) and can run with `normalizeCR`; the harness replay (H-RT-04, H-RT-06) shows which one Mathematica 15.0.1 uses here. |
+| K-RT-03 | known issue (lead) | `Round[x, 0.01]`: the snapshots prove the result is k·0.01 (146 of the 603 short steps of snapshots 2, 3 and 6 are reproduced only with k·0.01, none only with k/100; e.g. −1278·0.01 = −12.780000000000001 in snapshot 5's `newrand`), not k/100. Whether k comes from x/0.01 or x·100 and how exact halves round is not visible (only possible when x/0.01 is exactly k + ½); the harness replay compares every recorded draw. |
+| K-RT-04 | known issue (lead) | The last five nodes of a batch rely on the front end re-evaluating a Manipulate body that assigned `nodestoadd`. Assumed from the code's intent; check that a press of 10 ends at "11 nodes" and that the last steps can be seen (M-RT-03). The harness emulates it by evaluating until no variable changes. |
+| K-RT-05 | known issue (lead) | Large RRT\* batches (500 nodes into a tree of several thousand) may exceed the front end's dynamic-evaluation time limit in the original (then the evaluation is aborted with the nodes added so far). Record in M-RT-09. |
+| K-RT-06 | known issue (lead) | Goal disk containing the root only: `cost` = the root's exact 0 and the label shows `Round[0, 0.01]`, which may print as "0" (exact) or "0." (machine). The port prints "0" (regression pin) until H-RT-13 / M-RT-08 answer it. |
+| K-RT-07 | known issue (lead) — **resolved for the design** | Slider values: discrete Manipulate sliders give `min + k*step` in machine arithmetic (seen in several snapshots, COMMON-DECISIONS §4); the port uses `steps: 'mma'`. Matters only for the bias test `RandomReal[] < explorationBias` and the inclusive goal radius at exact boundaries. |
+| K-RT-08 | known issue (lead) | `Dot` in `angtest` and `λ` may use fused multiply-add in Mathematica's BLAS; the port uses plain multiply and add. Only exactly degenerate positions (a point on an edge line) could decide differently; all 4 000 snapshot edges and both RRT\* rebuilds match. |
+| K-RT-09 | known issue (lead) | The goal locator's glyph and picking: the default Locator appearance is drawn as measured in the robot-motion-obstacles and bfs-motion-planning snapshots (`darkLocatorGlyph`: black lines, dark translucent ring); the LocatorPane semantics are taken from the other ports (D-CP-06, K-CP-10); the exact no-jump distance is not known (M-RT-05). |
+| N-RT-01 | note | Snapshot facts used by the tests: 1 = live state (RRT, narrow passage, 1 node); 2 = Random Tree, 1001 nodes, goal (−12.66, 17.25), radius 2.5, "goal not yet reached"; 3 = RRT, 1001 nodes, "path length 47."; 4 = RRT\*, 1001 nodes, "path length 40.39"; 5 = RRT\*, concave, 501 nodes, "path length 20.82"; 6 = RRT, concave, 501 nodes, "path length 27."; bias 0. (a real zero) in 2–6. |
+| N-RT-02 | note | Unused locals of the original: `nvidx`, `collision`, `nodesNearGoal` in `addNode`; the `Module` variable `i` of the body is also used by the `Table` that draws the obstacles. The Manipulate's `ControllerLinking -> True` links `finalGoal`, `treeType`, `verts` (an artefact of its setter-like spec), `obstacles`, `explorationBias` and `goalRadius` to game controllers (`"ControllerVariables"`); not ported. |
+| N-RT-03 | note | `Position` matches with SameQ (1-ulp tolerance, K-PR-02 answer); the port's first-index map uses exact locations. They differ only for two distinct nodes within 1 ulp in both coordinates (duplicates are exact). |
+| N-RT-04 | note | In the stored Body of `addNode`, `While[success == False, …]` and the following `AppendTo[verts, …]` are separated only by a line break, so they form a product `While[…] AppendTo[…]` = `Times[Null, verts]`: the result is the same, but each new node costs an extra element-wise product over the whole tree (discarded). Timing only (K-RT-05, H-RT-18); the port does not reproduce the wasted product. |
+| N-RT-05 | note | Exactness in the segment test (`demos/common/segments.js`, option `exact`): the tree step `{nv, np}` is always treated as machine numbers (all tree locations are machine reals in the original, also the root `{0., 0.}` and a node that lands exactly on the integer goal, which JavaScript cannot tell from integers), an obstacle edge as exact when its vertices are integers (all of the original's are). So `Det[{a, b}]` of a step uses Mathematica's LU Det, `Det[{c, d}]` of an edge integer arithmetic, `Det[{a − b, c − d}]` the LU Det. |
+| N-RT-06 | note | The harness comparisons of the test plan (T-RT-52 … T-RT-69, scenarios H-RT-01 … H-RT-18) are in `tests/golden/rrt.golden.test.js` (the build brief's single golden file; the test plan named a separate `rrt.harness.test.js`), titled "H-RT-nn: …"; the feature rows cite them as golden "H-RT-nn". They replay the recorded `$RandomDraws` through `replayRng`, compare every capture bit for bit and require every draw to be consumed; they SKIP ("no harness data (owner run pending)") until `tests/golden/rrt.harness.json` exists. The replays of whole runs accept either Normalize model and report which one fits (K-RT-02). |
+
+## 8. Proposed changes
+
+No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
+
+| ID | Status | Requested by / date | Change | Reason | Acceptance criteria |
+|----|--------|---------------------|--------|--------|---------------------|
+
+## 9. Revision history
+
+| Doc rev. | Code version | Date | Change |
+|----------|--------------|------|--------|
+| 1 | v0.1.15 | 2026-10-17 | first implementation of the approved draft (DEC-17; draft of 2026-10-12 with COMMON-DECISIONS §6 and owner rules R-A/R-B/R-C): `model.js`, `main.js`, `index.html`; new common module `demos/common/segments.js` (owner); tests with the TESTPLAN titles (unit, golden incl. the harness replays — N-RT-06, e2e); §6.1 bundle table generated. Test data corrected against the draft: T-RT-14 uses nodes at (±1, 4) (with (±1, 0) the root, 5 away, is nearer to p = (0, 5) than √26); review fixes |
+
+## 10. Improvements to consider (not implemented)
+
+| ID | Improvement | Benefit | Cost / risk | Related |
+|----|-------------|---------|-------------|---------|
+| I-RT-01 | Spatial index (grid or k-d tree) for `Nearest` and a location map for `Position` | fast trees of many thousand nodes | must keep the original's tie order exactly; more code | N-RT-03, K-RT-01 |
+| I-RT-02 | A real point-in-polygon test for the concave obstacle and edges counted the same for both orientations | consistent collisions | differs from the original in edge cases | Q-RT-01 |
+| I-RT-03 | Skip zero-length extensions (no duplicate nodes at the goal) | the node count means distinct nodes | changes trees and counts with bias | Q-RT-02 |
+| I-RT-04 | Animate whole batches (one node per frame) | the growth becomes visible | slower; departs from the original's timing | Q-RT-12 |
+| I-RT-05 | Draw the RRT\* neighbourhood (radius 3) around the newest node | shows what "rewiring" looks at | a new graphic element | F-RT-14 |
+| I-RT-06 | Sliders for step size and RRT\* radius | lets students explore the parameters | new controls need design entries | F-RT-13, F-RT-14 |
+| I-RT-07 | Reset `cost` together with the tree | no stale value in saved states | invisible in the picture; differs from saved states | Q-RT-06 |
+| I-RT-08 | Run big RRT\* batches in slices (a few dozen nodes per animation frame, or in a Web Worker) with a busy indicator | the page stays responsive: today a 500-node RRT\* batch into a tree of a few thousand nodes runs in one evaluation (the linear `Nearest` and the rewiring scan) and blocks the page — drawing, locator, buttons — for several seconds | the batch would be split differently from the original's single evaluation (node order unchanged, but intermediate pictures appear); a worker needs the model and the random source moved off the page | K-RT-05, D-RT-02, I-RT-01 |
+
+## 11. Errors in the original (conceptual and mathematical)
+
+Owner rule R-C (2026-10-17). Checked: `λ` (for p = a + λ(b − a) the formula gives λ: correct), `lineIntersectionPoint`
+(the standard determinant formula: correct), `segmentIntersectionQ`, `angtest`, `ptInPoly` (a convexity-based test, see
+E-RT-01), `inCollision`, the extension step `nv + If[Norm[p - nv] > 1, Normalize[p - nv], p - nv]`, the RRT\* parent choice
+(least cost plus distance among neighbours within 3, colliding ones ∞) and rewiring with `updateCostToGo` (both as in
+Karaman and Frazzoli [3]; a fixed radius 3 is larger than their shrinking lower bound, so the optimality claim is not
+contradicted), the goal check and the path walk, the label and tooltips, caption and Details against the code and the
+snapshot `Settings` (N-RT-01). Not listed: the missing `;` that multiplies `While[…]` by `AppendTo[…]` (N-RT-04) costs
+time only and changes no result.
+
+| ID | Kind | Where in the original | What is (probably) wrong | What the port does | Effect of correcting it | Status |
+|----|------|-----------------------|--------------------------|--------------------|-------------------------|--------|
+| E-RT-01 | conceptual | `ptInPoly[poly_, pt_]` (comment "test if point pt inside convex polygon poly"), used by `inCollision` for every obstacle including the concave one `{{5,3},{-6,3},{-6,4},{6,4},{6,-4},{-6,-4},{-6,-3},{5,-3}}`; `segmentIntersectionQ` returning False when `Det[{a - b, c - d}] == 0` | A convex point-in-polygon test applied to a concave obstacle: points inside its three bars ((0, 3.5), (5.5, 0), (0, −3.5)) are reported outside. The tests also depend on orientation: a point on an edge counts as inside for counter-clockwise polygons and outside for clockwise ones, and a segment parallel to an edge never "intersects" it, so a step lying on an edge of a clockwise obstacle (e.g. (5, −1) → (5, −2) on narrow-passage wall 2) is accepted while the same step on wall 1's edge is refused. Steps that cross into an obstacle are still refused by the segment test, which hides most of this. | Keeps it (Q-RT-01, F-RT-09…F-RT-11). | A general point-in-polygon test and orientation-independent edge handling (I-RT-02) change only steps that touch obstacle boundaries: unit "ptInPoly never reports a point inside the concave obstacle (convex test, original quirk)", unit "ptInPoly on the obstacles: inside a wall is True, on an edge depends on the polygon orientation", unit "inCollision: a step lying on the edge of a clockwise wall does not collide (parallel edges are ignored)" change; the snapshot trees must then be re-checked (golden "rrt: no saved edge collides with the obstacles of its snapshot", golden "rrt: inserting the node locations of snapshot 5 (concave) with the RRT* rules reproduces the saved tree bit for bit") and the harness replays H-RT-07/08 kept as "original mode" if a recorded step lies on an edge. Possible as an option. | open |
+| E-RT-02 | conceptual | `If[RandomReal[] < explorationBias, p = finalGoal, …]` with the extension `np = nv + If[Norm[p - nv] > 1, …, p - nv]` and no test for a zero-length step | Once a node sits exactly on the goal, every further biased sample extends that node by zero: a **duplicate** node at the same place with a zero-length edge is added and counted in "n nodes". An RRT adds new configurations; with bias 0.9 most of a batch becomes copies of one node, so the node count and the exploration it suggests are false. | Keeps it (Q-RT-02, Q-RT-05). | Skipping zero-length extensions (I-RT-03) changes trees and counts only with bias > 0 after the goal is hit: unit "exploration bias: a biased attempt samples finalGoal itself and adds duplicate nodes once a node sits on the goal", H-RT-10, H-RT-11, H-RT-12 (duplicates) and M-RT-06 change; the snapshots (bias 0) stay. Also consumes random numbers differently, so seeded port trees change after the goal is hit. | open |
+| E-RT-03 | text | Details: "As shown in the Snapshots, a tree generated by random motion from a randomly selected tree node does not explore very far (Snapshot 1)." | Snapshot 1 is the opening state (RRT, one node, N-RT-01); the Random Tree picture is snapshot 2 (1001 nodes, "goal not yet reached"). Unless the published page numbers its snapshots differently, the reference should be "Snapshot 2". | Shows the Details as in the original (F-RT-23). | Text only; no test changes. | open |
+| E-RT-04 | text | Details: "A rapidly exploring random tree (RRT) first selects a goal point (drawn in green), then tries to add an edge from the closest node in the tree (blue) toward the goal point." | The blue point is drawn at the **newest** node (`Point[Last[verts][[1]]]`), i.e. the end of the new edge, not at the closest tree node it grew from; the dashed line joins the new node and the sample (Q-RT-11). | Draws as the original (Q-RT-11) and shows the text (F-RT-23). | Text only ("the new node (blue)"), or draw the parent instead (changes golden "rrt: goal disk colours and the newest-node marks in the snapshot pictures"). Text fix has no test effect. | open |
+| E-RT-05 | text | Details: "The RRT\* variant was introduced by S. Karaman and E. Frazolli[3]." | The author's name is Frazzoli, as reference [3] itself spells it. | Shows the text as in the original (F-RT-23). | Text only; no test changes. | open |

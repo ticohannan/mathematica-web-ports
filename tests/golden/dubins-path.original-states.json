@@ -1,0 +1,29 @@
+{
+ "source": "Demonstration-Shortest-Path-for-the-Dubins-Car-2-0-0-definition.nb",
+ "note": "Manipulate states saved in the ORIGINAL notebook, computed by the original Mathematica code: states[0] = the live state of the output cell, specs = the initial settings (the Manipulate's stored \"Variables\"), snapshots = the Settings stored with each snapshot cell. Extracted with tools/extract_state.py --snapshots. Golden parity fixture (CC BY-NC-SA 3.0, as the original).",
+ "format": "Numbers: a JSON integer is an exact Wolfram integer (|x| <= 2^53 - 1; larger ones are {\"wl\": digits}); a JSON number written with a decimal point or an exponent is a machine real (the shortest text that reads back as the identical double); any other exact number (Rational, rational multiple of Pi, arbitrary-precision real, an unevaluated Sin[...], Infinity) is {\"wl\": a Wolfram-readable form (not necessarily InputForm: compare exact values by value), \"n\": its double} - \"n\" is the correctly rounded double for a Rational or rational multiple of Pi, Python's double evaluation otherwise, and absent for Infinity. Symbols are {\"sym\": name}, other expressions {\"head\": name, \"args\": [...]}; variable names without context and $$, Greek letters as Unicode. packedTypes maps the JSON pointer of a decoded packed array that was stored with a narrower element type (CompressedData tag b) to that type. snapshots[\"k\"] belongs to the picture docs/original-snapshots/<dir>-k.png (cells in file order).",
+ "specs": {
+  "goalXY": [2,2],
+  "goalXYold": [2,2],
+  "goalθ": 0,
+  "goalθloc": [{"wl":"(2) + ((2)^(1/2))","n":3.414213562373095},{"wl":"(2) + (-((2)^(1/2)))","n":0.5857864376269049}],
+  "minRadius": 3,
+  "progress": 0.25,
+  "θ": {"wl":"-Pi/4","n":-0.7853981633974483}
+ },
+ "states": [
+  {"goalXY":[2,2],"goalXYold":[2,2],"goalθ":0,"goalθloc":[{"wl":"(2) + ((2)^(1/2))","n":3.414213562373095},{"wl":"(2) + (-((2)^(1/2)))","n":0.5857864376269049}],"minRadius":3,"progress":0.25,"θ":{"wl":"-Pi/4","n":-0.7853981633974483}}
+ ],
+ "snapshots": {
+  "1": {"goalXY":[2,2],"goalXYold":[2,2],"θ":{"wl":"-Pi/4","n":-0.7853981633974483},"goalθloc":[{"wl":"(2) + ((2)^(1/2))","n":3.414213562373095},{"wl":"(2) + (-((2)^(1/2)))","n":0.5857864376269049}],"goalθ":0,"progress":0.25,"minRadius":3},
+  "2": {"goalXY":[3.6000000000000014,-3.84],"goalXYold":[3.6000000000000014,-3.84],"θ":-0.7853981633974483,"goalθloc":[5.014213562373096,-5.254213562373095],"goalθ":0,"progress":0.25,"minRadius":3},
+  "3": {"goalXY":[1.9000000000000004,-3.58],"goalXYold":[1.9000000000000004,-3.58],"θ":-0.7853981633974483,"goalθloc":[3.3142135623730953,-4.994213562373095],"goalθ":0,"progress":0.25,"minRadius":3},
+  "4": {"goalXY":[-5.75,-1.6799999999999997],"goalXYold":[-5.75,-1.6799999999999997],"θ":3.0648207623200157,"goalθloc":[-7.744108971003163,-1.5266070022305265],"goalθ":0,"progress":0.25,"minRadius":3}
+ },
+ "snapshotCellIds": {
+  "1": 210222468,
+  "2": 1834982430,
+  "3": 537046443,
+  "4": 265799160
+ }
+}

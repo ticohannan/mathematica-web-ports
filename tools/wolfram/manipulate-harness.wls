@@ -335,10 +335,21 @@ hwTest["wl: parse into $CellContext`", With[{h = hwParseWL["hwTestFreshName + 1"
 hwTest["wl: bound symbols (iterator, Module list)", Length[hwBoundSyms[hwParseWL["Module[{a = 1}, Table[a i, {i, 3}]]"]]] == 2];
 hwTestMsg::x = "harness self-test message";
 hwMLWorks = (Block[{$Messages = {}}, Block[{$MessageList = {}}, Message[hwTestMsg::x]; Map[ToString, $MessageList]]] === {"hwTestMsg::x"});
-hwTest["messages captured with names", With[{r = hwRunCapturing[1/0]},
-  MemberQ[r["names"], "Power::infy"] && StringContainsQ[r["text"], "Power::infy"]]];
-hwTest["message texts cut per message", With[{r = hwRunCapturing[{1/0, Log[0, 0, 0]}]},
-  With[{m = hwMessageRecords[r["names"], r["text"], <||>]}, Length[m] >= 2 && StringStartsQ[m[[1]]["text"], "Power::infy"]]]];
+(* Message capture must be tested WITHOUT hwTest's Quiet[Check[...]]: inside Quiet a message is not issued at all (it
+   reaches neither $Messages nor $MessageList), and Check would turn any message into False. Run 1 (2026-10-16) failed
+   these two tests for that reason only; the capture itself worked (Det::luc recorded in motion planning). *)
+hwSelfTestDetail = <||>;
+SetAttributes[hwTestLoud, HoldRest];
+hwTestLoud[name_String, expr_] := Module[{r = CheckAbort[TrueQ[expr], False]},
+  hwSelfTests[name] = r; If[!r, hwSay["SELF-TEST FAILED: ", name]]; r];
+hwMsgTestRun = hwRunCapturing[{1/0, Log[0, 0, 0]}];
+hwMsgTestRecs = hwMessageRecords[hwMsgTestRun["names"], hwMsgTestRun["text"], <||>];
+hwSelfTestDetail["messages"] = <|"names" -> hwMsgTestRun["names"], "text" -> hwClip[hwMsgTestRun["text"], 400],
+  "records" -> Length[hwMsgTestRecs]|>;
+hwTestLoud["messages captured with names", MemberQ[hwMsgTestRun["names"], "Power::infy"] &&
+  StringContainsQ[hwMsgTestRun["text"], "Power::infy"]];
+hwTestLoud["message texts cut per message", Length[hwMsgTestRecs] >= 2 && hwMsgTestRecs[[1]]["name"] === "Power::infy" &&
+  StringStartsQ[hwMsgTestRecs[[1]]["text"], "Power::infy"] && !StringContainsQ[hwMsgTestRecs[[1]]["text"], hwMsgTestRecs[[2]]["name"] <> ":"]];
 hwTest["held assignment", (hwAssignHeldValue[HoldComplete[hwT`sv], Hold[1 + 1]]; hwT`sv === 2) &&
   (hwAssign[HoldComplete[hwT`sv], {3., 4}]; hwT`sv === {3., 4})];
 hwTestBody = Hold[Module[{hwT`a$ = 1, hwT`b$}, hwT`b$ = hwT`a$ + 1;
@@ -378,7 +389,7 @@ hwTop[] := <|"schema" -> If[hwMode === "run", "manipulate-harness/results-1", "m
   "scenarioFile" -> <|"file" -> FileNameTake[hwScenFile], "sha256" -> hwSha[hwScenFile]|>,
   "numberFormatSelfTest" -> (hwFmtOK && hwFastOK),
   "numberFormat" -> <|"exactWriter" -> hwFmtOK, "fastPath" -> hwFastOK, "fastSampleSize" -> Length[hwFastSample]|>,
-  "internalSelfTest" -> hwSelfTests, "kernelFeatures" -> <|"localizedMessageList" -> hwMLWorks|>, "phase" -> hwPhaseName|>;
+  "internalSelfTest" -> hwSelfTests, "kernelFeatures" -> <|"localizedMessageList" -> hwMLWorks|>, "selfTestDetail" -> hwSelfTestDetail, "phase" -> hwPhaseName|>;
 (* UTC, ISO 8601 ("2026-10-16T19:05:03Z"); falls back to local time without the Z if the conversion is unavailable *)
 hwRunDate[] := Quiet[Check[DateString[TimeZoneConvert[Now, 0],
      {"Year", "-", "Month", "-", "Day", "T", "Hour", ":", "Minute", ":", "Second", "Z"}], DateString[Now, "ISODateTime"]]];
@@ -436,16 +447,20 @@ hwCountDistinct[key_] := With[{l = DeleteCases[Map[#[key] &, hwCopies], None]}, 
 hwStructure["copies"] = <|"manipulateCells" -> Length[hwCopies], "Body" -> hwCountDistinct["body"],
   "Initialization" -> hwCountDistinct["init"], "Specifications" -> hwCountDistinct["specs"], "Variables" -> hwCountDistinct["variables"]|>;
 hwSay["stored copies: ", hwStructure["copies"]];
-hwDistinctCode = Max[hwStructure["copies"]["Body"]["distinct"], hwStructure["copies"]["Initialization"]["distinct"],
-  hwStructure["copies"]["Specifications"]["distinct"]];
+(* only a different Body or Initialization makes the copy matter; differing Specifications/Variables (an author notebook
+   whose snapshots are full output cells, each with its own initial values) are reported and copy 1 is used *)
+hwDistinctCode = Max[hwStructure["copies"]["Body"]["distinct"], hwStructure["copies"]["Initialization"]["distinct"]];
+If[hwDistinctCode <= 1 && Max[hwStructure["copies"]["Specifications"]["distinct"], hwStructure["copies"]["Variables"]["distinct"]] > 1,
+  hwStructure["copiesNote"] = "Body and Initialization identical in all copies; Specifications/Variables differ; copy 1 used";
+  hwSay["note: ", hwStructure["copiesNote"]]];
 If[hwUseCopy =!= 0 && !(1 <= hwUseCopy <= Length[hwCopies]),
   hwSay["warning: --use-copy=", hwUseCopy, " is out of range (the notebook has ", Length[hwCopies], " Manipulate output cells)"];
   hwFatal["--use-copy=" <> ToString[hwUseCopy] <> " is out of range 1.." <> ToString[Length[hwCopies]]]];
-(* identical copies (an author notebook whose snapshots are full output cells) are accepted silently: copy 1 is used *)
+(* identical Body and Initialization in all copies: copy 1 is used *)
 hwCopyIndex = Which[
   hwUseCopy >= 1 && hwUseCopy <= Length[hwCopies], hwUseCopy,
   hwDistinctCode > 1 && !hwAllowMultiple,
-    hwFatal["the notebook holds " <> ToString[hwDistinctCode] <> " different copies of the stored code; choose one with --use-copy=n"],
+    hwFatal["the notebook holds " <> ToString[hwDistinctCode] <> " different copies of the stored Body or Initialization; choose one with --use-copy=n"],
   True, 1];
 hwCopy = hwCopies[[hwCopyIndex]];
 hwStructure["usedCopy"] = hwCopyIndex;
@@ -844,19 +859,39 @@ hwTexts[out_] := Cases[out, t_Text :> hwTextRec[t], {0, Infinity}];
 hwTextRec[Text[a_, rest___]] := <|"input" -> ToString[Unevaluated[a], InputForm], "plain" -> ToString[Unevaluated[a]],
   "boxes" -> Quiet[Check[ToString[ToBoxes[a, StandardForm], InputForm], Null]],
   "pos" -> If[Length[{rest}] >= 1, hwRaw[hwEncode[First[{rest}]]], Null]|>;
-hwOptionsCapture[out_, names_List] := Map[Function[p, With[{g = Extract[out, p]},
+(* Extract[expr, {}] treats {} as an EMPTY LIST OF POSITIONS and gives {}: the position {} of the whole expression (a
+   Body whose value is the Graphics itself) needs its own case. Run 1 recorded %g3d/%plotRange of DH as {} because of it. *)
+hwPart[out_, p_List] := If[p === {}, out, Extract[out, p]];
+hwEncPart[out_, p_List] := If[p === {}, hwEncode[out], Extract[out, p, hwEnc]];
+hwOptionsCapture[out_, names_List] := Map[Function[p, With[{g = hwPart[out, p]},
      <|"head" -> ToString[Head[g]], "options" -> Association[Map[Function[nm, nm -> With[{o = Quiet[ToExpression[nm]]},
             If[MemberQ[Keys[Options[Head[g]]], o], hwRaw[hwEncode[Quiet[AbsoluteOptions[g, o]]]], <|"notAnOption" -> True|>]]], names]]|>]],
   hwOutermostGraphics[out, {Graphics, Graphics3D}]];
 hwNumericRange[r_] := MatrixQ[r, NumericQ];
-hwPlotRangeCapture[out_] := Map[Function[p, With[{g = Extract[out, p]}, Module[{r, m = "failed"},
-      r = Quiet[PlotRange /. AbsoluteOptions[g, PlotRange]];
-      If[hwNumericRange[r], m = "AbsoluteOptions",
-        r = Quiet[PlotRange[g]];
-        If[hwNumericRange[r], m = "PlotRange[g]",
-          If[hwFrontEnd, r = Quiet[UsingFrontEnd[PlotRange /. AbsoluteOptions[g, PlotRange]]]; If[hwNumericRange[r], m = "UsingFrontEnd"]]]];
-      <|"head" -> ToString[Head[g]], "value" -> hwRaw[hwEncode[r]], "method" -> m|>]]],
-  hwOutermostGraphics[out, {Graphics, Graphics3D}]];
+(* HW-50, K-HW-01: the methods in order; the first numeric result wins and "method" says which. "stored" = an explicit
+   numeric PlotRange option of the graphic; "regionBounds" = bounds of the primitives (RegionBounds of
+   DiscretizeGraphics: PlotRange -> All semantics, WITHOUT the front end's padding) -- a different quantity, marked as
+   such; "unavailable" = no method gave numbers (value null). "storedOption" is always the option as written. *)
+hwPlotRangeOne[g_] := Module[{r, m = "unavailable", tried = {}},
+  r = Quiet[PlotRange /. AbsoluteOptions[g, PlotRange]]; AppendTo[tried, "AbsoluteOptions"];
+  If[hwNumericRange[r], m = "AbsoluteOptions",
+    r = Quiet[PlotRange[g]]; AppendTo[tried, "PlotRange[g]"];
+    If[hwNumericRange[r], m = "PlotRange[g]",
+      If[hwFrontEnd, r = Quiet[UsingFrontEnd[PlotRange /. AbsoluteOptions[g, PlotRange]]]; AppendTo[tried, "UsingFrontEnd"]];
+      If[hwFrontEnd && hwNumericRange[r], m = "UsingFrontEnd",
+        r = Quiet[PlotRange /. Options[g, PlotRange]]; AppendTo[tried, "stored"];
+        If[hwNumericRange[r], m = "stored",
+          r = Quiet[TimeConstrained[RegionBounds[DiscretizeGraphics[g]], 30, $Failed]]; AppendTo[tried, "regionBounds"];
+          If[hwNumericRange[r], m = "regionBounds", r = Null]]]]];
+  <|"head" -> ToString[Head[g]], "value" -> hwRaw[hwEncode[r]], "method" -> m, "tried" -> tried,
+    "storedOption" -> hwRaw[hwEncode[Quiet[PlotRange /. Options[g, PlotRange]]]]|>];
+hwPlotRangeCapture[out_] := Map[Function[p, hwPlotRangeOne[hwPart[out, p]]], hwOutermostGraphics[out, {Graphics, Graphics3D}]];
+hwTest["Extract position {} = the whole expression (%g of a Body that IS the graphic)",
+  hwEncPart[Graphics[Point[{1, 2}]], {}] === hwEncode[Graphics[Point[{1, 2}]]] && hwPart[{a, b}, {}] === {a, b} &&
+  hwPart[{a, b}, {2}] === b];
+hwTest["plot range of an explicit range is numeric and names its method",
+  With[{pr = hwPlotRangeOne[Graphics[Point[{1, 2}], PlotRange -> {{0, 3}, {0, 4}}]]},
+    MemberQ[{"AbsoluteOptions", "PlotRange[g]", "stored"}, pr["method"]] && StringStartsQ[pr["value"][[1]], "[["]]];
 hwOutCapture[out_] := Module[{s = ToString[out, InputForm]},
   If[StringLength[s] <= hwMaxStringChars, s,
     <|"text" -> StringTake[s, hwMaxStringChars], "sha256" -> Quiet[Check[IntegerString[Hash[s, "SHA256"], 16, 64], Null]],
@@ -875,8 +910,8 @@ hwCaptureOne[p_Association, evaluated_, ctx_Association] := Module[{c = p["label
         c === "%messages", ctx["messages"],
         out === hwNoResult, <|"notEvaluated" -> True|>,
         c === "%out", hwOutCapture[out],
-        c === "%g", Map[hwRaw[Extract[out, #, hwEnc]] &, hwOutermostGraphics[out, {Graphics}]],
-        c === "%g3d", Map[hwRaw[Extract[out, #, hwEnc]] &, hwOutermostGraphics[out, {Graphics3D}]],
+        c === "%g", Map[hwRaw[hwEncPart[out, #]] &, hwOutermostGraphics[out, {Graphics}]],
+        c === "%g3d", Map[hwRaw[hwEncPart[out, #]] &, hwOutermostGraphics[out, {Graphics3D}]],
         c === "%primitives", hwPrimitives[out],
         c === "%text", hwTexts[out],
         c === "%plotRange", hwPlotRangeCapture[out],
@@ -1066,17 +1101,26 @@ hwScenarioRecord[sc_Association] := Module[{id = Lookup[sc, "id", "?"], plans = 
 
 (* ======================================================================== 22. structure evaluations (smoke, self-check, reference head) *)
 hwVarKeys[] := Map[hwKey[ReleaseHold[#]] &, hwManip];
-hwStateEval[start_String] := Module[{names, before, after, run, r},
+(* a changed variable's values before and after one evaluation (self-check): encoded when short, else length + hash;
+   for numeric arrays of equal shape also the largest absolute difference (tells last-bit drift from real changes) *)
+hwShortEnc[v_] := With[{e = hwEncode[v]}, If[StringLength[e] <= 4000, hwRaw[e],
+    <|"length" -> StringLength[e], "sha256" -> IntegerString[Hash[e, "SHA256"], 16, 64]|>]];
+hwChangeRecord[b_, a_] := Module[{d = Quiet[Check[If[ArrayQ[b, _, NumericQ] && ArrayQ[a, _, NumericQ] && Dimensions[a] === Dimensions[b],
+        N[Max[Abs[Flatten[{a - b}]]]], None], None]]},
+  <|"before" -> hwShortEnc[b], "after" -> hwShortEnc[a], "maxAbsDiff" -> If[MachineNumberQ[d], d, Null]|>];
+hwStateEval[start_String] := Module[{names, before, after, run, r, beforeVals, changed},
   hwRestoreState[]; SeedRandom[0]; hwRunBody = hwBodyHeld; hwLastStateResult = hwNoResult;
   names = hwAssignStart[start];
   If[StringQ[names], <|"state" -> start, "status" -> "prelude-failed", "note" -> names|>,
+    beforeVals = Map[ReleaseHold, hwManip];
     before = hwVarKeys[];
     hwRandomOn = True; run = hwEvalBody[False, hwFileTimeLimit]; hwRandomOn = False;
     after = hwVarKeys[];
     r = run["result"];
     hwLastStateResult = r;
     <|"state" -> start, "status" -> With[{b = hwBadResult[r]}, If[b === None, "ok", b]], "head" -> ToString[Head[r]],
-      "seconds" -> run["seconds"], "assigned" -> names, "changed" -> Select[Keys[hwManip], before[#] =!= after[#] &],
+      "seconds" -> run["seconds"], "assigned" -> names, "changed" -> (changed = Select[Keys[hwManip], before[#] =!= after[#] &]),
+      "changedValues" -> Association[Map[# -> Quiet[Check[hwChangeRecord[beforeVals[#], ReleaseHold[hwManip[#]]], <|"error" -> "encoding failed"|>]] &, changed]],
       "messages" -> hwMessageRecords[run["names"], run["text"], <||>], "randomDraws" -> hwDrawN|>]];
 hwLeads[r_] := <|
   "K-HW-01 plotRange" -> Quiet[Check[hwPlotRangeCapture[r], <|"error" -> "failed"|>]],

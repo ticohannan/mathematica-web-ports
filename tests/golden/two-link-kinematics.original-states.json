@@ -1,0 +1,32 @@
+{
+ "source": "Demonstration-Forward-and-Inverse-Kinematics-for-Two-Link-Arm-1-0-0-definition.nb",
+ "note": "Manipulate states saved in the ORIGINAL notebook, computed by the original Mathematica code: states[0] = the live state of the output cell, specs = the initial settings (the Manipulate's stored \"Variables\"), snapshots = the Settings stored with each snapshot cell. Extracted with tools/extract_state.py --snapshots. Golden parity fixture (CC BY-NC-SA 3.0, as the original).",
+ "format": "Numbers: a JSON integer is an exact Wolfram integer (|x| <= 2^53 - 1; larger ones are {\"wl\": digits}); a JSON number written with a decimal point or an exponent is a machine real (the shortest text that reads back as the identical double); any other exact number (Rational, rational multiple of Pi, arbitrary-precision real, an unevaluated Sin[...], Infinity) is {\"wl\": a Wolfram-readable form (not necessarily InputForm: compare exact values by value), \"n\": its double} - \"n\" is the correctly rounded double for a Rational or rational multiple of Pi, Python's double evaluation otherwise, and absent for Infinity. Symbols are {\"sym\": name}, other expressions {\"head\": name, \"args\": [...]}; variable names without context and $$, Greek letters as Unicode. packedTypes maps the JSON pointer of a decoded packed array that was stored with a narrower element type (CompressedData tag b) to that type. snapshots[\"k\"] belongs to the picture docs/original-snapshots/<dir>-k.png (cells in file order).",
+ "specs": {
+  "IsElbowUp": true,
+  "IsElbowUpp": true,
+  "jointVel": [1,0],
+  "p1": [1,0],
+  "p2": [1,0],
+  "pEnd": [2,0],
+  "pEndp": [2,0],
+  "pVel": [2,1],
+  "pVelp": [1,1],
+  "r1": 1
+ },
+ "states": [
+  {"IsElbowUp":true,"IsElbowUpp":true,"jointVel":[{"wl":"2/5","n":0.4},{"wl":"1/5","n":0.2}],"p1":[1,0],"p2":[1,0],"pEnd":[2,0],"pEndp":[2,0],"pVel":[2,1],"pVelp":[2,1],"r1":1}
+ ],
+ "snapshots": {
+  "1": {"r1":1,"pEnd":[2,0],"pEndp":[2,0],"pVel":[2,1],"pVelp":[2,1],"p1":[1,0],"p2":[1,0],"IsElbowUp":true,"IsElbowUpp":true,"jointVel":[{"wl":"2/5","n":0.4},{"wl":"1/5","n":0.2}]},
+  "2": {"r1":1,"pEnd":[-1.9259280394283633,0.5392598510399419],"pEndp":[-1.9259280394283633,0.5392598510399419],"pVel":[-2.5288388816592233,-1.613993156927415],"pVelp":[-2.5288388816592233,-1.613993156927415],"p1":[-0.9629640197141817,0.26962992551997095],"p2":[1,0],"IsElbowUp":false,"IsElbowUpp":false,"jointVel":[0.8944271909999155,0.4472135954999578]},
+  "3": {"r1":1.59,"pEnd":[0.5890309615033067,-1.0224688388359278],"pEndp":[0.5890309615033067,-1.0224688388359278],"pVel":[0.5890307077257286,-1.0224689850338804],"pVelp":[0.5890307077257286,-1.0224689850338804],"p1":[0.49917878093500556,-0.8664990159626506],"p2":[-1.0,1.2246467991473532e-16],"IsElbowUp":false,"IsElbowUpp":false,"jointVel":[0.32820990311228027,0.9446048257303126]},
+  "4": {"r1":2.0,"pEnd":[-1.364318756528898,-1.4624070331420873],"pEndp":[-1.364318756528898,-1.4624070331420873],"pVel":[-0.32313401494979965,-2.4337562127860015],"pVelp":[-0.32313401494979965,-2.4337562127860015],"p1":[-0.682159378264449,-0.7312035165710435],"p2":[-0.8044332669603459,0.5940430279091784],"IsElbowUp":false,"IsElbowUpp":false,"jointVel":[0.7119664484531625,0.7022134834058589]}
+ },
+ "snapshotCellIds": {
+  "1": 210222468,
+  "2": 720064138,
+  "3": 1047616521,
+  "4": 72446694
+ }
+}

@@ -1,0 +1,346 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Extracted 2026-10-12 with tools/nbextract.py; cached outputs skipped.
+
+
+### [Title]
+Rapidly Exploring Random Tree (RRT) and RRT*
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+\<A rapidly exploring random tree (RRT) grows a tree rooted at a start node. RRTs are designed to efficiently explore paths in a high-dimensional space. This Demonstration lets you compare random trees (RTs), RRTs and RRT*. An RT selects a node at random from the tree and adds an edge in a random direction, but an RRT first selects a goal point, then tries to add an edge from the closest node in the tree toward the goal point. RRT* improves on this by rewiring the tree to form shortest paths. Drag the goal locator to search for a path.\>
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+(*The parametric equation of the line containing the points a and b is a+λ (b-a), where 0<=λ<=1 for points between a and b. The value of λ is given by*)
+λ[{a_,b_}][p_]:=((a-p).(a-b))/((a-b).(a-b))
+(*For p on the line. For p not on the line, λ gives the closest point on the line.*) 
+
+### [Input] (init)
+(*Two lines, Subscript[L, 1 ]containing the points a and b with line Subscript[L, 2] containing the points c and d, intersect at a point \[DoubleLongLeftRightArrow] \[LeftBracketingBar]{a-b,c-d}\[RightBracketingBar]!=0. Compute the intersection point:*)
+lineIntersectionPoint[{{a_,b_},{c_,d_}}]:=(Det[{a,b}] (c-d)-Det[{c,d}] (a-b))/(Det[{a-b,c-d}])
+
+### [Input] (init)
+(*Use \[LeftBracketingBar]{a-b,c-d}\[RightBracketingBar]!=0 along with the condition 0<=λ<=1 to determine whether two segments intersect:*)
+segmentIntersectionQ[{p1:{a_,b_},p2:{c_,d_}}]:=
+If[Det[{a-b,c-d}]==0,False,
+Module[{p=lineIntersectionPoint[{p1,p2}]},0<=λ[p1][p]<=1&&0<=λ[p2][p]<=1]]
+
+### [Input] (init)
+angtest[p1:{x1_,y1_},p2:{x2_,y2_}]:=p1.{{0,-1},{1,0}}.p2>0;
+		
+
+### [Input] (init)
+(* test if point pt inside convex polygon poly *)
+ptInPoly[poly_,pt_]:=
+			(* translate poly such that pt becomes origin *)
+			poly//#-pt&/@#&//
+			(* pt is inside if adjacent vertex vector pair angles are all positive or all negative *)
+			{#,RotateLeft@#}&//Transpose//angtest@@#&/@#&//Equal@@#&
+
+### [Input] (init)
+inCollision[nv_,np_,obsedges_]:=(*test if line segment from point nv to np collides with any edges in the list of line segments obsedges*)
+Module[{i,collision},
+collision= False;
+For[i=1,collision!= True && i<= Length[obsedges],i++,If[ptInPoly[obsedges[[i]],np],collision=True]];
+For[i=1,collision!= True && i<= Length[obsedges],i++,
+If[segmentIntersectionQ[{{nv,np},#}],collision=True]&/@Partition[Append[obsedges[[i]],obsedges[[i,1]]],2,1];
+];collision
+]
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[Module[{addNode,waypoint,updateCostToGo,idx,i, rrtDist=3 (*range used by RRT* to define 'neighbors' of a node*),obsedges=\[Piecewise]<<Grid:{{{5,10},{6,10},{6,21},{5,21}},{{5,5},{6,5},{6,-21},{5,-21}},{{-5,-7},{-6,-7},{-6,21},{-5,21}},{{-5,-9},{-6,-9},{-6,-21},{-5,-21}}}obstacles== "\<narrow passage\>" | {{{1,1},{1,17},{17,17},{17,1}},
+{{-1,1},{-1,17},{-17,17},{-17,1}},
+{{1,-1},{1,-17},{17,-17},{17,-1}},-{{1,1},{1,17},{17,17},{17,1}}}obstacles =="\<sparse\>" | {{{5,3},{-6,3},{-6,4},{6,4},{6,-4},{-6,-4},{-6,-3},{5,-3}}}obstacles =="\<concave\>" | {}obstacles=="\<none\>">>},
+If[finalGoalOld!=finalGoal\[Or]goalRadiusOld!= goalRadius, reachGoal=False;path={};finalGoalOld=finalGoal;goalRadiusOld= goalRadius;];
+If[treeTypeOld!=treeType \[Or]obstaclesold!= obstacles,treeTypeOld =treeType;obstaclesold=obstacles;
+(*verts: {xyloc, parent,IDnum,cost2go,childrenlist}*)
+verts={{{0.0,0.0},0,1,0,{}}};path={};
+newrand={};reachGoal=False;];
+
+addNode[treeType_,obsedges_]:= Module[{p,nvidx,nv,np,parent,success=False,collision,nvs,nn,ppos, newdist,eucDist,vs,nodesNearGoal},
+While[success== False,
+(*Pick a goal location, if explorationBias>0, RRT performs a biased exploration toward the goal*)
+If[RandomReal[]<explorationBias,
+	p=finalGoal,
+	p=Round[RandomReal[{-20.0,20.0},2],0.01]
+];
+
+(*pick a node to expand toward the goal location. IF RRT*, pick all nodes within range*)
+If[treeType=="\<RRT\>"\[Or]treeType=="\<\!\(\*SuperscriptBox[\(RRT\), \(*\)]\)\>",nv=First@Nearest[verts[[;;,1]],p],
+(*random node*)nv=verts[[RandomInteger[{1,Length[verts]}],1]]];
+
+parent=First@Flatten@Position[verts[[;;,1]],nv];
+(*expand that node*)
+np = nv+If[Norm[p-nv]>1,1 Normalize[p-nv],p-nv];
+
+If[treeType=="\<\!\(\*SuperscriptBox[\(RRT\), \(*\)]\)\>", 
+(*Check all nearby nodes to see if np could be reached by a shorter route: TODO use ->Automatic to avoid searching for index*)
+Module[{dists,indexMinDist},
+nvs=Nearest[verts[[;;,1]],np,{All,rrtDist}];
+eucDist = Table[ If[!inCollision[vs,np,obsedges],EuclideanDistance[vs,np] ,∞],{vs,nvs}];
+dists=Table[ verts[[First@Flatten@Position[verts[[;;,1]],vs],4]],{vs,nvs}];
+indexMinDist=First@Ordering[dists+eucDist,1];
+parent=First@Flatten@Position[verts[[;;,1]],nvs[[indexMinDist]]];
+nv = verts[[parent,1]];
+]];
+
+(*check for collision*)
+success=!inCollision[nv,np,obsedges];
+]
+(*verts: {xyloc,parent,IDnum,cost2go,childrenlist}*)
+AppendTo[verts,{np,parent,Length[verts]+1,verts[[parent,4]]+EuclideanDistance[nv,np],{}}];
+verts[[parent,5]]=Append[verts[[parent,5]],Length[verts]];
+If[treeType=="\<\!\(\*SuperscriptBox[\(RRT\), \(*\)]\)\>", 
+(*If RRT*, check if any nearby nodes could be shortened by going through this one*)
+Table[
+vs=nvs[[n]];
+nn=First@Flatten@Position[verts[[;;,1]],vs];
+newdist = verts[[-1,4]]+eucDist[[n]];
+If[verts[[nn,4]]>newdist , 
+(*remove nn from parent's children*)ppos = Position[verts[[verts[[nn,2]],5]] ,nn];
+verts[[verts[[nn,2]],5]] = Delete[verts[[verts[[nn,2]],5]] , ppos];
+(*update nn's parent*) verts[[nn,2]] = Length[verts];
+(*update nn's distance*)verts[[nn,4]]=newdist;
+(*add child to new parent*)verts[[-1,5]]=Append[verts[[-1,5]],nn];
+(*update the cost2go for all children of nn*)
+updateCostToGo[nn];
+] ,{n,Length[nvs]}]];
+p];
+
+updateCostToGo[index_]:=Module[{parent = verts[[index,2]]},
+(*verts: {xyloc, parent,IDnum,cost2go,childrenlist}*)
+(*update this node's cost2go*)
+If[parent!= 0,
+verts[[index,4]]= verts[[parent,4]]+EuclideanDistance[verts[[parent,1]],verts[[index,1]]];
+(*call updateCostToGo on all children*)
+Table[updateCostToGo[ind],{ind,verts[[index,5]]}];]];
+
+If[nodestoadd>0,newrand = addNode[treeType,obsedges];nodestoadd-=1;reachGoal=False];
+While[nodestoadd>5,newrand = addNode[treeType,obsedges];nodestoadd-=1;];
+
+(*check for path connecting the starting point and the goal region*)
+If[reachGoal==False,
+{idx=Nearest[verts[[;;,1]]->Automatic,finalGoal,{All,goalRadius}];
+If[Length[idx]>0,
+{
+cost=10000;
+For[i=0,i<Length[idx],i++;
+	If[verts[[idx[[i]],4]]<cost,
+		{waypoint=verts[[idx[[i]],1;;2]];
+		cost=verts[[idx[[i]],4]]}];];
+path={waypoint};
+(*path: {xyloc, parent}*)
+While[path[[Length[path],2]]!=0,
+{waypoint=verts[[path[[Length[path],2]],1;;2]];
+AppendTo[path,waypoint];};];
+reachGoal=True;}
+];}];
+Graphics[{
+(*draw workspace*)
+White,Rectangle[-20{1,1},20{1,1}],
+(*draw the goal location*)
+{If[reachGoal,Green,Yellow], Disk[finalGoal,goalRadius]},
+{Yellow, PointSize[Large],Point[finalGoal]},
+(*draw obstacles*)
+{Blue, Rectangle[{-21,-21},{-20,21}],Rectangle[{20,-21},{21,21}],
+Rectangle[{-21,-21},{21,-20}],Rectangle[{-21,20},{21,21}],
+Table[Polygon[obsedges[[i]]],{i,1,Length[obsedges]}]},
+(*draw graph*)
+{Thin,Black, Table[Line[{verts[[n,1]],verts[[verts[[n,2]],1]]}],{n,2,Length[verts]}]},
+{If[Length[verts]>1,{Dashed,Black,Line[{Last[verts][[1]],newrand}],Blue,PointSize[Large],Point[Last[verts][[1]]]}]},
+Red,PointSize[Medium],Table[Tooltip[Point[verts[[n,1]]],verts[[n,4]]],{n,Length[verts]}],
+Green,PointSize[Large],Point[newrand],
+(*draw shortest path*)
+{If[reachGoal,{Thick,Darker[Green], Line[path[[;;,1]]]}]},{Black,Text[Style[
+StringForm["\<``, ``\>",If[Length[verts]==1,"\<1 node\>",StringForm["\<`` nodes\>", Length[verts]]],
+If[reachGoal,StringForm["\<path length ``\>",Round[cost,0.01]],"\<goal not yet reached\>"]],18],{0,22}]}
+},ImageSize->400,PlotRange->{{-21,21},{-21,23}}]], (*controls*)
+{{finalGoal,{18,-18}},{-19,-19},{19,19},ControlType->Locator},
+{{finalGoalOld,{10,10}},ControlType->None},
+"\<tree type\>",
+{{treeType,"\<RRT\>","\<\>"},{"\<Random Tree\>","\<RRT\>","\<\!\(\*SuperscriptBox[\(RRT\), \(*\)]\)\>"}},"\<\>",
+{treeTypeOld,None},
+{newrand,{},None},
+(*verts: {xyloc, parent,IDnum,cost2go,childrenlist}*)
+{verts,{{{0.0,0.0},0,1,0,{}}},None},
+{path,{},None},
+{cost,{},None},
+{nodestoadd,0,None},
+{reachGoal, False, None},
+
+"\<obstacle type\>",
+{{obstacles,"\<narrow passage\>","\<\>"},{"\<none\>","\<sparse\>","\<narrow passage\>","\<concave\>"},ControlType->PopupMenu},"\<\>",
+{obstaclesold,{},None},
+
+"\<number of nodes to add:\>",
+ButtonBar[{"\<1\>":>(nodestoadd+=1),"\<10\>":>(nodestoadd+=10),"\<100\>":>(nodestoadd+=100),"\<200\>":>(nodestoadd+=200),"\<500\>":>(nodestoadd+=500)}],"\<\>",
+
+"\<exploration bias\>",
+{{explorationBias,0,"\<\>"},0,.9,0.05,ControlType->Slider,ImageSize->80,Appearance->"\<Labeled\>"},"\<\>",
+
+"\<goal radius\>",
+{{goalRadius,1,"\<\>"},0,5,0.1,ControlType->Slider,ImageSize->80,Appearance->"\<Labeled\>"},
+{goalRadiusOld,-1,None},
+ControlPlacement->Left, SaveDefinitions->True
+]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Aaron T. Becker
+
+### [Text]
+Li Huang
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+This Demonstration shows a tree defined by red nodes with black edges. Obstacles are drawn in blue, and the goal position is indicated by a locator surrounded by a disc of radius goal radius. This is yellow before the goal is reached and turns green after success. As shown in the Snapshots, a tree generated by random motion from a randomly selected tree node does not explore very far (Snapshot 1). A rapidly exploring random tree (RRT) first selects a goal point (drawn in green), then tries to add an edge from the closest node in the tree (blue) toward the goal point. This results in a tree that tends to quickly explore the space, because search is biased into the largest Voronoi regions of a graph defined by the tree. RRT* improves on this by rewiring the tree to form shortest paths. RRT* converges to the shortest path, at the cost of more computation. All three trees are probabilistically complete, meaning if a nonzero width path exists, the tree will eventually find the path. This Demonstration attempts to construct a path (dark green) from the starting point (red) to the goal locator. Exploration can be biased toward the goal instead of random sampling by changing the corresponding slider.
+
+### [Text]
+In this Demonstration, each node on the tree has a tooltip that reports the total distance to this node from the root node at {0,0}. In general, the path lengths for RRT* are shorter than RRT. Try changing the obstacle type, the tree type and the goal location.
+
+### [Text]
+\<RRTs were developed by S. M. LaValle and J. J. Kuffner Jr. in[1] and[2]. They are often used for robot motion planning, especially for high-dimensional problems with obstacles. The RRT* variant was introduced by S. Karaman and E. Frazolli[3].\>
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] S. M. LaValle, Rapidly-Exploring Random Trees: A New Tool for Path Planning, Computer Science Department, Iowa State University (TR 98-11), 1998.
+
+### [Text]
+[2] S. M. LaValle and J. J. Kuffner, Jr., "Randomized Kinodynamic Planning," The International Journal of Robotics Research, 20(5), 2001 pp. 378\[Dash]400. doi:10.1177/02783640122067453.
+
+### [Text]
+[3] S. Karaman and E. Frazzoli, "Sampling-Based Algorithms for Optimal Motion Planning," The International Journal of Robotics Research, 30(7), 2011 pp. 846\[Dash]894. doi:10.1177/0278364911406761.
+
+### [Text]
+[4] Wikipedia. "Rapidly-Exploring Random Tree." (Jan 11, 2018) en.wikipedia.org/wiki/Rapidly-exploring_random _tree.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+RRT
+
+### [Item]
+RRT star
+
+### [Item]
+random tree
+
+### [Item]
+space filling tree
+
+### [Item]
+robot
+
+### [Item]
+motion planning
+
+### [Item]
+path planning
+
+### [Item]
+robotics
+
+### [Item]
+shortest path
+
+### [Item]
+obstacle avoidance
+
+### [Item]
+RRT*
+
+### [Item]
+rapidly-exploring random tree
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Random Tree Aggregation
+
+### [Text]
+Random Branching Process
+
+### [Text]
+Random Natural 3D tree
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2018-01-16
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

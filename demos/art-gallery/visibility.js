@@ -18,6 +18,7 @@
 // the original does are marked "PORT DEVIATION (D-AG-nn)". See demos/art-gallery/DESIGN.md §7.
 import { mEqual, mUnequal, mLess, mGreater, mLessEq, mGreaterEq, chop, mod, roundHalfEven, roundTo, sortMma, total, euclid } from '../../shared/mma.js';
 import { det, norm as normDnrm2, fma, arcTan, vectorAngle as VectorAngle } from '../../shared/mma-exact.js';
+import { lineList, sameQ } from '../common/polygon-core.js';
 
 const PI = Math.PI;
 const TWO_PI = 2 * Math.PI; // 2 Pi, numericised (6.283185307179586)
@@ -61,13 +62,8 @@ const add = (a, b) => [a[0] + b[0], a[1] + b[1]];
 const times = (s, v) => [s * v[0], s * v[1]];
 /** Dot of two 2-vectors (plain multiply-add). */
 const dot = (u, v) => u[0] * v[0] + u[1] * v[1];
-/** SameQ of two machine reals: equal if they differ in at most their last binary digit (Wolfram Language reference,
- *  SameQ; confirmed for SameQ, MatchQ and Position by extra-checks.wls, Mathematica 15.0.1, owner run 2026-10-06). */
-const dvA = new DataView(new ArrayBuffer(8));
-const ordinal = (x) => { dvA.setFloat64(0, x + 0); const b = dvA.getBigInt64(0); return b < 0n ? -(b & 0x7fffffffffffffffn) : b; };
-const sameReal = (x, y) => x === y || (Number.isFinite(x) && Number.isFinite(y) && Math.abs(Number(ordinal(x) - ordinal(y))) <= 1);
-/** SameQ / literal-pattern match of two points (Position, DeleteCases): component-wise sameReal. */
-export const sameQ = (u, v) => u.length === v.length && u.every((x, i) => sameReal(x, v[i]));
+// SameQ (sameQ) and lineList live in demos/common/polygon-core.js since v0.1.15 (shared with "Minkowski Sum of Convex
+// Robot and Obstacle", COMMON-DECISIONS §3); moved unchanged and re-exported below under their old names.
 /** Third component of Cross[{a1,a2,0},{b1,b2,0}]. */
 const cross3 = (a, b) => a[0] * b[1] - a[1] * b[0];
 
@@ -81,8 +77,8 @@ export function testpoint(poly, pt) {
   return roundHalfEven(total(diffs) * (1 / TWO_PI)) !== 0;
 }
 
-/** lineList[list] := Partition[Append[list, First[list]], 2, 1] — the closed polygon's edges. */
-export const lineList = (list) => list.map((p, i) => [p, list[(i + 1) % list.length]]);
+// lineList[list] := Partition[Append[list, First[list]], 2, 1] — the closed polygon's edges: demos/common/polygon-core.js.
+export { lineList, sameQ };
 
 /** vector[{{x1,y1},{x2,y2}}] := {x2 - x1, y2 - y1} (defined in the original, not used by it). */
 export const vector = ([[x1, y1], [x2, y2]]) => [x2 - x1, y2 - y1];

@@ -20,7 +20,7 @@
 <body>
   <main class="page">
     <h1 class="demo-title">Wolfram Demonstrations — Browser Ports</h1>
-    <p>Re-implementations of ten Mathematica <i>Manipulate</i> demonstrations from the Wolfram Demonstrations Project as
+    <p>Re-implementations of twenty Mathematica <i>Manipulate</i> demonstrations from the Wolfram Demonstrations Project as
       static web pages. Everything is computed and drawn in your browser; the server only delivers files.</p>
 
     <h2 class="section-title">Motion planning and rotations</h2>
@@ -78,6 +78,60 @@
         <h2><a href="demos/robot-singularities/index.html" data-testid="demo-link-robot-singularities">Robot Singularities in Three-Link Manipulators</a></h2>
         <p>Singular configurations and the manipulability ellipsoid of sixteen three-joint robot types.</p>
         <span class="tag">3D</span><span class="tag">WebGL 2</span>
+      </article>
+    </div>
+
+    <h2 class="section-title">Further robotics demonstrations — batch A</h2>
+    <div class="cards">
+      <article class="card">
+        <h2><a href="demos/two-link-kinematics/index.html" data-testid="demo-link-two-link-kinematics">Forward and Inverse Kinematics for Two-Link Arm</a></h2>
+        <p>Joint angles, inverse kinematics with elbow up or down, the Jacobian, the manipulability ellipse and joint velocities of a two-link arm.</p>
+        <span class="tag">2D</span><span class="tag">SVG</span><span class="tag">drag locators</span>
+      </article>
+      <article class="card">
+        <h2><a href="demos/robot-motion-obstacles/index.html" data-testid="demo-link-robot-motion-obstacles">Robot Motion with Obstacles</a></h2>
+        <p>A two-link arm and two obstacles; the configurations that collide, as a grid on the torus of the two joint angles.</p>
+        <span class="tag">2D</span><span class="tag">SVG</span><span class="tag">drag locators</span>
+      </article>
+      <article class="card">
+        <h2><a href="demos/bfs-motion-planning/index.html" data-testid="demo-link-bfs-motion-planning">Breadth-First Search Robot Motion Planning</a></h2>
+        <p>The same arm: a grid search from a start to a goal configuration, the cost map and the shortest path, and the arm moving along it.</p>
+        <span class="tag">2D</span><span class="tag">SVG</span><span class="tag">drag locators</span>
+      </article>
+      <article class="card">
+        <h2><a href="demos/distance-norms/index.html" data-testid="demo-link-distance-norms">Distance Norms in Robot Workspace and Phase Space</a></h2>
+        <p>Points within distance d of a two-link arm for the L1, L2, L3 and L∞ norms, measured in the workspace or in joint space.</p>
+        <span class="tag">2D</span><span class="tag">SVG</span><span class="tag">dials</span>
+      </article>
+      <article class="card">
+        <h2><a href="demos/rrt/index.html" data-testid="demo-link-rrt">Rapidly Exploring Random Tree (RRT) and RRT*</a></h2>
+        <p>Grow a random tree, an RRT or an RRT* among obstacles until a path reaches the goal disk.</p>
+        <span class="tag">2D</span><span class="tag">SVG</span><span class="tag">random</span>
+      </article>
+      <article class="card">
+        <h2><a href="demos/camera-lasers/index.html" data-testid="demo-link-camera-lasers">Measuring Distance and Orientation Using Camera and Lasers</a></h2>
+        <p>A pinhole camera and two lasers measure the distance and the angle of an object: top view and camera image.</p>
+        <span class="tag">2D</span><span class="tag">SVG</span><span class="tag">drag locator + dial</span>
+      </article>
+      <article class="card">
+        <h2><a href="demos/dubins-path/index.html" data-testid="demo-link-dubins-path">Shortest Path for the Dubins Car</a></h2>
+        <p>The six Dubins words between a fixed start and a goal pose, the shortest one drawn thick, a car driving along it.</p>
+        <span class="tag">2D</span><span class="tag">SVG</span><span class="tag">drag locators</span>
+      </article>
+      <article class="card">
+        <h2><a href="demos/dubins-isochrons/index.html" data-testid="demo-link-dubins-isochrons">Isochrons for a Dubins Car</a></h2>
+        <p>The positions a Dubins car can reach at time t (isochrons) or within time t, and the RS, LS, RL, LR paths to them.</p>
+        <span class="tag">2D</span><span class="tag">SVG</span>
+      </article>
+      <article class="card">
+        <h2><a href="demos/minkowski-sum/index.html" data-testid="demo-link-minkowski-sum">Minkowski Sum of Convex Robot and Obstacle</a></h2>
+        <p>Convex hulls, sorted edge normals and the Minkowski sum of a robot and an obstacle; the robot slides around it.</p>
+        <span class="tag">2D</span><span class="tag">SVG</span>
+      </article>
+      <article class="card">
+        <h2><a href="demos/four-bar-linkage/index.html" data-testid="demo-link-four-bar-linkage">Configuration Space for Four-Bar Linkage</a></h2>
+        <p>The configuration-space curve of a four-bar linkage; drag along it and watch the linkage move.</p>
+        <span class="tag">2D</span><span class="tag">SVG</span>
       </article>
     </div>
 

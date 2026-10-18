@@ -1,8 +1,8 @@
 {
   "name": "mathematica-web-ports",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "private": true,
-  "description": "Browser ports of ten Wolfram Demonstrations (robot motion planning, rotations, probabilistic roadmaps, car paths, art gallery, p-norm unit balls, robot singularities). Static site: all computation runs in the browser.",
+  "description": "Browser ports of twenty Wolfram Demonstrations (robot motion planning, rotations, Euler angles, probabilistic roadmaps, car paths, p-norm unit balls, art gallery, robot singularities, two-link kinematics, robot motion with obstacles, breadth-first search planning, distance norms, Dubins car paths and isochrons, RRT and RRT*, camera and lasers, Minkowski sums, four-bar linkage). Static site: all computation runs in the browser.",
   "author": "Tico Hannan",
   "license": "SEE LICENSE IN LICENSE.md",
   "repository": {
@@ -12,6 +12,7 @@
   "type": "module",
   "scripts": {
     "serve": "node tools/serve.mjs",
+    "bundle": "node tools/bundle-app.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test --project=firefox --project=chromium --project=webkit",
@@ -24,7 +25,8 @@
     "publish:tested": "node tools/publish-tested.mjs",
     "explore": "node tools/explore-motion.mjs",
     "compare:original": "node tools/compare-with-original.mjs",
-    "harness": "node tools/run-harness.mjs"
+    "harness": "node tools/run-harness.mjs",
+    "test-run": "node tools/new-test-run.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",

@@ -9,7 +9,7 @@ version = 1
 [[annotations]]
 path = ["tools/**", "shared/**", "LICENSES/**", "REUSE.toml", ".gitignore", ".gitattributes", ".nojekyll",
         "package.json", "package-lock.json", "vitest.config.js", "playwright.config.js",
-        "docs/ARCHITECTURE.md", "docs/TESTING.md", "docs/DESIGN_PROCESS.md"]
+        "docs/ARCHITECTURE.md", "docs/TESTING.md", "docs/DESIGN_PROCESS.md", "docs/MATHEMATICA_CHECKS.md"]
 precedence = "closest"
 SPDX-FileCopyrightText = "2026 Tico Hannan"
 SPDX-License-Identifier = "MIT"
@@ -25,7 +25,8 @@ SPDX-License-Identifier = "CC-BY-NC-SA-3.0"
 # Mathematica-harness scenario files (test inputs written for this project) and the generic harness test helpers: MIT.
 # Listed after the CC BY-NC-SA rule for tests/** so that they take precedence (the last matching annotation wins).
 [[annotations]]
-path = ["tests/harness/**", "tests/support/harness-json.js", "tests/unit/harness-*.test.js", "tests/unit/fixtures/fake-wolframscript.mjs"]
+path = ["tests/harness/**", "tests/support/harness-json.js", "tests/unit/harness-*.test.js", "tests/unit/fixtures/fake-wolframscript.mjs",
+        "tests/unit/new-test-run.test.js"]
 precedence = "closest"
 SPDX-FileCopyrightText = "2026 Tico Hannan"
 SPDX-License-Identifier = "MIT"

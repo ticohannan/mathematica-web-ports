@@ -1,0 +1,275 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Private reference (R-04). Extracted 2026-10-12 with a tolerant copy of tools/nbextract.py; cached outputs skipped.
+
+### [Title]
+Isochrons for a Dubins Car
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+This Demonstration shows the set of x,y positions reachable at time t by a car with a minimum turning radius r. This set is bounded by four isochrons. An isochron is a line on a diagram or map connecting points relating to the same or equal times. You can choose whether to show areas reachable at time t or less than or equal to t. The boundary of this set is defined by turning at the maximum rate in either direction for τ seconds and then either switching directions or moving straight ahead. The percent of the path traveled is denoted by p.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+drawCar[xy_,Theta_,Alpha_,opac_,sc_,lights_]:= (* draws a car icon, centered at middle of rear axle*){Opacity[opac],EdgeForm[Directive[Opacity[opac],Black]],Translate[Rotate[
+Translate[{Rectangle[{-1,-1/2},{1,1/2}],
+Darker[Gray],
+If[lights,{Yellow,Opacity[0.8*opac],EdgeForm[None],Polygon[{{1,.35},{8,.05},{8,.55}}],Polygon[{{1,-.35},{8,-.05},{8,-.55}}]}],
+Line[{{-.7,.35},{-.7,-.35}}],Line[{{.7,.35},{.7,-.35}}],
+Rotate[Rectangle[{.5,.35},{.9,.4}],If[Alpha==0,0,ArcTan[Alpha-.375,1.4]],{.7,.375}],
+Rectangle[{-.5,.35},{-.9,.4}],
+Rectangle[{-.5,-.35},{-.9,-.4}],
+Rotate[Rectangle[{.5,-.35},{.9,-.4}],If[Alpha==0,0,ArcTan[Alpha+.375,1.4]],{.7,-.375}],
+Black,Arrowheads[.02],Arrow[{{0,0},{1.0,0}}]
+},{0.7,0}],Theta,{0,0}],xy]}
+
+### [Input] (init)
+mRS[τ_,t_,r_]:=Module[{Alpha=(τ t)/(r)},{r(1-Cos[Alpha])-t (τ-1) Sin[Alpha],r Sin[Alpha]-t (τ-1) Cos[Alpha]}]
+
+### [Input] (init)
+mLS[τ_,t_,r_]:=Module[{Alpha=(τ t)/(r)},{-r(1-Cos[Alpha])+t (τ-1) Sin[Alpha],r Sin[Alpha]-t (τ-1) Cos[Alpha]}]
+
+### [Input] (init)
+mRL[τ_,t_,r_]:=Module[{Alpha=(τ t)/(r),Beta=((1-τ) t)/(r)},r{1-2 Cos[Alpha]+Cos[Alpha-Beta],2 Sin[Alpha]-Sin[Alpha-Beta]}]
+
+### [Input] (init)
+mLR[τ_,t_,r_]:=Module[{Alpha=(τ t)/(r),Beta=((1-τ) t)/(r)}, r{-1+2 Cos[Alpha]- Cos[Alpha-Beta],2 Sin[Alpha]-Sin[Alpha-Beta]}]
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[Module[{fs = Max[0,If[(p)/(100) t<= τ,1,(τ)/((p)/(100) t)]](*fraction of *),cxy,cTheta,cAlpha,pathGraphics,maxAlpha,epiGraphics,polySteps=If[t<10,0.05,0.02]If[r<1,r^2,1] },
+maxAlpha = Min[t,τ]/r;
+{cxy,cTheta,cAlpha,pathGraphics} =
+\[Piecewise]<<Grid:{ mRS[fs,(p)/(100) t,r],π/2-(Min[(p)/(100)t,τ])/(r),cAlpha=If[(p)/(100) t<τ,-r,0],{Blue,Circle[{r,0},r,π+{0,-maxAlpha}],Line[{r{1-Cos[maxAlpha],Sin[maxAlpha]} ,r{1-Cos[maxAlpha],Sin[maxAlpha]}+Max[0,t-τ]{Sin[maxAlpha],Cos[maxAlpha]}}]}}path == "\<RS\>" | {mLS[fs,(p)/(100) t,r],π/2+(Min[(p)/(100) t,τ])/(r),cAlpha=If[(p)/(100) t<τ,r,0],
+{Orange,Circle[{-r,0},r,{0,maxAlpha}],Line[{r{-1+Cos[maxAlpha],Sin[maxAlpha]} ,r{-1+Cos[maxAlpha],Sin[maxAlpha]}+Max[0,t-τ]{-Sin[maxAlpha],Cos[maxAlpha]}}]}}path == "\<LS\>" | {mRL[fs,(p)/(100) t,r],π/2-(Min[(p)/(100) t,τ])/(r)+(Max[(p)/(100) t-τ,0])/(r),cAlpha=If[(p)/(100)t<τ,-r,r],
+{Red,Circle[{r,0},r,π+{0,-maxAlpha}],
+Circle[r{1-2Cos[maxAlpha],2Sin[maxAlpha]},r,(-maxAlpha)+{0,Max[t-τ,0]/r}]}}path == "\<RL\>" | {mLR[fs,(p)/(100) t,r],π/2+(Min[(p)/(100)t,τ])/(r)-(Max[(p)/(100) t-τ,0])/(r),cAlpha=If[(p)/(100) t<τ,r,-r],
+{Green,Circle[{-r,0},r,{0,maxAlpha}],Circle[{-r,0},r,{0,maxAlpha}],
+Circle[r{-1+2Cos[maxAlpha],2Sin[maxAlpha]},r,(π+maxAlpha)-{0,Max[t-τ,0]/r}]}}True>>;
+epiGraphics = {
+{Dashed, Gray,Circle[{r,0},r],Circle[{-r,0},r]},
+{Thick,pathGraphics},
+Red,drawCar[{0,0},π/2,0,.5,.5,False],
+Green, drawCar[cxy,cTheta,cAlpha,.8,.5,True]};
+If[t!= told \[Or]plotReach==1\[Or]setold!= set\[Or]rold!= r,
+ControlActive[None, told=t;rold = r]; setold=set;
+plotReach=If[set=="\<=\>",ParametricPlot[{mRS[s,t,r],mLS[s,t,r],mLR[s,t,r],mRL[s,t,r]},{s,0,1},Prolog->{{Opacity[0.4],Gray,
+Polygon[Join[
+Table[mLS[s,t,r],{s,1,0,-polySteps}],
+Table[mRS[s,t,r],{s,0,1,polySteps}],
+Table[mRL[s,t,r],{s,0,1,polySteps}]
+]],
+Polygon[Join[
+Table[mLS[s,t,r],{s,1,0,-polySteps}],
+Table[mRS[s,t,r],{s,0,1,polySteps}],
+Table[mLR[s,t,r],{s,1,0,-polySteps}]
+]]}}],
+ParametricPlot[{mRS[s,t1,r],mLS[s,t1,r],mLR[s,t1,r],mRL[s,t1,r]},{s,0,1},{t1,0,t},Frame->False]]];
+Show[{plotReach,Graphics[epiGraphics]},AspectRatio->Automatic,ImageSize->{440},AxesOrigin->{0,0},PlotRange->{{-15,15},{-16,16}}]
+],
+Style["\<plot parameters\>",12],
+{{r,2,Row[{Style["\<r\>",Italic],"\< (m)\>"}]},.5,10,Appearance->"\<Labeled\>",ImageSize->100},
+{rold,1,None},
+{{t,10,Row[{Style["\<t\>",Italic],"\< (s)\>"}]},.1,14,Appearance->"\<Labeled\>",ImageSize->100},
+{told,1,None},
+{plotReach,1,None},
+Row[{Control@{set,{"\<=\>","\<<=\>"}},Style["\< t\>",Italic]}],
+Delimiter,
+Style["\<move car\>",12],
+{setold ,1,None},
+Row[{Control@{path,{"\<RS\>","\<LS\>","\<LR\>","\<RL\>"}}}],
+{{τ,0.5,"\<τ (s)\>"},0,14,0.01,Appearance->"\<Labeled\>",ImageSize->100},
+{{p,100,Row[{Style["\<p\>",Italic],"\< (%)\>"}]},0,100,1,Appearance->"\<Labeled\>",ImageSize->100},SaveDefinitions->True,ControlPlacement->Left]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Aaron T. Becker
+
+### [Text]
+Shiva Shahrokhi
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+In 1957, Lester Eli Dubins proved that the shortest path between two (x,y,Theta) coordinates for a forward-moving vehicle with a minimum turning radius r is composed entirely of straight lines or no more than three circular arcs of radius r[1].
+
+### [Text]
+This Demonstration gives the reachable set of x,y locations from a given starting (x,y,Theta) coordinate. The boundary of this set is reachable by a circular arc of radius r followed by either a straight path or a circular arc of radius r in the opposite direction. Label a turn to the right at the maximum rate by the letter R, left as L and straight as S; then the optimal paths to the boundary are RS, LS, RL, LR.
+
+### [Text]
+The Dubins car is a simplified mathematical model of a car that moves on the x,y plane[1]. The car's location is specified by the (x,y) location of the center of the car's rear axle and the orientation Theta of the car. The car cannot move sideways because the rear wheels would have to slide rather than roll. The Dubins car model stipulates that the car be moving forward at a constant speed and have a maximum steering angle that translates into a minimum turning radius r. The minimum turning radius circles are drawn tangent to the starting and ending positions with gray dashed circles.
+
+### [Text]
+\<If the car has forward velocity of 1 unit per second, the system equations are\>
+
+### [Text]
+(dx)/(dt)=cos Theta,
+
+### [Text]
+(dy)/(dt)=sin Theta,
+
+### [Text]
+and
+
+### [Text]
+(dTheta)/(dt)=u,
+
+### [Text]
+where u is chosen from the interval[-1/Subscript[r, min], 1/Subscript[r, min]].
+
+### [Text]
+For a car starting at (0,0,0), define the switching time as τ and arc lengths traveled by the car as Alpha=(τ)/(r) and Beta=(t-τ)/(r).
+
+### [Text]
+The car position for an RS path is
+
+### [Text]
+r{1-cos Alpha,sin Alpha} - (t-τ) {sin Alpha,cos Alpha}.
+
+### [Text]
+For LS the ending position is
+
+### [Text]
+r{cos Alpha-1,sin Alpha} + (t-τ) {sin Alpha,-cos Alpha}.
+
+### [Text]
+For RL the ending position is
+
+### [Text]
+r{1-2 cos Alpha+cos(Alpha-Beta), 2 sin Alpha-sin(Alpha-Beta)},
+
+### [Text]
+and for LR the ending position is
+
+### [Text]
+r{-1+2 cos Alpha- cos(Alpha-Beta), 2 sin Alpha-sin(Alpha-Beta)}.
+
+### [Text]
+See[2] for more details.
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] L. E. Dubins, "On Curves of Minimal Length with a Constraint on Average Curvature, and with Prescribed Initial and Terminal Positions and Tangents," American Journal of Mathematics, 79(3), 1957 pp. 497\[Dash]516. doi:10.2307/2372560.
+
+### [Text]
+[2] E. J. Cockayne and G. W. C. Hall, "Plane Motion of a Particle Subject to Curvature Constraints," SIAM Journal on Control, 13(1), 1975 pp. 197\[Dash]220. doi:10.1137/0313012.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+isochron
+
+### [Item]
+Dubins car
+
+### [Item]
+Dubin
+
+### [Item]
+shortest path
+
+### [Item]
+motion planning
+
+### [Item]
+robot
+
+### [Item]
+mobile robot
+
+### [Item]
+optimal path
+
+### [Item]
+robotics
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Parking a Car
+
+### [Text]
+Driving out of a Parking Space
+
+### [Text]
+Paths inside a Polygon
+
+### [Text]
+Shortest Path between Two Points in the Unit Disk Reflecting off the Circumference
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2017-12-18
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

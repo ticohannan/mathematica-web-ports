@@ -1,0 +1,245 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Extracted 2026-10-12 with tools/nbextract.py; cached outputs skipped.
+
+
+### [Title]
+Robot Motion with Obstacles
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+This Demonstration shows a two-link planar arm robot operating in the workspace on the left, containing two small circular obstacles. The corresponding robot phase space on the right shows the configurations q=(Subscript[Theta, 1],Subscript[Theta, 2]) for which an arm intersects an obstacle. You can relocate an obstacle in the workspace and see the corresponding change in phase space. Move the locator in phase space vertically or horizontally to rotate the robot arms. The angles Subscript[Theta, 1] and Subscript[Theta, 2] are expressed modulo 2π. The obstacle regions are computed using 32Q unit squares. You can improve the quality of the computation by increasing Q.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+(*returns the shortest distance between line segment 'seg' and a list of points*)
+pointsegdis2[{seg_,pointlist_}]:=Module[{u=Subtract@@seg,mean=Plus@@seg/2},Min[EuclideanDistance[#,(mean-u Sign@# Min[1,Abs@#]/2)&@(-(2 (#-mean).u)/u.u)]&/@pointlist]];
+isCollided[{seg_,pointlist_}, d_]:=Module[{u=Subtract@@seg,mean=Plus@@seg/2},If[(Min[EuclideanDistance[#,(mean-u Sign@# Min[1,Abs@#]/2)&@(-(2 (#-mean).u)/u.u)]&/@pointlist]<d),1,0]];
+(*to space the overlay plot*)
+xMin = 2.9;yMin =-2;xMax=xMin+3.8;yMax=yMin+3.8;
+(* a colored locator icon*)
+loc[col_]:=ToExpression@GraphicsBox[{col,{AbsoluteThickness[1],Antialiasing->False,LineBox[{{{0,-10},{0,-2}},{{0,2},{0,10}},{{-10,0},{-2,0}},{{2,0},{10,0}}}],Antialiasing->True,CircleBox[{-0.5,0.5},5]},{AbsoluteThickness[3],Opacity[0.3],CircleBox[{-0.5,0.5},3]}},ImageSize->17,PlotRange->{{-8,8},{-8,8}}];
+(*draw circular arcs with arrowheads*)
+arrowArc[s_Circle]:=s/.Circle[a_,r_,{start_,end_}]:>({s,Arrow[{#-r/10^6 {-Sin@end,Cos@end},#}]}&[a+r {Cos@end,Sin@end}]);
+
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{w = 1/8,l=1,Theta1 ,Theta2,inCollision,pObsV, resolution},
+(*enable torus property*)
+If[pConfig[[1]]<xMin,pConfig[[1]]=xMax];If[pConfig[[1]]>xMax,pConfig[[1]]=xMin];
+If[pConfig[[2]]<yMin,pConfig[[2]]=yMax];If[pConfig[[2]]>yMax,pConfig[[2]]=yMin];
+
+Theta1 = (pConfig[[1]]-xMin)/(xMax-xMin)2π;
+Theta2 = (pConfig[[2]]-yMin)/(yMax-yMin)2π;
+pObsV = {pObs,pObs2}; (*position vector for Obstacles*)
+inCollision = pointsegdis2[{{{0,0},l{Cos[Theta1],Sin[Theta1]}},pObsV}]<2w||
+pointsegdis2[{{l{Cos[Theta1],Sin[Theta1]} ,l{Cos[Theta1]+Cos[Theta1+Theta2],Sin[Theta1]+Sin[Theta1+Theta2]}},pObsV}]<2w;
+
+Graphics[{Gray,If[inCollision,EdgeForm[Red],EdgeForm[Black
+]],
+(*draw arm with arrows showing angles*)
+Arrowheads[.02],
+Rotate[Rectangle[{-w,-w},{l+w,w},RoundingRadius->w],Theta1,{0,0}],
+{Black,Point[{{0,0}}],
+Darker[Gray],arrowArc[Circle[{0,0},l/3,{0,Theta1}]],
+If[Abs[Theta1]>π/4,Text[Style["\<\!\(\*SubscriptBox[\(Theta\), \(1\)]\)\>",Medium],l/2{Cos[(Theta1)/(2)],Sin[(Theta1)/(2)]}]]},
+Rotate[{
+Rectangle[{l Cos[Theta1]-w,l Sin[Theta1]-w},{l Cos[Theta1]+l+w,l Sin[Theta1]+w},RoundingRadius->w],{Black,Text["\<Robot Arm\>",{l Cos[Theta1]+l/2,l Sin[Theta1]}]}
+},Theta1+Theta2,{l Cos[Theta1],l Sin[Theta1]}],
+{Black,Point[{l{Cos[Theta1],Sin[Theta1]}}],
+Darker[Gray],arrowArc[Circle[l{Cos[Theta1],Sin[Theta1]},l/3,{Theta1,Theta1+Theta2}]],
+If[Abs[Theta2]>π/4,Text[Style["\<\!\(\*SubscriptBox[\(Theta\), \(2\)]\)\>",Medium],{l Cos[Theta1]+l/2Cos[Theta1+(Theta2)/(2)],l Sin[Theta1]+l/2Sin[Theta1+(Theta2)/(2)]}]]},
+{Brown,Table[Disk[pObsV[[i]],w],{i,Length[pObsV]}]},
+Inset[
+(*TODO: there is probably someway to improve this ControlActive.  I want to only update freeConfigSpace if locator pObs changes.  While pObs is changing, I want to use a low resolution grid, and then refine it*)
+If[(pObsOld!=   pObs||pObs2Old!=   pObs2|| QualityOld != Quality|| !highRes),
+resolution = ControlActive[highRes=False;8 Quality,highRes=True;32 Quality];
+freeConfigSpace=Table[
+If[pointsegdis2[{{{0,0},l{Cos[a1],Sin[a1]}},pObsV}]<2w||
+pointsegdis2[{{l{Cos[a1],Sin[a1]} ,l{Cos[a1]+Cos[a1-a2],Sin[a1]+Sin[a1-a2]}},pObsV}]<2w,1,0],{a2,(π)/(resolution),2π-(π)/(resolution),(2π)/(resolution)},{a1,(π)/(resolution),2π-(π)/(resolution),(2π)/(resolution)}];
+pObsOld = pObs;pObs2Old = pObs2;QualityOld = Quality];
+ArrayPlot[freeConfigSpace,Mesh->None,ImageMargins->None,ImagePadding->None,PlotRangePadding->None,
+FrameStyle->{{Red,Directive[Red,Dashed]},{Blue,Directive[Blue,Dashed]}}],
+{xMin,yMin},{0,0},xMax-xMin],
+Text["\<\!\(\*SubscriptBox[\(Theta\), \(1\)]\)\>",{4.8,-2.2}],
+Text["\<\!\(\*SubscriptBox[\(Theta\), \(2\)]\)\>",{2.8,0}],
+Text["\<robot phase space\>",{4.8,2.25}],
+Text["\<robot workspace\>",{0,2.25}],
+Locator[pConfig,If[inCollision,loc[Red],loc[Darker[Green]]]]
+},PlotRange->{{-2.2,7.1},{-2.4,2.4}},ImageSize->{600,320}]
+],
+{{pObs,{1.1,1.1}},{-2,-2},{2,2},Locator},
+{{pObs2,{1.1,-1.1}},{-2,-2},{2,2},Locator},
+{{pConfig,{5,0}},{xMin-.1,yMin-.1},{xMax+.1,yMax+.1},Locator,Appearance->None}
+,(*what resolution to make the configuration-space obstacle array*)
+{{Quality,2,Style["\<Q\>",Italic]},1,10,1,Appearance->"\<Labeled\>"},
+(*the next are global variables to control how often freeConfigSpace is updated*)
+{freeConfigSpace, {0,0},None},
+{highRes, False,None},
+{{pObsOld,{-3,-2}},{-3,-2},{2,2},None},
+{{pObs2Old,{-3,-2}},{-3,-2},{2,2},None},
+{QualityOld,1,10,1,None},ControlPlacement->Top,
+SaveDefinitions->True]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Aaron T. Becker
+
+### [Text]
+Haoran Zhao
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+The set of all possible configurations of the robot can be represented in a two-dimensional phase space. Of particular interest are the configurations in which the robot collides with one of the obstacles.
+
+### [Text]
+This Demonstration computes the obstacle regions using 32Q unit squares and determines if the centroid of each square is in a collision. Given Subscript[Theta, 1] and Subscript[Theta, 2], the motion computation is trivial.
+
+### [Text]
+\<However, computing the phase-space obstacle region is more difficult, because the size of the space representation grows exponentially with the number of degrees of freedom (independent joints) of the robot.\>
+
+### [Text]
+Consider how many n-dimensional unit squares are required to fill a space of size k. For a one-dimensional space, k^1 units are needed. For a two-dimensional space, k^2 squares are needed. For an n-dimensional space, k^n hypercubes would be required.
+
+### [Text]
+The phase space for a two-link planar robot can be represented on a torus. When rotation joint 1 moves past 2π, it returns to angle 0. This is represented by dashed and solid lines of the same color. If the phase space were printed on a rubber sheet, cut out, and the dashed and solid lines of each color were joined, the resulting shape would be a torus. In this Demonstration, moving the locator past the edge of the phase space wraps the angle around 2π.
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] M. Spong, S. Hutchinson, and M. Vidyasagar, Robot Modeling and Control, Hoboken, NJ: John Wiley and Sons, 2006.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+configuration space
+
+### [Item]
+configuration
+
+### [Item]
+collision
+
+### [Item]
+obstacle
+
+### [Item]
+robot
+
+### [Item]
+planar robot
+
+### [Item]
+robot arm
+
+### [Item]
+path planning
+
+### [Item]
+path-planning
+
+### [Item]
+configuration space obstacle
+
+### [Item]
+torus
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Configuration
+
+### [Text]
+Torus
+
+### [Text]
+Inverse Kinematics for a Robot Manipulator with Six Degrees of Freedom
+
+### [Text]
+Forward and Inverse Kinematics of the SCARA Robot
+
+### [Text]
+Path
+
+### [Text]
+Path Integral
+
+### [Text]
+Planar Space
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2016-04-18
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

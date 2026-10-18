@@ -1,0 +1,96 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstration by Aaron T. Becker and Shiva Shahrokhi
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Isochrons for a Dubins Car</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <script src="../../shared/requirements.js"></script>
+  <style>
+    /* ControlPlacement -> Left: labels left of the controls; sliders at ImageSize 100; graphic at ImageSize 440 */
+    #controls .ctl-slider, #controls .ctl-setter { flex-direction: row; align-items: center; gap: 6px; flex-wrap: wrap; }
+    #controls .ctl-slider .ctl-label, #controls .ctl-setter .ctl-label { min-width: 2.8em; }
+    #controls .ctl-slider .ctl-line input[type=range] { flex: 0 0 100px; width: 100px; min-width: 100px; }
+    #controls .ctl-heading { font-weight: 400; font-size: 1.05rem; }
+    #controls .set-suffix { font-style: italic; margin-left: 4px; }
+    #graphic { max-width: 560px; }
+    #graphic svg.scene { margin: 0 auto; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Dubins isochrons</div>
+    <h1 class="demo-title">Isochrons for a Dubins Car</h1>
+
+    <section class="manipulate" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="graphic" id="graphic" data-testid="graphic">
+        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser.</div></noscript>
+      </div>
+    </section>
+
+    <p class="caption">This Demonstration shows the set of <i>x</i>,<i>y</i> positions reachable at time <i>t</i> by a car with a
+      minimum turning radius <i>r</i>. This set is bounded by four isochrons. An isochron is a line on a diagram or map
+      connecting points relating to the same or equal times. You can choose whether to show areas reachable at time <i>t</i>
+      or less than or equal to <i>t</i>. The boundary of this set is defined by turning at the maximum rate in either direction
+      for τ seconds and then either switching directions or moving straight ahead. The percent of the path traveled is
+      denoted by <i>p</i>.</p>
+
+    <details class="details" data-testid="details">
+      <summary>Details</summary>
+      <p>In 1957, Lester Eli Dubins proved that the shortest path between two (<i>x</i>,<i>y</i>,θ) coordinates for a
+        forward-moving vehicle with a minimum turning radius <i>r</i> is composed entirely of straight lines or no more than
+        three circular arcs of radius <i>r</i> [1].</p>
+      <p>This Demonstration gives the reachable set of <i>x</i>,<i>y</i> locations from a given starting (<i>x</i>,<i>y</i>,θ)
+        coordinate. The boundary of this set is reachable by a circular arc of radius <i>r</i> followed by either a straight
+        path or a circular arc of radius <i>r</i> in the opposite direction. Label a turn to the right at the maximum rate by
+        the letter R, left as L and straight as S; then the optimal paths to the boundary are RS, LS, RL, LR.</p>
+      <p>The Dubins car is a simplified mathematical model of a car that moves on the <i>x</i>,<i>y</i> plane [1]. The car's
+        location is specified by the (<i>x</i>,<i>y</i>) location of the center of the car's rear axle and the orientation θ
+        of the car. The car cannot move sideways because the rear wheels would have to slide rather than roll. The Dubins car
+        model stipulates that the car be moving forward at a constant speed and have a maximum steering angle that translates
+        into a minimum turning radius <i>r</i>. The minimum turning radius circles are drawn tangent to the starting and ending
+        positions with gray dashed circles.</p>
+      <p>If the car has forward velocity of 1 unit per second, the system equations are</p>
+      <p class="formula"><i>dx</i>/<i>dt</i> = cos θ,<br><i>dy</i>/<i>dt</i> = sin θ,<br>and<br><i>d</i>θ/<i>dt</i> = <i>u</i>,</p>
+      <p>where <i>u</i> is chosen from the interval [−1/<i>r</i><sub>min</sub>, 1/<i>r</i><sub>min</sub>].</p>
+      <p>For a car starting at (0,0,0), define the switching time as τ and arc lengths traveled by the car as α = τ/<i>r</i>
+        and β = (<i>t</i> − τ)/<i>r</i>.</p>
+      <p>The car position for an RS path is</p>
+      <p class="formula"><i>r</i>{1 − cos α, sin α} − (<i>t</i> − τ) {sin α, cos α}.</p>
+      <p>For LS the ending position is</p>
+      <p class="formula"><i>r</i>{cos α − 1, sin α} + (<i>t</i> − τ) {sin α, −cos α}.</p>
+      <p>For RL the ending position is</p>
+      <p class="formula"><i>r</i>{1 − 2 cos α + cos(α − β), 2 sin α − sin(α − β)},</p>
+      <p>and for LR the ending position is</p>
+      <p class="formula"><i>r</i>{−1 + 2 cos α − cos(α − β), 2 sin α − sin(α − β)}.</p>
+      <p>See [2] for more details.</p>
+      <p>References:<br>
+        [1] L. E. Dubins, "On Curves of Minimal Length with a Constraint on Average Curvature, and with Prescribed Initial
+        and Terminal Positions and Tangents," <i>American Journal of Mathematics</i>, 79(3), 1957 pp. 497–516.
+        doi:10.2307/2372560.<br>
+        [2] E. J. Cockayne and G. W. C. Hall, "Plane Motion of a Particle Subject to Curvature Constraints," <i>SIAM Journal
+        on Control</i>, 13(1), 1975 pp. 197–220. doi:10.1137/0313012.</p>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. The isochrons are drawn from the original's closed-form
+      formulas; the curves and regions are sampled on a fixed grid (Mathematica samples adaptively), the grey band uses the
+      original's own sample points. All computation runs in your browser.</p>
+    <div class="credits" data-testid="credits">
+      Adapted from <a href="https://demonstrations.wolfram.com/IsochronsForADubinsCar/">"Isochrons for a Dubins Car"</a>
+      by Aaron T. Becker and Shiva Shahrokhi, Wolfram Demonstrations Project (published December 18, 2017), licensed
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+      This JavaScript/SVG translation by Tico Hannan (© 2026; produced with an AI code-generation tool) is released under the
+      same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

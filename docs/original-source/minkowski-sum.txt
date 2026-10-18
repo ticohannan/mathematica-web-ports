@@ -1,0 +1,381 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Extracted 2026-10-12 with tools/nbextract.py; cached outputs skipped.
+
+### [Title]
+Minkowski Sum of Convex Robot and Obstacle
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+\<The Minkowski sum of a convex obstacle and a robot delineates the region where an obstacle and a robot might collide. Knowing this region simplifies robot motion planning. Set "view" to "static" and drag the locators to make arbitrary two-dimensional robots and obstacles. The region of the Minkowski sum can be traced out by choosing "move around Minkowski" to animate the robot moving around the edge of the obstacle.\>
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+(*Returns the convex hull of a polygon 
+Ref: https://www.algorithm-archive.org/contents/graham_scan/graham_scan.html *)
+convexHullGrahamScan[pts_]:=Module[{n=Length@pts,sortedP=Sort[pts,#1[[2]]<#2[[2]]&],p,m=2,i},
+clockwiseQ[p1:{x1_,y1_},p2:{x2_,y2_},p3:{x3_,y3_}]:=Chop[((x2-x1)*(y3-y1)-(y2-y1)*(x3-x1))];
+p = Join[{sortedP[[1]]},Sort[sortedP[[2;;n]],ArcTan[#1[[1]]-sortedP[[1,1]],#1[[2]]-sortedP[[1,2]]]< ArcTan[#2[[1]]-sortedP[[1,1]],#2[[2]]-sortedP[[1,2]]]&]];
+For[i=1,i<= n,i++,While[(clockwiseQ[p[[m-1]],p[[m]],p[[i]]]<= 0),If[m>2,m=m-1,If[i==n,Break[], i+=1]]];
+m+=1;p[[{i,m}]]=p[[{m,i}]];];
+p[[1;;m]]]
+
+### [Input] (init)
+(* Returns a Nested list of pair of points representing each line in polygon*)
+lineList[list_]:=Partition[Append[list,First[list]],2,1];
+
+### [Input] (init)
+(*Returns True if reflex else false*)
+reflex[{x1_,y1_},{x2_,y2_},{x3_,y3_}]:=Chop[Det[(\[NoBreak]<<Grid:1x1y1 | 1x2y2 | 1x3y3>>\[NoBreak])]> 0]
+(* Discretizes a line, returns points on a line which are at equidistant from each other*)
+discretizeLineRev1[{{x1_,y1_},{x2_,y2_}},step_]:=Module[{d = EuclideanDistance[{x1,y1},{x2,y2}]},
+If[d!=0,({(x1+(x2-x1)*#),(y1+(y2-y1)*#)})&/@Range[0,1,(step/d)],{{x1,y1}}]]
+
+### [Input] (init)
+(* Discretizes a polygon using the discretizeLine function*)
+discretizePolyRev1[poly_,step_]:=
+Append[Flatten[discretizeLineRev1[#,step]&/@lineList[poly],1],First@poly]
+
+### [Input] (init)
+(* Returns a Normal Vector for a line between two points*)
+normalVector[{{x2_,y2_},{x1_,y1_}}]:=Normalize[{(-y2+y1),x2-x1} ]
+
+### [Input] (init)
+(* Returns a Vector for a line between two points*)
+vector[{{x2_,y2_},{x1_,y1_}}]:={x2-x1,y2-y1}
+
+### [Input] (init)
+(* Returns the Area of a Polygon*)
+(*Ref:- https://www.seas.upenn.edu/~sys502/extra_materials/Polygon%20Area%20and%20Centroid.pdf *)
+areaCalulation[{{x1_,y1_},{x2_,y2_}}]:=(x1 *y2)-(x2*y1)
+
+### [Input] (init)
+areaOfPoly[poly_]:=1/2 *Total@((areaCalulation@#)&/@lineList@poly)
+
+### [Input] (init)
+(*Returns the centroid of a Polygon*)
+(*Ref: https://www.seas.upenn.edu/~sys502/extra_materials/Polygon%20Area%20and%20Centroid.pdf *)
+centroidCal[{{x1_,y1_},{x2_,y2_}}]:={(x1 +x2)*((x1*y2) - (x2*y1)),(y1 +y2)*((x1*y2) - (x2*y1))}
+
+### [Input] (init)
+centroidOfPoly[poly_]:=Module[{area=areaOfPoly@poly},If[area!= 0,(Total@((centroidCal@#)&/@lineList@poly))/(6*area) , Mean@poly]]
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{oldpts={},robopts,obopts,rltemp,oltemp,robot,obstacle,rc,oc,robotNormal,obstacleNormal,robotArrows,obstacleArrows,robotSubscript,obstacleSubscript,robotAssignedNormal,obstacleAssignedNormal,orderOfNormals,sortedVectors,pos,orderOfNormalsKeys,prev,minkowskiPointswithSide,minkowskiPoints,shiftedMinkwithSide,shiftedMink,sortedArrows,robotlabel,obstaclelabel,sortedNormalRobot,sortedNormalObstacle,minkowskiSidesNormalArrows,shiftedMinkLineList,roboPosMink,obosPosMink,minkowskiRobotSidesLabels,minkowskiObstacleSidesLabels,discretPolygon,
+minkRobotlinelist={},minkObstlinelist={},
+offset ={2.298,-2.298}},
+
+(*constrain vertices of robot and obstacle*)
+If[pts!= oldpts,oldpts=pts;
+Table[If[pts[[i]][[1]]<1.34704,pts[[i]][[1]]=1.34704],{i,1,m,1}];
+Table[If[pts[[i]][[1]]>-1.34704,pts[[i]][[1]]=-1.34704],{i,6,n+5,1}];
+];
+(*Get Convex Polygons for robot and obstacles and remove the duplicate points*)
+robopts =DeleteDuplicates@ pts[[1;;m]]; 
+obopts =DeleteDuplicates@ pts[[6;;n+5]];
+
+(*get the length of robot and obstacle polygons which do not have dupicate points*)
+rltemp=Length@robopts; 
+oltemp=Length@obopts;
+
+(*Get the convex hull of polygons*)
+robot =If[rltemp>=3,RotateLeft[convexHullGrahamScan@(robopts),-1],robopts];
+obstacle =If[oltemp>=3,RotateLeft[convexHullGrahamScan@(obopts),-1],obopts];
+
+(*Get the actual length of the robot and obstacle*)
+rl=Length@robot;
+ol=Length@obstacle;
+
+(*Get the Centroids robot & obstacle Polygons*)
+rc=If[rl>=3,centroidOfPoly@robot,Mean@robot];
+oc=If[ol>=3 ,centroidOfPoly@obstacle,Mean@obstacle];
+
+(*Get the Robot and Obstacle Normals*)
+robotNormal = {If[rl>=2,(-normalVector[#]),{0,0}],If[rl>=2,-vector[#],{0,0}],"\<Alpha\>",#}&/@(lineList@robot);
+ (* Robot Normals are in inward direction*)
+obstacleNormal={If[ol>=2,normalVector[#],{0,0}],If[ol>=2,vector[#],{0,0}],"\<Beta\>",#}&/@(lineList@obstacle);(* Obstacle Normals are in outward direction*)
+
+(*Make Arrows on inside the polygons*) (*Retouching the code needed*)
+robotArrows=Arrow[{Mean[#[[4]]],0.45#[[1]]+Mean[#[[4]]]}]&/@robotNormal; 
+obstacleArrows = Arrow[{Mean[#[[4]]],0.45#[[1]]+Mean[#[[4]]]}]&/@obstacleNormal;	
+
+(*Create Subscript*)
+robotSubscript=Cases[Range[1,Length[robotNormal]],t:_:>Subscript[Alpha, t]];
+obstacleSubscript=Cases[Range[1,Length[obstacleNormal]],t:_:>Subscript[Beta, t]];
+
+(*Assign the Edges of robot with Alpha and obstacle as Beta *)
+robotAssignedNormal =AssociationThread[robotSubscript-> robotNormal];
+obstacleAssignedNormal =AssociationThread[obstacleSubscript-> obstacleNormal];
+
+(*Merge the Normals and add the angles in the value list and Sort the Nested List based on Angles*)
+orderOfNormals =Sort[{If[!(#[[1]][[1]]==0&&#[[1]][[2]]==0) ,ArcTan[#[[1]][[1]],#[[1]][[2]]],None],#[[1]],#[[2]],#[[3]],#[[4]]}&/@Join [robotAssignedNormal,obstacleAssignedNormal],#1[[1]]<#2[[1]]&];
+sortedVectors=Values[orderOfNormals];
+
+(*Get the Sequence position where Alpha and Beta meet*)
+pos=SequencePosition[sortedVectors[[;;,4]],{"\<Alpha\>","\<Beta\>"}][[1,1]];
+orderOfNormalsKeys=RotateLeft[Keys@orderOfNormals,pos];
+
+(*Calculate the Prev Value based on the position*)
+prev=rc+sortedVectors[[pos+1]][[5]][[1]]-sortedVectors[[pos]][[5]][[1]];
+
+(*Get the Minkowski by adding the vectors in the sorted order*)
+minkowskiPointswithSide={Chop[prev=prev-#[[3]]],#[[4]]}&/@RotateLeft[sortedVectors,pos-1];
+minkowskiPoints=(#[[1]]&/@minkowskiPointswithSide);
+
+(*Get List of lines for robot and obstacle in the minkowski sum*)
+shiftedMinkwithSide={(-oc+offset+#[[1]]),#[[2]]}&/@(minkowskiPointswithSide);
+AppendTo[shiftedMinkwithSide,shiftedMinkwithSide[[1]]];
+
+(*Shifted Minkowski Sum Points*)
+shiftedMink=(#[[1]]&/@shiftedMinkwithSide);
+
+(*Get robot and obstacle respective side from minkowski Region*)
+Table[If[shiftedMinkwithSide[[i]][[2]]=="\<Alpha\>",AppendTo[minkRobotlinelist,{shiftedMinkwithSide[[i-1]][[1]],shiftedMinkwithSide[[i]][[1]]}],AppendTo[minkObstlinelist,{shiftedMinkwithSide[[i-1]][[1]],shiftedMinkwithSide[[i]][[1]]}]],{i,2,Length@shiftedMinkwithSide,1}];
+
+(*Make Arrows*) 
+sortedArrows=Arrow[{{-2.3 ,-1.5},{-2.3,-1.5}+#[[2]]}]&/@Values[orderOfNormals]; 
+
+(*Draw Labels on Robot/Obstacle*)
+robotlabel = If[rl>=2,Table[Text[Keys[robotAssignedNormal][[i]],(Mean@robotAssignedNormal[[i]][[4]]-(If[rl==2,-0.65,0.2])robotAssignedNormal[[i]][[1]])],{i,1,Length[robotAssignedNormal],1}],{}];
+obstaclelabel = If[ol>=2,Table[Text[Keys[obstacleAssignedNormal][[i]],(Mean@obstacleAssignedNormal[[i]][[4]]-(If[ol==2,-0.65,0.2])obstacleAssignedNormal[[i]][[1]])],{i,1,Length[obstacleAssignedNormal],1}],{}];
+
+(*Normal Labels on Sorted Normal Disk*)
+sortedNormalRobot=If[rl>=2,Table[Text[Keys[robotAssignedNormal][[i]],{-2.3,-1.5}+1.2robotAssignedNormal[[i]][[1]]],{i,1,Length[robotAssignedNormal],1}],{}];
+sortedNormalObstacle=If[ol>=2,Table[Text[Keys[obstacleAssignedNormal][[i]],{-2.3,-1.5}+1.2obstacleAssignedNormal[[i]][[1]]],{i,1,Length[obstacleAssignedNormal],1}],{}];
+
+(*Minkowski Normals Arrows*)
+minkowskiSidesNormalArrows= (Arrow[{Mean[#],0.5normalVector@#+Mean[#]}])&/@Join[minkRobotlinelist,minkObstlinelist];
+
+(*Minkowski Robot/Obstacle Respective Side Normals Labels*)
+shiftedMinkLineList=lineList@shiftedMink;
+roboPosMink=(Flatten@(Position[orderOfNormalsKeys,Subscript[Alpha, #]]&/@Range[1,rl]));
+obosPosMink=(Flatten@(Position[orderOfNormalsKeys,Subscript[Beta, #]]&/@Range[1,ol]));
+minkowskiRobotSidesLabels= If[rl>=2,(Text[orderOfNormalsKeys[[#]],-(If[And [(rl==2),(Or[ol==1,ol==2])],-0.7,0.25])(normalVector@shiftedMinkLineList[[#]])+Mean@shiftedMinkLineList[[#]]])&/@roboPosMink,{}];
+minkowskiObstacleSidesLabels= If[ol>=2,(Text[orderOfNormalsKeys[[#]],-(If[And [(Or[rl==1,rl==2]),(ol==2)],-0.7,0.25])(normalVector@shiftedMinkLineList[[#]])+Mean@shiftedMinkLineList[[#]]])&/@obosPosMink,{}];
+
+(*Discretize the Minkowski Polygon edges*)
+discretPolygon =discretizePolyRev1[minkowskiPoints,step];
+dl=Length@discretPolygon; (*Get number of discretized points to animate*)
+
+Graphics[
+{PointSize[0.01],(*Boundary Graphics Object*)
+{EdgeForm[Thin],White,Polygon@(7CirclePoints[4])}
+,If[stableOrMove!="\<move around Minkowski\>",
+(*for "\<Static\>"*)
+c=True;(*Enable the Locators*)
+s=1;(*Initialize the robot start position*)
+{(*Minkowski Sum Polygon Graphics Object*)
+{{Opacity[0.5],LightGreen, Polygon@shiftedMink},{Blue,Line@minkRobotlinelist},{Red,Line@minkObstlinelist},{Black,Point@shiftedMink},{Black,Text["\<Minkowski sum\>",{2.3,-4.75}]},If[a==True,{minkowskiSidesNormalArrows}],{Blue,minkowskiRobotSidesLabels},{Red,minkowskiObstacleSidesLabels}}
+(*Obstacle Graphics Object*)
+,{{EdgeForm[Red],LightRed, Polygon@obstacle},{Red,Point@pts[[6;;n+5]]},{Black,Point@obstacle},{Black,Point@oc},{If[a==True,{obstacleArrows}]},{Red,obstaclelabel},{Black,Text["\<obstacle\>",{-2.3,0.8}]}}
+(*Robot Graphics Object*)
+,{{EdgeForm[Blue],LightBlue, Polygon@robot},{Blue,Point@pts[[1;;m]]},{Black,Point@robot},{Black,Point@rc},{If[a==True,{robotArrows}]},{Blue,robotlabel},{Black,Text["\<robot\>",{2.3,0.8}]}}
+(*Sorted Normals Graphic Object*)
+,{{Black,sortedArrows},{EdgeForm[Thin],White,Disk[{-2.3,-1.5},{0.5,0.5}]},{Blue,sortedNormalRobot},{Red,sortedNormalObstacle},{Text["\<sorted normals\>",{-2.3,-3.2}]}}}
+,(*for "\<Move around Mikowski\>"*)
+{c=False;(*Disable the Locators*)
+(*Minkowski Sum Polygon Graphics Object*)
+{{EdgeForm[None],LightGreen,Opacity[0.5], Polygon@((-oc+#)&/@minkowskiPoints)}
+,{Black,Point@((-oc+#)&/@minkowskiPoints)},
+{Blue,Line@{-offset+#[[1]],-offset+#[[2]]}&/@minkRobotlinelist},{Red,Line@{-offset+#[[1]],-offset+#[[2]]}&/@minkObstlinelist},
+{ Black,Text["\<Minkowski sum\>",{0,1.1}]}}
+(*Obstacle Graphics Object*)
+,{{EdgeForm[Red],LightRed, Polygon@((-oc+#)&/@obstacle)},{Black,Point@((-oc+#)&/@obstacle)},{Black,Text["\<obstacle\>",{0,0}]}}
+(*Robot Graphics Object*)
+,{{EdgeForm[Blue],Opacity[0.5],LightBlue,Polygon@((discretPolygon[[s]]-rc-oc+#)&/@robot)},{Black,Point@((discretPolygon[[s]]-rc-oc+#)&/@robot)},{Red,Point@(discretPolygon[[s]]-oc)},{Black,Text["\<robot\>",discretPolygon[[s]]-oc+{0.2,0.2}]}}
+}] } ,ImageSize->.9{620,450} ] ]
+
+,{{stableOrMove,"\<static\>","\<view\>"},{"\<static\>","\<move around Minkowski\>"}}
+,{step,0.01,ControlType->None} (*Step size to discretize the Polygon*)
+,{dl,ControlType->None}(*Number of points of the discretized Minkowski Polygons*)
+,{rl,ControlType->None} (*number of robot edges*)
+,{ol,ControlType->None} (*number of obstacle edges*)
+,Dynamic@If[stableOrMove!="\<move around Minkowski\>",
+Row[{Control@{{a,False,"\<show normals\>"},{True,False}},Spacer[10]
+,Control@{{c,True,"\<enable locators\>"},{True,False}},Spacer[10]
+,Control@{{m,3,"\<number of robot edges\>"},Range[1,5]},Spacer[10]
+,Control@{{n,5,"\<number of obstacle edges\>"},Range[1,5]}}]
+,Control@{{s,1,"\<move\>"},1,dl,1,AnimationRunning->True,Appearance->"\<Open\>"}]
+,{{pts,{{2.885,1.489},{3.249,2.60},{2.298,3.298},{1.348,2.607},{1.710,1.489},{-1.710,1.489},{-1.347,2.607},{-2.298,3.298},{-3.249,2.607},{-2.885,1.489}}},{-3.249,1.489},
+{3.249,3.298},
+ControlType->Locator,Appearance->None,Enabled->c}, SaveDefinitions->True]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Shreyas Poyrekar
+
+### [Text]
+Arifa Sultana
+
+### [Text]
+Aaron T. Becker
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+The Minkowski sum is the set of all coordinates in which one polygon overlaps another. It is computed in four easy steps. In the following, we label the stationary polygon the obstacle and the moving polygon the robot.
+
+### [Text]
+\<This version assumes both polygons are convex. First, compute the convex hull of both the polygons, the robot and the obstacle. The obstacle edges are colored red and the robot edges blue.\>
+
+### [Text]
+\<Second, the normals to the sides of the polygons are drawn. These point outward for the obstacle and inward for the robot.\>
+
+### [Text]
+\<Third, these normals are sorted in the increasing order of their angles. The lower-left image shows the sorted normals.\>
+
+### [Text]
+\<The first point in the Minkowski sum is arbitrarily chosen as a point where the centroid of the robot lies at one of the vertex-vertex contacts of the obstacle and robot, assuming the robot is appropriately translated.\>
+
+### [Text]
+\<Finally, the Minkowski sum is generated by adding each edge in the order specified by the normals. Robot edges are added in the clockwise direction, obstacle edges in the counterclockwise direction. A significant observation is that every edge of the Minkowski sum polygon is a translated edge from either the obstacle or the robot polygon.\>
+
+### [Text]
+The Minkowski sum is useful for robot navigation because, once it is computed, the problem of finding a collision-free path for a polygon-shaped robot moving through a workspace filled with obstacles is reduced to finding a path for a point-shaped robot through a configuration space filled with Minkowski sums.
+
+### [Text]
+\<The Minkowski sum was named after German mathematician Hermann Minkowski (1864\[Dash]1909).\>
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] S. M. LaValle, Planning Algorithms, New York: Cambridge University Press, 2006.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+convex
+
+### [Item]
+Minkowski sum
+
+### [Item]
+convex polygon
+
+### [Item]
+sorted normals
+
+### [Item]
+motion planning
+
+### [Item]
+robot
+
+### [Item]
+obstacle
+
+### [Item]
+robot normals
+
+### [Item]
+obstacle normals
+
+### [Item]
+robotics
+
+### [Item]
+configuration space obstacle
+
+### [Item]
+2-D polygon
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Zonogons: Minkowski Sums of Line Segments in 2D
+
+### [Text]
+The Minkowski Sum of a Disk and a Polygon
+
+### [Text]
+The Minkowski Sum of Two Triangles
+
+### [Text]
+Robot Motion with Obstacles
+
+### [Text]
+Minkowski Sum
+
+### [Text]
+Configuration
+
+### [Text]
+Vector Addition
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2019-04-23
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

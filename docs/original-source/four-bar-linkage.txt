@@ -1,0 +1,301 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Extracted 2026-10-12 with tools/nbextract.py; cached outputs skipped.
+
+### [Title]
+Configuration Space for Four-Bar Linkage
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+A planar four-bar linkage has four joints, so its configuration is described by four numbers. However, because the linkage is a closed chain, the resulting constraints make most configurations unattainable. The linkage's configuration space is a one-dimensional curve embedded in a four-dimensional space. The plot at left projects the configuration space onto the joint angles (Theta, Phi) of the first and third links. You can drag the locator to explore the set of reachable configurations. Because Theta and Phi are angles, this configuration space wraps around from -π to π. If any link is greater than the sum of the other three links, no valid configurations exist.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+mod2pi[Theta_]:=ArcTan[Chop[Cos[Theta]],Chop[Sin[Theta]]]
+
+### [Input] (init)
+Phi[Theta_,l_]:=Module[{Alpha, Beta, Gamma,Phip ,Phin},
+Alpha=2 l[[3]]l[[4]]-2l[[1]]l[[3]] Cos[Theta];
+Beta = -2l[[1]]l[[3]]Sin[Theta];
+Gamma=l[[2]]^2-l[[4]]^2-l[[3]]^2-l[[1]]^2+2l[[1]]l[[4]]Cos[Theta];
+Phip =mod2pi[ ArcTan[Alpha,Beta]+ArcCos[(Gamma)/(Sqrt[Alpha^2+Beta^2])]];
+Phin =mod2pi[ ArcTan[Alpha,Beta]-ArcCos[(Gamma)/(Sqrt[Alpha^2+Beta^2])]];
+If[Phip ==-π,Phip=π];
+If[Phin ==-π,Phin =π];
+If[Gamma^2>= Alpha^2+Beta^2,{Null,Null},
+{Phip,Phin}
+]]
+
+### [Input] (init)
+Phipos[Theta_,l_]:=Module[{Alpha, Beta, Gamma,Phip },
+Alpha=2 l[[3]]l[[4]]-2l[[1]]l[[3]] Cos[Theta];
+Beta = -2l[[1]]l[[3]]Sin[Theta];
+Gamma=l[[2]]^2-l[[4]]^2-l[[3]]^2-l[[1]]^2+2l[[1]]l[[4]]Cos[Theta];
+Phip =mod2pi[ ArcTan[Alpha,Beta]+ArcCos[(Gamma)/(Sqrt[Alpha^2+Beta^2])]];
+If[Phip ==-π,Phip=π];
+If[Gamma^2>= Alpha^2+Beta^2,Null,Phip]]
+
+### [Input] (init)
+Phineg[Theta_,l_]:=Module[{Alpha, Beta, Gamma,Phin},
+Alpha=2 l[[3]]l[[4]]-2l[[1]]l[[3]] Cos[Theta];
+Beta = -2l[[1]]l[[3]]Sin[Theta];
+Gamma=l[[2]]^2-l[[4]]^2-l[[3]]^2-l[[1]]^2+2l[[1]]l[[4]]Cos[Theta];
+Phin =mod2pi[ ArcTan[Alpha,Beta]-ArcCos[(Gamma)/(Sqrt[Alpha^2+Beta^2])]];
+If[Phin ==-π,Phin =π];
+If[Gamma^2>= Alpha^2+Beta^2,Null,Phin]]
+
+### [Input] (init)
+(*draw circular arcs with arrowheads*)
+myArrowArc[c_,r_,{start_,end_}]:=(*problem -- initial point too far out*)
+If[start==end,Point[c+r{Cos[start],Sin[start]}],
+Arrow[BSplineCurve[Table[c+r{Cos[t],Sin[t]},{t,start,end,(end-start)/(11)}]]]]
+
+### [Input] (init)
+mod2pi[Theta_]:=ArcTan[Cos[Theta],Sin[Theta]]
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{lenlengths, Thetav, Phiv,w = .07,w2 = .05,impossibleLinks,Alpha},
+lenlengths = {links[[1]],links[[2]]-links[[1]],2.5-links[[2]],spacing};
+
+impossibleLinks=lenlengths[[1]]>= lenlengths[[2]]+lenlengths[[3]]+lenlengths[[4]] \[Or]
+lenlengths[[2]]>= lenlengths[[1]]+lenlengths[[3]]+lenlengths[[4]] \[Or]
+lenlengths[[3]]>= lenlengths[[2]]+lenlengths[[3]]+lenlengths[[1]] \[Or]
+lenlengths[[4]]>= lenlengths[[2]]+lenlengths[[3]]+lenlengths[[1]] ;
+If[impossibleLinks,
+pnear=\[Piecewise]<<Grid:{0,0}lenlengths[[1]]== lenlengths[[2]]+lenlengths[[3]]+lenlengths[[4]] | {π,0}lenlengths[[2]]== lenlengths[[1]]+lenlengths[[3]]+lenlengths[[4]]  | {π,π}lenlengths[[3]]== lenlengths[[2]]+lenlengths[[3]]+lenlengths[[1]] | {0,π}lenlengths[[4]]== lenlengths[[2]]+lenlengths[[3]]+lenlengths[[1]]  | {π/2,π/2}True>>;
+plot=Plot[{},{Theta,-π,π},PlotStyle->Thick,ExclusionsStyle->Red,
+AxesLabel->{"\<Theta\>","\<Phi\>"},PlotRange->{{-π,π},{-π,π}},AspectRatio->1,Epilog->{Style[Text[If[pnear=={π/2,π/2},"\<invalid link lengths,
+no configuration possible\>","\<only one configuration possible\>"],{0,1}],Red,Medium]},ImageSize->300,PlotLabel->"\<configuration space\>"];
+spacingOld= spacing; linksOld=links;
+, 
+If[spacingOld!= spacing \[Or] linksOld!=links,
+{plot,{pvals}}=Reap@Plot[{Phipos[Theta,lenlengths],Phineg[Theta,lenlengths]},{Theta,-π,π},PlotStyle->Thick,ExclusionsStyle->Directive[Dashed,Thin],
+AxesLabel->{"\<Theta\>","\<Phi\>"},PlotRange->{{-π,π},{-π,π}},AspectRatio->1,ImageSize->300,PlotLabel->"\<configuration space\>",
+EvaluationMonitor:>Sow[{{Theta, Phipos[Theta,lenlengths]},{Theta, Phineg[Theta,lenlengths]}}]];
+spacingOld= spacing; linksOld=links];
+pnear=First@Nearest[Flatten[pvals,1],mod2pi[p]]];
+{Thetav, Phiv}=pnear;
+Alpha =If[impossibleLinks\[And]pnear=={π/2,π/2},0, ArcTan[lenlengths[[3]]Cos[Phiv]-lenlengths[[1]]Cos[Thetav]+spacing, lenlengths[[3]]Sin[Phiv]-lenlengths[[1]]Sin[Thetav]]];
+Row[{Show[plot,
+Graphics[{Locator[pnear]}]],
+Graphics[{EdgeForm[Directive[Thin,Black]],
+{Brown,Rectangle[{-.1,-.4},{.1,.1},RoundingRadius->.1],
+Rectangle[{spacing-.1,-.4},{spacing+.1,.1},RoundingRadius->.1],Rectangle[{-.2,-.42},{spacing+.2,-.3}]},
+{Darker[Gray],Rotate[Rectangle[{-w,-w},{lenlengths[[1]]+w,w},RoundingRadius->w],Thetav,{0,0}]},
+{Gray,Rotate[Rectangle[{spacing-w2,-w2},{spacing+lenlengths[[3]]+w2,w2},RoundingRadius->w2],Phiv,{spacing,0}]},
+{Lighter[Gray],CapForm["\<Round\>"],Thickness[0.02],Line[{lenlengths[[1]]{Cos[Thetav],Sin[Thetav]},lenlengths[[1]]{Cos[Thetav],Sin[Thetav]}+lenlengths[[2]]{Cos[Alpha],Sin[Alpha]}}]},
+
+Arrow[{{0,-.1},{spacing,-.1}}],Arrow[{{spacing,-.1},{0,-.1}}],{Black,Text[Style["\<\!\(\*SubscriptBox[\(L\), \(4\)]\)\>",Medium],{spacing/2,-.2}]},
+{(*ref lines for angle arcs*)Thin,Line[{{0,0},{lenlengths[[1]]/2.8,0}}],
+Line[{{spacing,0},{spacing+lenlengths[[3]]/2.8,0}}]
+ },
+{Blue,
+{Circle[{0,0},lenlengths[[1]]]},
+{Line[{{0,0},lenlengths[[1]]{Cos[Thetav],Sin[Thetav]}}]},
+myArrowArc[{0,0},lenlengths[[1]]/3,{0,Thetav}],
+Text[Style["\<Theta\>",Medium],(0.1+lenlengths[[1]]/3){Cos[(Thetav)/(2)],Sin[(Thetav)/(2)]}],
+{Black,Text[Style["\<\!\(\*SubscriptBox[\(L\), \(1\)]\)\>",Medium],lenlengths[[1]]/2{Cos[Thetav],Sin[Thetav]}]}
+},
+{Red,
+{Circle[{spacing,0},lenlengths[[3]]]},
+Line[{{spacing,0},{spacing,0}+lenlengths[[3]]{Cos[Phiv],Sin[Phiv]}}],
+myArrowArc[{spacing,0},lenlengths[[3]]/3,{0,Phiv}],
+Text[Style["\<Phi\>",Medium],
+{spacing,0}+(0.1+lenlengths[[3]] /3){Cos[(Phiv)/(2)],Sin[(Phiv)/(2)]}],
+{Black,Text[Style["\<\!\(\*SubscriptBox[\(L\), \(3\)]\)\>",Medium],{spacing,0}+lenlengths[[3]]/2{Cos[Phiv],Sin[Phiv]}]}
+},
+{Orange,
+{Circle[lenlengths[[1]]{Cos[Thetav],Sin[Thetav]},lenlengths[[2]]]},
+Line[{lenlengths[[1]]{Cos[Thetav],Sin[Thetav]},lenlengths[[1]]{Cos[Thetav],Sin[Thetav]}+lenlengths[[2]]{Cos[Alpha],Sin[Alpha]}}],
+{Black,Text[Style["\<\!\(\*SubscriptBox[\(L\), \(2\)]\)\>",Medium],lenlengths[[1]]{Cos[Thetav],Sin[Thetav]}+lenlengths[[2]]/2{Cos[Alpha],Sin[Alpha]},{-1,-1}]}
+}
+},ImageSize->300,PlotRange->{{-1.25,2},{-1.5,1.5}},PlotLabel->"\<four\[Hyphen]bar linkage\>"]}]
+],
+{pnear,None},{plot,None},{pvals,None},
+{{p,{-.9,-1}},Locator,Appearance->None},
+{{spacingOld,-1} ,None},
+{{linksOld ,{-1,-1}},None},
+{{spacing,0.75,Row[{"\<separation (\>",Subscript[Style["\<L\>",Italic],4],"\<)\>"}]},0,1.5,.05,ImageSize->180,Appearance->"\<Labeled\>"},
+{{links,{1.35,2},Row[{"\<link lengths (\>",Subscript[Style["\<L\>",Italic],1],"\<,\>",Subscript[Style["\<L\>",Italic],2],"\<,\>",Subscript[Style["\<L\>",Italic],3],"\<)\>"}]},0,2.49,0.05,ControlType->IntervalSlider,Method -> "\<Push\>",MinIntervalSize->0.1,Appearance->"\<Labeled\>",ImageSize->{300,20}},SaveDefinitions->True,ControlPlacement->Top
+]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Aaron T. Becker
+
+### [Text]
+Shiva Shahrokhi
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+In this Demonstration, links 1 and 3 are connected to the ground plane and are separated by a distance that can be adjusted by the slider "separation (Subscript[L, 4])". The other three link lengths are set by the interval slider.
+
+### [Text]
+\<The four-bar linkage has four links, which are connected in a closed chain. The four-bar linkage is therefore a parallel mechanism. Gr\[UDoubleDot]bler's formula states that the number of degrees of freedom of a planar mechanism is given by\>
+
+### [Text]
+DOF=3(N-1-J)+<<UnderoverscriptBox>>Subscript[f, i].
+
+### [Text]
+In this Demonstration, DOF is the number of degrees of freedom, N=4 is the number of links, J=4 is the number of joints, and Subscript[f, i]=1 is the number of degrees of freedom provided by joint i. The DOF of the four-bar linkage is therefore 3(4-1-4)+4=1.
+
+### [Text]
+\<The kinematic loop constraint equations for the four-bar linkage are given in[1] as:\>
+
+### [Text]
+Phi=arctan(Alpha,Beta)\[PlusMinus]arcos((Gamma)/(Sqrt[Alpha^2+Beta^2])),
+
+### [Text]
+where
+
+### [Text]
+Alpha=2 Subscript[L, 3]Subscript[L, 4]-2Subscript[L, 1]Subscript[L, 3] cos Theta,
+
+### [Text]
+Beta=-2 Subscript[L, 1]Subscript[L, 3] sin Theta, and
+
+### [Text]
+Gamma=Subscript[L, 2]^2 - Subscript[L, 4]^2 - Subscript[L, 3]^2 - Subscript[L, 1]^2+ 2Subscript[L, 1]Subscript[L, 4]cos Theta.
+
+### [Text]
+Here Subscript[L, 1], Subscript[L, 2] and Subscript[L, 3] are the lengths of the three links and Subscript[L, 4] is the separation distance of links 1 and 3. These equations can be found using the law of cosines. The \[PlusMinus] sign in the expression for Phi gives two solutions. The more positive solution of Phi is drawn with an orange line, and the more negative solution with a blue line.
+
+### [Text]
+Depending on the link lengths chosen, the configuration space curve may have bifurcation points where branches of the curve meet. Snapshot 1 with link lengths[1,1,0.5,0.5] has bifurcations at (0,π), (0,-π), (π, π) and (-π,-π). Snapshot 2 has no bifurcations, and Snapshot 3 with link lengths[0.9,1.2,0.5,0.8] has a bifurcation at (0,0).
+
+### [Text]
+Vertical lines in the configuration space plot are spurious.
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] K. M. Lynch and F. C. Park, Modern Robotics: Mechanics, Planning, and Control, New York: Cambridge University Press, 2017.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+Gr\[UDoubleDot]bler
+
+### [Item]
+Chebychev\[Dash]Gr\[UDoubleDot]bler\[Dash]Kutzbach
+
+### [Item]
+law of cosines
+
+### [Item]
+four-bar linkage
+
+### [Item]
+configuration space
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Four-Bar Linkage
+
+### [Text]
+Plotting Closed Curves with a Four Bar Linkage
+
+### [Text]
+Linkage
+
+### [Text]
+Coupler Curves of a Four-Bar Linkage
+
+### [Text]
+Coupler Curve Atlas for the Four-Bar Linkage
+
+### [Text]
+Designing Four-Bar Linkages
+
+### [Text]
+Designs from Mechanical Linkages
+
+### [Text]
+Distance Norms in Robot Workspace and Phase Space
+
+### [Text]
+Breadth-First Search Robot Motion Planning	
+
+### [Text]
+Robot Motion with Obstacles
+
+### [Text]
+Forward and Inverse Kinematics for Two-Link Arm
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2018-01-11
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

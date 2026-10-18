@@ -1,0 +1,85 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstration by Shiva Shahrokhi and Aaron T. Becker
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Measuring Distance and Orientation Using Camera and Lasers</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <script src="../../shared/requirements.js"></script>
+  <style>
+    /* ControlPlacement -> Left; Column[{top view, Framed[camera image]}] at ImageSize 450 */
+    #controls { min-width: 200px; max-width: 230px; }
+    #controls .ctl-heading { font-size: 1rem; font-weight: 700; }
+    #controls .ctl-vslider { flex-direction: row; align-items: center; gap: 10px; flex-wrap: wrap; }
+    #controls .ctl-vslider .ctl-vvalue { flex-basis: 100%; padding-left: 28px; }
+    #controls .ctl-inline { flex-direction: row; align-items: center; flex-wrap: wrap; gap: 6px; }
+    #graphic { max-width: 560px; flex-basis: 470px; border: 0; background: transparent; display: flex; flex-direction: column; gap: 6px; }
+    #graphic .top-view { background: #fff; }
+    #graphic .camera-image { background: #fff; border: 1px solid #000; }
+    #graphic svg.scene { margin: 0 auto; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Camera and lasers</div>
+    <h1 class="demo-title">Measuring Distance and Orientation Using Camera and Lasers</h1>
+
+    <section class="manipulate" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="graphic" id="graphic" data-testid="graphic">
+        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser.</div></noscript>
+      </div>
+    </section>
+
+    <p class="caption">Distance to an object can be measured with a single camera and a laser, if the laser position
+      relative to the camera is known. Usually the laser is pointed in the same direction as the camera and mounted a known
+      distance from the camera. By dragging the locator, you can choose the orientation of the brown cuboid and two red
+      lasers mounted <i>s</i> units to the left and right of a camera, which has a focal length λ. These lasers can measure
+      the distance to the cuboid, as shown by the reticule on the camera image. The cuboid's angle can be computed from two
+      distance measurements.</p>
+
+    <details class="details" data-testid="details">
+      <summary>Details</summary>
+      <p>In a pinhole camera, light enters the camera through a tiny hole and illuminates the image plane. A pinhole camera
+        has a focal length λ, the distance from the pinhole to the image plane. The pinhole is shown with a blue point and
+        the image plane as a blue line. 3D points in the camera's coordinate frame
+        (<i>x</i><sub>c</sub>, <i>y</i><sub>c</sub>, <i>z</i><sub>c</sub>)<sup>T</sup> are converted to image plane
+        coordinates (<i>u</i>, <i>v</i>) according to the formula:</p>
+      <p class="formula"><i>k</i> (<i>x</i><sub>c</sub>, <i>y</i><sub>c</sub>, <i>z</i><sub>c</sub>)<sup>T</sup> =
+        (<i>u</i>, <i>v</i>, λ)<sup>T</sup>, where <i>k</i> = λ/<i>z</i><sub>c</sub>.</p>
+      <p>All lines parallel to the camera frame's <i>z</i> axis terminate at <i>z</i> = ∞ at the vanishing point (0, 0) in
+        the image plane.</p>
+      <p>Lasers mounted at (<i>s</i>, 0, 0)<sup>T</sup> and (−<i>s</i>, 0, 0)<sup>T</sup> that terminate at <i>z</i>
+        coordinates <i>z</i><sub>1</sub> and <i>z</i><sub>2</sub> have image plane coordinates
+        (<i>s</i> λ/<i>z</i><sub>1</sub>, 0) and (<i>s</i> λ/<i>z</i><sub>2</sub>, 0).</p>
+      <p>Thus the distance to objects with image plane coordinates (<i>u</i><sub>1</sub>, 0) and (<i>u</i><sub>2</sub>, 0)
+        gives camera frame coordinates (<i>s</i>, 0, λ/<i>u</i><sub>1</sub>)<sup>T</sup> and
+        (−<i>s</i>, 0, λ/<i>u</i><sub>2</sub>)<sup>T</sup>.</p>
+      <p>If both lasers strike the same object, the angle to the object is computed as
+        arctan(2<i>s</i>, λ/<i>u</i><sub>1</sub> − λ/<i>u</i><sub>2</sub>).</p>
+      <p>A camera's reticule (or graticule) is a net of fine lines in the scope. In this case, the reticule is aligned with
+        the vanishing point of the lasers. The readings on the reticule directly measure the distance from the object to the
+        camera.</p>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. Drag in the top view to move the object (a press anywhere
+      in the top view moves it there); click or drag on the dial to turn it in steps of π/32. Arrow keys move the focused
+      object locator, and turn the focused dial by π/32 (Shift: π/8). All computation runs in your browser.</p>
+    <div class="credits" data-testid="credits">
+      Adapted from <a href="https://demonstrations.wolfram.com/MeasuringDistanceAndOrientationUsingCameraAndLasers/">"Measuring Distance and Orientation Using Camera and Lasers"</a>
+      by Shiva Shahrokhi and Aaron T. Becker, Wolfram Demonstrations Project (published June 29, 2016), licensed
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+      This JavaScript/SVG translation by Tico Hannan (© 2026; produced with an AI code-generation tool) is released under the
+      same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

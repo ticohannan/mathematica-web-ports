@@ -1,0 +1,45 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstrations by their authors, see demos/common/dial-control.js and LICENSE.md
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<!-- tests/e2e/fixtures/dial-control.html — a test page (not an app, not linked from the site) with one dial of each
+     variant of demos/common/dial-control.js, for tests/e2e/dial-control.spec.js: two-link-kinematics (normalize,
+     myArrowArc2, 140), camera-lasers (nearest32, keyStep 'grid', 120), torus chart (normalize, arrowArcCircle, 160),
+     manipulability ellipsoid (nearest32, grid, automatic size) and one with clamp: false and inline labels. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dial control (test page)</title>
+  <link rel="stylesheet" href="../../../shared/style.css">
+</head>
+<body>
+<main class="page">
+  <div class="manipulate">
+    <div class="controls" id="controls" style="max-width:260px"></div>
+  </div>
+</main>
+<script type="module">
+  import { Controls } from '../../../shared/ui.js';
+  import { NAMED } from '../../../shared/mma-colors.js';
+  import { makeDialControl } from '../../../demos/common/dial-control.js';
+
+  const inputs = [];
+  const log = (name) => (pt, info) => inputs.push([name, pt, info.source]);
+  const c = new Controls(document.getElementById('controls'));
+  const dials = {
+    p1: makeDialControl(c, { name: 'p1', label: 'θ₁', color: NAMED.Red, imageSize: 140, onInput: log('p1') }),
+    c1: makeDialControl(c, { name: 'c1', label: 'θ', color: NAMED.Red, imageSize: 120, setter: 'nearest32', arc: 'myArrowArc2', keyStep: 'grid', onInput: log('c1') }),
+    t1: makeDialControl(c, { name: 't1', label: 'φ', color: NAMED.Blue, imageSize: 160, setter: 'normalize', arc: 'arrowArcCircle', onInput: log('t1') }),
+    m1: makeDialControl(c, { name: 'm1', label: 'θ3', color: NAMED.Green, imageSize: 'automatic', setter: 'nearest32', keyStep: 'grid', value: [Math.SQRT1_2, Math.SQRT1_2], onInput: log('m1') }),
+    n1: makeDialControl(c, { name: 'n1', label: 'free', color: NAMED.Blue, imageSize: 120, clamp: false, labels: 'inline', onInput: log('n1') }),
+  };
+  window.__fixture = {
+    dials, inputs, controls: c.controls,
+    /** client position of the world point p of dial `name` */
+    client: (name, p) => dials[name].plot.worldToClient(p),
+    ready: true,
+  };
+</script>
+</body>
+</html>

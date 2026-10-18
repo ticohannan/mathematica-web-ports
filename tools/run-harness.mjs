@@ -212,8 +212,15 @@ async function pool(items, n, fn) {
 const HW73_EXPECTED = {
   rrt: { initial: 'treeTypeOld = 0 differs from treeType: the tree is reset' },
   'minkowski-sum': { initial: 'pts clamped; dl, rl, ol set' },
-  'two-link-kinematics': { initial: 'pVelp differs from pVel: the inverse-velocity branch runs' },
   'prm-3d': { '*': 'freeConfigSpacea/b rebuilt as RegionPlot3D[False, …] when showConfigObs is False' },
+  // classified after owner run 1 (2026-10-16): behaviour of the original, not of the harness
+  prm: { initial: 'initial settings have restart = True and empty roadmap: the Body rebuilds it (run 1)' },
+  'prm-robot-arm': { initial: 'restart = True in the initial settings: rebuild (run 1)',
+    '*': 'freeConfigSpace is recomputed by RegionPlot each evaluation when !highRes; 15.0.1 output differs from the stored one (run 1)' },
+  'prm-seven-link': { initial: 'collideState = -1 in the initial settings; the first evaluation sets 0 (run 1)' },
+  'car-paths': { initial: 'optPath = {{0, 0, 1}} placeholder in the initial settings; recomputed (run 1)' },
+  'two-link-kinematics': { initial: 'pVelp differs from pVel: the inverse-velocity branch runs',
+    'snapshot:2': 'pVel recomputed as J.jointVel + pEnd; see changedValues.maxAbsDiff (last-bit drift expected, run 1)' },
 };
 const jobs = Math.max(1, Number(opt('jobs', 1)) || 1);
 const only = typeof opt('only') === 'string' ? opt('only').split(',').filter(Boolean) : null;
@@ -304,7 +311,9 @@ async function runApp(dir) {
     definitionProblems: st.definitions?.problems ?? [] };
   if (mode !== 'run') {
     sum.evaluations = (head.evaluations ?? []).map((e) => ({ state: e.state, status: e.status, head: e.head, seconds: e.seconds instanceof LexNumber ? e.seconds.value : e.seconds,
-      changed: e.changed ?? [], messages: (e.messages ?? []).map((m) => m.name), note: e.note }));
+      changed: e.changed ?? [], messages: (e.messages ?? []).map((m) => m.name), note: e.note,
+      maxAbsDiff: Object.fromEntries(Object.entries(e.changedValues ?? {}).filter(([, v]) => v && v.maxAbsDiff != null)
+        .map(([k, v]) => [k, v.maxAbsDiff instanceof LexNumber ? v.maxAbsDiff.value : v.maxAbsDiff])) }));
     sum.leads = head.leads ?? null;
   } else {
     sum.summary = summarize(file, merged, { expectedIds: ids });
@@ -335,8 +344,9 @@ async function runParity() {
   const wire = path.join(outDir, 'motion-planning.wire.json');
   const out = path.join(outDir, 'motion-planning.harness.json');
   fs.writeFileSync(wire, wireText(wireFile(file, { timeLimit: 120 })));
+  // the author notebook holds 6 output cells with one distinct Body and Initialization: the harness uses copy 1
+  // without --allow-multiple (only a different Body or Initialization needs --use-copy)
   const extra = [`--partial=${path.join(outDir, 'motion-planning.harness.partial.jsonl')}`];
-  if (!opt('use-copy')) extra.push('--allow-multiple');
   const r2 = await runProcess(ws.path, harnessArgs(nb, wire, out, extra), '[harness] ', path.join(outDir, 'motion-planning.harness.log'), appTimeoutMs(file, null));
   if (r1.code !== 0 || r2.code !== 0 || !fs.existsSync(mpOut) || !fs.existsSync(out)) { console.error('parity: one of the two runs failed (see the logs)'); return 1; }
   const mp = parseLexical(fs.readFileSync(mpOut, 'utf8'));
@@ -395,6 +405,7 @@ for (const s of summaries) {
     const exp = HW73_EXPECTED[s.app]?.[e.state] ?? HW73_EXPECTED[s.app]?.['*'];
     if (e.changed.length && mode === 'self-check') e.note = `${e.note ? `${e.note}; ` : ''}${exp ? `expected (HW-73): ${exp}` : 'FINDING: not expected by HW-73/74'}`;
     P(`      ${String(e.state).padEnd(12)} ${String(e.status).padEnd(15)} ${String(e.head ?? '').padEnd(11)} ${e.seconds != null ? `${Number(e.seconds).toFixed(2)} s` : ''}  changed: ${e.changed.length ? e.changed.join(', ') : '—'}${e.messages.length ? `  messages: ${[...new Set(e.messages)].join(', ')}` : ''}${e.note ? `  ${e.note}` : ''}`);
+    if (e.maxAbsDiff && Object.keys(e.maxAbsDiff).length) P(`        largest change: ${Object.entries(e.maxAbsDiff).map(([k, v]) => `${k} ${v}`).join(', ')}`);
   }
   if (s.summary) {
     const sm = s.summary;

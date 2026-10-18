@@ -10,14 +10,25 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { parseLexical } from '../../tools/lib/json-lexical.mjs';
 
-const FAKE = path.resolve('tests/unit/fixtures/fake-wolframscript.mjs');
+// the fixture is a plain (non-executable) .mjs file; each test run makes a tiny executable wrapper in a temporary
+// folder that starts it with this Node (process.execPath), so no file in the repository needs an executable bit
+const FAKE_SCRIPT = path.resolve('tests/unit/fixtures/fake-wolframscript.mjs');
 const posix = process.platform !== 'win32';
 const nbName = parseLexical(fs.readFileSync('tests/harness/rrt.scenarios.json', 'utf8')).notebook;
 
 const tmpDirs = [];
 afterAll(() => { for (const d of tmpDirs) fs.rmSync(d, { recursive: true, force: true }); });
+let FAKE = null;
+function fakeWrapper() {
+  if (FAKE) return FAKE;
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-e2e-bin-'));
+  tmpDirs.push(dir);
+  FAKE = path.join(dir, 'wolframscript');
+  fs.writeFileSync(FAKE, `#!/bin/sh\nexec "${process.execPath}" "${FAKE_SCRIPT}" "$@"\n`, { mode: 0o755 });
+  return FAKE;
+}
 function setup(extraNotebooks = []) {
-  fs.chmodSync(FAKE, 0o755);
+  fakeWrapper();
   const out = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-e2e-'));
   const nbDir = fs.mkdtempSync(path.join(os.tmpdir(), 'harness-e2e-nb-'));
   tmpDirs.push(out, nbDir);
@@ -27,6 +38,10 @@ function setup(extraNotebooks = []) {
 const run = (args, env = {}) => spawnSync(process.execPath, ['tools/run-harness.mjs', ...args], { encoding: 'utf8', env: { ...process.env, ...env } });
 
 describe.skipIf(!posix)('run-harness.mjs with a fake wolframscript', () => {
+  it('the fixture has no executable bit (a Windows checkout would hash differently)', () => {
+    expect(fs.statSync(FAKE_SCRIPT).mode & 0o111).toBe(0);
+    expect(fs.readFileSync(FAKE_SCRIPT, 'utf8').startsWith('#!')).toBe(false);
+  });
   it('smoke: runs, writes the result, the log and the summary', () => {
     const { out, nbDir } = setup();
     const r = run(['rrt', '--smoke', `--wolframscript=${FAKE}`, `--out=${out}`, `--originals=${nbDir}`]);

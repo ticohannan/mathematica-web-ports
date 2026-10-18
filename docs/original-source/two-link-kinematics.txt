@@ -1,0 +1,290 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Private reference (R-04). Extracted 2026-10-12 with tools/nbextract.py; cached outputs skipped.
+
+### [Title]
+Forward and Inverse Kinematics for Two-Link Arm
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+This Demonstration lets you control a two-link revolute-revolute robot arm either by setting the two joint angles (this is called forward kinematics) or by dragging a locator specifying the tip of the end effector (this is called inverse kinematics). Most locations in the workspace have two solutions to the inverse kinematics and can be selected with the "elbow up?" check box. The joint velocities are limited to magnitudes less than or equal to 1, represented by a green disc. Joint velocities map to a velocity of the end effector, drawn with a green locator (this is called forward velocity kinematics). Dragging the green locator maps to joint velocities (this is called inverse velocity kinematics). You can vary the relative link lengths under the constraint that Subscript[r, 1]+Subscript[r, 2]=2.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+(*draw circular arcs with arrowheads*)
+myArrowArc[c_,r_,{start_,end_}]:=(*problem -- initial point too far out*)
+If[start==end,Point[c+r{Cos[start],Sin[start]}],
+Arrow[BSplineCurve[Table[c+r{Cos[t],Sin[t]},{t,start,end,(end-start)/(11)}]]]]
+myArrowArc2[c_,r_,{start_,end_}]:=(*problem -- initial point too far out*)
+If[start===end,Point[c+r{Cos[start],Sin[start]}],
+Arrow[BSplineCurve[Table[c+r{Cos[t],Sin[t]},{t,start,end,(end-start)/(11)}]]]]
+makeHand[fl_, bl_, fw_, bw_] :=
+ Polygon[{{ -bl,-bw}, { -bl,bw}, { fl,fw}, { fl + 8 fw,0}, { fl,-fw}}/10];
+makeDialControl[Dynamic[pt_],cent_,color_]:=Module[{ang},
+LocatorPane[Dynamic[pt,(pt = Normalize[#])&],
+ang=Dynamic[ArcTan[pt[[1]],pt[[2]]]];(*If[ang <0,ang=ang+2π];*)
+Graphics[
+{
+Gray,Circle[cent],
+Gray,Table[Line[{cent+.94{Cos@a,Sin@a},cent+{Cos@a,Sin@a}}],{a,0,2π,π/8}],
+Table[Line[{cent+.98{Cos@a,Sin@a},cent+{Cos@a,Sin@a}}],{a,π/16,2π,π/8}],
+{FontSize->10,Table[Text[Theta,cent+.7{Cos@Theta,Sin@Theta}],{Theta, Rest@Range[- Pi,Pi, Pi/4]}]},
+{color, EdgeForm[Black],Rotate[Translate[makeHand[7, 7/3, .1, .3],cent],ang,cent]},
+Black,Arrowheads[.05],
+color,myArrowArc2[cent,0.3,{0,ang}]
+},ImageSize->140]]];
+make2VelControl[Dynamic[pt_]]:=Module[{ang,cent = {0,0}},
+LocatorPane[Dynamic[pt,(pt = If[Norm[Re[#]]>1,Normalize[Re[#]],Re[#]])&],
+Graphics[
+{ (*{White,Rectangle[{-1,-1},{1,1}]},*)
+{LightGreen,Disk[cent,1]},
+{Thin,Black,Line[{{-1,0},{1,0}}],Line[{{0,-1},{0,1}}],
+Text["\<\!\(\*SubscriptBox[OverscriptBox[\(Theta\), \(.\)], \(1\)]\)\>",{0.9,0.2}],Text["\<\!\(\*SubscriptBox[OverscriptBox[\(Theta\), \(.\)], \(2\)]\)\>",{0.2,0.9}],
+Table[Line[{{a,0},{a,0.05}}],{a,-1,1,0.2}],
+Table[Line[{{0,a},{0.05,a}}],{a,-1,1,0.2}],
+Table[Text[a,{-0.1,a}],{a,{-1,1}}],
+Table[Text[a,{a,-0.1}],{a,{-1,1}}]
+},
+Arrowheads[{0,.1}],Thick,
+Red,Arrow[Dynamic[{{0,pt[[2]]},pt}]],
+Blue,Arrow[Dynamic[{{pt[[1]],0},pt}]]
+},ImageSize->140]]];
+(*inverse kinematics*)
+Theta2inv[x_,y_,r1_,r2_,IsElbowUp_] :=Re[If[x^2+y^2>= (r1+r2)^2 ,0,Module[{D =(-r1^2-r2^2+x^2+y^2)/(2 r1 r2)},ArcTan[D,If[IsElbowUp,-1,1]Sqrt[1-D^2]]]]];
+Theta1inv[x_,y_,r1_,r2_,Theta2_] :=Re[ ArcTan[x,y]- ArcTan[r1+r2 Cos[Theta2],r2 Sin[Theta2]]];
+loc[col_,c_]:=(* a colored locator icon*)Module[{sc = 1/25},{col,Line[{c+sc{0,1.5},c+sc{0,3}}],Line[{c+sc{0,-1.5},c+sc{0,-3}}],Line[{c+sc{-1.5,0},c+sc{-3,0}}],Line[{c+sc{1.5,0},c+sc{3,0}}],Circle[c,sc 2],{Thickness[1/100],Opacity[0.5],Circle[c,sc 2*.7]}}]
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{w = 1/8,l=1,Theta1 ,Theta2, r2,U,\[CapitalSigma],V,J,q,vNorm},
+r2=2-r1;
+If[Norm[pEnd]>= 2,pEnd =2pEnd/Norm[pEnd]];
+If[Norm[pEnd]<= Abs[r1-r2],pEnd =Abs[r1-r2]pEnd/Norm[pEnd]];
+If[pEndp != pEnd ||IsElbowUpp!=IsElbowUp,
+(*inv kin*)
+Theta2=Theta2inv[pEnd[[1]],pEnd[[2]],r1,r2,IsElbowUp];
+Theta1=Theta1inv[pEnd[[1]],pEnd[[2]],r1,r2,Theta2];
+p1={Cos[Theta1],Sin[Theta1]};
+p2={Cos[Theta2],Sin[Theta2]};
+,(*fwdkin*) Theta1 =ArcTan[p1[[1]],p1[[2]]];
+Theta2 = ArcTan[p2[[1]],p2[[2]]];
+pEnd={r1 Cos[Theta1]+r2 Cos[Theta1+Theta2],r1 Sin[Theta1]+r2 Sin[Theta1+Theta2]}];
+If[Theta2>0,IsElbowUp=False];If[Theta2<0,IsElbowUp=True];
+pEndp=pEnd;IsElbowUpp= IsElbowUp;
+J = (\[NoBreak]<<Grid:-r1 Sin[Theta1]-r2 Sin[Theta1+Theta2]-r2 Sin[Theta1+Theta2] | r1 Cos[Theta1]+r2 Cos[Theta1+Theta2]r2 Cos[Theta1+Theta2]>>);
+{U,\[CapitalSigma],V} =SingularValueDecomposition[ J];
+q = Transpose[U].( pVel-pEnd);
+If[ pVelp!= pVel,(*inv Vel*)
+(*ensure points are within the ellipse*)
+If[\[CapitalSigma][[1,1]]>0 && \[CapitalSigma][[2,2]]>0, 
+vNorm = Sqrt[(q[[1]]^2)/(\[CapitalSigma][[1,1]]^2)+(q[[2]]^2)/(\[CapitalSigma][[2,2]]^2)];
+If[vNorm>1,pVel = ( pVel-pEnd)/vNorm+pEnd];
+(*not singular*)jointVel =V.{{1/\[CapitalSigma][[1,1]],0},{0,1/\[CapitalSigma][[2,2]]}}.Transpose[U].( pVel-pEnd);,
+If[\[CapitalSigma][[1,1]]>0 ,pVel =U.{q[[1]],0}*If[Sqrt[(q[[1]]^2)/(\[CapitalSigma][[1,1]]^2)]>1,Abs[(\[CapitalSigma][[1,1]])/(q[[1]])],1]+pEnd];
+If[\[CapitalSigma][[2,2]]>0 ,pVel =U.{0,q[[2]]}*If[Sqrt[(q[[2]]^2)/(\[CapitalSigma][[2,2]]^2)]>1,Abs[(\[CapitalSigma][[2,2]])/(q[[2]])],1]+pEnd];
+(*singular*)jointVel =PseudoInverse[J].( pVel-pEnd)]
+,(*fwd Vel*)pVel = J.jointVel+pEnd
+];pVelp = pVel;
+
+Graphics[{
+(*workspace*){LightBlue,EdgeForm[{Thin,Blue}],Disk[{0,0},2],If[r1!=1,{White,Disk[{0,0},Abs[r1-r2]]}],Black,Text["\<Workspace\>",{0,1.8}]},
+
+(*Text[{q},{0,1.5}],*)
+(*draw manipulability ellipse*)
+{EdgeForm[{Thin,Blue}],GeometricTransformation[{Opacity[0.5],If[MatrixRank[\[CapitalSigma]]>1,{LightRed,Ellipsoid[{0,0},\[CapitalSigma]^2]}],Blue,Arrow[{{0,0},\[CapitalSigma][[1]]}],Arrow[{{0,0},-\[CapitalSigma][[1]]}],Red,Arrow[{{0,0},\[CapitalSigma][[2]]}],Red,Arrow[{{0,0},-\[CapitalSigma][[2]]}]},{U,pEnd}]},
+Gray,EdgeForm[Black],
+(*draw arm with arrows showing angles*)
+Rotate[{Rectangle[{-w,-w},{r1+w,w},RoundingRadius->w],If[r2< 1,{Black,Text["\<Robot Arm\>",{r1/2,0}]}]},Theta1,{0,0}],
+{Black,Point[{{0,0}}],
+{(*velocity*)Red,PointSize[Large],myArrowArc[l{0,0},1/2,Theta1+{0,jointVel[[1]]}]},
+Darker[Gray],myArrowArc[{0,0},l/4,{0,Theta1}],
+If[Abs[Theta1]>π/4,Text[Style["\<\!\(\*SubscriptBox[\(Theta\), \(1\)]\)\>",Medium],l 2/5{Cos[(Theta1)/(2)],Sin[(Theta1)/(2)]}]]},
+Rotate[{
+Rectangle[{r1 Cos[Theta1]-w,r1 Sin[Theta1]-w},{r1 Cos[Theta1]+r2+w,r1 Sin[Theta1]+w},RoundingRadius->w],If[r2>= 1,{Black,Text["\<Robot Arm\>",{r1 Cos[Theta1]+r2/2,r1 Sin[Theta1]}]}]
+},Theta1+Theta2,{r1 Cos[Theta1],r1 Sin[Theta1]}],
+{Black,Point[{r1{Cos[Theta1],Sin[Theta1]}}],
+{(*velocity*)Thick,Blue, myArrowArc[r1{Cos[Theta1],Sin[Theta1]},2/3,Theta1+Theta2+{0,jointVel[[2]]}]},
+Darker[Gray],myArrowArc[r1{Cos[Theta1],Sin[Theta1]},l/3,{Theta1,Theta1+Theta2}],
+If[Abs[Theta2]>π/4,Text[Style["\<\!\(\*SubscriptBox[\(Theta\), \(2\)]\)\>",Medium],{r1 Cos[Theta1]+r2/2Cos[Theta1+(Theta2)/(2)],r1 Sin[Theta1]+r2/2Sin[Theta1+(Theta2)/(2)]}]]},
+loc[Darker[Green],pVel],
+loc[Black,pEnd],
+{(*velocity arrow*) Green,Thick,Arrow[{pEnd,pVel }]}
+},PlotRange->3{{-1,1},{-1,1}},ImageSize->400]
+],
+{{r1,1,"\<\!\(\*SubscriptBox[\(r\), \(1\)]\)\>"},0,2,ImageSize->80,Appearance->"\<Labeled\>"},
+{{pEnd,{2,0}},{-2,-2},{2,2},Locator,Appearance->None}, 
+{{pEndp,{2,0}},{-2,-2},{2,2},None},
+{{pVel,{2,1}},{-4,-4},{4,4},Locator,Appearance->None},
+{{pVelp,{1,1}},{-4,-4},{4,4},None},
+(*the next are global variables to control how often freeConfigSpace is updated*)
+{{p1,{1,0},"\<\!\(\*SubscriptBox[\(Theta\), \(1\)]\)\>"},(makeDialControl[#1,{0,0},Red]&),ImageSize->140},
+{{p2,{1,0},"\<\!\(\*SubscriptBox[\(Theta\), \(2\)]\)\>"},(makeDialControl[#1,{0,0},Blue]&),ImageSize->140},
+{{IsElbowUp,True,"\<elbow up?\>"},{True,False}},
+{{IsElbowUpp,True},None},
+{{jointVel,{1,0},"\<joint
+velocity\>"},(make2VelControl[#1]&)},
+ControlPlacement->Left,
+SaveDefinitions->True]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Aaron T. Becker
+
+### [Text]
+Lillian Lin
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+A robot arm, or robot manipulator, is constructed from two types of joints, prismatic and revolute. A revolute joint rotates on a single plane along an axis centered at the joint, while a prismatic joint moves linearly, extending along a line. The transformation from joint angles to the location of the end effector is called forward kinematics and can be computed by a series of matrix multiplications.
+
+### [Text]
+Each joint transforms the coordinate frame from the previous joint. These coordinate transformations are multiplied together to determine the location of the end effector. The Denavit\[Dash]Hartenberg convention represents the transformation due to the i^th joint as[1]:
+Subscript[A, i]=Subscript[rot, z,Subscript[Theta, i]]Subscript[trans, z,Subscript[d, i]]Subscript[trans, x,Subscript[a, i]]Subscript[rot, z,Subscript[Alpha, i]]=(<<Grid:Subscript[c, Subscript[Theta, i]]-Subscript[Subscript[s, Theta], i] Subscript[c, Subscript[Alpha, i]]Subscript[Subscript[s, Theta], i] Subscript[s, Subscript[Alpha, i]]Subscript[a, i]Subscript[c, Subscript[Theta, i]] | Subscript[Subscript[s, Theta], i]Subscript[c, Subscript[Theta, i]] Subscript[c, Subscript[Alpha, i]]-Subscript[c, Subscript[Theta, i]] Subscript[s, Subscript[Alpha, i]]Subscript[a, i]Subscript[Subscript[s, Theta], i] | 0Subscript[s, Subscript[Alpha, i]]Subscript[c, Subscript[Alpha, i]]Subscript[d, i] | 0001>>), where Subscript[c, Theta]=cos Theta and Subscript[s, Theta]=sin Theta.
+
+### [Text]
+A sequence of matrices Subscript[A, i] are then multiplied together to give the location of the end effector.
+
+### [Text]
+\<The transformation from the end effector location to joint angles is usually challenging because it often involves inverse trigonometric functions. Often there are multiple solutions, and the transformation is sometimes impossible (some end effectors are outside the workspace of the robot). Even for this simple two-link robot, these issues are present. The reachable workspace is drawn in blue. All locations outside of this region are impossible to reach. All locations on the boundary of this workspace have only one solution, but locations inside the blue region can be reached by two configurations, called the "elbow up" and "elbow down" configurations.\>
+
+### [Text]
+The transformation from joint velocities q' to end effector velocities ξ is called forward velocity kinematics. It can be computed by taking the derivative of the forward kinematics equations and multiplying this by the joint velocities. This gives the Jacobian, a function of the current robot configuration and is represented by J(q), where q is a vector of joint angles:
+
+### [Text]
+ξ=J(q) q'.
+
+### [Text]
+If all joint velocities are within the unit ball \[Sum](Subscript[q, i]')^2<=1, then the end effector velocities are constrained to lie within an ellipse, drawn in pink in the figure. This ellipse is called the manipulability ellipse.
+
+### [Text]
+The inverse problem of determining what joint velocities q' are required to generate a desired ξ is inverse velocity kinematics. Inverse velocity kinematics is trivial if J(q)^-1 exists: J(q)^-1\[CenterDot]ξ= q', but when J(q) is singular this is not possible. In this Demonstration, singular configurations occur on the boundary of the workspace, where the manipulability ellipse loses a dimension and becomes a line. In this case, we solve for the required joint velocities by generating the Moore\[Dash]Penrose pseudoinverse. This is calculated in Mathematica as PseudoInverse[J]\[CenterDot]ξ= q'.
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] M. W. Spong, S. Hutchinson, and M. Vidyasagar, Robot Modeling and Control, Hoboken, NJ: John Wiley and Sons, 2006.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+Jacobian
+
+### [Item]
+Manipulability
+
+### [Item]
+DH parameters
+
+### [Item]
+Denavit-Hartenburg parameters
+
+### [Item]
+manipulator
+
+### [Item]
+planar robot
+
+### [Item]
+homogeneous transformation matrix
+
+### [Item]
+coordinate frames
+
+### [Item]
+Inverse velocity
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Forward and Inverse Kinematics of the SCARA Robot
+
+### [Text]
+Inverse Kinematics for a Robot Manipulator with Six Degrees of Freedom
+
+### [Text]
+Rotation Matrix
+
+### [Text]
+Jacobian
+
+### [Text]
+Forward Kinematics
+
+### [Text]
+Robot Motion with Obstacles
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2016-06-20
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

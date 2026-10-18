@@ -1,0 +1,379 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Private reference (R-04). Extracted 2026-10-12 with a tolerant copy of tools/nbextract.py; cached outputs skipped.
+
+### [Title]
+Shortest Path for the Dubins Car
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+In 1957, Lester Eli Dubins proved that the shortest path between two (x,y,Theta) coordinates for a forward-moving vehicle with a minimum turning radius Subscript[r, min] is composed entirely of no more than three circular arcs of radius Subscript[r, min] or straight lines.
+
+### [Text]
+In this Demonstration, the starting position of the blue car is green and its end position (the goal) is red. You can drag two locators, one for the red car's (x,y) position and the other for the red car's orientation Theta. The sliders let you vary the minimum turning radius Subscript[r, min] or move the blue car from the start to the goal.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+drawCar[xy_,Theta_,Alpha_,opac_]:= (* draws a car icon, centered at middle of rear axle*){Opacity[opac],EdgeForm[Directive[Opacity[opac],Black]],Translate[Rotate[
+Translate[{Rectangle[{-1,-1/2},{1,1/2}],
+Darker[Gray],
+{Yellow,Opacity[0.8*opac],EdgeForm[None],Polygon[{{1,.35},{4,.05},{4,.55}}],Polygon[{{1,-.35},{4,-.05},{4,-.55}}]},
+Line[{{-.7,.35},{-.7,-.35}}],Line[{{.7,.35},{.7,-.35}}],
+Rotate[Rectangle[{.5,.35},{.9,.4}],If[Alpha==0,0,ArcTan[Alpha-.375,1.4]],{.7,.375}],
+Rectangle[{-.5,.35},{-.9,.4}],
+Rectangle[{-.5,-.35},{-.9,-.4}],
+Rotate[Rectangle[{.5,-.35},{.9,-.4}],If[Alpha==0,0,ArcTan[Alpha+.375,1.4]],{.7,-.375}],
+Black,Arrowheads[.02],Arrow[{{0,0},{1.0,0}}]
+},{0.7,0}],Theta,{0,0}],xy]}
+
+drawCarOld[xy_,Theta_,Alpha_,opac_]:= (* draws a car icon with all-wheel drive*){Opacity[opac],EdgeForm[Directive[Opacity[opac],Black]],Translate[Rotate[{Rectangle[{-1,-1/2},{1,1/2}],Black,Arrowheads[.02],Arrow[{{0,0},{1.75,0}}],
+Darker[Gray],
+{Yellow,Opacity[0.5*opac],EdgeForm[None],Polygon[{{1,.35},{4,.05},{4,.55}}],Polygon[{{1,-.35},{4,-.05},{4,-.55}}]},
+(*ControlActive[,{Yellow,EdgeForm[None],Polygon[{{1,.35},{4,.05},{4,.55}},VertexColors->{Yellow,White,White}],Polygon[{{1,-.35},{4,-.05},{4,-.55}},VertexColors->{Yellow,White,White}]}], (*looks great but is slow*)*)
+Rotate[Rectangle[{.5,.35},{.9,.4}],If[Alpha==0,0,ArcTan[Alpha-.375,.7]],{.7,.375}],
+Rotate[Rectangle[{-.5,.35},{-.9,.4}],If[Alpha==0,0,ArcTan[Alpha-.375,-.7]],{-.7,.375}],
+Rotate[Rectangle[{-.5,-.35},{-.9,-.4}],If[Alpha==0,0,ArcTan[Alpha+.375,-.7]],{-.7,-.375}],
+Rotate[Rectangle[{.5,-.35},{.9,-.4}],If[Alpha==0,0,ArcTan[Alpha+.375,+.7]],{.7,-.375}]
+},Theta,{0,0}],xy]}
+
+angPt2Pt[ps_,pe_]:=Chop[N[ArcTan[pe[[1]]-ps[[1]],pe[[2]]-ps[[2]]]]];
+distPt2Pt[ps_,pe_]:=Sqrt[(pe[[1]]-ps[[1]])^2+(pe[[2]]-ps[[2]])^2];
+
+arcLen[aS_,aE_,dir_]:=Module[{Theta,a1,a2},
+a1=aS;a2 = aE;Theta = a2-a1;
+While[dir>0\[And]Theta<0,Theta+=2π;a2+=2π;];
+While[dir<0\[And]Theta>0,Theta-=2π;a2-=2π;];
+
+If[Theta>2π,Theta -=2π;a2-=2π];
+If[Theta<-2π,Theta+=2π;a2+=2π];
+{Abs[Theta],a1,a2}]
+
+(*The following functions return the length of the given path type and graphics commands for drawing them. At end the calling manipulate can draw the shortest path with a thick line*)
+drawLSL[csL_,ceL_,Theta_,minRadius_]:=Module[{oLSL,dLSL,dLL = distPt2Pt[csL,ceL],AlphaL2L =angPt2Pt[csL,ceL ],arc1,arc2},
+oLSL=minRadius{Cos[AlphaL2L -π/2],Sin[AlphaL2L-π/2]};
+arc1 = arcLen[-π/2,AlphaL2L -π/2,1];
+arc2= arcLen[AlphaL2L -π/2,Theta-π/2,1];
+dLSL = dLL+minRadius*(arc1 [[1]]+ arc2[[1]]);
+{dLSL,
+{Pink,
+Circle[csL,minRadius,arc1[[2;;3]]],
+Line[{oLSL+csL,oLSL+ceL}],
+Circle[ceL,minRadius,arc2[[2;;3]]]}}
+]
+
+drawLSR[csL_,ceR_,Theta_,minRadius_]:=
+Module[{oLSR,dLSR,GammaLSR,dLR = distPt2Pt[csL,ceR],AlphaL2R =angPt2Pt[csL,ceR ],arc1,arc2,drawing},
+dLSR = ∞;drawing={};
+If[dLR>2 minRadius,
+GammaLSR =ArcCos[2 minRadius/dLR];
+oLSR=minRadius{Cos[AlphaL2R-GammaLSR],Sin[AlphaL2R-GammaLSR]};
+arc1 =arcLen[-π/2,AlphaL2R-GammaLSR,1];
+arc2= arcLen[π+AlphaL2R-GammaLSR,Theta+π/2,-1];
+drawing={Blue,
+Circle[csL,minRadius,arc1[[2;;3]]],
+Line[{oLSR+csL,ceR-oLSR}],
+Circle[ceR,minRadius,arc2[[2;;3]]]};
+dLSR =distPt2Pt[oLSR+csL,ceR-oLSR]+ minRadius*(arc1[[1]]+arc2[[1]]);
+];{dLSR,drawing}]
+
+drawRSR[csR_,ceR_,Theta_,minRadius_]:=Module[{oRSR,dRSR,dRR = distPt2Pt[csR,ceR],AlphaR2R =angPt2Pt[csR,ceR ],arc1,arc2},
+oRSR=minRadius{Cos[AlphaR2R +π/2],Sin[AlphaR2R+π/2]};
+arc1=arcLen[π/2,AlphaR2R +π/2,-1];
+arc2=arcLen[AlphaR2R +π/2,Theta+π/2,-1];
+dRSR =dRR+ minRadius(arc1[[1]]+arc2[[1]]);
+{dRSR,{Darker[Yellow],
+Circle[csR,minRadius,arc1[[2;;3]]],
+Line[{oRSR+csR,oRSR+ceR}],
+Circle[ceR,minRadius,arc2[[2;;3]]]}}]
+
+drawRSL[csR_,ceL_,Theta_,minRadius_]:=
+Module[{oRSL,dRSL,GammaRSL,dRL = distPt2Pt[csR,ceL],AlphaR2L =angPt2Pt[csR,ceL ],arc1,arc2,drawing},
+dRSL = ∞;drawing={};
+If[dRL>2 minRadius,
+GammaRSL =ArcCos[2 minRadius/dRL];
+oRSL=minRadius{Cos[AlphaR2L+GammaRSL ],Sin[AlphaR2L+GammaRSL ]};
+arc1 =arcLen[π/2,AlphaR2L+GammaRSL,-1];
+arc2= arcLen[-π+AlphaR2L+GammaRSL,Theta-π/2,1];
+drawing={Orange,
+Circle[csR,minRadius,arc1[[2;;3]]],
+Line[{oRSL+csR,ceL-oRSL}],
+Circle[ceL,minRadius,arc2[[2;;3]]]};
+dRSL =distPt2Pt[oRSL+csR,ceL-oRSL]+ minRadius(arc1[[1]]+arc2[[1]]);
+];{dRSL ,drawing}]
+
+drawLRL[csL_,ceL_,Theta_,minRadius_]:=
+Module[{dLRL,dLL = distPt2Pt[csL,ceL],drawing},
+dLRL = ∞;drawing={};
+If[dLL<4minRadius,Module[{AlphaL2L =angPt2Pt[csL,ceL ],cC,LRLBeta =- ArcCos[(dLL)/(4 minRadius)],arc1,arc2,arc3},
+arc1=arcLen[-π/2,AlphaL2L -LRLBeta ,1];
+arc2=arcLen[AlphaL2L -LRLBeta-π,AlphaL2L +LRLBeta ,-1];
+arc3=arcLen[AlphaL2L +LRLBeta -π,Theta-π/2,1];
+dLRL = minRadius(arc1[[1]]+arc2[[1]]+arc3[[1]]);
+cC=csL+2minRadius{Cos[AlphaL2L -LRLBeta],Sin[AlphaL2L-LRLBeta]};
+drawing={Brown,Circle[csL,minRadius,arc1[[2;;3]] ],Circle[cC,minRadius,arc2[[2;;3]] ],
+Circle[ceL,minRadius,arc3[[2;;3]] ]}
+]];{dLRL,drawing}]
+
+drawRLR[csR_,ceR_,Theta_,minRadius_]:=
+Module[{dRLR,dRR = distPt2Pt[csR,ceR],drawing},
+dRLR = ∞;drawing={};
+If[dRR<4minRadius,Module[{AlphaR2R =angPt2Pt[csR,ceR ],cC,RLRBeta =- ArcCos[(dRR)/(4 minRadius)],arc1,arc2,arc3}, 
+arc1=arcLen[π/2,AlphaR2R +RLRBeta ,-1];
+arc2=arcLen[π+(AlphaR2R +RLRBeta ),AlphaR2R -RLRBeta,1];
+arc3=arcLen[π+AlphaR2R -RLRBeta,Theta+π/2,-1];
+dRLR = minRadius(arc1[[1]]+arc2[[1]]+arc3[[1]]);
+cC=csR+2minRadius{Cos[AlphaR2R +RLRBeta],Sin[AlphaR2R+RLRBeta]};
+drawing={Darker[Green],Circle[csR,minRadius,arc1[[2;;3]] ],
+Circle[cC,minRadius,arc2[[2;;3]] ],
+Circle[ceR,minRadius,arc3[[2;;3]] ]
+}]];{dRLR,drawing}]
+
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[Module[{dTheta,csL,csR,ceL,ceR,
+dLSL,dLSR,dRSR,dRSL,dLRL,dRLR,
+shortestPath={20,{Pink,Circle[{0,3},3,{-3,-1.3}],Line[{{0.7,0.1},{4.,1.}}],Circle[{2,2},3,{-1.3,(5 π)/(4)}]}}
+},
+
+If[goalXYold != goalXY,
+goalThetaloc = goalXY + 2{Cos[Theta],Sin[Theta]};
+goalXYold = goalXY; ];
+
+dTheta =Sqrt[(goalThetaloc[[1]]-goalXY[[1]])^2+(goalThetaloc[[2]]-goalXY[[2]])^2];
+Theta=If[dTheta >0,ArcTan[goalThetaloc[[1]]-goalXY[[1]],goalThetaloc[[2]]-goalXY[[2]]],0];
+goalThetaloc = goalXY + 2{Cos[Theta],Sin[Theta]};
+
+Graphics[{
+{Green,drawCar[{0,0},0,0,0.2]},(*start position of car*)
+{Red,drawCar[goalXY,Theta,0,0.2]},(*end position of car*)
+Locator[goalThetaloc,Graphics[{Red,{AbsoluteThickness[1],Antialiasing->False,LineBox[{{{0,-10},{0,-2}},{{0,2},{0,10}},{{-10,0},{-2,0}},{{2,0},{10,0}}}],Antialiasing->True,CircleBox[{-0.5,0.5},5]},{AbsoluteThickness[3],Opacity[0.3],CircleBox[{-0.5,0.5},3]}},ImageSize->17,PlotRange->{{-8,8},{-8,8}}]],(*user can change ending orientation of car*)
+(* circles of minimum turning radius at start and end*)
+csL = {0,+minRadius};
+csR = {0,-minRadius};
+ceL = goalXY+minRadius{Cos[Theta+π/2],Sin[Theta+π/2]};
+ceR = goalXY+minRadius{Cos[Theta-π/2],Sin[Theta-π/2]};
+(*sketching lines*)
+{Thin,Gray,Dashed,
+Circle[csL,minRadius],Circle[csR,minRadius],
+Circle[ceL,minRadius],Circle[ceR,minRadius]},
+
+(*CSC Plots: four possible lines*)
+dLSL=drawLSL[csL,ceL,Theta,minRadius];
+dLSR=drawLSR[csL,ceR,Theta,minRadius];
+dRSR=drawRSR[csR,ceR,Theta,minRadius];
+dRSL =drawRSL[csR,ceL,Theta,minRadius];
+(*CCC plots: 2 possibilities*)
+dLRL=drawLRL[csL,ceL,Theta,minRadius];
+dRLR=drawRLR[csR,ceR,Theta,minRadius];
+{Thin,dLSL[[2]],dLSR[[2]],dRSR[[2]],dRSL [[2]],dLRL[[2]],dRLR [[2]]},
+(*shortestPath = MinimalBy[{dLSL,dLSR,dRSR,dRSL ,dLRL,dRLR },First];*)
+shortestPath =(Sort[{dLSL,dLSR,dRSR,dRSL ,dLRL,dRLR }])[[1]];
+{Black,Style[Text[StringForm["\<`` path length, `` distance\>",Round[N[shortestPath[[1]]],0.01],
+N[Round[Sqrt[(goalXY[[1]])^2+(goalXY[[2]])^2],0.01]]],{0,8}],FontSize->14]},
+{Thickness[0.005],shortestPath[[2]]},
+(*Plot the progress of the robot. We use the data in the drawing.*)
+Module[{distTrav,ang1,ang2,ang3,angP,xyP,drawing,Alpha},
+distTrav =progress*shortestPath[[1]];
+drawing = shortestPath[[2]];
+ang1=drawing[[2,3,2]]-drawing[[2,3,1]];
+ang3=drawing[[4,3,2]]-drawing[[4,3,1]];
+If[ distTrav<= Abs[minRadius*ang1] ,
+angP=drawing[[2,3,1]]+ang1*If[Abs[minRadius*ang1]==0,0,(distTrav)/(Abs[minRadius*ang1])];
+xyP = drawing[[2,1]]+minRadius*{Cos[angP],Sin[angP]};
+Alpha =Sign[ang1] minRadius;
+angP+=Sign[ang1+10^-6]π/2,
+If[distTrav<= shortestPath[[1]]-Abs[minRadius*ang3] ,
+If[Head[drawing[[3]]]==Circle,(*circle*)
+ang2=drawing[[3,3,2]]-drawing[[3,3,1]];
+angP=drawing[[3,3,1]]+ang2*(distTrav-Abs[minRadius*ang1])/(Abs[minRadius*ang2]);
+xyP = drawing[[3,1]]+minRadius*{Cos[angP],Sin[angP]};
+angP+=Sign[ang2]π/2;
+Alpha =Sign[ang2] minRadius;
+];
+If[Head[drawing[[3]]]==Line,(*line*)
+Alpha =0;
+angP=ArcTan[drawing[[3,1,2,1]]-drawing[[3,1,1,1]],drawing[[3,1,2,2]]-drawing[[3,1,1,2]]];
+xyP = drawing[[3,1,1]]+(distTrav-Abs[minRadius*ang1])/(distPt2Pt[drawing[[3,1,2]],drawing[[3,1,1]]])(drawing[[3,1,2]]-drawing[[3,1,1]]);
+],
+(*in 3rd segment*)
+angP=drawing[[4,3,1]]+ang3*(distTrav-(shortestPath[[1]]-Abs[minRadius*ang3]))/(Abs[minRadius*ang3]);
+xyP = drawing[[4,1]]+minRadius*{Cos[angP],Sin[angP]};
+angP+=Sign[ang3]π/2;
+Alpha =Sign[ang3] minRadius;
+]];
+{Blue,drawCar[xyP,angP,Alpha,0.8]}]
+
+},PlotRange->{{-15,15},{-10,10}},ImageSize->600,Background->Lighter[Gray,.92]
+]],
+{{goalXY,{2,2}},{-13,-8},{13,8},Locator},
+{{goalXYold,{2,2}},None},
+{{Theta,π/2},None},
+{{goalThetaloc,{4,0}},Locator,Appearance->None},
+{{goalTheta,0},-π,π,None},
+{{progress,0.25},0,1,Appearance->"\<Labeled\>",ImageSize->400},
+{{minRadius,3,"\<\!\(\*SubscriptBox[\(r\), \(min\)]\)\>"},0.001,5,Appearance->"\<Labeled\>",ImageSize->400}, SaveDefinitions->True,ControlPlacement->Top
+]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Aaron T. Becker
+
+### [Text]
+Shiva Shahrokhi
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+The Dubins car is a simplified mathematical model of a car that moves in the x-y plane[1]. The car's location is specified by the (x,y) location of the center of the car's rear axle and the orientation Theta of the car. The car cannot move sideways because the rear wheels would have to slide instead of roll. The Dubins car model stipulates that the car moves forward at a constant speed and has a maximum steering angle that translates into a minimum turning radius Subscript[r, min]. The minimum turning radius circles are drawn tangent to the starting and ending positions with dashed gray circles.
+
+### [Text]
+\<If the car has forward velocity of 1 unit per second, the system equations are\>
+
+### [Text]
+dx=cos Theta, 
+dy=sin Theta,
+dTheta=u,
+
+### [Text]
+where u∈[-1/Subscript[r, min],1/Subscript[r, min]]. The task is to minimize the length of the curve traced out by the center of the rear axle as it moves from the start to the goal. That path is the bounded-curvature shortest path. Dubins proved that the shortest path consists of no more than three segments, where in each segment u is either -1/Subscript[r, min], 0 or 1/Subscript[r, min]. Denote these steering commands by R, S, L for turning right, going straight or turning left. A path is then coded with a three-letter word.
+
+### [Text]
+If Subscript[r, min]=0, then the shortest path is a straight line. For nonzero Subscript[r, min], the shortest paths are of the form LRL, RLR, LSL, LSR, RSL, RSR. In this Demonstration, each path type is given a different color: LRL is brown, RLR is dark green, LSL is pink, LSR is blue, RSL is orange, and RSR is dark yellow.
+
+### [Text]
+LSR (blue) and RSL (orange) are potentially valid only if the distance from start to goal is greater than 2 Subscript[r, min]. The two paths composed entirely of curves, LRL (brown) and RLR (dark green), are potentially valid only if the distance from start to goal is less than 4 Subscript[r, min].
+
+### [Text]
+\<This Demonstration determines the shortest path by computing the paths using all of the valid words, and then picks the one with shortest length.\>
+
+### [Text]
+\<All paths are drawn in their respective colors, but the shortest path is drawn with a thicker line. Techniques in[4] show how to determine the regions where each path is optimal. If the car is allowed to move backward as well as forward, there are 46 possible words, and this mathematical model is called the Reeds\[Dash]Shepp car[2].\>
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] L. E. Dubins, "On Curves of Minimal Length with a Constraint on Average Curvature, and with Prescribed Initial and Terminal Positions and Tangents," American Journal of Mathematics, 79(3), 1957 pp. 497\[Dash]516. doi:10.2307/2372560.
+
+### [Text]
+[2] J. A. Reeds and L. A. Shepp, "Optimal Paths for a Car That Goes both Forwards and Backwards," Pacific Journal of Mathematics, 145(2), 1990 pp. 367\[Dash]393. projecteuclid.org/euclid.pjm/1102645450.
+
+### [Text]
+[3] S. Lavalle, Planning Algorithms, Cambridge University Press, 2006. http://planning.cs.uiuc.edu/node821.html.
+
+### [Text]
+[4] X.-N. Bui, P. Sou\[EGrave]res, J.-D. Boissonnat and J.-P. Laumond, "The Shortest Path Synthesis for Non-holonomic Robots Moving Forwards," Research Report RR-2153, INRIA, France, 1994. hal.inria.fr/inria-00074519.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+Dubins car
+
+### [Item]
+Dubin
+
+### [Item]
+shortest path
+
+### [Item]
+motion planning
+
+### [Item]
+robot
+
+### [Item]
+mobile robot
+
+### [Item]
+optimal path
+
+### [Item]
+robotics
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Parking a Car
+
+### [Text]
+Driving out of a Parking Space
+
+### [Text]
+Paths inside a Polygon
+
+### [Text]
+Shortest Path between Two Points in the Unit Disk Reflecting off the Circumference
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2017-12-14
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

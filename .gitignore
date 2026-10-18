@@ -3,6 +3,7 @@ _internal/
 
 # ---- Generated / installed ----
 node_modules/
+dist/
 test-output/
 test-results/
 playwright-report/

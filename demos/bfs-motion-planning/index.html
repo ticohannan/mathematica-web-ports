@@ -1,0 +1,89 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstration by Aaron T. Becker, Benedict Isichei and Praveen Reddy Padala
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Breadth-First Search Robot Motion Planning</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <script src="../../shared/requirements.js"></script>
+  <style>
+    /* ControlPlacement -> Top: the label left of the slider, as in the original; graphic at ImageSize {600, 320} */
+    #controls .ctl-slider { flex-direction: row; align-items: center; gap: 8px; }
+    #controls .ctl-slider input[type=range] { flex: 0 1 220px; width: 220px; }
+    #controls .ctl-label i { font-family: "Times New Roman", serif; font-size: 1.05em; }
+    #graphic { width: 100%; max-width: 640px; flex: none; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Breadth-first search motion planning</div>
+    <h1 class="demo-title">Breadth-First Search Robot Motion Planning</h1>
+
+    <section class="manipulate controls-top" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="graphic wide" id="graphic" data-testid="graphic">
+        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser.</div></noscript>
+      </div>
+    </section>
+
+    <p class="caption">This Demonstration shows a resolution-complete planner that finds the shortest path between an initial
+      and final configuration of a two-link, planar-arm robot by using a breadth-first search. The robot operates in the
+      workspace on the left that contains two small circular obstacles. The corresponding robot phase space on the right
+      shows the configurations <i>q</i> = (<i>θ</i><sub>1</sub>, <i>θ</i><sub>2</sub>), for which an arm intersects an
+      obstacle. You can relocate obstacles in the workspace and change the initial and final positions. You can improve the
+      resolution of the search grid by increasing <i>Q</i> and move the robot along the shortest path by increasing
+      <i>P</i>.</p>
+
+    <details class="details" data-testid="details">
+      <summary>Details</summary>
+      <p>The set of all possible configurations of a two-link, planar-arm robot can be represented in a two-dimensional
+        phase space. Of particular interest are the configurations in which the robot collides with one of the obstacles. A
+        resolution-complete planner returns a path between the initial and final configuration if it exists or returns that
+        such a path is impossible. The path is discovered using breadth-first search in the phase space, which calculates
+        the distance to every configuration reachable from the initial configuration. In this Demonstration, path distance
+        is shown by a gradient that darkens with distance from the initial configuration. Even if configurations are close
+        in the configuration space, obstacles may make moving between them require a longer distance.</p>
+      <p>This Demonstration computes the obstacle regions using 16<i>Q</i> unit squares and determines if the centroid of
+        each square is in a collision. Given <i>θ</i><sub>1</sub> and <i>θ</i><sub>2</sub>, one collision computation is
+        trivial.</p>
+      <p>However, computing the phase-space obstacle region is more difficult because the size of the space representation
+        grows exponentially with the number of degrees of freedom (independent joints) of the robot.</p>
+      <p>Consider how many <i>n</i>-dimensional unit squares are required to fill a space of size <i>k</i>. For a
+        one-dimensional space, <i>k</i><sup>1</sup> units are needed. For a two-dimensional space, <i>k</i><sup>2</sup>
+        squares are needed. For an <i>n</i>-dimensional space, <i>k</i><sup><i>n</i></sup> hypercubes would be required.
+        The number of collision computations grows exponentially with the number of joints in the robot, making
+        breadth-first search computationally infeasible for robots with many joints.</p>
+      <p>The phase space for a two-link, planar robot can be represented on a torus. When rotation joint 1 moves past 2π,
+        it returns to angle 0. This is represented by dashed and solid lines of the same color. If the phase space were
+        printed on a rubber sheet and cut out and the dashed and solid lines of each color were joined, the resulting shape
+        would be a torus. In this Demonstration, moving the locator past the edge of the phase space wraps the angle around
+        2π.</p>
+      <p>Reference<br>
+        [1] M. Spong, S. Hutchinson and M. Vidyasagar, <i>Robot Modeling and Control</i>, Hoboken, NJ: John Wiley &amp; Sons,
+        2006.</p>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. Drag the two obstacle locators in the workspace and the
+      start (left) and goal (right) cross-hairs in the phase space (a press anywhere moves the nearest locator there). The
+      cost map is grey (white at the start, darker with distance), blocked or unreachable cells dark red, the path green and
+      the arm's current cell blue; <i>P</i> moves the arm along the path. Arrow keys move a focused locator. All computation
+      runs in your browser.</p>
+    <div class="credits" data-testid="credits">
+      Adapted from <a href="https://demonstrations.wolfram.com/BreadthFirstSearchRobotMotionPlanning/">"Breadth-First Search Robot Motion Planning"</a>
+      by Aaron T. Becker, Benedict Isichei and Praveen Reddy Padala, Wolfram Demonstrations Project (published December 12,
+      2017), licensed
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+      This JavaScript/SVG translation by Tico Hannan (© 2026; produced with an AI code-generation tool) is released under the
+      same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

@@ -1,0 +1,305 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Extracted 2026-10-12 with tools/nbextract.py; cached outputs skipped.
+
+
+### [Title]
+Measuring Distance and Orientation Using Camera and Lasers
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+Distance to an object can be measured with a single camera and a laser, if the laser position relative to the camera is known. Usually the laser is pointed in the same direction as the camera and mounted a known distance from the camera. By dragging the locator, you can choose the orientation of the brown cuboid and two red lasers mounted s units to the left and right of a camera, which has a focal length λ. These lasers can measure the distance to the cuboid, as shown by the reticule on the camera image. The cuboid's angle can be computed from two distance measurements.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+arrowArc[s_Circle]:=s/.Circle[a_,r_,{start_,end_}]:>({s,Arrow[{#-r/10^6 {-Sin@end,Cos@end},#}]}&[a+r {Cos@end,Sin@end}]);
+myArrowArc2[c_,r_,{start_,end_}]:=(*problem -- initial point too far out*)
+If[start===end,Point[c+r{Cos[start],Sin[start]}],
+Arrow[BSplineCurve[Table[c+r{Cos[t],Sin[t]},{t,start,end,(end-start)/(11)}]]]]
+
+(*The parametric equation of the line containing the points a and b is a+Gamma (b-a), where 0<=Gamma<=1 for points between a and b. The value of Gamma is given by*)
+Gamma[{a_,b_}][p_]:=((a-p).(a-b))/((a-b).(a-b))
+(*for p on the line. For p not on the line, Gamma gives the closest point on the line.*)
+(*Two lines, Subscript[L, 1 ]containing the points a and b with line Subscript[L, 2] containing the points c and d, intersect at a point \[DoubleLongLeftRightArrow] \[LeftBracketingBar]{a-b,c-d}\[RightBracketingBar]!=0.  Compute the intersection point:*)
+LineIntersectionPoint[{{a_,b_},{c_,d_}}]:=(Det[{a,b}] (c-d)-Det[{c,d}] (a-b))/(Det[{a-b,c-d}])
+(*Use \[LeftBracketingBar]{a-b,c-d}\[RightBracketingBar]!=0 along with the condition 0<=λ<=1 to determine whether two segments intersect:*)
+SegmentIntersectionQ[{p1:{a_,b_},p2:{c_,d_}}]:=
+If[Det[{a-b,c-d}]==0,False,
+Module[{p=LineIntersectionPoint[{p1,p2}]},0<=Gamma[p1][p]<=1&&0<=Gamma[p2][p]<=1]]
+
+LineIntersectionPoint[{a_,b_},{c_,d_}]:=(Det[{a,b}] (c-d)-Det[{c,d}] (a-b))/Det[{a-b,c-d}];
+Convert3DtoCam[λ_,pt3d_]:=Module[{k = λ/Max[0.001,pt3d[[3]]]},k {-pt3d[[1]],pt3d[[2]]}];
+makeHand[fl_, bl_, fw_, bw_] :=
+ Polygon[{{ -bl,-bw}, { -bl,bw}, { fl,fw}, { fl + 8 fw,0}, { fl,-fw}}/10];
+makeDialControl[Dynamic[pt_],cent_,color_]:=Module[{ang},
+LocatorPane[Dynamic[pt, (pt =  Nearest[Table[{Cos@a,Sin@a},{a,-π,π,π/32}],#][[1]]) &],
+(*LocatorPane[Dynamic[pt,(pt = Normalize[#])&],*)
+ang=Dynamic[ArcTan[pt[[1]],pt[[2]]]];(*If[ang <0,ang=ang+2π];*)
+Graphics[
+{
+Gray,Circle[cent],
+Gray,Table[Line[{cent+.94{Cos@a,Sin@a},cent+{Cos@a,Sin@a}}],{a,0,2π,π/8}],
+Table[Line[{cent+.98{Cos@a,Sin@a},cent+{Cos@a,Sin@a}}],{a,π/16,2π,π/8}],
+{FontSize->10,Table[Text[Theta,cent+.7{Cos@Theta,Sin@Theta}],{Theta, Rest@Range[- Pi,Pi, Pi/4]}]},
+{color, EdgeForm[Black],Rotate[Translate[makeHand[7, 7/3, .1, .3],cent],ang,cent]},
+Black,Arrowheads[.05],
+color,myArrowArc2[cent,0.3,{0,ang}]
+}]]];
+(* a colored locator icon*)
+loc[col_]:=ToExpression@GraphicsBox[{col,{AbsoluteThickness[1],Antialiasing->False,LineBox[{{{0,-10},{0,-2}},{{0,2},{0,10}},{{-10,0},{-2,0}},{{2,0},{10,0}}}],Antialiasing->True,CircleBox[{-0.5,0.5},5]},{AbsoluteThickness[3],Opacity[0.3],CircleBox[{-0.5,0.5},3]}},ImageSize->17,PlotRange->{{-8,8},{-8,8}}];
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{sc,plotRange={{-1,15},{-4,4}},Theta ,imsz=450,camWidth = 0.8,objectPts,L1,L2,InterPt1,InterPt2,sl1,sl2,T,InterPt3D1,InterPt3D2},
+ sc =\[Piecewise]<<Grid:1/50λ s<1/10 | 1/10λ s<1/4 | 1/2λ s<1/2 | 1True>>;
+L1= {0,s};L2= {0,-s};
+Theta = ArcTan[p1[[1]],p1[[2]]];If[Theta <0,Theta=Theta+2π];
+(*constrain locators*)
+If[p[[2]]<= plotRange[[2,1]](*|| p[[2]]>= plotRange[[2,2]]*), p = pFixed];
+pFixed = p;
+
+objectPts = ( RotationMatrix[Theta].#+p)&/@{{-1/2,-2},{1/2,-2},{1/2,2},{-1/2,2}} ;
+ InterPt1 = {10000,L1[[2]]};sl1 = {L1,InterPt1};
+ InterPt2 = {10000,L2[[2]]};sl2 = {L2,InterPt2};
+{If[SegmentIntersectionQ[{sl1,#}],
+T = LineIntersectionPoint[{sl1,#}]; If[InterPt1[[1]]>T[[1]],InterPt1=T]];
+If[SegmentIntersectionQ[{sl2,#}],
+T = LineIntersectionPoint[{sl2,#}]; If[InterPt2[[1]]>T[[1]],InterPt2=T]];
+}&/@Partition[AppendTo[objectPts,objectPts[[1]]],2,1];
+InterPt3D1=Convert3DtoCam[λ,{InterPt1[[2]],0,InterPt1[[1]]}];
+InterPt3D2=Convert3DtoCam[λ,{InterPt2[[2]],0,InterPt2[[1]]}];
+Column[{
+Graphics[{(* top view *)
+(*camera field of view*)
+{Opacity[0.2],Blue,Polygon[{{0,0},10000{λ,-camWidth},10000{λ,camWidth}}]},
+(*draw object*)
+{Brown,EdgeForm[Black],Polygon[objectPts]},
+Arrowheads[.025],
+arrowArc[Circle[p,1,{π/2,π/2+Theta}]],
+Line[{p+1{0,1},p,p+1.6{-Sin[Theta],Cos[Theta]}}],
+If[Abs[Theta]>= π/16,Text[Style["\<Theta\>",Medium],p+1.5{-Sin[(Theta)/(2)],Cos[(Theta)/(2)]}]],
+(*optical axis*)
+Black,Line[{{0,0},{500,0}}],
+(*camera*)
+Darker[Gray], Rectangle[{-1.5λ,-camWidth},{0,camWidth}],
+(*lasers*)
+{Orange,EdgeForm[Black],
+Rectangle[L1-{1/2,1/8},L1+{0,1/8}],
+Rectangle[L2-{1/2,1/8},L2+{0,1/8}]},
+Red, Line[{L1,InterPt1 }], Line[{L2 ,InterPt2}],
+{Dashed, Line[{InterPt1,{0,0} }], Line[{InterPt2,{0,0}}]},
+(*image plane*)
+{Thick, Blue,  Line[{{λ,-camWidth},{λ,camWidth}}],
+ Line[{{-λ,-camWidth},{-λ,camWidth}}],PointSize[Large],Point[{0,0}]},
+Black,Text[Style["\<top view\>",Medium],{7,3.5}],
+(*draw λ*)
+Arrow[{{λ+1/2,2camWidth},{λ,2camWidth}}],
+Arrow[{{-1/2,2camWidth},{0,2camWidth}}],
+Text["\<λ\>",{λ/2,2camWidth}],
+{Thin, Blue,Line[{{λ,0},{λ,2.2camWidth}}],Line[{{0,0},{0,2.2camWidth}}]},
+{Opacity[0.2],Blue,Polygon[{{0,0},{-λ,-camWidth},{-λ,camWidth}}]},
+
+Arrow[{{-1/4,1/2},{-1/4,0}}],
+Arrow[{{-1/4,-s-1/2},{-1/4,-s}}],
+Text["\<s\>",{-1/4,-s/2}],
+Locator[p,loc[Black]]
+},
+PlotRange->plotRange,
+GridLines->{Table[i,{i,-1,15}],Table[i,{i,-4,4}]},GridLinesStyle->Directive[Thin,Dashed,Gray],ImageSize->imsz],
+Framed[Graphics[{
+(*draw gridlines*)
+{Thin,Gray,
+Table[Line[{Convert3DtoCam[λ,{-50,-1,i}],Convert3DtoCam[λ,{50,-1,i}]}],{i,1,Round[20λ]}],
+Table[Line[{Convert3DtoCam[λ,{i,-1,0}],Convert3DtoCam[λ,{i,-1,1Round[20λ]+1}]}],{i,-Round[3/λ],Round[3/λ]}],
+LightGray,Rectangle[{-camWidth,Convert3DtoCam[λ,{-50,-1,Round[20λ]+1}][[2]]},{camWidth,Convert3DtoCam[λ,{500,0,∞}][[2]]}]
+},
+(*ground plane*)
+{Opacity[0.2],Blue,Rectangle[{-camWidth,-camWidth},{camWidth,0}]},
+(*draw rectangle*)
+{Brown,EdgeForm[Black],(*draw each side of rectangle*)
+If[(#[[1,2]])/(#[[1,1]])>(#[[2,2]])/(#[[2,1]]),{Polygon[ Partition[Flatten[{
+Convert3DtoCam[λ,{#[[1,2]],-1,#[[1,1]]}],
+Convert3DtoCam[λ,{#[[1,2]],1,#[[1,1]]}],
+Convert3DtoCam[λ,{#[[2,2]],1,#[[2,1]]}],
+Convert3DtoCam[λ,{#[[2,2]],-1,#[[2,1]]}]
+}],2]]}]&/@Partition[AppendTo[objectPts,objectPts[[1]]],2,1]
+},
+(*draw laser points*)
+{Red, PointSize[λ.2/InterPt1[[1]]],Point[InterPt3D1],
+PointSize[λ.2/InterPt2[[1]]],Point[InterPt3D2]},
+(*add Reticule for distance measure*)
+{Black,Thin,Line[{{-camWidth,0},{camWidth,0}}],
+(*add + and - tick marks and labels*)
+Table[{
+Line[{{s λ/i ,-.025},{s λ/i ,.05}}],Text[i,{s λ/i ,-.05}],
+Line[{{-s λ/i ,-.025},{-s λ/i ,.05}}],Text[-i,{-s λ/i ,-.05}]
+},{i,sc{.8,1,1.2,1.5,2,3,5,10}}],
+Table[{
+Line[{{s λ/i ,-.025},{s λ/i ,0}}],
+Line[{{-s λ/i ,-.025},{-s λ/i ,0}}]
+},{i,sc{.5,.6,.7,.8,.9,1,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2,3,4,5,6,7,8,9,10,20,30,50,100,200}}]
+}
+,Text[Style["\<camera image\>",Medium],{0,.4camWidth}]
+},PlotRange->{{-camWidth,camWidth},{-camWidth/2,camWidth/2}},ImageSize->imsz],ImageMargins->0,FrameMargins->0]
+}]],
+{{p,{3,-1/5}},Locator,Appearance->None},
+{{pFixed,{3,-1/5}},None},
+Style["\<object orientation\>",12,Bold],
+{{p1,{1,0},"\<Theta\>"},(makeDialControl[#1,{0,0},Red]&),ImageSize->{120,120}},
+Style["\<
+laser spacing\>",12,Bold],
+{{s,1},0.1,2,0.01,VerticalSlider,ImageSize->{Automatic,80},Appearance->"\<Labeled\>"},
+Style["\<camera focal length\>",12,Bold],
+{{λ,0.5},0.1,2,0.01,ImageSize->80,Appearance->"\<Labeled\>"},
+ControlPlacement->Left,
+SaveDefinitions->True]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Item]
+Shiva Shahrokhi
+
+### [Item]
+Aaron T. Becker
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+In a pinhole camera, light enters the camera through a tiny hole and illuminates the image plane. A pinhole camera has a focal length λ, the distance from the pinhole to the image plane. The pinhole is shown with a blue point and the image plane as a blue line. 3D points in the camera's coordinate frame (Subscript[x, c],Subscript[y, c],Subscript[z, c])\[Transpose] are converted to image plane coordinates (u,v) according to the formula:
+
+### [Text]
+k (<<Grid:Subscript[x, c] | <<Grid:Subscript[y, c] | Subscript[z, c]>>>>)=(<<Grid:u | <<Grid:v | λ>>>>), where k=λ/Subscript[z, c].
+
+### [Text]
+All lines parallel to the camera frame's z axis terminate at z=∞ at the vanishing point (0,0) in the image plane.
+
+### [Text]
+Lasers mounted at (<<Grid:s | <<Grid:0 | 0>>>>) and (<<Grid:-s | <<Grid:0 | 0>>>>) that terminate at z coordinates Subscript[z, 1] and Subscript[z, 2] have image plane coordinates (s λ/Subscript[z, 1],0) and (s λ/Subscript[z, 2],0).
+
+### [Text]
+Thus the distance to objects with image plane coordinates (Subscript[u, 1],0) and (Subscript[u, 2],0) gives camera frame coordinates (<<Grid:s | <<Grid:0 | λ/Subscript[u, 1]>>>>) and (<<Grid:-s | <<Grid:0 | λ/Subscript[u, 2]>>>>).
+
+### [Text]
+If both lasers strike the same object, the angle to the object is computed as arctan(2s,λ/Subscript[u, 1]-λ/Subscript[u, 2]).
+
+### [Text]
+\<A camera's reticule (or graticule) is a net of fine lines in the scope. In this case, the reticule is aligned with the vanishing point of the lasers. The readings on the reticule directly measure the distance from the object to the camera.\>
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+graticule
+
+### [Item]
+vanishing point
+
+### [Item]
+laser range
+
+### [Item]
+range sensor
+
+### [Item]
+projective geometry
+
+### [Item]
+reticule
+
+### [Item]
+pinhole camera
+
+### [Item]
+
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Vanishing Point
+
+### [Text]
+Projective Geometry
+
+### [Text]
+Projection
+
+### [Text]
+ArcTan
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2016-06-29
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

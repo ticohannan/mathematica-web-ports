@@ -1,7 +1,10 @@
 # Architecture
 
 What each app does and why is specified in its design document (`demos/<app>/DESIGN.md`);
-how features are added is described in [`DESIGN_PROCESS.md`](DESIGN_PROCESS.md).
+how features are added is described in [`DESIGN_PROCESS.md`](DESIGN_PROCESS.md). Each design document ends with §11
+*Errors in the original*: where the original is probably wrong, kept in the code until the owner decides (the
+model files reproduce the original, errors included). Manual checks against the original in Mathematica follow
+[`MATHEMATICA_CHECKS.md`](MATHEMATICA_CHECKS.md).
 
 ## Server vs. client
 
@@ -58,6 +61,22 @@ saved states of the originals can be replayed) and `requirements.js` (start-up w
 v0.1.13 adds `beep.js` (a short Web Audio tone for Mathematica's `Beep[]`, played only after the user's first press,
 touch or key press on the page and only while the browser lets audio run; used by the seven-link robot).
 
+Generic MIT helpers for the batch of sixteen further apps (cross-app decisions: each app's design document cites them;
+no Demonstration code in them — code derived from a Demonstration goes to `demos/common/`, CC BY-NC-SA):
+
+| Module | Provides |
+|--------|----------|
+| `shared/ui.js` (additive options) | `Controls.slider` options `plus: false` (no ⊕ animation panel), `steps: 'mma'` (Mathematica's discrete slider values min + k·step in machine arithmetic, the right end = max; drag, keys, panel and typed values land on them; Mathematica-style value text), `labeled: 'text'`, `format`/`parse` hooks; pure helpers `mmaGrid`, `mmaSliderText`. Defaults unchanged. |
+| `shared/ui-interval.js` | `addIntervalSlider` — IntervalSlider with `method` 'Free' / 'Push' / 'Stop', `minIntervalSize`, `labeled`, pointer and keyboard; pure `intervalStep`, `intervalShift`, `intervalLabel`. |
+| `shared/mma-extra.js` (additions) | `lengthCR`, `normalizeCR` (v·(1/correctly rounded length)), `normalizeDnrm2` (v·(1/dnrm2 length)), `engineeringForm` / `engineeringParts` (EngineeringForm text), `nDigits` (text of N[x, n]). |
+| `shared/mma-text.js` | text of exact numbers: `piFraction` ('inline' "5π/32" or 'stacked' parts), `fractionText` / `fractionParts`, `numberText` / `numberParts`, `parsePiFraction`, `parseFraction`. |
+| `shared/exact-pi.js` | Cos/Sin of exact multiples of π with Mathematica's first-octant rewriting and exact 0, ±1, ±1/2: `reducePi`, `trigPi`, `cosPi`, `sinPi`, `cosSinPi`, `octantForm`. |
+| `shared/svg-frame.js` | Frame, frame ticks, axes and tick labels for `svg-plot.js` pictures: `drawFrame`, `drawAxes`, `clipToRange`, `frameLayout`; pure `ticks`, `automaticTicks`, `tickLabel`, `framePrimitives`, `axesPrimitives`. |
+| `shared/three-helpers.js` (additive option) | `createViewer({imageSize: [w, h]})` for a non-square image (the square viewer is unchanged); pure `viewerSize`, `viewerCamera`. |
+
+Their browser behaviour is tested on a test page that is not part of the site (`tests/e2e/fixtures/shared-controls.html`,
+`tests/e2e/shared-controls.spec.js`); the pure parts by `tests/unit/<module>.test.js`.
+
 ## Rendering choices
 
 - **Motion planning → SVG.** Flat 2D; locators are DOM elements (native pointer events, testable
@@ -76,6 +95,17 @@ touch or key press on the page and only while the browser lets audio run; used b
 The WebGL apps require WebGL 2; there is no fallback renderer. Instead of an empty page, a browser that cannot run an
 app gets a clear notice: the seven apps added in v0.1.12 load `shared/requirements.js` (a start-up watchdog, a WebGL 2
 check, and a `<noscript>` message). The first three apps do not have the notice yet.
+
+## Shared code and single-app deployment
+
+Code used by several apps lives once, in `shared/` (MIT), `demos/common/` (CC BY-NC-SA 3.0) and `vendor/three/`; the
+apps import it by relative paths (`../../shared/ui.js`) and through the import map, never by absolute URLs. That keeps
+one app deployable on its own (owner rule R-A): `npm run bundle -- <dir>` (`tools/bundle-app.mjs`) follows the page's
+imports and references and copies exactly the files it loads into `dist/<dir>/`, with the repository's layout, plus a
+root page, README and licence texts; any static host can serve that folder. Rules for app code that follow from this:
+reference files only by literal relative paths (a computed `import(…)` or `new URL(…, import.meta.url)` makes the
+bundler stop; list such files in `tools/bundle-app.config.json`), and keep every file an app needs under `demos/`,
+`shared/` or `vendor/`. `tests/e2e/bundle.spec.js` runs every app from its bundle alone.
 
 ## No build step
 

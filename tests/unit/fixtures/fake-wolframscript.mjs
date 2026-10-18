@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 // SPDX-FileCopyrightText: 2026 Tico Hannan
 // SPDX-License-Identifier: MIT
 // tests/unit/fixtures/fake-wolframscript.mjs — stands in for wolframscript in tests/unit/harness-runner-e2e.test.js.

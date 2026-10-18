@@ -25,10 +25,12 @@
 import {
   mEqual, mUnequal, mLess, mGreater, mLessEq, chop, mod, roundHalfEven,
   circlePoints, sortMma, add, sub, scale, neg, dot, dist,
-  mean, canonicalCompare, key, sameKey, total, euclid,
+  canonicalCompare, key, sameKey, euclid,
 } from '../../shared/mma.js';
 // Bit-exact Det, Norm, ArcTan and (best known) VectorAngle of Mathematica — design P-MP-01, v0.1.7.
 import { det, norm as normMma, arcTan, vectorAngle as vectorAngleMma } from '../../shared/mma-exact.js';
+// Polygon helpers shared with the Minkowski-sum port (moved in v0.1.15, unchanged).
+import { lineList, vector, areaOfPoly, centroidOfPoly, discretizeLineRev1 } from '../common/polygon-core.js';
 
 /** Normalize[v]: Mathematica multiplies by the reciprocal of Norm[v] (matches the traced normals,
  *  e.g. Normalize[{0., a}] can give 0.9999999999999999). */
@@ -42,10 +44,10 @@ const TWO_PI = 2 * Math.PI;
 // Basic polygon helpers
 // ---------------------------------------------------------------------------
 
-/** lineList[list] := Partition[Join[list, {First[list]}], 2, 1] — closed edge list. */
-export function lineList(list) {
-  return list.map((p, i) => [p, list[(i + 1) % list.length]]);
-}
+// lineList, vector, areaOfPoly, centroidOfPoly (and discretizeLineRev1 below) live in demos/common/polygon-core.js
+// since v0.1.15 (shared with "Minkowski Sum of Convex Robot and Obstacle", COMMON-DECISIONS §3); moved unchanged and
+// re-exported here under their old names, so this module's interface and results are unchanged.
+export { lineList, vector, areaOfPoly, centroidOfPoly };
 
 /** vertexList[list] := Partition[Join[list, list[[1;;2]]], 3, 1] — triples (v_i, v_i+1, v_i+2). */
 export function vertexList(list) {
@@ -56,34 +58,6 @@ export function vertexList(list) {
 /** normalVector[{{x2,y2},{x1,y1}}] := Normalize[{-y2 + y1, x2 - x1}] */
 export function normalVector([[x2, y2], [x1, y1]]) {
   return normalize([-y2 + y1, x2 - x1]);
-}
-
-/** vector[{{x2,y2},{x1,y1}}] := {x2 - x1, y2 - y1} */
-export function vector([[x2, y2], [x1, y1]]) {
-  return [x2 - x1, y2 - y1];
-}
-
-/** areaCalculation[{{x1,y1},{x2,y2}}] := x1 y2 - x2 y1 */
-const areaCalculation = ([[x1, y1], [x2, y2]]) => x1 * y2 - x2 * y1;
-
-/** areaOfPoly[poly] — signed shoelace area. */
-export function areaOfPoly(poly) {
-  return 0.5 * total(lineList(poly).map(areaCalculation));
-}
-
-const centroidCal = ([[x1, y1], [x2, y2]]) => {
-  const c = x1 * y2 - x2 * y1;
-  return [(x1 + x2) * c, (y1 + y2) * c];
-};
-
-/** centroidOfPoly[poly] — polygon centroid, or the vertex mean for zero area. */
-export function centroidOfPoly(poly) {
-  const area = areaOfPoly(poly);
-  if (mUnequal(area, 0.0)) {
-    const t = lineList(poly).reduce((s, e) => add(s, centroidCal(e)), [0, 0]);
-    return scale(t, 1 / (6.0 * area));
-  }
-  return mean(poly);
 }
 
 // ---------------------------------------------------------------------------
@@ -430,19 +404,8 @@ export function myAstarRev2(adjL, verts, si, fi) {
   return -1;
 }
 
-/** discretizeLineRev1[{p1, p2}, step] — points every `step` along the segment (end point excluded unless it lands exactly). */
-export function discretizeLineRev1([p1, p2], step) {
-  const d = euclid(p1, p2); // N@EuclideanDistance
-  if (d === 0) return [p1];
-  const h = step * (1 / d); // Mathematica evaluates step/d as step * d^-1
-  const count = Math.floor(1 / h + 1e-12);
-  const out = [];
-  for (let k = 0; k <= count; k++) {
-    const t = k * h;
-    out.push([p1[0] + (p2[0] - p1[0]) * t, p1[1] + (p2[1] - p1[1]) * t]);
-  }
-  return out;
-}
+// discretizeLineRev1[{p1, p2}, step]: demos/common/polygon-core.js (re-exported above).
+export { discretizeLineRev1 };
 
 // ---------------------------------------------------------------------------
 // The Manipulate body

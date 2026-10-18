@@ -17,13 +17,49 @@ export { THREE };
 export const rgb = ([r, g, b]) => new THREE.Color(r, g, b);
 
 /**
+ * Display size of a viewer in CSS px for a container of width `clientWidth`: square by default (side
+ * min(clientWidth || size, maxSize ?? 560)); with opts.imageSize = [w, h] (Mathematica ImageSize -> {w, h}) the
+ * width is min(clientWidth || w, maxSize ?? w) and the height keeps the ratio h/w.
+ */
+export function viewerSize(clientWidth, opts) {
+  if (Array.isArray(opts.imageSize)) {
+    const [iw, ih] = opts.imageSize;
+    const w = Math.min(clientWidth || iw, opts.maxSize ?? iw);
+    return { width: w, height: (w * ih) / iw };
+  }
+  const w = Math.min(clientWidth || (opts.size ?? 400), opts.maxSize ?? 560);
+  return { width: w, height: w };
+}
+
+/**
+ * Camera of a viewer (pure): centre of the box, position centre + viewPoint × longest side, vertical field of view
+ * in degrees and aspect ratio. viewAngle (radians) is the vertical angle over the image height (for a square image
+ * the same as before); undefined = automatic (bounding sphere seen from the view point, × 1.04).
+ */
+export function viewerCamera(opts) {
+  const [[x0, x1], [y0, y1], [z0, z1]] = opts.box;
+  const center = [(x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2];
+  const longest = Math.max(x1 - x0, y1 - y0, z1 - z0);
+  const vp = opts.viewPoint.map((c) => c * longest);
+  const dist = Math.sqrt(vp[0] * vp[0] + vp[1] * vp[1] + vp[2] * vp[2]); // as THREE.Vector3.length (createViewer)
+  const radius = 0.5 * Math.hypot(x1 - x0, y1 - y0, z1 - z0);
+  const fovRad = opts.viewAngle ?? 2 * Math.asin(Math.min(0.99, radius / dist)) * 1.04;
+  const aspect = Array.isArray(opts.imageSize) ? opts.imageSize[0] / opts.imageSize[1] : 1;
+  return { center, position: center.map((c, i) => c + vp[i]), fovDeg: (fovRad * 180) / Math.PI, aspect, near: dist / 100, far: dist * 10 };
+}
+
+/**
  * Create a renderer + camera + orbit controls inside `container`.
  * opts.box: [[xmin,xmax],[ymin,ymax],[zmin,zmax]] (PlotRange)
  * opts.viewPoint: Mathematica ViewPoint (scaled box coords, longest side = 1)
  * opts.viewAngle: full view angle in radians, or undefined for automatic (fit bounding sphere)
+ * opts.size / opts.maxSize: square image (default; the side follows the container, at most maxSize ?? 560)
+ * opts.imageSize: [w, h] for a non-square image (ImageSize -> {w, h}): aspect w/h, viewAngle vertical over the
+ *   height h, the width follows the container up to maxSize ?? w (manipulability-ellipsoid draft D-ME-01)
  */
 export function createViewer(container, opts) {
   const size = opts.size ?? 400;
+  const nonSquare = Array.isArray(opts.imageSize);
   const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setClearColor(0xffffff, 1);
@@ -38,15 +74,10 @@ export function createViewer(container, opts) {
   container.append(labelRenderer.domElement);
 
   const scene = new THREE.Scene();
-  const [[x0, x1], [y0, y1], [z0, z1]] = opts.box;
-  const center = new THREE.Vector3((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
-  const longest = Math.max(x1 - x0, y1 - y0, z1 - z0);
-  const vp = new THREE.Vector3(...opts.viewPoint).multiplyScalar(longest);
-  const camPos = center.clone().add(vp);
-  const dist = vp.length();
-  const radius = 0.5 * Math.hypot(x1 - x0, y1 - y0, z1 - z0);
-  const fovRad = opts.viewAngle ?? 2 * Math.asin(Math.min(0.99, radius / dist)) * 1.04;
-  const camera = new THREE.PerspectiveCamera((fovRad * 180) / Math.PI, 1, dist / 100, dist * 10);
+  const cam = viewerCamera(opts);
+  const center = new THREE.Vector3(...cam.center);
+  const camPos = new THREE.Vector3(...cam.position);
+  const camera = new THREE.PerspectiveCamera(cam.fovDeg, cam.aspect, cam.near, cam.far);
   camera.up.set(0, 0, 1); // ViewVertical -> {0,0,1}
   camera.position.copy(camPos);
   camera.lookAt(center);
@@ -72,7 +103,14 @@ export function createViewer(container, opts) {
   controls.addEventListener('change', render);
 
   const lineMaterials = new Set();
-  const resize = () => {
+  const resize = nonSquare ? () => {
+    const { width: w, height: h } = viewerSize(container.clientWidth, opts);
+    renderer.setSize(w, h);
+    labelRenderer.setSize(w, h);
+    container.style.height = `${h}px`;
+    for (const m of lineMaterials) m.resolution.set(w, h);
+    render();
+  } : () => {
     const w = Math.min(container.clientWidth || size, opts.maxSize ?? 560);
     renderer.setSize(w, w);
     labelRenderer.setSize(w, w);

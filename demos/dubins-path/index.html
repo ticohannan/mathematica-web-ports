@@ -1,0 +1,96 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstration by Aaron T. Becker and Shiva Shahrokhi
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shortest Path for the Dubins Car</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <script src="../../shared/requirements.js"></script>
+  <style>
+    /* ControlPlacement -> Top: labels left of the sliders, as in the original; graphic at ImageSize 600 */
+    #controls .ctl-slider { flex-direction: row; align-items: center; gap: 8px; }
+    #controls .ctl-slider .ctl-label { min-width: 4.5em; text-align: right; }
+    #controls .ctl-slider .ctl-line input[type=range] { flex: 0 1 400px; width: 400px; }
+    #graphic { width: 100%; max-width: 660px; flex: none; padding: 18px; }
+    @media (max-width: 640px) { #graphic { padding: 6px; } #controls .ctl-slider .ctl-line input[type=range] { width: auto; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Dubins car</div>
+    <h1 class="demo-title">Shortest Path for the Dubins Car</h1>
+
+    <section class="manipulate controls-top" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="graphic wide" id="graphic" data-testid="graphic">
+        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser.</div></noscript>
+      </div>
+    </section>
+
+    <p class="caption">In 1957, Lester Eli Dubins proved that the shortest path between two (<i>x</i>,<i>y</i>,θ) coordinates for
+      a forward-moving vehicle with a minimum turning radius <i>r</i><sub>min</sub> is composed entirely of no more than three
+      circular arcs of radius <i>r</i><sub>min</sub> or straight lines.</p>
+    <p class="caption">In this Demonstration, the starting position of the blue car is green and its end position (the goal) is
+      red. You can drag two locators, one for the red car's (<i>x</i>,<i>y</i>) position and the other for the red car's
+      orientation θ. The sliders let you vary the minimum turning radius <i>r</i><sub>min</sub> or move the blue car from the
+      start to the goal.</p>
+
+    <details class="details" data-testid="details">
+      <summary>Details</summary>
+      <p>The Dubins car is a simplified mathematical model of a car that moves in the <i>x</i>-<i>y</i> plane [1]. The car's
+        location is specified by the (<i>x</i>,<i>y</i>) location of the center of the car's rear axle and the orientation θ
+        of the car. The car cannot move sideways because the rear wheels would have to slide instead of roll. The Dubins car
+        model stipulates that the car moves forward at a constant speed and has a maximum steering angle that translates into
+        a minimum turning radius <i>r</i><sub>min</sub>. The minimum turning radius circles are drawn tangent to the starting
+        and ending positions with dashed gray circles.</p>
+      <p>If the car has forward velocity of 1 unit per second, the system equations are</p>
+      <p class="formula"><i>dx</i> = cos θ,<br><i>dy</i> = sin θ,<br><i>d</i>θ = <i>u</i>,</p>
+      <p>where <i>u</i> ∈ [−1/<i>r</i><sub>min</sub>, 1/<i>r</i><sub>min</sub>]. The task is to minimize the length of the curve
+        traced out by the center of the rear axle as it moves from the start to the goal. That path is the bounded-curvature
+        shortest path. Dubins proved that the shortest path consists of no more than three segments, where in each segment
+        <i>u</i> is either −1/<i>r</i><sub>min</sub>, 0 or 1/<i>r</i><sub>min</sub>. Denote these steering commands by R, S, L
+        for turning right, going straight or turning left. A path is then coded with a three-letter word.</p>
+      <p>If <i>r</i><sub>min</sub> = 0, then the shortest path is a straight line. For nonzero <i>r</i><sub>min</sub>, the
+        shortest paths are of the form LRL, RLR, LSL, LSR, RSL, RSR. In this Demonstration, each path type is given a different
+        color: LRL is brown, RLR is dark green, LSL is pink, LSR is blue, RSL is orange, and RSR is dark yellow.</p>
+      <p>LSR (blue) and RSL (orange) are potentially valid only if the distance from start to goal is greater than
+        2 <i>r</i><sub>min</sub>. The two paths composed entirely of curves, LRL (brown) and RLR (dark green), are potentially
+        valid only if the distance from start to goal is less than 4 <i>r</i><sub>min</sub>.</p>
+      <p>This Demonstration determines the shortest path by computing the paths using all of the valid words, and then picks
+        the one with shortest length.</p>
+      <p>All paths are drawn in their respective colors, but the shortest path is drawn with a thicker line. Techniques in [4]
+        show how to determine the regions where each path is optimal. If the car is allowed to move backward as well as
+        forward, there are 46 possible words, and this mathematical model is called the Reeds–Shepp car [2].</p>
+      <p>References:<br>
+        [1] L. E. Dubins, "On Curves of Minimal Length with a Constraint on Average Curvature, and with Prescribed Initial
+        and Terminal Positions and Tangents," <i>American Journal of Mathematics</i>, 79(3), 1957 pp. 497–516.
+        doi:10.2307/2372560.<br>
+        [2] J. A. Reeds and L. A. Shepp, "Optimal Paths for a Car That Goes both Forwards and Backwards," <i>Pacific Journal
+        of Mathematics</i>, 145(2), 1990 pp. 367–393. projecteuclid.org/euclid.pjm/1102645450.<br>
+        [3] S. Lavalle, <i>Planning Algorithms</i>, Cambridge University Press, 2006. http://planning.cs.uiuc.edu/node821.html.<br>
+        [4] X.-N. Bui, P. Souères, J.-D. Boissonnat and J.-P. Laumond, "The Shortest Path Synthesis for Non-holonomic Robots
+        Moving Forwards," Research Report RR-2153, INRIA, France, 1994. hal.inria.fr/inria-00074519.</p>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. Drag the black locator to move the goal car (its position is
+      kept within ±13 × ±8, as in the original) and the red cross-hair to turn it (it stays 2 units from the car); a press
+      elsewhere in the picture moves the nearer of the two there. Arrow keys move a focused locator. "distance" is the
+      distance of the goal position from the start. All computation runs in your browser.</p>
+    <div class="credits" data-testid="credits">
+      Adapted from <a href="https://demonstrations.wolfram.com/ShortestPathForTheDubinsCar/">"Shortest Path for the Dubins Car"</a>
+      by Aaron T. Becker and Shiva Shahrokhi, Wolfram Demonstrations Project (published December 14, 2017), licensed
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+      This JavaScript/SVG translation by Tico Hannan (© 2026; produced with an AI code-generation tool) is released under the
+      same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

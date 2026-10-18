@@ -1,0 +1,9 @@
+{
+  "_comment": "tools/bundle-app.mjs: files an app needs that the collector cannot find by itself. Per app: extraFiles (repository-relative paths of files the page loads but the collector cannot find, e.g. through a computed dynamic import; copied and scanned), dynamicImportsIn (files whose non-literal dynamic imports are covered by extraFiles), notices (licence notices that must accompany the code; copied, not loaded), why (shown in the bundle README next to the notices).",
+  "apps": {
+    "car-paths": {
+      "notices": ["docs/third-party/reeds-shepp-curves-LICENSE.txt"],
+      "why": "MIT licence notice of the Python library reeds-shepp-curves (Copyright (c) 2019 Nathan Lichtlé), from which the original's authors converted the Reeds–Shepp code that demos/car-paths/carpaths.js carries over; it must accompany copies of that code"
+    }
+  }
+}

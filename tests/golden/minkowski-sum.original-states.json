@@ -1,0 +1,35 @@
+{
+ "source": "Demonstration-Minkowski-Sum-of-Convex-Robot-and-Obstacle-1-0-0-definition.nb",
+ "note": "Manipulate states saved in the ORIGINAL notebook, computed by the original Mathematica code: states[0] = the live state of the output cell, specs = the initial settings (the Manipulate's stored \"Variables\"), snapshots = the Settings stored with each snapshot cell. Extracted with tools/extract_state.py --snapshots. Golden parity fixture (CC BY-NC-SA 3.0, as the original).",
+ "format": "Numbers: a JSON integer is an exact Wolfram integer (|x| <= 2^53 - 1; larger ones are {\"wl\": digits}); a JSON number written with a decimal point or an exponent is a machine real (the shortest text that reads back as the identical double); any other exact number (Rational, rational multiple of Pi, arbitrary-precision real, an unevaluated Sin[...], Infinity) is {\"wl\": a Wolfram-readable form (not necessarily InputForm: compare exact values by value), \"n\": its double} - \"n\" is the correctly rounded double for a Rational or rational multiple of Pi, Python's double evaluation otherwise, and absent for Infinity. Symbols are {\"sym\": name}, other expressions {\"head\": name, \"args\": [...]}; variable names without context and $$, Greek letters as Unicode. packedTypes maps the JSON pointer of a decoded packed array that was stored with a narrower element type (CompressedData tag b) to that type. snapshots[\"k\"] belongs to the picture docs/original-snapshots/<dir>-k.png (cells in file order).",
+ "specs": {
+  "a": false,
+  "c": true,
+  "dl": null,
+  "m": 3,
+  "n": 5,
+  "ol": null,
+  "pts": [[2.885,1.489],[3.249,2.6],[2.298,3.298],[1.348,2.607],[1.71,1.489],[-1.71,1.489],[-1.347,2.607],[-2.298,3.298],[-3.249,2.607],[-2.885,1.489]],
+  "rl": null,
+  "s": 1,
+  "stableOrMove": "static",
+  "step": 0.01
+ },
+ "states": [
+  {"a":false,"c":true,"dl":1017,"m":3,"n":5,"ol":5,"pts":[[2.885,1.489],[3.249,2.6],[2.298,3.298],[1.348,2.607],[1.71,1.489],[-1.71,1.489],[-1.34704,2.607],[-2.298,3.298],[-3.249,2.607],[-2.885,1.489]],"rl":3,"s":1,"stableOrMove":"static","step":0.01}
+ ],
+ "snapshots": {
+  "1": {"stableOrMove":"static","step":0.01,"dl":1017,"rl":3,"ol":5,"a":false,"c":true,"m":3,"n":5,"s":1,"pts":[[2.885,1.489],[3.249,2.6],[2.298,3.298],[1.348,2.607],[1.71,1.489],[-1.71,1.489],[-1.34704,2.607],[-2.298,3.298],[-3.249,2.607],[-2.885,1.489]]},
+  "2": {"stableOrMove":"static","step":0.01,"dl":878,"rl":5,"ol":3,"a":true,"c":true,"m":5,"n":3,"s":1,"pts":[[3.245,2.396],[3.249,2.6],[1.34704,2.23],[1.34704,1.916],[1.8849999999999998,1.854],[-2.035,1.624],[-2.37,1.489],[-3.249,3.19],[-3.249,2.607],[-2.885,1.489]]},
+  "3": {"stableOrMove":"move around Minkowski","step":0.01,"dl":878,"rl":5,"ol":3,"a":true,"c":false,"m":5,"n":3,"s":150,"pts":[[3.245,2.396],[3.249,2.6],[1.34704,2.23],[1.34704,1.916],[1.8849999999999998,1.854],[-2.035,1.624],[-2.37,1.489],[-3.249,3.19],[-3.249,2.607],[-2.885,1.489]]},
+  "4": {"stableOrMove":"static","step":0.01,"dl":780,"rl":2,"ol":4,"a":true,"c":true,"m":2,"n":4,"s":1,"pts":[[2.885,1.489],[3.249,2.6],[2.298,3.298],[1.348,2.607],[1.71,1.489],[-1.71,1.489],[-1.34704,2.607],[-2.298,3.298],[-3.249,2.607],[-2.885,1.489]]},
+  "5": {"stableOrMove":"move around Minkowski","step":0.01,"dl":780,"rl":2,"ol":4,"a":true,"c":false,"m":2,"n":4,"s":166,"pts":[[2.885,1.489],[3.249,2.6],[2.298,3.298],[1.348,2.607],[1.71,1.489],[-1.71,1.489],[-1.34704,2.607],[-2.298,3.298],[-3.249,2.607],[-2.885,1.489]]}
+ },
+ "snapshotCellIds": {
+  "1": 664422755,
+  "2": 1826513932,
+  "3": 2088404906,
+  "4": 1348528574,
+  "5": 177332780
+ }
+}

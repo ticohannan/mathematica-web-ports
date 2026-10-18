@@ -1,0 +1,79 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstration by Aaron T. Becker and Haoran Zhao
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Robot Motion with Obstacles</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <script src="../../shared/requirements.js"></script>
+  <style>
+    /* ControlPlacement -> Top: the label left of the slider, as in the original; graphic at ImageSize {600, 320} */
+    #controls .ctl-slider { flex-direction: row; align-items: center; gap: 8px; }
+    #controls .ctl-slider input[type=range] { flex: 0 1 220px; width: 220px; }
+    #controls .ctl-label i { font-family: "Times New Roman", serif; font-size: 1.05em; }
+    #graphic { width: 100%; max-width: 640px; flex: none; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Robot motion with obstacles</div>
+    <h1 class="demo-title">Robot Motion with Obstacles</h1>
+
+    <section class="manipulate controls-top" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="graphic wide" id="graphic" data-testid="graphic">
+        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser.</div></noscript>
+      </div>
+    </section>
+
+    <p class="caption">This Demonstration shows a two-link planar arm robot operating in the workspace on the left, containing
+      two small circular obstacles. The corresponding robot phase space on the right shows the configurations
+      <i>q</i> = (<i>θ</i><sub>1</sub>, <i>θ</i><sub>2</sub>) for which an arm intersects an obstacle. You can relocate an
+      obstacle in the workspace and see the corresponding change in phase space. Move the locator in phase space vertically
+      or horizontally to rotate the robot arms. The angles <i>θ</i><sub>1</sub> and <i>θ</i><sub>2</sub> are expressed
+      modulo 2π. The obstacle regions are computed using 32<i>Q</i> unit squares. You can improve the quality of the
+      computation by increasing <i>Q</i>.</p>
+
+    <details class="details" data-testid="details">
+      <summary>Details</summary>
+      <p>The set of all possible configurations of the robot can be represented in a two-dimensional phase space. Of
+        particular interest are the configurations in which the robot collides with one of the obstacles.</p>
+      <p>This Demonstration computes the obstacle regions using 32<i>Q</i> unit squares and determines if the centroid of
+        each square is in a collision. Given <i>θ</i><sub>1</sub> and <i>θ</i><sub>2</sub>, the motion computation is
+        trivial.</p>
+      <p>However, computing the phase-space obstacle region is more difficult, because the size of the space representation
+        grows exponentially with the number of degrees of freedom (independent joints) of the robot.</p>
+      <p>Consider how many <i>n</i>-dimensional unit squares are required to fill a space of size <i>k</i>. For a
+        one-dimensional space, <i>k</i><sup>1</sup> units are needed. For a two-dimensional space, <i>k</i><sup>2</sup>
+        squares are needed. For an <i>n</i>-dimensional space, <i>k</i><sup><i>n</i></sup> hypercubes would be required.</p>
+      <p>The phase space for a two-link planar robot can be represented on a torus. When rotation joint 1 moves past 2π, it
+        returns to angle 0. This is represented by dashed and solid lines of the same color. If the phase space were printed
+        on a rubber sheet, cut out, and the dashed and solid lines of each color were joined, the resulting shape would be a
+        torus. In this Demonstration, moving the locator past the edge of the phase space wraps the angle around 2π.</p>
+      <p>Reference<br>
+        [1] M. Spong, S. Hutchinson, and M. Vidyasagar, <i>Robot Modeling and Control</i>, Hoboken, NJ: John Wiley and Sons,
+        2006.</p>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. Drag the two obstacle locators in the workspace; press and
+      drag anywhere in the phase space to set the arm's angles (the configuration locator is invisible; the coloured
+      cross-hair shows it). While a control is dragged the grid is computed at a quarter of the resolution, as in the
+      original. Arrow keys move a focused locator. All computation runs in your browser.</p>
+    <div class="credits" data-testid="credits">
+      Adapted from <a href="https://demonstrations.wolfram.com/RobotMotionWithObstacles/">"Robot Motion with Obstacles"</a>
+      by Aaron T. Becker and Haoran Zhao, Wolfram Demonstrations Project (published April 18, 2016), licensed
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+      This JavaScript/SVG translation by Tico Hannan (© 2026; produced with an AI code-generation tool) is released under the
+      same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

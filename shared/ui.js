@@ -7,6 +7,37 @@
 //
 // Every interactive element gets a stable data-testid so the Playwright tests
 // (tests/e2e) can find it without depending on layout or wording.
+//
+// Controls.slider options (all optional except name/min/max/value; the defaults keep the behaviour the first
+// ten apps were built with):
+//   label, step (0 = continuous), value, enabled, onInput(v), animSeconds  — as before
+//   labeled  true (default): an editable value field `value-<name>`; false: no value shown;
+//            'text': the value as plain, non-editable text `value-<name>` (Mathematica's Dynamic[x] beside a
+//            Slider, e.g. a slider grid).
+//   plus     true (default): the ⊕ button `plus-<name>` with the animation panel `anim-<name>` (play, step
+//            back/forward) of a Manipulate control with Appearance -> "Labeled"; false: neither (a plain Slider,
+//            ControlType -> Slider, or a Manipulate slider without the panel).
+//   steps    undefined (default): user input snaps to min + round((v − min)/step)·step, rounded to 10 decimals.
+//            'mma': Mathematica's discrete slider {min, max, step}: the positions are k = 0 … n with the value
+//            min + k·step in machine arithmetic (k·0.05 for k = 3 is 0.15000000000000002) and the right end giving
+//            max exactly (also when max is off the step grid, e.g. {0, 2.49, 0.05} ends 2.45, 2.49); the range
+//            input runs on k, so a drag, the arrow keys, Home/End, the ⊕ panel and a typed value (snapped to the
+//            nearest position) all land on these values (mmaGrid below). With step 0 the slider stays continuous.
+//            The value field is a text field showing Mathematica's text of the value (mmaSliderText): exact
+//            integers as "2", machine reals as "0.15", "1." — the values are machine reals unless min and step are
+//            integers (or option realValues says otherwise), and the opening value counts as exact until the user
+//            moves the slider (Mathematica shows the exact default 0 as "0" and the moved value as "0."). A whole
+//            number typed into the field ("2", no point) stays exact like Mathematica's typed Integer when the
+//            stored value equals it (after parse, snapping and clamping): it shows as "2", not "2.", until the next drag, key,
+//            ⊕ step or typed non-integer (the format hook then receives moved = false too; isMoved() stays true).
+//   realValues  (steps 'mma') whether moved values are machine reals; default: not (min and step integers).
+//   format(v, {moved, k, min, max, step})  the text shown for v (value field or 'text' label), e.g. "5π/32" or
+//            "1/2" with piFraction/fractionText of shared/mma-text.js; implies a text field.
+//   parse(text)  a typed text → a number (null / NaN rejects the entry and restores the shown text), e.g. "5π/32"
+//            → 5 for a slider over the integer n of nπ/32; the result is then clamped (and snapped with a step).
+// The returned api: get(), set(v, {moved}) (programmatic, stores v as given; `moved` sets what the default text
+// shows, otherwise unchanged), setRange(a, b), setEnabled(b), stop(), isMoved(), row.
+import { mmaNumberString } from './mma-extra.js';
 
 export function el(tag, attrs = {}, ...children) {
   const node = document.createElement(tag);
@@ -40,6 +71,37 @@ const snapTo = (v, min, step) => (step ? Math.round((v - min) / step) * step + m
 const clamp = (v, a, b) => Math.min(Math.max(v, a), b);
 
 /**
+ * Positions of Mathematica's discrete slider {min, max, step} (step > 0): k = 0 … n with valueAt(k) = min + k·step
+ * in machine arithmetic, and valueAt(n) = max. If max lies on the grid (within 1e-9 steps) the last grid point IS
+ * the right end (it gives max exactly, as robot-singularities D-RS-06); otherwise the right end is one extra position
+ * after the last grid point ({0, 2.49, 0.05}: …, 2.4000000000000004, 2.45, 2.49 — four-bar-linkage K-FB-06).
+ * indexOf(v) is the nearest position of v (clamped to the range).
+ */
+export function mmaGrid(min, max, step) {
+  const K = Math.floor((max - min) / step + 1e-9);
+  const endOnGrid = Math.abs(min + K * step - max) <= 1e-9 * Math.abs(step);
+  const n = endOnGrid ? K : K + 1;
+  const valueAt = (k) => (k >= n ? max : k <= 0 ? min : min + k * step);
+  const indexOf = (v) => {
+    if (!(v > min)) return 0;
+    if (v >= max) return n;
+    const k = Math.min(Math.round((v - min) / step), n);
+    if (!endOnGrid && k >= K) return Math.abs(max - v) < Math.abs(v - valueAt(K)) ? n : K;
+    return k;
+  };
+  return { min, max, step, n, endOnGrid, valueAt, indexOf };
+}
+
+/**
+ * Mathematica's text of a slider value: an exact value (the opening value of an integer slider position, or any value
+ * of a slider with integer min and step) plainly ("0", "2", "0.75" for a non-integer), a moved machine real with
+ * mmaNumberString ("0.", "0.15", "4.27", "1.").
+ */
+export function mmaSliderText(v, { moved = false, realValues = true } = {}) {
+  return moved && realValues ? mmaNumberString(v, { isReal: true }) : mmaNumberString(v);
+}
+
+/**
  * Container for Manipulate-style controls.
  */
 export class Controls {
@@ -58,96 +120,168 @@ export class Controls {
 
   /**
    * Labelled slider with Mathematica's "+" panel (value field, play/pause, step).
-   * opts: {name, label, min, max, step, value, labeled, enabled, onInput, animSeconds}
+   * opts: {name, label, min, max, step, value, labeled, enabled, onInput, animSeconds,
+   *        plus, steps, realValues, format, parse}  — see the file header.
    */
   slider(opts) {
-    const { name, label = '', step = 0, labeled = true, onInput } = opts;
+    const { name, label = '', step = 0, labeled = true, onInput, format, parse } = opts;
+    const withPlus = opts.plus !== false;
+    const mma = opts.steps === 'mma';
     let { min, max } = opts;
     let value = opts.value;
     let enabled = opts.enabled !== false;
     let playing = false, raf = 0, lastT = 0;
+    let moved = false;
+    let typedExact = false; // the last user input was a typed whole number kept exact (file header, steps 'mma')
     const animSeconds = opts.animSeconds ?? 6; // time to sweep the full range
+    // steps 'mma' with a step: the range input runs on the position index k (mmaGrid)
+    let grid = mma && step > 0 ? mmaGrid(min, max, step) : null;
+    const realValues = opts.realValues ?? !(step > 0 && Number.isInteger(min) && Number.isInteger(step));
+    const textual = mma || !!format || !!parse; // the value field shows text, not an <input type=number>
+    const shownMoved = () => moved && !typedExact;
+    const info = () => ({ moved: shownMoved(), k: grid ? grid.indexOf(value) : undefined, min, max, step });
+    const show = (v) => (format ? format(v, info()) : mma ? mmaSliderText(v, { moved: shownMoved(), realValues }) : fmt(v, step));
 
-    const range = el('input', {
-      type: 'range', min, max, step: step || 'any', value,
-      'data-testid': `slider-${name}`, 'aria-label': label || name,
-    });
-    const field = el('input', {
-      type: 'number', class: 'ctl-field', step: step || 'any', min, max, value: fmt(value, step),
-      'data-testid': `value-${name}`, 'aria-label': `${label || name} value`,
-    });
-    const playBtn = el('button', { type: 'button', class: 'ctl-btn', 'data-testid': `play-${name}`, title: 'Play / pause animation' }, '▶');
-    const backBtn = el('button', { type: 'button', class: 'ctl-btn', 'data-testid': `stepback-${name}`, title: 'Step back' }, '−');
-    const fwdBtn = el('button', { type: 'button', class: 'ctl-btn', 'data-testid': `stepfwd-${name}`, title: 'Step forward' }, '+');
-    const panel = el('div', { class: 'ctl-anim', hidden: true, 'data-testid': `anim-${name}` }, backBtn, playBtn, fwdBtn);
-    const plus = el('button', {
-      type: 'button', class: 'ctl-plus', 'data-testid': `plus-${name}`, title: 'Show animation controls', 'aria-expanded': 'false',
-    }, '⊕');
+    const range = grid
+      ? el('input', { type: 'range', min: 0, max: grid.n, step: 1, value: grid.indexOf(value), 'data-testid': `slider-${name}`, 'aria-label': label || name })
+      : el('input', {
+        type: 'range', min, max, step: step || 'any', value,
+        'data-testid': `slider-${name}`, 'aria-label': label || name,
+      });
+    let field = null;
+    if (labeled === 'text') {
+      field = el('span', { class: 'ctl-valuetext', 'data-testid': `value-${name}`, style: 'min-width:3em;font-size:0.82rem' }, show(value));
+    } else if (labeled && textual) {
+      field = el('input', {
+        type: 'text', class: 'ctl-field', inputmode: 'decimal', autocomplete: 'off', spellcheck: 'false', value: show(value),
+        'data-testid': `value-${name}`, 'aria-label': `${label || name} value`,
+      });
+    } else if (labeled) {
+      field = el('input', {
+        type: 'number', class: 'ctl-field', step: step || 'any', min, max, value: fmt(value, step),
+        'data-testid': `value-${name}`, 'aria-label': `${label || name} value`,
+      });
+    }
+    if (grid) range.setAttribute('aria-valuetext', show(value));
+    const showField = (v) => {
+      if (grid) range.setAttribute('aria-valuetext', show(v));
+      if (!field) return;
+      if (labeled === 'text') field.textContent = show(v);
+      else field.value = textual ? show(v) : fmt(v, step);
+    };
+    let playBtn = null, backBtn = null, fwdBtn = null, panel = null, plus = null;
+    if (withPlus) {
+      playBtn = el('button', { type: 'button', class: 'ctl-btn', 'data-testid': `play-${name}`, title: 'Play / pause animation' }, '▶');
+      backBtn = el('button', { type: 'button', class: 'ctl-btn', 'data-testid': `stepback-${name}`, title: 'Step back' }, '−');
+      fwdBtn = el('button', { type: 'button', class: 'ctl-btn', 'data-testid': `stepfwd-${name}`, title: 'Step forward' }, '+');
+      panel = el('div', { class: 'ctl-anim', hidden: true, 'data-testid': `anim-${name}` }, backBtn, playBtn, fwdBtn);
+      plus = el('button', {
+        type: 'button', class: 'ctl-plus', 'data-testid': `plus-${name}`, title: 'Show animation controls', 'aria-expanded': 'false',
+      }, '⊕');
+    }
 
     const row = el('div', { class: 'ctl ctl-slider', 'data-testid': `ctl-${name}` },
       label ? el('label', { class: 'ctl-label' }, label) : null,
-      el('div', { class: 'ctl-line' }, range, labeled ? field : null, plus),
+      el('div', { class: 'ctl-line' }, range, field, plus),
       panel);
     this.root.append(row);
 
     // User input snaps to the slider step. Programmatic set() (fire = false)
     // stores the exact value, like a Manipulate variable assigned in code
     // (e.g. converted angles written back into disabled sliders).
-    const set = (v, fire = true) => {
+    const set = (v, fire = true, typedInteger = null) => {
       v = Number(v);
+      if (fire) typedExact = false;
       if (fire) {
-        v = clamp(snapTo(v, min, step), Math.min(min, max), Math.max(min, max));
-        if (step) v = Number(v.toFixed(10));
+        if (grid) v = grid.valueAt(grid.indexOf(v));
+        else {
+          v = clamp(snapTo(v, min, step), Math.min(min, max), Math.max(min, max));
+          if (step) v = Number(v.toFixed(10));
+        }
+        moved = true;
+        if (typedInteger !== null && v === typedInteger) typedExact = true;
       }
       value = v;
-      range.value = String(v);
-      field.value = fmt(v, step);
+      range.value = String(grid ? grid.indexOf(v) : v);
+      showField(v);
       if (fire && onInput) onInput(v);
     };
-    range.addEventListener('input', () => set(range.value));
-    field.addEventListener('change', () => set(field.value));
-    plus.addEventListener('click', () => {
-      panel.hidden = !panel.hidden;
-      plus.setAttribute('aria-expanded', String(!panel.hidden));
-    });
-    const stepBy = (dir) => set(value + dir * (step || (max - min) / 100));
-    backBtn.addEventListener('click', () => stepBy(-1));
-    fwdBtn.addEventListener('click', () => stepBy(+1));
+    // a position index of the mma grid (drag, keys, ⊕ panel): exactly min + k·step, max at the right end
+    const setIndex = (k) => {
+      k = clamp(Math.round(k), 0, grid.n);
+      moved = true;
+      typedExact = false;
+      value = grid.valueAt(k);
+      range.value = String(k);
+      showField(value);
+      if (onInput) onInput(value);
+    };
+    range.addEventListener('input', () => (grid ? setIndex(Number(range.value)) : set(range.value)));
+    if (field && labeled !== 'text') {
+      field.addEventListener('change', () => {
+        if (!textual) return set(field.value);
+        const t = field.value;
+        const v = parse ? parse(t) : t.trim() === '' ? NaN : Number(t.trim().replace(/[−–]/g, '-'));
+        if (v == null || !Number.isFinite(Number(v))) { showField(value); return; }
+        // a whole-number literal stays exact (file header): "2" → 2 shown as "2"
+        const lit = t.trim().replace(/[−–]/g, '-');
+        set(Number(v), true, mma && /^-?\d+$/.test(lit) ? Number(lit) : null);
+      });
+    }
+    const stepBy = (dir) => (grid ? setIndex(grid.indexOf(value) + dir) : set(value + dir * (step || (max - min) / 100)));
     let animPos = 0; // continuous position; the displayed value snaps to the step
+    const snapped = (x) => (grid ? grid.valueAt(grid.indexOf(x)) : snapTo(x, min, step));
     const tick = (t) => {
       if (!playing) return;
       const dt = lastT ? (t - lastT) / 1000 : 0;
       lastT = t;
       animPos += ((max - min) * dt) / animSeconds;
       if (animPos > max) animPos = min + (animPos - max); // loop like Manipulate's default animator
-      if (snapTo(animPos, min, step) !== value) set(animPos);
+      if (snapped(animPos) !== value) set(animPos);
       raf = requestAnimationFrame(tick);
     };
-    playBtn.addEventListener('click', () => {
-      playing = !playing;
-      playBtn.textContent = playing ? '❚❚' : '▶';
-      playBtn.setAttribute('aria-pressed', String(playing));
-      lastT = 0;
-      animPos = value;
-      if (playing) raf = requestAnimationFrame(tick); else cancelAnimationFrame(raf);
-    });
+    if (withPlus) {
+      plus.addEventListener('click', () => {
+        panel.hidden = !panel.hidden;
+        plus.setAttribute('aria-expanded', String(!panel.hidden));
+      });
+      backBtn.addEventListener('click', () => stepBy(-1));
+      fwdBtn.addEventListener('click', () => stepBy(+1));
+      playBtn.addEventListener('click', () => {
+        playing = !playing;
+        playBtn.textContent = playing ? '❚❚' : '▶';
+        playBtn.setAttribute('aria-pressed', String(playing));
+        lastT = 0;
+        animPos = value;
+        if (playing) raf = requestAnimationFrame(tick); else cancelAnimationFrame(raf);
+      });
+    }
 
     const api = {
       get: () => value,
-      set: (v) => set(v, false),
+      set: (v, how) => {
+        if (how && 'moved' in how) { moved = !!how.moved; typedExact = false; }
+        set(v, false);
+      },
       setRange: (a, b) => {
         min = a; max = b;
-        range.min = String(a); range.max = String(b);
-        field.min = String(a); field.max = String(b);
+        if (grid) {
+          grid = mmaGrid(a, b, step);
+          range.max = String(grid.n);
+        } else {
+          range.min = String(a); range.max = String(b);
+        }
+        if (field && field.type === 'number') { field.min = String(a); field.max = String(b); }
         set(value, false);
       },
       setEnabled: (b) => {
         enabled = b;
-        for (const n of [range, field, playBtn, backBtn, fwdBtn]) n.disabled = !b;
+        for (const n of [range, field, playBtn, backBtn, fwdBtn]) if (n && n.tagName !== 'SPAN') n.disabled = !b;
         row.classList.toggle('is-disabled', !b);
         if (!b && playing) playBtn.click();
       },
       stop: () => { if (playing) playBtn.click(); },
+      isMoved: () => moved,
       row,
     };
     api.setEnabled(enabled);

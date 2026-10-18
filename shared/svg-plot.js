@@ -145,6 +145,13 @@ export function locatorGlyph(plot, { color = [0.25, 0.25, 0.25], size = 17, ring
 }
 
 /**
+ * The Manipulate's default locator glyph as measured in the snapshots of robot-motion-obstacles, bfs-motion-planning
+ * and rrt: black lines and a dark translucent ring (black at opacity 0.3; over the brown obstacle disks it darkens
+ * them to about 70 %, over white it is a light grey).
+ */
+export const darkLocatorGlyph = (plot) => locatorGlyph(plot, { color: [0, 0, 0], ringFill: [0, 0, 0], ringOpacity: 0.3 });
+
+/**
  * Draggable locators (Manipulate `Locator` controls).
  *   names: list of locator names
  *   get(name) -> [x, y]                     current position (drawn from this)

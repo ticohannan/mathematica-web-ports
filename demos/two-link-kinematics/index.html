@@ -1,0 +1,118 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstration by Aaron T. Becker and Lillian Lin
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Forward and Inverse Kinematics for Two-Link Arm</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <script src="../../shared/requirements.js"></script>
+  <style>
+    /* ControlPlacement -> Left: one column of controls, labels left of each control, the picture (ImageSize 400) right */
+    .manipulate .controls { min-width: 0; max-width: 250px; gap: 10px; }
+    #controls .ctl-slider { flex-direction: row; align-items: center; gap: 8px; }
+    #controls .ctl-label { min-width: 4.2em; text-align: right; }
+    #controls .ctl-slider .ctl-field { width: 3.6em; }
+    #controls .ctl-check { flex-direction: row-reverse; justify-content: flex-end; }
+    #controls .ctl-check span { min-width: 4.2em; text-align: right; }
+    #graphic { flex: 1 1 400px; max-width: 520px; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Two-link arm kinematics</div>
+    <h1 class="demo-title">Forward and Inverse Kinematics for Two-Link Arm</h1>
+
+    <section class="manipulate" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="graphic" id="graphic" data-testid="graphic">
+        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser.</div></noscript>
+      </div>
+    </section>
+
+    <p class="caption">This Demonstration lets you control a two-link revolute-revolute robot arm either by setting the two
+      joint angles (this is called forward kinematics) or by dragging a locator specifying the tip of the end effector (this
+      is called inverse kinematics). Most locations in the workspace have two solutions to the inverse kinematics and can be
+      selected with the "elbow up?" check box. The joint velocities are limited to magnitudes less than or equal to 1,
+      represented by a green disc. Joint velocities map to a velocity of the end effector, drawn with a green locator (this
+      is called forward velocity kinematics). Dragging the green locator maps to joint velocities (this is called inverse
+      velocity kinematics). You can vary the relative link lengths under the constraint that
+      <i>r</i><sub>1</sub>+<i>r</i><sub>2</sub>=2.</p>
+
+    <details class="details" data-testid="details">
+      <summary>Details</summary>
+      <p>A robot arm, or robot manipulator, is constructed from two types of joints, prismatic and revolute. A revolute joint
+        rotates on a single plane along an axis centered at the joint, while a prismatic joint moves linearly, extending along
+        a line. The transformation from joint angles to the location of the end effector is called forward kinematics and can
+        be computed by a series of matrix multiplications.</p>
+      <p>Each joint transforms the coordinate frame from the previous joint. These coordinate transformations are multiplied
+        together to determine the location of the end effector. The Denavit–Hartenberg convention represents the
+        transformation due to the <i>i</i><sup>th</sup> joint as [1]:</p>
+      <p class="formula">
+        <math display="block">
+          <msub><mi>A</mi><mi>i</mi></msub><mo>=</mo>
+          <msub><mtext>rot</mtext><mrow><mi>z</mi><mo>,</mo><msub><mi>θ</mi><mi>i</mi></msub></mrow></msub>
+          <msub><mtext>trans</mtext><mrow><mi>z</mi><mo>,</mo><msub><mi>d</mi><mi>i</mi></msub></mrow></msub>
+          <msub><mtext>trans</mtext><mrow><mi>x</mi><mo>,</mo><msub><mi>a</mi><mi>i</mi></msub></mrow></msub>
+          <msub><mtext>rot</mtext><mrow><mi>z</mi><mo>,</mo><msub><mi>α</mi><mi>i</mi></msub></mrow></msub>
+          <mo>=</mo>
+          <mrow><mo>(</mo><mtable>
+            <mtr><mtd><msub><mi>c</mi><msub><mi>θ</mi><mi>i</mi></msub></msub></mtd><mtd><mo>−</mo><msub><mi>s</mi><msub><mi>θ</mi><mi>i</mi></msub></msub><msub><mi>c</mi><msub><mi>α</mi><mi>i</mi></msub></msub></mtd><mtd><msub><mi>s</mi><msub><mi>θ</mi><mi>i</mi></msub></msub><msub><mi>s</mi><msub><mi>α</mi><mi>i</mi></msub></msub></mtd><mtd><msub><mi>a</mi><mi>i</mi></msub><msub><mi>c</mi><msub><mi>θ</mi><mi>i</mi></msub></msub></mtd></mtr>
+            <mtr><mtd><msub><mi>s</mi><msub><mi>θ</mi><mi>i</mi></msub></msub></mtd><mtd><msub><mi>c</mi><msub><mi>θ</mi><mi>i</mi></msub></msub><msub><mi>c</mi><msub><mi>α</mi><mi>i</mi></msub></msub></mtd><mtd><mo>−</mo><msub><mi>c</mi><msub><mi>θ</mi><mi>i</mi></msub></msub><msub><mi>s</mi><msub><mi>α</mi><mi>i</mi></msub></msub></mtd><mtd><msub><mi>a</mi><mi>i</mi></msub><msub><mi>s</mi><msub><mi>θ</mi><mi>i</mi></msub></msub></mtd></mtr>
+            <mtr><mtd><mn>0</mn></mtd><mtd><msub><mi>s</mi><msub><mi>α</mi><mi>i</mi></msub></msub></mtd><mtd><msub><mi>c</mi><msub><mi>α</mi><mi>i</mi></msub></msub></mtd><mtd><msub><mi>d</mi><mi>i</mi></msub></mtd></mtr>
+            <mtr><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>0</mn></mtd><mtd><mn>1</mn></mtd></mtr>
+          </mtable><mo>)</mo></mrow><mo>,</mo>
+        </math>
+      </p>
+      <p>where <i>c</i><sub>θ</sub> = cos θ and <i>s</i><sub>θ</sub> = sin θ.</p>
+      <p>A sequence of matrices <i>A</i><sub><i>i</i></sub> are then multiplied together to give the location of the end
+        effector.</p>
+      <p>The transformation from the end effector location to joint angles is usually challenging because it often involves
+        inverse trigonometric functions. Often there are multiple solutions, and the transformation is sometimes impossible
+        (some end effectors are outside the workspace of the robot). Even for this simple two-link robot, these issues are
+        present. The reachable workspace is drawn in blue. All locations outside of this region are impossible to reach. All
+        locations on the boundary of this workspace have only one solution, but locations inside the blue region can be
+        reached by two configurations, called the "elbow up" and "elbow down" configurations.</p>
+      <p>The transformation from joint velocities <i>q</i>′ to end effector velocities ξ is called forward velocity
+        kinematics. It can be computed by taking the derivative of the forward kinematics equations and multiplying this by
+        the joint velocities. This gives the Jacobian, a function of the current robot configuration and is represented by
+        <i>J</i>(<i>q</i>), where <i>q</i> is a vector of joint angles:</p>
+      <p class="formula">ξ = <i>J</i>(<i>q</i>) <i>q</i>′.</p>
+      <p>If all joint velocities are within the unit ball ∑(<i>q</i><sub><i>i</i></sub>′)<sup>2</sup> ≤ 1, then the end
+        effector velocities are constrained to lie within an ellipse, drawn in pink in the figure. This ellipse is called the
+        manipulability ellipse.</p>
+      <p>The inverse problem of determining what joint velocities <i>q</i>′ are required to generate a desired ξ is inverse
+        velocity kinematics. Inverse velocity kinematics is trivial if <i>J</i>(<i>q</i>)<sup>−1</sup> exists:
+        <i>J</i>(<i>q</i>)<sup>−1</sup>·ξ = <i>q</i>′, but when <i>J</i>(<i>q</i>) is singular this is not possible. In
+        this Demonstration, singular configurations occur on the boundary of the workspace, where the manipulability ellipse
+        loses a dimension and becomes a line. In this case, we solve for the required joint velocities by generating the
+        Moore–Penrose pseudoinverse. This is calculated in <i>Mathematica</i> as PseudoInverse[J]·ξ = <i>q</i>′.</p>
+      <p>References:<br>
+        [1] M. W. Spong, S. Hutchinson, and M. Vidyasagar, <i>Robot Modeling and Control</i>, Hoboken, NJ: John Wiley and
+        Sons, 2006.</p>
+      <p>Related links of the original: Forward and Inverse Kinematics of the SCARA Robot; Inverse Kinematics for a Robot
+        Manipulator with Six Degrees of Freedom; Rotation Matrix; Jacobian; Forward Kinematics; Robot Motion with
+        Obstacles.</p>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. Drag the black locator (the end effector) or the green one
+      (the end-effector velocity) in the picture; a press anywhere in the picture moves the nearer of the two there. Press or
+      drag in a dial to set a joint angle, and in the green pad to set the joint velocities. Arrow keys move a focused
+      locator (Shift: five times as far). All computation runs in your browser.</p>
+    <div class="credits" data-testid="credits">
+      Adapted from <a href="https://demonstrations.wolfram.com/ForwardAndInverseKinematicsForTwoLinkArm/">"Forward and Inverse Kinematics for Two-Link Arm"</a>
+      by Aaron T. Becker and Lillian Lin, Wolfram Demonstrations Project (published June 20, 2016), licensed
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+      This JavaScript/SVG translation by Tico Hannan (© 2026; produced with an AI code-generation tool) is released under the
+      same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

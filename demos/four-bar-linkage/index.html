@@ -1,0 +1,96 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstration by Aaron T. Becker and Shiva Shahrokhi
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Configuration Space for Four-Bar Linkage</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <script src="../../shared/requirements.js"></script>
+  <style>
+    /* ControlPlacement -> Top: labels left of the controls (as in the original) */
+    #controls .ctl-slider, #controls .ctl-islider { flex-direction: row; align-items: center; gap: 10px; }
+    #controls .ctl-label { min-width: 11em; text-align: right; }
+    #controls .ctl-slider .ctl-line input[type=range] { flex: 0 1 180px; width: 180px; }
+    #controls .ctl-islider .ctl-line { flex: 0 1 430px; }
+    /* Row[{configuration space, linkage}]: side by side, stacked on narrow screens (D-FB-08) */
+    .fb-row { display: flex; flex-wrap: wrap; gap: 18px; width: 100%; }
+    .fb-row .fb-graphic { flex: 1 1 300px; max-width: 380px; min-width: 0; border: none; }
+    .fb-row .plot-label { text-align: center; color: #666; font-size: 13px; padding-top: 4px; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Four-bar linkage</div>
+    <h1 class="demo-title">Configuration Space for Four-Bar Linkage</h1>
+
+    <section class="manipulate controls-top" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="fb-row" id="graphics">
+        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser.</div></noscript>
+      </div>
+    </section>
+
+    <p class="caption">A planar four-bar linkage has four joints, so its configuration is described by four numbers.
+      However, because the linkage is a closed chain, the resulting constraints make most configurations unattainable.
+      The linkage's configuration space is a one-dimensional curve embedded in a four-dimensional space. The plot at left
+      projects the configuration space onto the joint angles (θ, φ) of the first and third links. You can drag the
+      locator to explore the set of reachable configurations. Because θ and φ are angles, this configuration space wraps
+      around from −π to π. If any link is greater than the sum of the other three links, no valid configurations
+      exist.</p>
+
+    <details class="details" data-testid="details">
+      <summary>Details</summary>
+      <p>In this Demonstration, links 1 and 3 are connected to the ground plane and are separated by a distance that can
+        be adjusted by the slider "separation (<i>L</i><sub>4</sub>)". The other three link lengths are set by the
+        interval slider.</p>
+      <p>The four-bar linkage has four links, which are connected in a closed chain. The four-bar linkage is therefore a
+        parallel mechanism. Grübler's formula states that the number of degrees of freedom of a planar mechanism is given
+        by</p>
+      <p class="formula">DOF = 3(<i>N</i> − 1 − <i>J</i>) + ∑<sub><i>i</i>=1</sub><sup><i>J</i></sup> <i>f</i><sub><i>i</i></sub>.</p>
+      <p>In this Demonstration, DOF is the number of degrees of freedom, <i>N</i> = 4 is the number of links, <i>J</i> = 4
+        is the number of joints, and <i>f</i><sub><i>i</i></sub> = 1 is the number of degrees of freedom provided by
+        joint <i>i</i>. The DOF of the four-bar linkage is therefore 3(4 − 1 − 4) + 4 = 1.</p>
+      <p>The kinematic loop constraint equations for the four-bar linkage are given in [1] as:</p>
+      <p class="formula">φ = arctan(α, β) ± arcos(γ/√(α<sup>2</sup> + β<sup>2</sup>)),</p>
+      <p>where</p>
+      <p class="formula">α = 2 <i>L</i><sub>3</sub><i>L</i><sub>4</sub> − 2<i>L</i><sub>1</sub><i>L</i><sub>3</sub> cos θ,<br>
+        β = −2 <i>L</i><sub>1</sub><i>L</i><sub>3</sub> sin θ, and<br>
+        γ = <i>L</i><sub>2</sub><sup>2</sup> − <i>L</i><sub>4</sub><sup>2</sup> − <i>L</i><sub>3</sub><sup>2</sup> −
+        <i>L</i><sub>1</sub><sup>2</sup> + 2<i>L</i><sub>1</sub><i>L</i><sub>4</sub> cos θ.</p>
+      <p>Here <i>L</i><sub>1</sub>, <i>L</i><sub>2</sub> and <i>L</i><sub>3</sub> are the lengths of the three links and
+        <i>L</i><sub>4</sub> is the separation distance of links 1 and 3. These equations can be found using the law of
+        cosines. The ± sign in the expression for φ gives two solutions. The more positive solution of φ is drawn with an
+        orange line, and the more negative solution with a blue line.</p>
+      <p>Depending on the link lengths chosen, the configuration space curve may have bifurcation points where branches
+        of the curve meet. Snapshot 1 with link lengths [1, 1, 0.5, 0.5] has bifurcations at (0, π), (0, −π), (π, π) and
+        (−π, −π). Snapshot 2 has no bifurcations, and Snapshot 3 with link lengths [0.9, 1.2, 0.5, 0.8] has a bifurcation
+        at (0, 0).</p>
+      <p>Vertical lines in the configuration space plot are spurious.</p>
+      <p>References:<br>
+        [1] K. M. Lynch and F. C. Park, <i>Modern Robotics: Mechanics, Planning, and Control</i>, New York: Cambridge
+        University Press, 2017.</p>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. Press or drag anywhere in the configuration-space plot:
+      the linkage takes the sampled configuration nearest to the pointer (the cross-hair marks it). Arrow keys move the
+      focused locator and the focused thumbs of the link-length slider. For the opening settings and the three snapshot
+      settings the curve uses the original's own samples; for other settings the port samples the curve itself, so the
+      curve's points can differ slightly from Mathematica's. All computation runs in your browser.</p>
+    <div class="credits" data-testid="credits">
+      Adapted from <a href="https://demonstrations.wolfram.com/ConfigurationSpaceForFourBarLinkage/">"Configuration Space for Four-Bar Linkage"</a>
+      by Aaron T. Becker and Shiva Shahrokhi, Wolfram Demonstrations Project (published January 11, 2018), licensed
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+      This JavaScript/SVG translation by Tico Hannan (© 2026; produced with an AI code-generation tool) is released under the
+      same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

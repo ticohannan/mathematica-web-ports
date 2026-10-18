@@ -7,7 +7,7 @@ Six layers. Run them in this order; each one catches problems the others cannot.
 | 1. Unit & property tests | `npm test` | Node | the math functions behave correctly on hand-derived cases and random cases checked by an independent oracle |
 | 2. Golden parity tests | `npm test` (same run) | Node | the port reproduces numbers **computed by the original Mathematica code** (cached in the .nb files) |
 | 3. Browser tests | `npm run test:e2e` | Firefox, Chromium and WebKit (Playwright builds) | controls exist and work, the screen shows what the math computed, drag/keyboard interaction, error-free load |
-| 4. Manual / exploratory | `docs/MANUAL_TEST_CHECKLIST.md`, `docs/checklists/` | a person, a browser, ideally the original running in Wolfram software | look & feel, behaviour compared with the original, things no script can judge |
+| 4. Manual / exploratory | `docs/MANUAL_TEST_CHECKLIST.md`, `docs/checklists/`, `docs/MATHEMATICA_CHECKS.md`, `npm run test-run -- <dir>` | a person, a browser, ideally the original running in Mathematica | look & feel, behaviour compared with the original, things no script can judge |
 | 5. Automated comparison with the original (motion planning) | `npm run compare:original` | local Mathematica / Wolfram Engine (`wolframscript`) | the port computes the same validity, C-obstacles, lines, path and trajectory as the **original code run live**, on many scenes, not only the 5 saved ones |
 | 6. Mathematica harness (any definition notebook) | `npm run harness` | local Mathematica (`wolframscript`), the original notebooks in `_internal/originals/` | the original's stored Manipulate code, run headless for scripted control changes, produces the numbers the ports' golden tests compare with (`tests/golden/<dir>.harness.json`) |
 
@@ -144,15 +144,42 @@ remains a manual test.
   `set PW_WORKERS=1` to debug one test at a time.
 - Headed (watch it happen): `npm run test:e2e:headed`.
 
+**Standalone bundles** (`tests/e2e/bundle.spec.js`, owner rule R-A, since v0.1.15): one test per app of
+`tests/e2e/apps.js` (new apps are included automatically), titled "bundle: <dir> runs from its own folder". It bundles
+the app with `tools/bundle-app.mjs` into `test-output/bundle-e2e/<browser>/<dir>/`, serves that folder **alone** with
+`tools/serve.mjs` on a free port (a second server, next to the one on port 8090), opens the bundle's root page and
+requires: the root page opens the app, the app starts (`window.__demo.ready`) without page errors, no request leaves
+the bundle folder, no request fails (404s count), every script and stylesheet in the bundle was loaded (nothing
+superfluous), and the app's "All demos" link reaches the bundle's root page. One page load per app and browser.
+Run only these: `npx playwright test tests/e2e/bundle.spec.js` (add `-g "bundle: prm runs"` for one app).
+The unit tests in `tests/unit/bundle-app.test.js` cover the collector on a small synthetic site (CSS `url()`,
+`@import`, the import map, dynamic imports, a missing file, wrong letter case, non-literal imports), the licence lookup,
+the zip writer, `tools/serve.mjs` with a root folder, and check that the contents table in each `DESIGN.md` §6.1 is
+current (after a change of imports: `npm run bundle -- --update-docs`).
+
 > Status: v0.1.0 was first run in Firefox (Playwright's Firefox 155) on Windows 10 on 2026-10-03 —
-> 38/38 passed. It had previously been run only in Chromium in the authoring sandbox. Any later
+> 38/38 passed. It had previously been run only in Chromium in the AI tool's sandbox. Any later
 > failure is a finding — record it.
 
 ## Layer 4: manual testing
 
-Use `docs/MANUAL_TEST_CHECKLIST.md`. Copy it per test session (e.g.
-`2026-10-05_alice_checklist.md`), fill it in, email it back. Completed copies are kept in
-`_internal/test-runs/` (private) unless decided otherwise.
+The items are in `docs/MANUAL_TEST_CHECKLIST.md` (general items and the first three apps) and
+`docs/checklists/<dir>.md` (the seven newer apps). Every item that involves the original notebook is an operator
+procedure with the fixed headings Open / Prepare / Do / Record / Save / Port / Expected (owner rule R-B,
+`docs/DESIGN_PROCESS.md` rule 8); the general procedure — starting Mathematica 15.0.1, Enable Dynamics, the ⊕ menu
+and Initial Settings, invisible locators, how long to wait, saving states as golden data, what to do on errors, how
+to send results back — is written once in [`docs/MATHEMATICA_CHECKS.md`](MATHEMATICA_CHECKS.md).
+
+Results go into one test-run file per app and day, created from the template:
+```bat
+npm run test-run -- car-paths      :: writes _internal\test-runs\<today>_car-paths.md (never overwrites; --force to replace)
+npm run test-run -- general        :: the M-GEN items
+```
+`tools/new-test-run.mjs` lists every `M-` item of the app with its Record instructions and empty Original / Port /
+Result fields; `tests/unit/new-test-run.test.js` checks the generator and that every item has the fixed headings.
+Completed test-run files and saved notebooks (`_internal\originals\saved\`) stay private in `_internal/` and are sent
+back as a zip (MATHEMATICA_CHECKS.md §11). Where a check shows that the ORIGINAL is probably wrong (not just
+unusual), the finding goes into §11 *Errors in the original* of the app's DESIGN.md.
 
 ### Getting the ORIGINAL running for comparison
 You have the author notebooks (`_internal/originals/*.nb`). Options — check each vendor's current
@@ -315,6 +342,6 @@ ideally by reproducing the scene in the original (above).
 ## Test ID conventions
 
 - Design features: `F-<demo>-NN` (in each DESIGN.md), deviations `D-…`, original quirks `Q-…`.
-- Manual tests: `M-<demo>-NN`.
+- Manual tests: `M-<demo>-NN`; errors in the original: `E-<demo>-NN` (DESIGN.md §11).
 - Automated tests are referenced by file + test title.
 Demo codes: `MP` motion planning, `TP` three parametrizations, `EA` Euler angles, `GEN` general.

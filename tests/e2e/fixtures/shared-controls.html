@@ -1,0 +1,70 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-License-Identifier: MIT -->
+<!-- tests/e2e/fixtures/shared-controls.html — a test page (not an app, not linked from the site) that puts the
+     generic shared controls and drawing helpers on one page for tests/e2e/shared-controls.spec.js: shared/ui.js
+     slider options (plus, steps 'mma', labeled 'text', format, parse), shared/ui-interval.js, shared/svg-frame.js and
+     the non-square viewer of shared/three-helpers.js. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shared controls (test page)</title>
+  <link rel="stylesheet" href="../../../shared/style.css">
+  <script type="importmap">{ "imports": { "three": "../../../vendor/three/three.module.js", "three/addons/": "../../../vendor/three/addons/" } }</script>
+</head>
+<body>
+<main class="page">
+  <div class="manipulate">
+    <div class="controls" id="controls" style="max-width:420px"></div>
+    <div class="graphic" id="plot"></div>
+  </div>
+  <div id="viewer" style="position:relative;width:600px"></div>
+</main>
+<script type="module">
+  import { Controls } from '../../../shared/ui.js';
+  import { addIntervalSlider } from '../../../shared/ui-interval.js';
+  import { piFraction, parsePiFraction } from '../../../shared/mma-text.js';
+  import { createPlot } from '../../../shared/svg-plot.js';
+  import { drawFrame, drawAxes, frameLayout, clipToRange } from '../../../shared/svg-frame.js';
+
+  const inputs = [];
+  const log = (name) => (v) => inputs.push([name, v]);
+  const c = new Controls(document.getElementById('controls'));
+  c.slider({ name: 'sep', label: 'separation', min: 0, max: 1.5, step: 0.05, value: 0.75, steps: 'mma', onInput: log('sep') });
+  c.slider({ name: 'bias', label: 'exploration bias', min: 0, max: 0.9, step: 0.05, value: 0, steps: 'mma', plus: false, onInput: log('bias') });
+  c.slider({ name: 'n', label: 'θ*1', min: -32, max: 32, step: 1, value: 0, steps: 'mma', plus: false, labeled: 'text', format: (n) => piFraction(n, 32), onInput: log('n') });
+  c.slider({
+    name: 'theta', label: 'θ1', min: -32, max: 32, step: 1, value: 5, steps: 'mma', format: (n) => piFraction(n, 32),
+    parse: (t) => { const r = parsePiFraction(t); return r ? (r.num * 32) / r.den : null; }, onInput: log('theta'),
+  });
+  c.slider({ name: 'tau', label: 'τ', min: 0, max: 10, step: 0.01, value: 0.5, steps: 'mma', onInput: log('tau') });
+  c.slider({ name: 'off', label: 'off-grid end', min: 0, max: 2.49, step: 0.05, value: 2, steps: 'mma', plus: false, onInput: log('off') });
+  c.slider({ name: 'progress', label: '', min: 0, max: 1, step: 0.01, value: 0, steps: 'mma', plus: false, labeled: false, onInput: log('progress') });
+  const links = addIntervalSlider(c, { name: 'links', label: 'link lengths', min: 0, max: 2.49, step: 0.05, steps: 'mma', value: [1.35, 2], minIntervalSize: 0.1, method: 'Push', labeled: true, onInput: log('links') });
+  addIntervalSlider(c, { name: 'r1', label: 'r₁', min: -3.1, max: 3.1, step: 0.1, steps: 'mma', value: [0.5, 1.5], minIntervalSize: 0.1, method: 'Push', onInput: log('r1') });
+
+  // distance-norms-like frame and a four-bar-like axes picture
+  const layout = frameLayout([[-2.5, 2.5], [-2.5, 2.5]], { imageSize: 360, margins: { left: 28, right: 18, top: 15, bottom: 28 } });
+  const plot = createPlot(document.getElementById('plot'), { ...layout, testid: 'frame-svg' });
+  const content = plot.layer('content');
+  plot.disk(content, [2.4, 2.4], 0.5, { fill: [1, 0, 0] });
+  clipToRange(plot, content, [[-2.5, 2.5], [-2.5, 2.5]]);
+  drawFrame(plot, plot.layer('frame'), { range: [[-2.5, 2.5], [-2.5, 2.5]], majorStep: 1, minorStep: 0.2, axes: true, testidPrefix: 'dn-' });
+  const plot2 = createPlot(document.getElementById('plot'), { plotRange: [[-Math.PI, Math.PI], [-Math.PI, Math.PI]], padding: 0.08, imageSize: 300, testid: 'axes-svg' });
+  drawAxes(plot2, plot2.layer('axes'), { range: [[-Math.PI, Math.PI], [-Math.PI, Math.PI]], axesLabel: ['θ', 'φ'], testidPrefix: 'fb-' });
+
+  window.__fixture = { controls: c.controls, inputs, links, ready: false };
+  try {
+    const { createViewer, THREE } = await import('../../../shared/three-helpers.js');
+    const viewer = createViewer(document.getElementById('viewer'), { box: [[-3.5, 3.5], [-4, 4], [-1, 5]], viewPoint: [1.3, -2.4, 2], viewAngle: (18 * Math.PI) / 180, imageSize: [440, 420] });
+    viewer.scene.add(new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), new THREE.MeshBasicMaterial({ color: 0x3355aa })));
+    viewer.render();
+    window.__fixture.viewer = viewer;
+  } catch (e) {
+    window.__fixture.viewerError = String(e && e.message);
+  }
+  window.__fixture.ready = true;
+</script>
+</body>
+</html>

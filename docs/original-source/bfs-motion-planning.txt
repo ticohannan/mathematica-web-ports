@@ -1,0 +1,350 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Extracted 2026-10-12 with tools/nbextract.py; cached outputs skipped.
+
+
+### [Title]
+Breadth-First Search Robot Motion Planning
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+This Demonstration shows a resolution-complete planner that finds the shortest path between an initial and final configuration of a two-link, planar-arm robot by using a breadth-first search. The robot operates in the workspace on the left that contains two small circular obstacles. The corresponding robot phase space on the right shows the configurations q=(Subscript[Theta, 1],Subscript[Theta, 2]), for which an arm intersects an obstacle. You can relocate obstacles in the workspace and change the initial and final positions. You can improve the resolution of the search grid by increasing Q and move the robot along the shortest path by increasing P.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+(*returns the shortest distance between line segment 'seg' and a list of points*)
+pointsegdis2[{seg_,pointlist_}]:=Module[{u=Subtract@@seg,mean=Plus@@seg/2.0},Min[EuclideanDistance[#,(mean-u Sign@# Min[1.0,Abs@#]/2.0)&@(-(2.0 (#-mean).u)/u.u)]&/@pointlist]];
+
+(*to space the overlay plot*)
+xMin = 2.9;yMin =-2;xMax=xMin+3.8;yMax=yMin+3.8;
+
+applyTorus[pConfigI_]:=(*enable torus property*)
+Module[{pConfigO},
+pConfigO=pConfigI;
+If[pConfigI[[1]]<xMin,pConfigO[[1]]=xMax];If[pConfigI[[1]]>xMax,pConfigO[[1]]=xMin];
+If[pConfigI[[2]]<yMin,pConfigO[[2]]=yMax];If[pConfigI[[2]]>yMax,pConfigO[[2]]=yMin];
+pConfigO]
+
+loc[col_]:=(* a colored locator icon*)ToExpression@GraphicsBox[{col,{AbsoluteThickness[1],Antialiasing->False,LineBox[{{{0,-10},{0,-2}},{{0,2},{0,10}},{{-10,0},{-2,0}},{{2,0},{10,0}}}],Antialiasing->True,CircleBox[{-0.5,0.5},5]},{AbsoluteThickness[3],Opacity[0.3],CircleBox[{-0.5,0.5},3]}},ImageSize->17,PlotRange->{{-8,8},{-8,8}}];
+
+(*draw circular arcs with arrowheads*)
+arrowArc[s_Circle]:=s/.Circle[a_,r_,{start_,end_}]:>({s,Arrow[{#-r/10^6 {-Sin@end,Cos@end},#}]}&[a+r {Cos@end,Sin@end}]);
+
+bfsTorus[cSpace_, start_]:=
+(*The function below takes a table cSpace and a vertex start {row,col} and performs a breadth first search of cSpace starting
+at start. The function returns two lists 
+(i) parent, which contains parent pointers representing the breadth first search tree,and 
+(ii) lvl, which contains the distances of vertices from start.*)
+Module[{d=Dimensions[cSpace],
+v, queue={start},
+parent,lvl},
+parent=Table[{0.0,0.0},{d[[1]]},{d[[2]]}];
+lvl=Table[(*10.0*d[[1]]d[[2]]*)Infinity,{d[[1]]},{d[[2]]}];
+lvl[[start[[1]],start[[2]]]]=0.0;
+While[queue!={},
+{v,queue}={First[queue],Rest[queue]}; (*v = {r,c}*)
+Table[Module[{r,c,mylc=lvl[[v[[1]],v[[2]]]]+1.0},( (*Add the cells above, left, right and below*)
+{r,c}=coords+v;
+(*apply the 4 torus conventions*)
+If[r<1,r = d[[1]]];If[r>d[[1]], r = 1];
+If[c<1,c = d[[2]]];If[c>d[[2]], c = 1];
+If[ cSpace[[r,c]]>-0.5\[And]lvl[[r,c]]>mylc,
+parent[[r,c,;;]]=v;
+lvl[[r,c]]=mylc;
+AppendTo[queue,{r,c}]]
+)],{coords,{{1,0},{0,1},{-1,0},{0,-1}} }];
+Table[Module[{r,c,mylc = lvl[[v[[1]],v[[2]]]]+1.41},( (*add the cells to the diagonals*)
+{r,c}=coords+v;
+(*apply the 4 torus conventions*)
+If[r<1,r = d[[1]]];If[r>d[[1]], r = 1];
+If[c<1,c = d[[2]]];If[c>d[[2]], c = 1];
+If[ cSpace[[r,c]]>-0.5\[And]lvl[[r,c]]>mylc,
+parent[[r,c,;;]]=v;
+lvl[[r,c]]=mylc;
+AppendTo[queue,{r,c}]]
+)],{coords,{{1,1},{-1,1},{-1,-1},{1,-1}} }];
+];(*some error checking*)
+{parent,lvl}]/;(1<=start[[1]])\[And](start[[1]]<=Dimensions[cSpace][[1]])\[And](1<=start[[2]])\[And](start[[2]]<=Dimensions[cSpace][[2]])
+
+
+getShortestPath[parents_,start_,end_]:=Module[(*path planning.  parents is a 2D array containing the coordinates for the parents of the cell start. We start the search at the cell 'end' *)
+{ps = end,path={end}},
+If[parents[[ps[[1]],ps[[2]]]]!={0,0},
+While[start != ps,ps = parents[[ps[[1]],ps[[2]]]];AppendTo[path,ps]]];
+Return[path]];
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{w = 1/8,l=1,Theta1 ,Theta2,inCollision,pObsV, resolution,out1,pS,pE,ccord,costmapcolor},
+(*enable torus property*)
+pConfigI = applyTorus[pConfigI];
+pConfigF = applyTorus[pConfigF];
+pObsV = {pObs,pObs2}; (*position vector for Obstacles*)
+
+If[(pObsOld!= pObs\[Or]pObs2Old!= pObs2\[Or] QualityOld != Quality\[Or] !highRes),
+(* ControlActive: only update freeConfigSpace if locator pObs changes.  While pObs is changing, I want to use a low resolution grid, and then refine it*)
+resolution = ControlActive[highRes=False;4 Quality,highRes=True;16 Quality];
+freeConfigSpace=Table[
+If[pointsegdis2[{{{0,0},l{Cos[a1],Sin[a1]}},pObsV}]<2.0w\[Or]
+pointsegdis2[{{l{Cos[a1],Sin[a1]} ,l{Cos[a1]+Cos[a1-a2],Sin[a1]+Sin[a1-a2]}},pObsV}]<2.0w,-1,0],{a2,(1.0π)/(resolution),2.0π-(1.0π)/(resolution),(2.0π)/(resolution)},{a1,(1.0π)/(resolution),2.0π-(1.0π)/(resolution),(2.0π)/(resolution)}];
+pObsOld = pObs;pObs2Old = pObs2;QualityOld = Quality;
+updatedCspace = True;
+];
+pS ={Length[freeConfigSpace] (pConfigI[[1]]-xMin)/(xMax-xMin),Length[freeConfigSpace](1- (pConfigI[[2]]-yMin)/(yMax-yMin))};
+pE ={Length[freeConfigSpace] (pConfigF[[1]]-xMin)/(xMax-xMin),Length[freeConfigSpace](1- (pConfigF[[2]]-yMin)/(yMax-yMin))};
+(*only update these if locators change or config space change *)
+If[lS!= Round[{.5+pS[[2]],Max[1,pS[[1]]+.5]}]\[Or]updatedCspace ,
+lS= Round[{.5+pS[[2]],Max[1,pS[[1]]+.5]}];
+{parents,costmap} =bfsTorus[freeConfigSpace,lS];
+updatedCspace = False;
+updatedcostmap = True;
+];
+(*only update these if locators change or cost map change *)
+If[lE!= Round[{.5+pE[[2]],Max[1,pE[[1]]+.5]}]\[Or]updatedcostmap,
+lE= Round[{.5+pE[[2]],Max[1,pE[[1]]+.5]}];
+path = Reverse[getShortestPath[parents,lS,lE]];
+updatedcostmap = False;
+];
+
+costmapcolor = costmap;
+Table[costmapcolor[[p[[1]],p[[2]]]]=Green,{p,path}];
+ccord=path[[Max[1,Ceiling[progress*Length[path]] ]]];
+costmapcolor[[ccord[[1]],ccord[[2]]]] = Blue;
+
+Theta1 = ((2.0ccord[[2]]-1.0))/(Length[costmap])π;
+Theta2 = (-(2.0ccord[[1]]-1.0))/(Length[costmap])π;
+inCollision = pointsegdis2[{{{0.0,0.0},l{Cos[Theta1],Sin[Theta1]}},pObsV}]<2.0w\[Or]
+pointsegdis2[{{l{Cos[Theta1],Sin[Theta1]} ,l{Cos[Theta1]+Cos[Theta1+Theta2],Sin[Theta1]+Sin[Theta1+Theta2]}},pObsV}]<2.0w;
+
+Graphics[{Gray,If[inCollision,EdgeForm[Red],EdgeForm[Black]],
+(*draw arm with arrows showing angles*)
+Arrowheads[.02],
+Rotate[Rectangle[{-w,-w},{l+w,w},RoundingRadius->w],Theta1,{0,0}],
+{Black,Point[{{0,0}}],
+Darker[Gray],arrowArc[Circle[{0,0},l/3,{0,Theta1}]],
+If[Abs[Theta1]>π/4,Text[Style["\<\!\(\*SubscriptBox[\(Theta\), \(1\)]\)\>",Medium],l/2{Cos[(Theta1)/(2)],Sin[(Theta1)/(2)]}]]},
+{LightGray,Rotate[{
+Rectangle[{l Cos[Theta1]-w,l Sin[Theta1]-w},{l Cos[Theta1]+l+w,l Sin[Theta1]+w},RoundingRadius->w],{Black,Text["\<Robot Arm\>",{l Cos[Theta1]+l/2,l Sin[Theta1]}]}
+},Theta1+Theta2,{l Cos[Theta1],l Sin[Theta1]}]},
+{Black,Point[{l{Cos[Theta1],Sin[Theta1]}}],
+Darker[Gray],arrowArc[Circle[l{Cos[Theta1],Sin[Theta1]},l/3,{Theta1,Theta1+Theta2}]],
+If[Abs[Theta2]>π/4,Text[Style["\<\!\(\*SubscriptBox[\(Theta\), \(2\)]\)\>",Medium],{l Cos[Theta1]+l/2Cos[Theta1+(Theta2)/(2)],l Sin[Theta1]+l/2Sin[Theta1+(Theta2)/(2)]}]]},
+{Brown,Table[Disk[pObsV[[i]],w],{i,Length[pObsV]}]},
+Inset[
+ArrayPlot[(*freeConfigSpace*)costmapcolor,Mesh->None,ImageMargins->None,ImagePadding->None,PlotRangePadding->None,
+FrameStyle->{{Red,Directive[Red,Dashed]},{Blue,Directive[Blue,Dashed]}}],
+{xMin,yMin},{0,0},xMax-xMin],
+{Black,
+Text["\<\!\(\*SubscriptBox[\(Theta\), \(1\)]\)\>",{4.8,-2.2}],
+Text["\<\!\(\*SubscriptBox[\(Theta\), \(2\)]\)\>",{2.8,0}],
+Text[StringForm["\<robot phase space, path length = `` rads\>",Round[(2.0π )/(Length[costmap])costmap[[lE[[1]],lE[[2]]]],0.01]],{4.8,2.2}],
+Text["\<robot workspace\>",{0,2.2}]
+},
+Locator[pConfigI,If[inCollision,loc[Red],loc[Darker[Green]]]],
+Locator[pConfigF,If[inCollision,loc[Red],loc[Darker[Green]]]]
+},PlotRange->{{-2.2,7.1},{-2.4,2.4}},ImageSize->{600,320}]
+],
+{{pObs,{1.1,1.1}},{-2.0,-2.0},{2.0,2.0},Locator}, (*obstacle 1 locator*)
+{{pObs2,{1.1,-1.1}},{-2.0,-2.0},{2.0,2.0},Locator}, (*obstacle 2 locator*)
+{{pConfigI,{4.5,0.0}},{xMin-.1,yMin-.1},{xMax+.1,yMax+.1},Locator,Appearance->None},
+{{pConfigF,{5.5,0.0}},{xMin-.1,yMin-.1},{xMax+.1,yMax+.1},Locator,Appearance->None},
+(*what resolution to make the configuration-space obstacle array*)
+{{Quality,2,Style["\<Q\>",Italic]},1,10,1,Appearance->"\<Labeled\>"},
+{{progress,1,Style["\<P\>",Italic]},0.0,1.0,0.01,Appearance->"\<Labeled\>"},
+(*the next are global variables to control how often freeConfigSpace is updated*)
+{freeConfigSpace, {0,0},None},
+{{costmap, {{0,0}}},None},
+{{parents, {{0,0}}},None},
+{{path, {{0,0}}},None},
+{highRes, False,None},
+{{pObsOld,{-3,-2}},{-3,-2},{2,2},None},
+{{pObs2Old,{-3,-2}},{-3,-2},{2,2},None},
+{updatedCspace, False,None},
+{updatedcostmap, False,None},
+{{lS, {1.0,1.0}},None},
+{{lE, {1.0,1.0}},None},
+{QualityOld,1,10,1,None},ControlPlacement->Top,
+SaveDefinitions->True]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Aaron T. Becker
+
+### [Text]
+Benedict Isichei
+
+### [Text]
+Praveen Reddy Padala
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+The set of all possible configurations of a two-link, planar-arm robot can be represented in a two-dimensional phase space. Of particular interest are the configurations in which the robot collides with one of the obstacles. A resolution-complete planner returns a path between the initial and final configuration if it exists or returns that such a path is impossible. The path is discovered using breadth-first search in the phase space, which calculates the distance to every configuration reachable from the initial configuration. In this Demonstration, path distance is shown by a gradient that darkens with distance from the initial configuration. Even if configurations are close in the configuration space, obstacles may make moving between them require a longer distance.
+
+### [Text]
+This Demonstration computes the obstacle regions using 16Q unit squares and determines if the centroid of each square is in a collision. Given Subscript[Theta, 1] and Subscript[Theta, 2], one collision computation is trivial.
+
+### [Text]
+\<However, computing the phase-space obstacle region is more difficult because the size of the space representation grows exponentially with the number of degrees of freedom (independent joints) of the robot.\>
+
+### [Text]
+Consider how many n-dimensional unit squares are required to fill a space of size k. For a one-dimensional space, k^1 units are needed. For a two-dimensional space, k^2 squares are needed. For an n-dimensional space, k^n hypercubes would be required. The number of collision computations grows exponentially with the number of joints in the robot, making breadth-first search computationally infeasible for robots with many joints.
+
+### [Text]
+The phase space for a two-link, planar robot can be represented on a torus. When rotation joint 1 moves past 2π, it returns to angle 0. This is represented by dashed and solid lines of the same color. If the phase space were printed on a rubber sheet and cut out and the dashed and solid lines of each color were joined, the resulting shape would be a torus. In this Demonstration, moving the locator past the edge of the phase space wraps the angle around 2π.
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] M. Spong, S. Hutchinson and M. Vidyasagar, Robot Modeling and Control, Hoboken, NJ: John Wiley & Sons, 2006.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+configuration space
+
+### [Item]
+configuration
+
+### [Item]
+collision
+
+### [Item]
+obstacle
+
+### [Item]
+robot
+
+### [Item]
+planar robot
+
+### [Item]
+robot arm
+
+### [Item]
+path planning
+
+### [Item]
+path-planning
+
+### [Item]
+configuration space obstacle
+
+### [Item]
+torus
+
+### [Item]
+curse of dimensionality
+
+### [Item]
+phase space
+
+### [Item]
+resolution complete
+
+### [Item]
+breadth first search
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Breadth-First Traversal
+
+### [Text]
+Configuration
+
+### [Text]
+Forward and Inverse Kinematics of the SCARA Robot
+
+### [Text]
+Inverse Kinematics for a Robot Manipulator with Six Degrees of Freedom
+
+### [Text]
+Path
+
+### [Text]
+Path Integral
+
+### [Text]
+Planar Space
+
+### [Text]
+Robot Motion with Obstacles
+
+### [Text]
+Torus
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2017-12-12
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

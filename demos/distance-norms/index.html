@@ -1,0 +1,118 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstration by Aaron T. Becker and Benedict Isichei
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Distance Norms in Robot Workspace and Phase Space</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <script src="../../shared/requirements.js"></script>
+  <style>
+    /* ControlPlacement -> Left: labels left of the controls, as in the original; ParametricPlot at ImageSize 360 */
+    #controls { max-width: 300px; }
+    #controls .ctl-slider, #controls .ctl-setter { flex-direction: row; align-items: center; gap: 8px; }
+    #controls .ctl-label { min-width: 4.6em; text-align: right; }
+    #controls .ctl-dial .ctl-label { min-width: 2.2em; }
+    #controls .ctl-slider .ctl-line input[type=range] { flex: 0 0 110px; width: 110px; min-width: 0; }
+    #controls .ctl-field { width: 4.2em; }
+    #graphic { max-width: 452px; flex-basis: 400px; }
+    /* the dials' ImageSize 120 at the same pt-to-px scale as the 360 pt plot (452/364 ≈ 1.24): 149 px */
+    #controls .dial { width: 149px !important; }
+    .details math { font-size: 1.05em; }
+    .details ul.related { margin: 4px 0 0; padding-left: 1.2em; columns: 2; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Distance norms</div>
+    <h1 class="demo-title">Distance Norms in Robot Workspace and Phase Space</h1>
+
+    <section class="manipulate" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="graphic" id="graphic" data-testid="graphic">
+        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser.</div></noscript>
+      </div>
+    </section>
+
+    <p class="caption">This Demonstration shows the area within the distance <i>d</i> of a two-link planar-arm robot with
+      configuration (θ<sub>1</sub>, θ<sub>2</sub>). The distance <i>d</i> is measured in the <i>L</i><sub>1</sub>,
+      <i>L</i><sub>2</sub>, <i>L</i><sub>3</sub> or <i>L</i><sub>∞</sub> norm, with the norm applied either in the workspace
+      or the phase space of the robot. You can change the norm type, the length of the first arm joint and the angles of
+      the two arm joints.</p>
+
+    <details class="details" data-testid="details">
+      <summary>Details</summary>
+      <p>The measurement of distance between two configurations of the same robot is necessary for many robot motion
+        planners, such as probabilistic road-map methods and rapidly expanding random trees.</p>
+      <p>The vector norm
+        <math><mrow><mo>|</mo><mi mathvariant="bold">x</mi><msub><mo>|</mo><mi>p</mi></msub></mrow></math>
+        for <math><mrow><mi>p</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mo>…</mo></mrow></math> is defined as
+        <math><mrow><mo>|</mo><mi mathvariant="bold">x</mi><msub><mo>|</mo><mi>p</mi></msub><mo>=</mo>
+          <mroot><mrow><msub><mo>∑</mo><mi>i</mi></msub><mo>|</mo><msub><mi>x</mi><mi>i</mi></msub><msup><mo>|</mo><mi>p</mi></msup></mrow><mrow><mn>1</mn><mo>/</mo><mi>p</mi></mrow></mroot></mrow></math>.</p>
+      <p>The special case for <math><mrow><mi>p</mi><mo>=</mo><mi>∞</mi></mrow></math> is defined as
+        <math><mrow><mo>|</mo><mi mathvariant="bold">x</mi><msub><mo>|</mo><mi>∞</mi></msub><mo>=</mo><msub><mo>max</mo><mi>i</mi></msub><mo>|</mo><msub><mi>x</mi><mi>i</mi></msub><mo>|</mo></mrow></math>.</p>
+      <p>If a given robot configuration
+        <math><mrow><mo>(</mo><msubsup><mi>θ</mi><mn>1</mn><mo>*</mo></msubsup><mo>,</mo><msubsup><mi>θ</mi><mn>2</mn><mo>*</mo></msubsup><mo>)</mo></mrow></math>
+        places the tip of the robot at position
+        <math><mrow><mo>(</mo><msub><mi>x</mi><mi>r</mi></msub><mo>,</mo><msub><mi>y</mi><mi>r</mi></msub><mo>)</mo></mrow></math>,
+        the workspace norms are
+        <math><mrow><msub><mi>L</mi><mn>1</mn></msub><mo>=</mo><mo>|</mo><msub><mi>x</mi><mi>r</mi></msub><mo>−</mo><mi>x</mi><mo>|</mo><mo>+</mo><mo>|</mo><msub><mi>y</mi><mi>r</mi></msub><mo>−</mo><mi>y</mi><mo>|</mo></mrow></math>,
+        <math><mrow><msub><mi>L</mi><mn>2</mn></msub><mo>=</mo><msqrt><msup><mrow><mo>(</mo><msub><mi>x</mi><mi>r</mi></msub><mo>−</mo><mi>x</mi><mo>)</mo></mrow><mn>2</mn></msup><mo>+</mo><msup><mrow><mo>(</mo><msub><mi>y</mi><mi>r</mi></msub><mo>−</mo><mi>y</mi><mo>)</mo></mrow><mn>2</mn></msup></msqrt></mrow></math>,
+        <math><mrow><msub><mi>L</mi><mn>3</mn></msub><mo>=</mo><mroot><mrow><mo>|</mo><msub><mi>x</mi><mi>r</mi></msub><mo>−</mo><mi>x</mi><msup><mo>|</mo><mn>3</mn></msup><mo>+</mo><mo>|</mo><msub><mi>y</mi><mi>r</mi></msub><mo>−</mo><mi>y</mi><msup><mo>|</mo><mn>3</mn></msup></mrow><mn>3</mn></mroot></mrow></math>
+        and
+        <math><mrow><msub><mi>L</mi><mi>∞</mi></msub><mo>=</mo><mo>max</mo><mo>(</mo><mo>|</mo><msub><mi>x</mi><mi>r</mi></msub><mo>−</mo><mi>x</mi><mo>|</mo><mo>,</mo><mo>|</mo><msub><mi>y</mi><mi>r</mi></msub><mo>−</mo><mi>y</mi><mo>|</mo><mo>)</mo></mrow></math>.</p>
+      <p>It is trivial to compute the distance using norms in the workspace; however, these distances are often
+        misleading. The arm's workspace is the unit disk, but the
+        <math><mrow><msub><mi>L</mi><mi>∞</mi></msub><mo>&lt;</mo><mn>1</mn><mo>/</mo><mn>2</mn></mrow></math> workspace norm
+        shown in Snapshot 1 includes an area inaccessible to the robot arm.</p>
+      <p>It is more correct to calculate the set of configurations with distance less than <i>d</i> in the phase space
+        of the robot and then map this set into the workspace. These norms are
+        <math><mrow><msub><mi>L</mi><mn>1</mn></msub><mo>=</mo><mo>|</mo><msubsup><mi>θ</mi><mn>1</mn><mo>*</mo></msubsup><mo>−</mo><msub><mi>θ</mi><mn>1</mn></msub><mo>|</mo><mo>+</mo><mo>|</mo><msubsup><mi>θ</mi><mn>2</mn><mo>*</mo></msubsup><mo>−</mo><msub><mi>θ</mi><mn>2</mn></msub><mo>|</mo></mrow></math>,
+        <math><mrow><msub><mi>L</mi><mn>2</mn></msub><mo>=</mo><msqrt><msup><mrow><mo>(</mo><msubsup><mi>θ</mi><mn>1</mn><mo>*</mo></msubsup><mo>−</mo><msub><mi>θ</mi><mn>1</mn></msub><mo>)</mo></mrow><mn>2</mn></msup><mo>+</mo><msup><mrow><mo>(</mo><msubsup><mi>θ</mi><mn>2</mn><mo>*</mo></msubsup><mo>−</mo><msub><mi>θ</mi><mn>2</mn></msub><mo>)</mo></mrow><mn>2</mn></msup></msqrt></mrow></math>,
+        <math><mrow><msub><mi>L</mi><mn>3</mn></msub><mo>=</mo><mroot><mrow><mo>|</mo><msubsup><mi>θ</mi><mn>1</mn><mo>*</mo></msubsup><mo>−</mo><msub><mi>θ</mi><mn>1</mn></msub><msup><mo>|</mo><mn>3</mn></msup><mo>+</mo><mo>|</mo><msubsup><mi>θ</mi><mn>2</mn><mo>*</mo></msubsup><mo>−</mo><msub><mi>θ</mi><mn>2</mn></msub><msup><mo>|</mo><mn>3</mn></msup></mrow><mn>3</mn></mroot></mrow></math>
+        and
+        <math><mrow><msub><mi>L</mi><mi>∞</mi></msub><mo>=</mo><mo>max</mo><mo>(</mo><mo>|</mo><msubsup><mi>θ</mi><mn>1</mn><mo>*</mo></msubsup><mo>−</mo><msub><mi>θ</mi><mn>1</mn></msub><mo>,</mo><mo>|</mo><msubsup><mi>θ</mi><mn>2</mn><mo>*</mo></msubsup><mo>−</mo><msub><mi>θ</mi><mn>2</mn></msub><mo>|</mo><mo>)</mo></mrow></math>.
+        The mapping into the workspace is performed using Mathematica's <code>ParametricPlot</code> command.</p>
+      <p>Notice that lower-order norms are contained by higher-order norms:
+        <math><mrow><msub><mi>L</mi><mn>1</mn></msub><mo>⊆</mo><msub><mi>L</mi><mn>2</mn></msub><mo>⊆</mo><msub><mi>L</mi><mn>3</mn></msub><mo>⊆</mo><msub><mi>L</mi><mi>∞</mi></msub></mrow></math>.</p>
+      <p>Related links (from the original):</p>
+      <ul class="related">
+        <li><a href="https://mathworld.wolfram.com/Norm.html">Norm</a> (Wolfram MathWorld)</li>
+        <li><a href="https://mathworld.wolfram.com/L1-Norm.html">L^1-Norm</a> (Wolfram MathWorld)</li>
+        <li><a href="https://mathworld.wolfram.com/L2-Norm.html">L^2-Norm</a> (Wolfram MathWorld)</li>
+        <li><a href="https://mathworld.wolfram.com/L-Infinity-Norm.html">L^infty-Norm</a> (Wolfram MathWorld)</li>
+        <li><a href="https://mathworld.wolfram.com/VectorNorm.html">Vector Norm</a> (Wolfram MathWorld)</li>
+        <li><a href="https://mathworld.wolfram.com/Configuration.html">Configuration</a> (Wolfram MathWorld)</li>
+        <li><a href="https://mathworld.wolfram.com/Torus.html">Torus</a> (Wolfram MathWorld)</li>
+        <li><a href="https://demonstrations.wolfram.com/InverseKinematicsForARobotManipulatorWithSixDegreesOfFreedom/">Inverse Kinematics for a Robot Manipulator with Six Degrees of Freedom</a> (Wolfram Demonstrations Project)</li>
+        <li><a href="https://demonstrations.wolfram.com/ForwardAndInverseKinematicsOfTheSCARARobot/">Forward and Inverse Kinematics of the SCARA Robot</a> (Wolfram Demonstrations Project)</li>
+        <li><a href="https://mathworld.wolfram.com/Path.html">Path</a> (Wolfram MathWorld)</li>
+        <li><a href="https://mathworld.wolfram.com/PathIntegral.html">Path Integral</a> (Wolfram MathWorld)</li>
+        <li><a href="https://mathworld.wolfram.com/PlanarSpace.html">Planar Space</a> (Wolfram MathWorld)</li>
+        <li><a href="https://mathworld.wolfram.com/Breadth-FirstTraversal.html">Breadth-First Traversal</a> (Wolfram MathWorld)</li>
+        <li><a href="https://demonstrations.wolfram.com/RobotMotionWithObstacles/">Robot Motion with Obstacles</a> (Wolfram Demonstrations Project)</li>
+      </ul>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. The shaded set is drawn from the exact boundary of the
+      norm ball, cut where the arm map folds, instead of Mathematica's sampled <code>ParametricPlot</code>; parts covered
+      twice look darker. Turn the joints with the two dials (press or drag on a dial; arrow keys turn a focused dial). As in
+      the original, a press in the plot only moves an invisible locator that has no effect. All computation runs in your
+      browser.</p>
+    <div class="credits" data-testid="credits">
+      Adapted from <a href="https://demonstrations.wolfram.com/DistanceNormsInRobotWorkspaceAndPhaseSpace/">"Distance Norms in Robot Workspace and Phase Space"</a>
+      by Aaron T. Becker and Benedict Isichei, Wolfram Demonstrations Project (published December 13, 2017), licensed
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+      This JavaScript/SVG translation by Tico Hannan (© 2026; produced with an AI code-generation tool) is released under the
+      same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

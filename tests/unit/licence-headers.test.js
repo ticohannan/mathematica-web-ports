@@ -6,7 +6,7 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const SKIP = new Set(['node_modules', 'test-output', 'vendor', '_internal', '.git', 'LICENSES']);
+const SKIP = new Set(['node_modules', 'test-output', 'dist', 'vendor', '_internal', '.git', 'LICENSES']);
 function walk(dir, out = []) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     if (SKIP.has(e.name)) continue;

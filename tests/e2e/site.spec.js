@@ -6,7 +6,7 @@ import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
 import { APPS } from './apps.js';
 
-test('landing page links to all ten demos and they load', async ({ page }) => {
+test('landing page links to all demos and they load', async ({ page }) => {
   await page.goto('/index.html');
   const links = page.locator('a[data-testid^="demo-link-"]');
   await expect(links).toHaveCount(APPS.length);

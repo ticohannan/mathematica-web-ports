@@ -1,0 +1,295 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Extracted 2026-10-12 with tools/nbextract.py (definition-notebook patch); cached outputs skipped. Greek letters appear as their names (Theta).
+
+
+### [Title]
+Distance Norms in Robot Workspace and Phase Space
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+This Demonstration shows the area within the distance d of a two-link planar-arm robot with configuration (Subscript[Theta, 1],Subscript[Theta, 2]). The distance d is measured in the Subscript[L, 1], Subscript[L, 2], Subscript[L, 3] or Subscript[L, ∞] norm, with the norm applied either in the workspace or the phase space of the robot. You can change the norm type, the length of the first arm joint and the angles of the two arm joints.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+(*draw circular arcs with arrowheads*)
+myArrowArc[c_,r_,{start_,end_}]:=(*problem -- initial point too far out*)
+If[start==end,Point[c+r{Cos[start],Sin[start]}],
+Arrow[BSplineCurve[Table[c+r{Cos[t],Sin[t]},{t,start,end,(end-start)/(11)}]]]]
+
+### [Input] (init)
+myArrowArc2[c_,r_,{start_,end_}]:=(*problem -- initial point too far out*)
+If[start===end,Point[c+r{Cos[start],Sin[start]}],
+Arrow[BSplineCurve[Table[c+r{Cos[t],Sin[t]},{t,start,end,(end-start)/(11)}]]]]
+
+### [Input] (init)
+makeHand[fl_, bl_, fw_, bw_] :=
+ Polygon[{{ -bl,-bw}, { -bl,bw}, { fl,fw}, { fl + 8 fw,0}, { fl,-fw}}/10];
+
+### [Input] (init)
+makeDialControl[Dynamic[pt_],cent_,color_]:=Module[{ang},
+LocatorPane[Dynamic[pt,(pt = Normalize[#])&],
+ang=Dynamic[ArcTan[pt[[1]],pt[[2]]]];(*If[ang <0,ang=ang+2π];*)
+Graphics[
+{
+Gray,Circle[cent],
+Gray,Table[Line[{cent+.94{Cos@a,Sin@a},cent+{Cos@a,Sin@a}}],{a,0,2π,π/8}],
+Table[Line[{cent+.98{Cos@a,Sin@a},cent+{Cos@a,Sin@a}}],{a,π/16,2π,π/8}],
+{FontSize->10,Table[Text[Theta,cent+.7{Cos@Theta,Sin@Theta}],{Theta, Rest@Range[- Pi,Pi, Pi/4]}]},
+{color, EdgeForm[Black],Rotate[Translate[makeHand[7, 7/3, .1, .3],cent],ang,cent]},
+Black,Arrowheads[.05],
+color,myArrowArc2[cent,0.3,{0,ang}]
+},ImageSize->120]]];
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[Module[{ r2,Theta1,Theta2,w = 1/8,l=1,arm},
+r2=2-r1;
+ Theta1 =ArcTan[p1[[1]],p1[[2]]];
+Theta2 = ArcTan[p2[[1]],p2[[2]]];
+arm = {(*draw arm with arrows showing angles*)LightGray,EdgeForm[Black],
+Rotate[{Rectangle[{-w,-w},{r1+w,w},RoundingRadius->w],If[r2< 1,{Black,Text["\<Robot Arm\>",{r1/2,0}]}]},Theta1,{0,0}],
+{Black,Point[{{0,0}}],,
+Red,myArrowArc[{0,0},l/4,{0,Theta1}],
+If[Abs[Theta1]>π/4,Text[Style["\<\!\(\*SubscriptBox[\(Theta\), \(1\)]\)\>",Medium],l 2/5{Cos[(Theta1)/(2)],Sin[(Theta1)/(2)]}]]},
+Rotate[{
+Rectangle[{r1 Cos[Theta1]-w,r1 Sin[Theta1]-w},{r1 Cos[Theta1]+r2+w,r1 Sin[Theta1]+w},RoundingRadius->w],If[r2>= 1,{Black,Text["\<Robot Arm\>",{r1 Cos[Theta1]+r2/2,r1 Sin[Theta1]}]}]
+},Theta1+Theta2,{r1 Cos[Theta1],r1 Sin[Theta1]}],
+{Black,Point[{r1{Cos[Theta1],Sin[Theta1]}}]},
+Blue,myArrowArc[r1{Cos[Theta1],Sin[Theta1]},l/3,{Theta1,Theta1+Theta2}],
+If[Abs[Theta2]>π/4,Text[Style["\<\!\(\*SubscriptBox[\(Theta\), \(2\)]\)\>",Medium],{r1 Cos[Theta1]+r2/2Cos[Theta1+(Theta2)/(2)],r1 Sin[Theta1]+r2/2Sin[Theta1+(Theta2)/(2)]}]]
+};
+ParametricPlot[
+If[cORw == "\<workspace\>",
+{r1 Cos[Theta1]+r2 Cos[Theta1+Theta2]+Theta1d,r1 Sin[Theta1]+r2 Sin[Theta1+Theta2]+Theta2d},
+{r1 Cos[Theta1+Theta1d]+r2 Cos[Theta1+Theta1d+Theta2+Theta2d],r1 Sin[Theta1+Theta1d]+r2 Sin[Theta1+Theta1d+Theta2+Theta2d]}],
+{Theta1d,-bound,bound},{Theta2d,-bound,bound},PlotRange-> {{-2.5,2.5},{-2.5,2.5}},RegionFunction->Function[{x,y,Theta1d,Theta2d},Norm[{Theta1d,Theta2d},p]<bound],PlotStyle->Opacity[0.5],(*Mesh->Full,*)
+Prolog->arm]
+],
+{{cORw,"\<phase space\>","\<norm space\>"},{"\<workspace\>","\<phase space\>"}},
+{{p,∞,"\<norm type\>"},{1,2,3,∞}},
+{{pEnd,{2,0}},{-2,-2},{2,2},Locator,Appearance->None}, 
+{{pEndp,{2,0}},{-2,-2},{2,2},None},
+{{bound,1/2,"\<d\>"},0.01,π,0.01,ImageSize->80,Appearance->"\<Labeled\>"},
+{{r1,1,"\<\!\(\*SubscriptBox[\(r\), \(1\)]\)\>"},0,2,0.01,ImageSize->80,Appearance->"\<Labeled\>"},
+{{p1,{1,0},"\<\!\(\*SubscriptBox[\(Theta\), \(1\)]\)\>"},(makeDialControl[#1,{0,0},Red]&)},
+{{p2,{0,1},"\<\!\(\*SubscriptBox[\(Theta\), \(2\)]\)\>"},(makeDialControl[#1,{0,0},Blue]&)},
+{{IsElbowUpp,True},None},
+ControlPlacement->Left,
+SaveDefinitions->True]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Item]
+Aaron T. Becker
+
+### [Item]
+Benedict Isichei
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+\<The measurement of distance between two configurations of the same robot is necessary for many robot motion planners, such as probabilistic road-map methods and rapidly expanding random trees.\>
+
+### [Text]
+The vector norm |xSubscript[|, p] for p=1,2,\[Ellipsis] is defined as |xSubscript[|, p]=<<RadicalBox>>.
+
+### [Text]
+The special case for p=∞ is defined as |xSubscript[|, ∞]=Subscript[max, i]|Subscript[x, i]|.
+
+### [Text]
+If a given robot configuration (Subscript[Theta, 1]^*,Subscript[Theta, 2]^*) places the tip of the robot at position (Subscript[x, r],Subscript[y, r]), the workspace norms are Subscript[L, 1]=|Subscript[x, r]-x|+|Subscript[y, r]-y|, Subscript[L, 2]=Sqrt[(Subscript[x, r]-x)^2+(Subscript[y, r]-y)^2], Subscript[L, 3]=<<RadicalBox>> and Subscript[L, ∞]=max(|Subscript[x, r]-x|,|Subscript[y, r]-y| ).
+
+### [Text]
+It is trivial to compute the distance using norms in the workspace; however, these distances are often misleading. The arm's workspace is the unit disk, but the Subscript[L, ∞]<1/2 workspace norm shown in Snapshot 1 includes an area inaccessible to the robot arm.
+
+### [Text]
+It is more correct to calculate the set of configurations with distance less than d in the phase space of the robot and then map this set into the workspace. These norms are Subscript[L, 1]=|Subscript[Theta, 1]^*-Subscript[Theta, 1]| +|Subscript[Theta, 2]^*-Subscript[Theta, 2]|, Subscript[L, 2]=Sqrt[(Subscript[Theta, 1]^*-Subscript[Theta, 1])^2+(Subscript[Theta, 2]^*-Subscript[Theta, 2])^2], Subscript[L, 3]=<<RadicalBox>> and Subscript[L, ∞]=max(|Subscript[Theta, 1]^*-Subscript[Theta, 1] ,|Subscript[Theta, 2]^*-Subscript[Theta, 2]| ). The mapping into the workspace is performed using Mathematica's ParametricPlot command.
+
+### [Text]
+Notice that lower-order norms are contained by higher-order norms: Subscript[L, 1]\[SubsetEqual]Subscript[L, 2]\[SubsetEqual]Subscript[L, 3]\[SubsetEqual]Subscript[L, ∞].
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+norm
+
+### [Item]
+configuration space
+
+### [Item]
+configuration
+
+### [Item]
+collision
+
+### [Item]
+obstacle
+
+### [Item]
+robot
+
+### [Item]
+planar robot
+
+### [Item]
+robot arm
+
+### [Item]
+path planning
+
+### [Item]
+path-planning
+
+### [Item]
+configuration space obstacle
+
+### [Item]
+torus
+
+### [Item]
+curse of dimensionality
+
+### [Item]
+phase space
+
+### [Item]
+resolution complete
+
+### [Item]
+breadth first search
+
+### [Item]
+L^1-Norm
+
+### [Item]
+L^2-Norm
+
+### [Item]
+L^infty-Norm
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Norm
+
+### [Text]
+L^1-Norm
+
+### [Text]
+L^2-Norm
+
+### [Text]
+L^infty-Norm
+
+### [Text]
+Vector Norm
+
+### [Text]
+Configuration
+
+### [Text]
+Torus
+
+### [Text]
+Inverse Kinematics for a Robot Manipulator with Six Degrees of Freedom
+
+### [Text]
+Forward and Inverse Kinematics of the SCARA Robot
+
+### [Text]
+Path
+
+### [Text]
+Path Integral
+
+### [Text]
+Planar Space
+
+### [Text]
+Breadth-First Traversal
+
+### [Text]
+Robot Motion with Obstacles
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2017-12-13
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
