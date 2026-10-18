@@ -320,9 +320,9 @@ also (especially) when something fails. `--accept` (run by the AI in a later del
 `tests/golden/<dir>.harness.json` (gzipped above 10 MB) and refuses unless a self-check with the same harness, notebook
 and Mathematica version passed and every echoed input number is bit-identical to the scenario file.
 
-**Status (v0.1.17).** Harness run 2 (owner, Mathematica 15.0.1, 2026-10-18) is accepted for all 16 batch A/B apps:
-`tests/golden/<dir>.harness.json`, 313 of 314 scenarios recorded (H-ME-11 was rewritten after a prelude failure and
-waits for a rerun). Every `harness "H-…"` golden test now compares the port with the original's recorded values; where
+**Status (v0.1.18).** Harness run 2 (owner, Mathematica 15.0.1, 2026-10-18) is accepted for all 16 batch A/B apps:
+`tests/golden/<dir>.harness.json`; H-ME-11, rewritten after a prelude failure in run 2, was recorded in run 3 (the same
+day), so all 314 scenarios have data. Every `harness "H-…"` golden test now compares the port with the original's recorded values; where
 the port still differs on purpose, the test asserts the recorded difference and names the proposal (P-) in the app's
 DESIGN.md. The numerics rules the run settled (division, sums, Dot, N of exact angles, Normalize, Total, Chop, Nearest,
 Sort) are listed in each app's K- entries.

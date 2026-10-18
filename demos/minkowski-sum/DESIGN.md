@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.17 |
+| Code version: | 0.1.18 |
 | Document revision | 3 (2026-10-18) — harness run 2 evaluated (K-MS-01/02/03/04/07/08 resolved, P-MS-01 proposed, K-MS-11 new) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Minkowski Sum of Convex Robot and Obstacle", contributed by Shreyas Poyrekar, Arifa Sultana and Aaron T. Becker, published 2019-04-23 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/MinkowskiSumOfConvexRobotAndObstacle/>. Readable source: `docs/original-source/minkowski-sum.txt`; snapshots: `docs/original-snapshots/minkowski-sum-1.png` … `-5.png` (the extraction's pictures 6 and 7 are the Wolfram logo, not snapshots); golden data (`tests/golden/minkowski-sum.original-states.json`, COMMON-DECISIONS §1): the live state, the Settings of the five snapshot cells (raw notebook lines 4386, 5542, 6194, 7236, 7866) and the initial settings |
@@ -314,6 +314,7 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 | 1 | v0.1.15 | 2026-10-17 | first implementation, from the design draft approved by the owner on 2026-10-17 (DEC-17; draft of 2026-10-12 with COMMON-DECISIONS §6 and owner rules R-A/R-B/R-C applied). `demos/common/polygon-core.js` created (owned by this app; helpers moved from motion-planning and art-gallery without behaviour change). Changes against the draft: harness references written as the golden tests `minkowski-sum: harness H-MS-nn` (the design-docs test accepts only test titles, checklist items, inventory, compare and review); D-MS-06 added (both control sets in the page, one hidden); D-MS-02 and §6.6 state the arrowhead and image sizes used; A-MS-03 adds `stopAnimation`. |
 | 2 | v0.1.16 | 2026-10-18 | version number only (batch B release); no change to this app |
 | 3 | v0.1.17 | 2026-10-18 | harness run 2 (Mathematica 15.0.1) evaluated: vector `Total` pairwise and `Mean` as a division (`demos/common/polygon-core.js` `totalPairwise`, `meanMma`, used by `centroidOfPoly` and this app's `Mean`s; K-MS-08), the three-vector `prev` sum by the empirical rule of K-MS-11, frame half side N[7/Sqrt[2]] = 4.949747468305832 (K-MS-07); K-MS-01 (→ P-MS-01), K-MS-02, K-MS-03, K-MS-04, K-MS-07, K-MS-08 resolved, K-MS-09 with evidence, K-MS-11 new (open). Golden harness tests: `%plotRange` read as one record per graphic, the recorded differences of P-MS-01 and K-MS-11 asserted exactly |
+| 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 
 ## 10. Improvements to consider (not implemented)
 

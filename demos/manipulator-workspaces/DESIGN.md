@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.17 |
+| Code version: | 0.1.18 |
 | Document revision | 1 (2026-10-18) — first implementation |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Robot Manipulator Workspaces", contributed by Aaron T. Becker, Benedict Isichei, Muhammad Sultan and Maruthi S. Chemudupati, published 2017-12-13 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/RobotManipulatorWorkspaces/>. Readable source: [`docs/original-source/manipulator-workspaces.txt`](../../docs/original-source/manipulator-workspaces.txt); snapshots: `docs/original-snapshots/manipulator-workspaces-1.png` … `-8.png` (the notebook's snapshot cells 9 and 10 are empty); golden data: `tests/golden/manipulator-workspaces.original-states.json` (written with `tools/extract_state.py --snapshots` from the raw notebook, COMMON-DECISIONS §1: `states[0]` = the live output-cell state, `snapshots[1…8]` = the snapshot cells' Settings — each with its robot, ranges and the original's `workspace3D`, raw notebook lines 8885, 11436, 13864, 15630, 17367, 19228, 21886, 24150 — and `specs` = the initial settings) |
@@ -242,6 +242,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 |----------|--------------|------|--------|
 | 1 | v0.1.16 | 2026-10-18 | first implementation of the design draft approved by the owner (DEC-17; draft of 2026-10-12 with COMMON-DECISIONS §6 and owner rules R-A/R-B/R-C applied); decided while implementing: D-MW-10 (the "Speed" sampling, mesh and boundary lines and the Show option rule in the app's `model.js`, the surfaces drawn by `main.js`), N-MW-07 (table angles through `jointTransform`'s table-constant rule), D-MW-04 (zoom 1.35 fitted to snapshots 1–7) with K-MW-08 (snapshot 8's framing), D-MW-02 (ground colour tolerance as robot-singularities), N-MW-08 (recompute on every value change of a drag), A-MW-02's e2e test; harness checks are golden tests `harness "H-MW-nn"` that skip until `tests/golden/manipulator-workspaces.harness.json` exists |
 | 2 | v0.1.17 | 2026-10-18 | harness run 2 (Mathematica 15.0.1 records H-MW-01 … H-MW-23): Td chopped and multiplied with the fused machine Dot (Q-MW-09; every recorded Td and pm bit for bit), K-MW-02 and K-MW-07 resolved, K-MW-03 not decided by the record (N-MW-09), K-MW-08 narrowed (the box is the same); the arrows' 3/2 jr drawn as 0.3; golden tests compare Td and pm bit for bit, the vertex counts of every recorded workspace, the H-MW-20 options and plot range, the H-MW-17 primitive list |
+| 3 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 
 ## 10. Improvements to consider (not implemented)
 

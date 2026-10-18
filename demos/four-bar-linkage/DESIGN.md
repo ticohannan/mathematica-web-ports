@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.17 |
+| Code version: | 0.1.18 |
 | Document revision | 3 (2026-10-18) — harness run 2 evaluated (K-FB-02/03 resolved, P-FB-01/02 proposed) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Configuration Space for Four-Bar Linkage", contributed by Aaron T. Becker and Shiva Shahrokhi, published 2018-01-11 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ConfigurationSpaceForFourBarLinkage/>. Readable source: `docs/original-source/four-bar-linkage.txt`; snapshots: `docs/original-snapshots/four-bar-linkage-1.png` … `-4.png` (the extraction's pictures 5 and 6 are the Wolfram logo); golden data (`tests/golden/four-bar-linkage.original-states.json`, COMMON-DECISIONS §1): the live state, the Settings of the four snapshot cells (raw notebook lines 4030, 6009, 7933, 9769, each with `pvals`, `plot`, `pnear`, `p`, `spacing`, `links`) and the initial settings |
@@ -329,6 +329,7 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 | 1 | v0.1.15 | 2026-10-17 | first implementation, from the design draft approved by the owner on 2026-10-17 (DEC-17; draft of 2026-10-12 with COMMON-DECISIONS §6 and owner rules R-A/R-B/R-C applied). `recorded-samples.json` extracted from the notebook's stored states; `shared/ui-interval.js` (owned by this app) gains the option `trackPress` (D-FB-05). Changes against the draft: harness references written as the golden tests `four-bar: harness H-FB-nn` (the design-docs test accepts only test titles, checklist items, inventory, compare and review); `value-links` removed from the UI inventory (read-only text, not an interactive element); D-FB-09 (sampler parameters) and D-FB-10 (no padding of the linkage graphic) added; §6.2 corrected (all four recorded sets refine 3 levels; the small gaps of snapshots 3 and 4 are edge gaps); A-FB-03 adds `linkageToClient`; review fixes |
 | 2 | v0.1.16 | 2026-10-18 | version number only (batch B release); no change to this app |
 | 3 | v0.1.17 | 2026-10-18 | harness run 2 (Mathematica 15.0.1) evaluated: α of the impossible branch uses exact Cos/Sin of the Piecewise's 0 and π (H-FB-06; D-FB-03, D-FB-11); K-FB-02, K-FB-03, K-FB-04, K-FB-09, K-FB-11 resolved, K-FB-01 resolved for the records, K-FB-05 and K-FB-07 with evidence; proposals P-FB-01 (15.0.1 samples at the recorded settings) and P-FB-02 (empty plot when nothing is sampled); N-FB-05 (empty `Plot` log, 15.0.1 plot style). Golden harness tests read the 15.0.1 encoding (exact `Pi` as a symbol, the new plot colours, multi-segment Lines) and assert the recorded differences of P-FB-01/P-FB-02 exactly |
+| 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 
 ## 10. Improvements to consider (not implemented)
 

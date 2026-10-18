@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.17 |
+| Code version: | 0.1.18 |
 | Document revision | 2 (2026-10-18) — `matrixRank` imported from `demos/common/svd3.js` (DH-family move) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Forward and Inverse Kinematics for Two-Link Arm", contributed by Aaron T. Becker and Lillian Lin, published 2016-06-20 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ForwardAndInverseKinematicsForTwoLinkArm/>. Readable source: [`docs/original-source/two-link-kinematics.txt`](../../docs/original-source/two-link-kinematics.txt); saved states: `tests/golden/two-link-kinematics.original-states.json` (`states[0]` = the output cell's saved state, `snapshots[1…4]` = the four snapshot cells' `Settings`, raw notebook lines 3580, 5050, 6589, 8110; `specs` = the initial settings (stored `"Variables"`); exact values kept as `{"wl": …}` next to their double); snapshots: `docs/original-snapshots/two-link-kinematics-1…4.png` (the notebook's snapshot cells 5 and 6 are the Wolfram icon placeholder, N-TK-06) |
@@ -330,6 +330,7 @@ Template: see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md).
 | 1 | v0.1.15 | 2026-10-17 | first implementation of the design draft approved by the owner on 2026-10-17 (DEC-17; draft of 2026-10-12 with COMMON-DECISIONS §5, §6 and owner rules R-A/R-B/R-C applied); decided while implementing: K-TK-13 (pad pointer limited to its plot range), N-TK-08 (three TESTPLAN corrections), the σ1 formula of `svd2` and the drawing sizes of D-TK-04; harness checks are golden tests "harness H-TK-nn" that skip until `tests/golden/two-link-kinematics.harness.json` exists; review fixes |
 | 2 | v0.1.16 | 2026-10-18 | DH-family move (COMMON-DECISIONS §6): `matrixRank` is imported from `demos/common/svd3.js` (robot-singularities' module, moved unchanged) instead of `demos/robot-singularities/svd3.js` — in `model.js` and the unit and golden tests; §6 text and §6.1 bundle table updated (the bundle carries `demos/common/svd3.js` and `demos/common/g3d.js`); no feature change |
 | 3 | v0.1.17 | 2026-10-18 | harness run 2 accepted, no change to the app code: K-TK-01, K-TK-04, K-TK-07, K-TK-10, K-TK-11 resolved with the recorded values, K-TK-08 and K-TK-09 updated, K-TK-03 not decided by the record (decisive pose proposed); D-TK-07 decided; P-TK-01 (dial press at the centre), P-TK-02 (LAPACK SVD bits) proposed. Golden tests: H-TK-13 asserts the recorded θ1 = 0 without messages, H-TK-14/H-TK-15 jointVel bit for bit from the recorded U, Σ, V (the port's own within 2 ulps, P-TK-02), H-TK-05 jointVel within 4 ulps of max \|pEnd\|·‖J⁺‖ (cancellation, K-TK-08), H-TK-23 PseudoInverse against the recorded truncated SVD and MatrixRank through svd2 |
+| 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 
 ## 10. Improvements to consider (not implemented)
 

@@ -372,7 +372,7 @@ describe('manipulability-ellipsoid golden: Mathematica harness records', () => {
     const T = 'Table[{Cos[a],Sin[a]},{a,-Pi,Pi,Pi/32}]';
     // the midpoint pointer: the port assumes N[Cos[Pi/64]] = Math.cos(π/64) (the recorded input echo must say so, else
     // the tie premise of this scenario does not hold and the expectations below must be re-derived)
-    const echo = h.record.inputEcho.find((e) => e.step === 1 && e.name === 'p1');
+    const echo = h.record.inputEcho.find((e) => toJS(e.step) === 1 && toJS(e.name) === 'p1'); // lexical record: step is a LexNumber
     expect(toJS(echo.value), 'H-ME-11 midpoint pointer').toEqual([Math.cos(PI / 64), Math.sin(PI / 64)]);
     const mid = toJS(captureOf(h.record, `wl:Nearest[${T},N[{Cos[Pi/64],Sin[Pi/64]}]]`, { step: 1 }));
     expect(mid[0], 'H-ME-11 first point at the midpoint').toEqual(DIAL_TABLE_32[32 + nearest32Index([Math.cos(PI / 64), Math.sin(PI / 64)])]);

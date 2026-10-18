@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.17 |
+| Code version: | 0.1.18 |
 | Document revision | 6 (2026-10-18) — `demos/common/prm-core.js` generalised to n dimensions (by prm-3d); no change to this app |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Probabilistic Roadmap Method for Robot Arm", contributed by Aaron T. Becker and Yitong Lu, published January 29, 2020 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ProbabilisticRoadmapMethodForRobotArm/>. Readable source: [`docs/original-source/prm-robot-arm.txt`](../../docs/original-source/prm-robot-arm.txt); snapshots: `docs/original-snapshots/prm-robot-arm-*.png`; saved state: `tests/golden/prm-robot-arm.original-state.json` |
@@ -217,6 +217,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 5 | v0.1.15 | 2026-10-17 | §11 Errors in the original added (owner rule R-C); Mathematica checklist items rewritten as operator procedures (R-B); standalone bundle (owner rule R-A): §6.1, A-PA-09, tools/bundle-app.mjs; review fixes |
 | 6 | v0.1.16 | 2026-10-18 | `demos/common/prm-core.js` generalised to n dimensions by "Probabilistic Roadmap Method in 3D" (owner prm-3d, approved by the owner): `toroidDist`, `pathOKT`, `toroidLine` and `toroidPt` loop over the coordinates (sums from the first term, left to right, so every 2D result is the same double), one wrap `wrapto0to2pi` (the same double as the 2D sequential wrap on (−2π, 4π)), `toroidPt` option `zeroTest`, optional distance function / toroidPt parameters of `connectPoints`, `myAstar`, `planQuery` and `progressOnPath`, missing adjacency lists taken as empty in `connectPoints`; every export and its behaviour unchanged for this app — its unit and golden replays run unchanged and pass; bundle contents unchanged |
 | 7 | v0.1.17 | 2026-10-18 | version number only (harness run 2 accepted); no change to this app |
+| 8 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 
 ## 10. Improvements to consider (not implemented)
 

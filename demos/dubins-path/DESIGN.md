@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.17 |
+| Code version: | 0.1.18 |
 | Document revision | 1 (2026-10-17) — first implementation |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Shortest Path for the Dubins Car", contributed by Aaron T. Becker and Shiva Shahrokhi, published 2017-12-14 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ShortestPathForTheDubinsCar/>. Readable source: [`docs/original-source/dubins-path.txt`](../../docs/original-source/dubins-path.txt); snapshots: `docs/original-snapshots/dubins-path-1.png` … `dubins-path-4.png` (pictures 5 and 6 of the extraction are the Wolfram icon, not snapshots); golden fixture (COMMON-DECISIONS §1): `tests/golden/dubins-path.original-states.json` with `states[0]` = the live output-cell state, `snapshots[1…4]` = the `"Settings"` of the four snapshot cells (raw definition notebook lines 3511, 4416, 5299, 6178) and `specs` = the initial settings (output cell `"Variables"`, line 2047, and `"Specifications"`, line 2235); exact values kept as `{"wl": …}` |
@@ -241,6 +241,7 @@ Template: see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md).
 | 1 | v0.1.15 | 2026-10-17 | first implementation of the approved design draft (2026-10-12, owner approval 2026-10-17, DEC-17): `dubins.js`, `main.js`, `index.html`, the shared car icon `demos/common/car-icon.js` (owned by this app); harness references cited as the golden tests that replay them; dash pattern measured (D-DP-03); N-DP-05; review fixes |
 | 2 | v0.1.16 | 2026-10-18 | version number only (batch B release); no change to this app |
 | 3 | v0.1.17 | 2026-10-18 | harness run 2 accepted: the opening constant goalThetaloc[[2]] is now 0.5857864376269049, Mathematica's `N[2 - Sqrt[2]]` (H-DP-01, H-DP-25; D-DP-09; was 0.585786437626905); K-DP-01, K-DP-02, K-DP-03, K-DP-06, K-DP-08 resolved with the recorded values; Q-DP-01 updated (H-DP-08 is an exact tie in Mathematica); P-DP-01 proposed (exact-integer tie, H-DP-07; the golden test asserts the recorded difference). Golden-test adapter: scenario values (read lexically) converted to doubles, the colour of a drawing read from the `{"h", "a"}` encoding, a fresh state object per step |
+| 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 
 ## 10. Improvements to consider (not implemented)
 

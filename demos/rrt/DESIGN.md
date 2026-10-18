@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.17 |
+| Code version: | 0.1.18 |
 | Document revision | 3 (2026-10-18) — harness run 2 evaluated (15.0.1 numerics model, K-RT-02/06 resolved, P-RT-01 proposed) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Rapidly Exploring Random Tree (RRT) and RRT*", contributed by Aaron T. Becker and Li Huang, published 2018-01-16 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/RapidlyExploringRandomTreeRRTAndRRT/>. Readable source: [`docs/original-source/rrt.txt`](../../docs/original-source/rrt.txt); snapshots: `docs/original-snapshots/rrt-1.png` … `rrt-6.png` (pictures 7 and 8 of the extraction are the Wolfram logo placeholder, not snapshots); saved states (COMMON-DECISIONS §1): [`tests/golden/rrt.original-states.json`](../../tests/golden/rrt.original-states.json), written by `python3 tools/extract_state.py --snapshots`, with `states[0]` = the live output-cell state, `snapshots[1…6]` = the six snapshot cells' `"Settings"` (raw notebook lines 3360, 4786, 9538, 16507, 21317, 24564) and `specs` = the initial settings (see §6, *Golden data*) |
@@ -267,6 +267,7 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 | 1 | v0.1.15 | 2026-10-17 | first implementation of the approved draft (DEC-17; draft of 2026-10-12 with COMMON-DECISIONS §6 and owner rules R-A/R-B/R-C): `model.js`, `main.js`, `index.html`; new common module `demos/common/segments.js` (owner); tests with the TESTPLAN titles (unit, golden incl. the harness replays — N-RT-06, e2e); §6.1 bundle table generated. Test data corrected against the draft: T-RT-14 uses nodes at (±1, 4) (with (±1, 0) the root, 5 away, is nearer to p = (0, 5) than √26); review fixes |
 | 2 | v0.1.16 | 2026-10-18 | version number only (batch B release); no change to this app |
 | 3 | v0.1.17 | 2026-10-18 | harness run 2 (Mathematica 15.0.1) evaluated: the numerics model is selectable (`MODEL_1501` default, `MODEL_2018` for the saved snapshots); 15.0.1 `Normalize` with the x87 extended-precision length (`lengthExtended`, `normalizeExtended`) and `EuclideanDistance` in plain doubles (K-RT-02 resolved); K-RT-01, K-RT-03, K-RT-06 (→ P-RT-01) resolved, K-RT-04, K-RT-05, K-RT-08 with evidence; N-RT-07 (scenarios without recorded draw values, typeset strings). Golden harness tests: `%text` read as recorded Text objects, `treeTypeOld` as the kernel string, records without draw values replayed structurally |
+| 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 
 ## 10. Improvements to consider (not implemented)
 

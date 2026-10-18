@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.17 |
+| Code version: | 0.1.18 |
 | Document revision | 1 (2026-10-17) — first implementation |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Breadth-First Search Robot Motion Planning", contributed by Aaron T. Becker, Benedict Isichei and Praveen Reddy Padala, published 2017-12-12 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/BreadthFirstSearchRobotMotionPlanning/>. Readable source: `docs/original-source/bfs-motion-planning.txt`; snapshots: `docs/original-snapshots/bfs-motion-planning-1.png` … `-4.png` (the extraction's pictures 5 and 6 are the Wolfram logo); stored output cell (initial settings = stored `"Variables"`, Body, Specifications, Initialization): raw definition notebook lines 2373, 2749, 2949, 3336; fixture `tests/golden/bfs-motion-planning.original-states.json` (`states[0]` live state; `snapshots[1…4]` the snapshot Settings, raw lines 4456, 5720, 7383, 13618; `specs` the initial settings) |
@@ -250,6 +250,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 1 | v0.1.15 | 2026-10-17 | first implementation, from the design draft of 2026-10-12 approved by the owner on 2026-10-17 (DEC-17; draft revised after review r2, COMMON-DECISIONS §3–§6 and owner rules R-A/R-B/R-C). Built as specified, on the shared `demos/common/arm-grid.js` and `arm-view.js` of robot-motion-obstacles; decided while building: the provisional out-of-grid handling of D-BF-07 (the draft left it to the harness), the harness test file (§6 Tests); review fixes |
 | 2 | v0.1.16 | 2026-10-18 | version number only (batch B release); no change to this app |
 | 3 | v0.1.17 | 2026-10-18 | harness run 2 accepted (Mathematica 15.0.1): all 23 records match the port, no app code changed. Golden test adapter: an unassigned local recorded as null (H-BF-23, N-BF-07). K-BF-03 resolved (a·(1/b), row 1; D-BF-07 updated); evidence added to K-BF-01, 02, 04, 05, 06, 08, 09 (01, 02, 09 not decided by the record) |
+| 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 
 ## 10. Improvements to consider (not implemented)
 

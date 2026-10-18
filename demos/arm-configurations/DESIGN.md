@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.17 |
+| Code version: | 0.1.18 |
 | Document revision | 1 (2026-10-18) — first implementation |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Common Robot Arm Configurations", contributed by Mohammad Sultan and Aaron T. Becker, published 2017-06-28 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/CommonRobotArmConfigurations/>. Readable source: [`docs/original-source/arm-configurations.txt`](../../docs/original-source/arm-configurations.txt); snapshots: `docs/original-snapshots/arm-configurations-1.png` … `-6.png` (pictures 1 and 2 are identical, N-AC-01); golden data: `tests/golden/arm-configurations.original-states.json` (written with `tools/extract_state.py --snapshots` from the raw notebook, COMMON-DECISIONS §1: `states[0]` = output-cell state, raw notebook line 1948; `snapshots[1…6]` = the snapshot cells' Settings, raw lines 5256, 7471, 9130, 10505, 12137, 13574; `specs` = the stored Specifications) |
@@ -262,6 +262,7 @@ Template: [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md).
 | 1 | v0.1.16 | 2026-10-18 | first implementation of the design draft approved by the owner (DEC-17; draft of 2026-10-12 with COMMON-DECISIONS §5, §6 and owner rules R-A/R-B/R-C applied); decided while implementing: A-AC-07 (context-loss redraw), N-AC-06 (`drawJoint` `'ac'` verified against the source, unchanged), K-AC-09 and K-AC-04 completed with what the port does, §5 lists only interactive elements (`value-params-*`, `dh-table`, `h-matrix` are named below the table as non-interactive test ids), `robot` is a 0-based index (§6.3); harness checks are golden tests `harness "H-AC-nn"` that skip until `tests/golden/arm-configurations.harness.json` exists |
 | 2 | v0.1.16 | 2026-10-18 | review fixes: K-AC-10 (`-1+d-jr-.01` in COMMON §7 order for drawJoint `'ac'` and drawShaft); unit tests: the no-negative-zero check and the Chop check can fail now |
 | 3 | v0.1.17 | 2026-10-18 | harness run 2 (Mathematica 15.0.1 records H-AC-01 … H-AC-18): K-AC-01 resolved (Chop acts: the port chops machine products), K-AC-02 resolved (machine products = the fused multiply-add Dot, `mul4Fma`: H-AC-11 bit for bit, no 10^-16 residues in H), K-AC-09 resolved (a matrix with one machine entry is all machine), K-AC-10 resolved (prismatic axis bottom in written order, via dh-parameters' records), N-AC-07 (3/2 jr = 0.3); K-AC-03 answered with proposal P-AC-01 (high-precision H, difference asserted by the test); K-AC-04 stays open (front-end rounding); `shared/exact-pi.js` sin(π/8) = 0.3826834323650898 (H-ME-12) shifts exact entries' doubles by 1 ulp; golden tests compare Td bit for bit, the H text with the recorded boxes, and the %g3d primitives |
+| 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 
 ## 10. Improvements to consider (not implemented)
 

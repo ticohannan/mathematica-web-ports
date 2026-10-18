@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.17 |
+| Code version: | 0.1.18 |
 | Document revision | 1 (2026-10-17) — first implementation |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Isochrons for a Dubins Car", contributed by Aaron T. Becker and Shiva Shahrokhi, published 2017-12-18 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/IsochronsForADubinsCar/>. Readable source: [`docs/original-source/dubins-isochrons.txt`](../../docs/original-source/dubins-isochrons.txt); snapshots: `docs/original-snapshots/dubins-isochrons-1.png` … `dubins-isochrons-5.png` (pictures 6 and 7 of the extraction are the Wolfram icon, not snapshots); golden fixture (COMMON-DECISIONS §1): `tests/golden/dubins-isochrons.original-states.json` with `states[0]` = the live output-cell state including the original's cached `ParametricPlot` output `plotReach` (raw definition notebook line 1111), `specs` = the initial settings (stored `"Variables"`, raw line 3792, equal to the live state; the output cell `"Specifications"`, line 5286, also hold the cached plot), `snapshots[1…5]` = the `"Settings"` of the five snapshot cells with their own cached plots (lines 7853, 10287, 17941, 25604, 33224; 2–4 hold the "≤" region meshes) |
@@ -255,6 +255,7 @@ Template: see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md).
 | 1 | v0.1.15 | 2026-10-17 | first implementation of the approved design draft (2026-10-12, owner approval 2026-10-17, DEC-17): `isochrons.js`, `main.js`, `index.html`, the car icon from `demos/common/car-icon.js` (owner dubins-path), axes from `shared/svg-frame.js`; harness references cited as the golden tests that replay them; D-DI-11 (extremes of the sampled curves), D-DI-02 completed (fold lines), N-DI-09; review fixes |
 | 2 | v0.1.16 | 2026-10-18 | version number only (batch B release); no change to this app |
 | 3 | v0.1.17 | 2026-10-18 | harness run 2 accepted: `mRS`/`mLS` multiply `t (τ-1) X` from left to right, `(t*(s-1))*X`, as Mathematica 15.0.1 (K-DI-04 resolved, N-DI-07 superseded; car states bit-identical in all 23 scenarios, grey polygons except K-DI-03's last bits); K-DI-01, K-DI-05, K-DI-07 resolved, K-DI-03 updated with the evidence; P-DI-01 proposed (15.0.1's plot style). Golden tests: the `{"h", "a"}` encoding read, scenario values converted to doubles, a fresh state per step, the symbol `Pi` in Circle angles (`toJSNumeric`), a point-on-curve search that also finds the nearest arc of curves with many turns and cusps, polygon tolerance one ulp of max(*t*, *r*) with ≥ 95 % identical (≥ 90 % for the saved cache) |
+| 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 
 ## 10. Improvements to consider (not implemented)
 
