@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.18 |
+| Code version: | 0.1.19 |
 | Document revision | 1 (2026-10-17) — first implementation |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Shortest Path for the Dubins Car", contributed by Aaron T. Becker and Shiva Shahrokhi, published 2017-12-14 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ShortestPathForTheDubinsCar/>. Readable source: [`docs/original-source/dubins-path.txt`](../../docs/original-source/dubins-path.txt); snapshots: `docs/original-snapshots/dubins-path-1.png` … `dubins-path-4.png` (pictures 5 and 6 of the extraction are the Wolfram icon, not snapshots); golden fixture (COMMON-DECISIONS §1): `tests/golden/dubins-path.original-states.json` with `states[0]` = the live output-cell state, `snapshots[1…4]` = the `"Settings"` of the four snapshot cells (raw definition notebook lines 3511, 4416, 5299, 6178) and `specs` = the initial settings (output cell `"Variables"`, line 2047, and `"Specifications"`, line 2235); exact values kept as `{"wl": …}` |
-| Port files | `dubins.js` (the original's functions `angPt2Pt`, `distPt2Pt`, `arcLen`, `drawLSL` … `drawRLR` with their drawings as data, the `Sort` selection, the moving-car module and one evaluation of the Manipulate body; pure), `main.js` (SVG drawing, locators, controls), `index.html`; new shared module owned by this app: `demos/common/car-icon.js` (CC BY-NC-SA 3.0; header credits "Shortest Path for Forward and Reverse Motion of a Car", this Demonstration and "Isochrons for a Dubins Car"; `drawCar` with `{lights, beam, headlightEdge}`, `wheelAngle`, the SVG car renderer `drawCarSvg`; car-paths switches to it later, with owner approval, its tests guarding; §6) |
+| Port files | `dubins.js` (the original's functions `angPt2Pt`, `distPt2Pt`, `arcLen`, `drawLSL` … `drawRLR` with their drawings as data, the `Sort` selection, the moving-car module and one evaluation of the Manipulate body; pure), `main.js` (the Manipulate on `shared/manipulate.js`: controls, locators, Graphics data; v0.1.19), `index.html`; new shared module owned by this app: `demos/common/car-icon.js` (CC BY-NC-SA 3.0; header credits "Shortest Path for Forward and Reverse Motion of a Car", this Demonstration and "Isochrons for a Dubins Car"; `drawCar` with `{lights, beam, headlightEdge}`, `wheelAngle`, the SVG car renderer `drawCarSvg`; car-paths switches to it later, with owner approval, its tests guarding; §6) |
 | Role in the project | further demonstration (batch A) |
 
 ## 1. Purpose and background
@@ -143,10 +143,13 @@ Non-interactive test ids of the graphic (not part of the inventory check): `plot
   for `distPt2Pt` and the label distance (not `Math.hypot`, not dnrm2), `Math.acos`, `Math.cos`, `Math.sin` (K-DP-08).
   `a/b` is evaluated as `a*(1/b)` where the original divides machine numbers, with the grouping of the stored definitions (e.g. `2 (minRadius/dLR)`,
   `dLL/(4 minRadius)`, `distTrav/Abs[minRadius ang1]`, `ang2 ((distTrav - Abs[minRadius ang1])/Abs[minRadius ang2])`). The output cell's stored Initialization and Body were checked against the Input cells: same definitions and specs except the initial values (F-DP-12) and the extras of Q-DP-07.
-- `main.js` keeps the state, calls `evaluate` after every control change, and draws with `shared/svg-plot.js`
-  (`createPlot` with `padding: 0`, `addLocators` with `pickAnywhere: true` and names `goalXY`, `goalThetaloc`,
-  `locatorGlyph` for the visible goal locator, `arcPoints`, `svgNode`), `demos/common/car-icon.js` (`drawCar`, `drawCarSvg`), `shared/mma-colors.js` (`NAMED`, `darker`,
-  `lighter`, `css`), `shared/ui.js` (`Controls.slider` ×2, `ControlPlacement->Top`), `shared/requirements.js`.
+- `main.js` (v0.1.19) is one `Manipulate({…})` call of `shared/manipulate.js`: the two sliders and the locators
+  `goalXY`, `goalThetaloc` as Mathematica control specs (the layer draws them with `shared/svg-plot.js` `addLocators`,
+  `pickAnywhere: true`, `locatorGlyph` for the visible goal locator), `body: evaluate`, and `draw` returning the
+  Graphics list in the original's order (`shared/graphics.js`: `Background -> Lighter[Gray, .92]`, the heading glyph as
+  an `Inset` of a 17 px Graphics, circles, candidate words, label); the cars are still drawn by
+  `demos/common/car-icon.js` (`drawCar`, `drawCarSvg`) through the layer's `Raw` migration aid. `shared/mma-colors.js`
+  (`NAMED`, `darker`), `shared/requirements.js`.
   The goal locator is drawn by the locator layer at `goalXY`; the heading locator is invisible (`appearance` → null) and
   the red glyph (F-DP-17) is drawn in the graphic at the reset `goalThetaloc`, in the original's drawing order.
 - Reuse from car-paths. Shareable (identical code): `drawCar` except the headlight edge (F-DP-15), `wheelAngle`, the
@@ -177,7 +180,7 @@ npm run bundle -- dubins-path
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/dubins-path/`) | 3 | `dubins.js`, `index.html`, `main.js` |
-| `shared/` | 8 | `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `requirements.js`, `style.css`, `svg-plot.js`, `ui.js` |
+| `shared/` | 10 | `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `requirements.js`, `style.css`, `svg-plot.js`, `ui.js` |
 | `demos/common/` | 1 | `car-icon.js` |
 | added by the bundler | 7 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/dubins-path/DESIGN.md` |
 <!-- bundle-contents:end -->
@@ -242,6 +245,7 @@ Template: see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md).
 | 2 | v0.1.16 | 2026-10-18 | version number only (batch B release); no change to this app |
 | 3 | v0.1.17 | 2026-10-18 | harness run 2 accepted: the opening constant goalThetaloc[[2]] is now 0.5857864376269049, Mathematica's `N[2 - Sqrt[2]]` (H-DP-01, H-DP-25; D-DP-09; was 0.585786437626905); K-DP-01, K-DP-02, K-DP-03, K-DP-06, K-DP-08 resolved with the recorded values; Q-DP-01 updated (H-DP-08 is an exact tie in Mathematica); P-DP-01 proposed (exact-integer tie, H-DP-07; the golden test asserts the recorded difference). Golden-test adapter: scenario values (read lexically) converted to doubles, the colour of a drawing read from the `{"h", "a"}` encoding, a fresh state object per step |
 | 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
+| 5 | v0.1.19 | 2026-10-21 | main.js rewritten on the new shared Manipulate layer (`shared/manipulate.js`, `shared/graphics.js`): the controls are written as Manipulate control specs and the picture as Graphics data; no change to behaviour or picture (all unit, golden and browser tests unchanged and passing; screenshots and Manipulate state identical to v0.1.18 at sample settings) |
 
 ## 10. Improvements to consider (not implemented)
 

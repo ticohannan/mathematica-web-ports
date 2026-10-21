@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.18 |
+| Code version: | 0.1.19 |
 | Document revision | 6 (2026-10-18) — DH-family move: the generic code lives in `demos/common/` (re-export shims here); no feature change |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Robot Singularities in Three-Link Manipulators", contributed by Aaron T. Becker and Yitong Lu, published January 11, 2021 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/RobotSingularitiesInThreeLinkManipulators/>. Readable source: [`docs/original-source/robot-singularities.txt`](../../docs/original-source/robot-singularities.txt); snapshots: `docs/original-snapshots/robot-singularities-*.png`; saved state: `tests/golden/robot-singularities.original-state.json` |
@@ -225,6 +225,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 6 | v0.1.16 | 2026-10-18 | DH-family move (owner-approved, COMMON-DECISIONS §3, dh-parameters §6.5): the generic code moved unchanged in behaviour to `demos/common/` — `g3d.js` and `svd3.js` (whole files; new options `EdgeForm`, `cuboidCorners`, `zeroTol` with defaults that leave this app's results unchanged), `dh-chain.js` (DOF, joints, dhTransform, jointTransform, makeO3coords, computeAd, computeTd from `robots.js`), `robot-draw.js` (drawZArrow, drawCoordAxes, the ground, drawJoint variant 'rs', drawWristCenter from `model.js`), `g3d-three.js` (addPrims, disposeGroup, fitViewer from `main.js`, with parameters instead of this page's globals); `g3d.js`, `svd3.js`, `robots.js`, `model.js` keep re-export shims, so imports and tests are unchanged; bit-for-bit regression test T-DH-48 (`tests/unit/dh-parameters.test.js`); §6.1 bundle table regenerated; no feature change |
 | 7 | v0.1.17 | 2026-10-18 | version number only (harness run 2 accepted); no change to this app |
 | 8 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
+| 9 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
 
 ## 10. Improvements to consider (not implemented)
 

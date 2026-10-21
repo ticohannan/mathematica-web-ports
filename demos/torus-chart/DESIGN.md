@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.18 |
+| Code version: | 0.1.19 |
 | Document revision | 1 (2026-10-18) — first implementation |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Chart for a Torus", contributed by Aaron T. Becker and Haoran Zhao, published 2016-05-02 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ChartForATorus/>. Readable source: [`docs/original-source/torus-chart.txt`](../../docs/original-source/torus-chart.txt); snapshots: `docs/original-snapshots/torus-chart-1.png` … `-4.png` (files 5 and 6 of the extraction are 96 × 100 placeholder icons); golden data: `tests/golden/torus-chart.original-states.json` (COMMON-DECISIONS §1: `states[0]` = the live state, `snapshots[1…4]` = the snapshot cells' Settings, raw notebook lines 2311, 6086, 9212, 12067, `specs` = the initial settings; λ read from the raw notebook by `tools/extract_state.py --snapshots`, N-TC-01) |
@@ -238,6 +238,7 @@ Open proposals (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
 | 2 | v0.1.16 | 2026-10-18 | review fixes: E-TC-03 counterexample and reason corrected (constant map, (cos u, cos v); compactness and invariance of domain); golden harness balls compared bit for bit (K-TC-09), H-TC-13 expectation written out; e2e λ drag to 0 moves past the end of the track |
 | 3 | v0.1.17 | 2026-10-18 | harness run 2: `TorusToPlane` in Mathematica's order of operations (K-TC-09 resolved, all 14 recorded balls bit for bit); a dial point (0, 0) is evaluated (ArcTan[0., 0.] = 0., K-TC-03, H-TC-11); K-TC-01 answered (lights recorded, P-TC-01 proposed), K-TC-02 resolved (15 equally spaced z contours), K-HW-03 answered (ResolvePlotTheme exists); P-TC-02 proposed (dial centre); golden harness tests read the record as encoded (`{"sym": "Pi"}`, the Sphere and GraphicsComplex arguments, `wl:-0.` inside the set object) (N-TC-07) |
 | 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
+| 5 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
 
 ## 10. Improvements to consider (not implemented)
 

@@ -43,6 +43,36 @@ Each demo is split into
 actually rendered). It is what lets browser tests check *calculations shown on screen* instead of
 only pixels.
 
+## The Manipulate layer (`shared/manipulate.js`, `shared/graphics.js`; since v0.1.19)
+
+The scaffolding every app used to write by hand — keeping the Manipulate variables, wiring each control to a
+re-evaluation, locators and their ranges, `ControlActive`, the "Initial settings" button, layers and redraws, the
+`window.__demo` hook — lives in two MIT modules, so that an app reads like its Mathematica source:
+
+```js
+Manipulate({
+  name: 'robot-motion-obstacles',
+  initial: initialState, ControlActive: true,
+  body: evaluate,                                   // the pure model: one evaluation of the Manipulate body
+  draw: (v, s) => [v.inCollision ? EdgeForm(Red) : EdgeForm(Black), armGraphics(v.geometry, v.arcs), …],
+  graphics: { PlotRange: PLOT_RANGE, ImageSize: IMAGE_SIZE, PlotRangePadding: 0, label: '…' },
+  controls: [
+    [['pObs', [1.1, 1.1]], [-2, -2], [2, 2], Locator],
+    [['Quality', 2, Style('Q', Italic)], 1, 10, 1, { Appearance: 'Labeled' }],
+  ],
+});
+```
+
+| Module | Provides |
+|--------|----------|
+| `shared/manipulate.js` | `Manipulate(spec)`; control specs in Mathematica's own forms (slider, setter bar with `Rule`, `Locator` incl. a list of points, 2D slider, hidden variables, `Delimiter`, headings); Mathematica slider values (`steps: 'mma'`) by default; `ControlActive`; reset; the test hook (`getState`, `setState`, `view`, `moveLocator`, `worldToClient`, `controlActive`, plus app extras); `cacheLast` (the originals' "…Old" caching as one helper); pure `parseControl`, `hookCopy`, `hookRead` |
+| `shared/graphics.js` | 2D `Graphics` as data: primitives `Line`, `Polygon`, `Rectangle` (`RoundingRadius`), `Disk`, `Circle` (and arcs), `Point`, `Arrow`, `Text`, `Rotate`, `Translate`, `Inset` (of a small Graphics), `Raster`; directives (colours as `RGBColor` objects, `Darker`/`Lighter`/`Blend`, `Opacity`, `Thickness`/`AbsoluteThickness`/`Thin`/`Thick`, `AbsoluteDashing`, `CapForm`, `PointSize`, `Arrowheads`, `EdgeForm`, `FaceForm`, `Transparent`, `Directive`, fonts); `Style`/`Subscript` text; Mathematica's list scoping of directives; `Annotation[g, id, attrs]` for test ids; `Raw` as a migration aid for helpers not yet written as data; pure `walk`, `textOf`, `htmlOf` |
+
+They build on `shared/ui.js` and `shared/svg-plot.js`, which are unchanged; apps not yet migrated keep using those
+directly. Migrated in v0.1.19: robot-motion-obstacles, bfs-motion-planning, dubins-path, art-gallery (the same pictures
+and states as before, checked by their unchanged tests). Tests: `tests/unit/graphics.test.js`,
+`tests/unit/manipulate.test.js` (pure parts) and the migrated apps' browser tests.
+
 ## Mathematica semantics (`shared/mma.js`)
 
 The ports reproduce Wolfram Language numeric behaviour that the originals depend on:

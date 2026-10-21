@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.18 |
+| Code version: | 0.1.19 |
 | Document revision | 1 (2026-10-17) — first implementation |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Breadth-First Search Robot Motion Planning", contributed by Aaron T. Becker, Benedict Isichei and Praveen Reddy Padala, published 2017-12-12 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/BreadthFirstSearchRobotMotionPlanning/>. Readable source: `docs/original-source/bfs-motion-planning.txt`; snapshots: `docs/original-snapshots/bfs-motion-planning-1.png` … `-4.png` (the extraction's pictures 5 and 6 are the Wolfram logo); stored output cell (initial settings = stored `"Variables"`, Body, Specifications, Initialization): raw definition notebook lines 2373, 2749, 2949, 3336; fixture `tests/golden/bfs-motion-planning.original-states.json` (`states[0]` live state; `snapshots[1…4]` the snapshot Settings, raw lines 4456, 5720, 7383, 13618; `specs` the initial settings) |
-| Port files | `demos/bfs-motion-planning/model.js` (`bfsTorus`, `getShortestPath`, the cell rule, one evaluation of the Manipulate body; pure), `main.js` (SVG drawing, locators, Q and P sliders, ControlActive tracking), `index.html`; shared with "Robot Motion with Obstacles": `demos/common/arm-grid.js` (new, pure) and `demos/common/arm-view.js` (new, browser-only), which compose `demos/common/two-link.js` (`armSegments`, `armGeometry`) and `demos/common/arrow-arcs.js` (`arrowArc`); `LOC_ICON` from `demos/common/prm-core.js` — API in `demos/robot-motion-obstacles/DESIGN.md` §6 |
+| Port files | `demos/bfs-motion-planning/model.js` (`bfsTorus`, `getShortestPath`, the cell rule, one evaluation of the Manipulate body; pure), `main.js` (the Manipulate on `shared/manipulate.js`: Q and P sliders, locators, Graphics data; v0.1.19), `index.html`; shared with "Robot Motion with Obstacles": `demos/common/arm-grid.js` (new, pure) and `demos/common/arm-view.js` (new; Graphics data since v0.1.19), which compose `demos/common/two-link.js` (`armSegments`, `armGeometry`) and `demos/common/arrow-arcs.js` (`arrowArc`); `LOC_ICON` from `demos/common/prm-core.js` — API in `demos/robot-motion-obstacles/DESIGN.md` §6 |
 | Role in the project | further demonstration (batch A) |
 
 ## 1. Purpose and background
@@ -69,7 +69,7 @@ Out of scope (would need a design entry first): other search algorithms or metri
 | ID | Feature | Reason | Since | Verified by |
 |----|---------|--------|-------|-------------|
 | F-BF-15 | Outer graphic as in the other original (`PlotRange -> {{-2.2, 7.1}, {-2.4, 2.4}}`, `ImageSize -> {600, 320}`, no padding); texts in Black: θ1 at {4.8, −2.2}, θ2 at {2.8, 0}, "robot workspace" at {0, 2.2}, and at {4.8, 2.2} the `StringForm` text "robot phase space, path length = *value* rads" with *value* = `Round[(2. (Pi/Length[costmap])) costmap[[lE[[1]], lE[[2]]]], 0.01]` (stored Body; the Input cell writes `(2.0π)/(Length[costmap])`; `2. (Pi/L)` with the correctly rounded π/L, K-BF-09) (1.57 at the defaults; a whole value shows as "4.") | the path length (UC-BF-01) | v0.1.15 | unit "label: Round[2.0 pi/L costmap[[lE]], 0.01] shown like Mathematica (1.57, 4.)"; golden "bfs: the snapshot labels read path length = 1.57, 2.99, 2.58 and 4.31 rads"; e2e "the phase-space label reads path length = 1.57 rads at the initial settings, as in snapshot 1" |
-| F-BF-16 | Arm and obstacles as in the other original (F-RM-14: `two-link.js` `armGeometry` with `robotArmLabel: 'link2'` and label radius l/2, `arrow-arcs.js` `arrowArc`, drawn by `arm-view.js` `drawArm`) except: link 2 inside `{LightGray, Rotate[…]}` (light grey); the top-level `If[inCollision, EdgeForm[Red], EdgeForm[Black]]` colours the edges of both bars AND of the Brown obstacle disks (black outline in snapshot 1); the elbow arc `Circle[elbow, l/3, {Theta1, Theta1 + Theta2}]` has its end below its start (θ2 < 0) and is drawn as the arc between the two angles (snapshot 4: θ2 = −35.6°, a short arc), its arrowhead points counter-clockwise at θ1 + θ2 (Q-BF-12); label conditions `Abs[θ] > Pi/4` tolerant (Q-RM-05) | the arm at the current cell (UC-BF-02) | v0.1.15 | unit "the elbow arc runs from Theta1 to Theta1 + Theta2 < Theta1 and is drawn as the short arc"; golden "bfs: snapshot 4 draws the elbow arc as the short arc of 35.6 degrees"; e2e "loads without errors and draws the arm, the obstacles, the cost map and the path"; e2e "a goal inside an obstacle region gives a one-cell path and red glyphs"; M-BF-09 |
+| F-BF-16 | Arm and obstacles as in the other original (F-RM-14: `two-link.js` `armGeometry` with `robotArmLabel: 'link2'` and label radius l/2, `arrow-arcs.js` `arrowArc`, written as Graphics data by `arm-view.js` `armGraphics`, v0.1.19) except: link 2 inside `{LightGray, Rotate[…]}` (light grey); the top-level `If[inCollision, EdgeForm[Red], EdgeForm[Black]]` colours the edges of both bars AND of the Brown obstacle disks (black outline in snapshot 1); the elbow arc `Circle[elbow, l/3, {Theta1, Theta1 + Theta2}]` has its end below its start (θ2 < 0) and is drawn as the arc between the two angles (snapshot 4: θ2 = −35.6°, a short arc), its arrowhead points counter-clockwise at θ1 + θ2 (Q-BF-12); label conditions `Abs[θ] > Pi/4` tolerant (Q-RM-05) | the arm at the current cell (UC-BF-02) | v0.1.15 | unit "the elbow arc runs from Theta1 to Theta1 + Theta2 < Theta1 and is drawn as the short arc"; golden "bfs: snapshot 4 draws the elbow arc as the short arc of 35.6 degrees"; e2e "loads without errors and draws the arm, the obstacles, the cost map and the path"; e2e "a goal inside an obstacle region gives a one-cell path and red glyphs"; M-BF-09 |
 | F-BF-17 | Phase-space inset: `ArrayPlot[costmapcolor, Mesh -> None, …, FrameStyle -> {{Red, Directive[Red, Dashed]}, {Blue, Directive[Blue, Dashed]}}]` placed as in the other original; `costmapcolor` = costmap with every path cell set to `Green` and then `ccord` set to `Blue`; ArrayPlot's default colouring: a cost v → GrayLevel[1 − v/max] (start white), `Infinity` (blocked or unreachable) → the default dark red for cells "for which no color is determined" (measured (127, 0, 0)), colours as given | cost map and path (UC-BF-01, UC-BF-03) | v0.1.15 | unit "arrayPlotColors for the costmap: grey 1 - v/max, Infinity dark red, Green path, Blue current cell"; golden "bfs: snapshot greys follow 255 (1 - cost/max) and blocked cells are dark red (127, 0, 0)"; golden "bfs: snapshots show the saved path in green and the current cell in blue"; harness "H-BF-19"; e2e "loads without errors and draws the arm, the obstacles, the cost map and the path" |
 | F-BF-18 | Glyphs: `Locator[pConfigI, If[inCollision, loc[Red], loc[Darker[Green]]]]` and the same at pConfigF — both coloured by the CURRENT arm's collision state (Q-BF-06); `loc` drawn from prm-core's `LOC_ICON`; the glyphs are themselves draggable Locator primitives in Mathematica (K-BF-07) | show start and goal | v0.1.15 | unit "both glyphs take the colour of the current arm configuration"; e2e "a goal inside an obstacle region gives a one-cell path and red glyphs"; M-BF-05 |
 | F-BF-19 | Title, caption and Details text of the original (with the reference) | explains the Demonstration | v0.1.15 | M-BF-01 |
@@ -124,17 +124,19 @@ the new state (all Manipulate variables: `pObs`, `pObs2`, `pConfigI`, `pConfigF`
 `freeConfigSpace`, `costmap`, `parents`, `path`, `highRes`, `pObsOld`, `pObs2Old`, `updatedCspace`, `updatedcostmap`,
 `lS`, `lE`, `QualityOld`) and a view (label text, colour array, arm geometry and arcs, glyph colour). `initialState()` returns the
 Input cell's values; the first evaluation computes the live state (D-BF-08). Indices stay 1-based
-like Mathematica's, so states compare directly with the saved ones. `main.js` keeps the state, draws, and calls
-`evaluate` after every change.
+like Mathematica's, so states compare directly with the saved ones. `main.js` (v0.1.19) is one `Manipulate({…})` call
+of `shared/manipulate.js` (control specs in Mathematica's form, `ControlActive: true`, the body wraps `evaluate` to
+count searches and walks for the hook, `draw` returns the Graphics list); the layer keeps the state and re-evaluates
+after every change.
 
 **Shared code.** `demos/common/arm-grid.js` (pure; constants, `pointsegdis2`, `armHits` on `two-link.js` `armSegments`,
 `tableCount`/`tableAngles`, `cSpaceTable(obs, res, -1, 0, {exactPi: true})`, `applyTorus`, `arrayPlotColors`) and
-`demos/common/arm-view.js` (browser: `drawArm` of `two-link.js` `armGeometry` + `arrow-arcs.js` `arrowArc`,
-`drawGridInset`, `drawInsetFrame`, `locIcon` of prm-core's `LOC_ICON`), specified
+`demos/common/arm-view.js` (Graphics data since v0.1.19: `armGraphics` of `two-link.js` `armGeometry` + `arrow-arcs.js`
+`arrowArc`, `gridInset`, `insetFrame`, `configGlyph`/`locIcon` of prm-core's `LOC_ICON`), specified
 in `demos/robot-motion-obstacles/DESIGN.md` §6 . `bfsTorus`, `getShortestPath` and `cellOf` stay in this app's
-`model.js` (only this app uses them). Existing modules reused: `shared/svg-plot.js` (`createPlot` with `padding: 0`,
-`addLocators` with `pickAnywhere`, `onStart`/`onEnd`, `darkLocatorGlyph`), `shared/ui.js` (two `Controls.slider` with ⊕ and
-`steps: 'mma'`),
+`model.js` (only this app uses them). Existing modules reused: `shared/manipulate.js` and `shared/graphics.js` (v0.1.19; on `shared/svg-plot.js`
+`createPlot` with `padding: 0`, `addLocators` with `pickAnywhere`, `darkLocatorGlyph`, and `shared/ui.js` two
+`Controls.slider` with ⊕ and `steps: 'mma'`),
 `shared/mma.js` (`mGreater` for `lvl[[r,c]] > mylc`, `mLess`, `mUnequal` for the cache and `lS != …`,
 `roundHalfEven`, `roundTo`; machine divisions of the stored code as a·(1/b); π over a whole resolution or L correctly rounded, K-BF-09), `shared/mma-extra.js` (`mmaNumberString` for "1.57" / "4." / "0."),
 `shared/mma-colors.js`, `demos/common/prm-core.js` (`LOC_ICON`), `shared/requirements.js`. Not applicable: prm-core's
@@ -178,7 +180,7 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/bfs-motion-planning/`) | 3 | `index.html`, `main.js`, `model.js` |
-| `shared/` | 9 | `exact-pi.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `requirements.js`, `style.css`, `svg-plot.js`, `ui.js` |
+| `shared/` | 11 | `exact-pi.js`, `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `requirements.js`, `style.css`, `svg-plot.js`, `ui.js` |
 | `demos/common/` | 5 | `arm-grid.js`, `arm-view.js`, `arrow-arcs.js`, `prm-core.js`, `two-link.js` |
 | added by the bundler | 7 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/bfs-motion-planning/DESIGN.md` |
 <!-- bundle-contents:end -->
@@ -251,6 +253,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 2 | v0.1.16 | 2026-10-18 | version number only (batch B release); no change to this app |
 | 3 | v0.1.17 | 2026-10-18 | harness run 2 accepted (Mathematica 15.0.1): all 23 records match the port, no app code changed. Golden test adapter: an unassigned local recorded as null (H-BF-23, N-BF-07). K-BF-03 resolved (a·(1/b), row 1; D-BF-07 updated); evidence added to K-BF-01, 02, 04, 05, 06, 08, 09 (01, 02, 09 not decided by the record) |
 | 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
+| 5 | v0.1.19 | 2026-10-21 | main.js rewritten on the new shared Manipulate layer (`shared/manipulate.js`, `shared/graphics.js`): the controls are written as Manipulate control specs and the picture as Graphics data; no change to behaviour or picture (all unit, golden and browser tests unchanged and passing; screenshots and Manipulate state identical to v0.1.18 at sample settings); `demos/common/arm-view.js` now returns Graphics data (§6) |
 
 ## 10. Improvements to consider (not implemented)
 

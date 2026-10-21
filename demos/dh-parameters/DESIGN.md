@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.18 |
+| Code version: | 0.1.19 |
 | Document revision | 1 (2026-10-18) — first implementation |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Denavit-Hartenberg Parameters for a Three-Link Robot", contributed by Aaron T. Becker and Mary Burbage, published 2016-06-16 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/DenavitHartenbergParametersForAThreeLinkRobot/>. Readable source: [`docs/original-source/dh-parameters.txt`](../../docs/original-source/dh-parameters.txt); snapshots: `docs/original-snapshots/dh-parameters-1.png` … `-5.png`; saved state: `tests/golden/dh-parameters.original-states.json` (written with `tools/extract_state.py --snapshots` from the raw notebook: live state, initial settings and the five snapshot `Settings`) |
@@ -268,6 +268,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 2 | v0.1.16 | 2026-10-18 | review fixes: K-DH-06 (`-1+d-jr-.01` in COMMON §7 order, `axisBottomZ`), D-DH-09 (3/2 jr one ulp above 3/10, kept for robot-singularities), §6.3 state shape, §6.5 g3d row and SPDX sentence corrected, checklist M-DH-04 Port line (snaps, D-DH-07), e2e θ1 drag aims at the centre of the target position |
 | 3 | v0.1.17 | 2026-10-18 | harness run 2 (Mathematica 15.0.1 records H-DH-01 … H-DH-10): K-DH-06 resolved (prismatic axis bottom in written order), products with a machine factor are Mathematica's fused machine Dot (`mul4Fma`, F-DH-09: T1.T2.T3 bit for bit in H-DH-02, -04, -05), `shared/exact-pi.js` sin(π/8) = 0.3826834323650898 (H-DH-07 machine T3, H-ME-12), D-DH-09 removed (3/2 jr drawn as 0.3), D-DH-10 (exact entries in doubles), K-DH-03 narrowed (the box equals Mathematica's PlotRange); golden tests compare T1, T2, T3, T1.T2.T3 (machine entries bit for bit), the plot range and every recorded primitive |
 | 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
+| 5 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
 
 ## 10. Improvements to consider (not implemented)
 

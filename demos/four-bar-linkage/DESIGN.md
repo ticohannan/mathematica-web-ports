@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.18 |
+| Code version: | 0.1.19 |
 | Document revision | 3 (2026-10-18) — harness run 2 evaluated (K-FB-02/03 resolved, P-FB-01/02 proposed) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Configuration Space for Four-Bar Linkage", contributed by Aaron T. Becker and Shiva Shahrokhi, published 2018-01-11 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ConfigurationSpaceForFourBarLinkage/>. Readable source: `docs/original-source/four-bar-linkage.txt`; snapshots: `docs/original-snapshots/four-bar-linkage-1.png` … `-4.png` (the extraction's pictures 5 and 6 are the Wolfram logo); golden data (`tests/golden/four-bar-linkage.original-states.json`, COMMON-DECISIONS §1): the live state, the Settings of the four snapshot cells (raw notebook lines 4030, 6009, 7933, 9769, each with `pvals`, `plot`, `pnear`, `p`, `spacing`, `links`) and the initial settings |
@@ -330,6 +330,7 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 | 2 | v0.1.16 | 2026-10-18 | version number only (batch B release); no change to this app |
 | 3 | v0.1.17 | 2026-10-18 | harness run 2 (Mathematica 15.0.1) evaluated: α of the impossible branch uses exact Cos/Sin of the Piecewise's 0 and π (H-FB-06; D-FB-03, D-FB-11); K-FB-02, K-FB-03, K-FB-04, K-FB-09, K-FB-11 resolved, K-FB-01 resolved for the records, K-FB-05 and K-FB-07 with evidence; proposals P-FB-01 (15.0.1 samples at the recorded settings) and P-FB-02 (empty plot when nothing is sampled); N-FB-05 (empty `Plot` log, 15.0.1 plot style). Golden harness tests read the 15.0.1 encoding (exact `Pi` as a symbol, the new plot colours, multi-segment Lines) and assert the recorded differences of P-FB-01/P-FB-02 exactly |
 | 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
+| 5 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
 
 ## 10. Improvements to consider (not implemented)
 

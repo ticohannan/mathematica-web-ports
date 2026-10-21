@@ -1,0 +1,414 @@
+// SPDX-FileCopyrightText: 2026 Tico Hannan
+// SPDX-License-Identifier: MIT
+// shared/graphics.js — Mathematica's 2D Graphics language as data, drawn into an svg-plot.js picture.
+//
+// Write the picture the way the Wolfram Language does: a nested list of primitives and directives.
+//
+//   Graphics([
+//     Gray, EdgeForm(Black),
+//     Rotate(Rectangle([-w, -w], [l + w, w], { RoundingRadius: w }), theta1, [0, 0]),
+//     [Brown, Disk(p1, w), Disk(p2, w)],               // a nested list scopes its directives
+//     [Red, AbsoluteDashing([2, 2]), Line([[0, 0], [1, 1]])],
+//     Text(Style(Subscript('θ', 1), Italic, { FontSize: 12 }), [4.8, -2.2]),
+//   ], { PlotRange: [[-2.2, 7.1], [-2.4, 2.4]], ImageSize: 600 })
+//
+// Rules (as in Mathematica): a directive applies to the primitives AFTER it in the same list and in lists nested
+// below it; a nested list starts with a copy of the enclosing style, so its directives do not leak out. Colours are
+// RGBColor objects (`Red`, `RGBColor(1, 0, 0)`, `Darker(Green)`), never bare arrays, so that a list of primitives and
+// a colour cannot be confused.
+//
+// Additions with no Wolfram Language counterpart (needed for tests, accessibility and speed):
+//   Annotation(g, id, attrs)   — Mathematica's Annotation[expr, data]: `id` becomes the element's data-testid, and
+//                                attrs (an object) further attributes, e.g. { 'data-color': 'green' }.
+//   ImageRaster(image, [[x0, y0], [x1, y1]]) draws an RGBA image {width, height, data} with ROW 1 AT THE TOP (the order
+//                                of ArrayPlot and Image; Mathematica's Raster puts row 1 at the bottom, hence the other
+//                                name); the encoded picture is cached per image object, so an unchanged image is not
+//                                re-encoded on every redraw.
+//   Raw(draw)                  — a migration aid: an older SVG drawing helper used inside Graphics data.
+//
+// Sizes follow svg-plot.js: Thickness[t] and PointSize[d] are fractions of the plot width; AbsoluteThickness,
+// AbsolutePointSize, AbsoluteDashing and font sizes are pixels at the picture's ImageSize.
+//
+// The data constructors are pure (usable in Node tests); render() needs the DOM.
+
+import { NAMED, blend, css } from './mma-colors.js';
+import { svgNode, arcPoints } from './svg-plot.js';
+
+// ---- colours -------------------------------------------------------------------------------------------------------
+const color = (rgb) => Object.freeze({ dir: 'color', rgb: Object.freeze([...rgb]) });
+/** RGBColor[r, g, b] (0..1). */
+export const RGBColor = (r, g, b) => color([r, g, b]);
+/** GrayLevel[g]. */
+export const GrayLevel = (g) => color([g, g, g]);
+export const Black = color(NAMED.Black), White = color(NAMED.White), Gray = color(NAMED.Gray);
+export const LightGray = color(NAMED.LightGray), DarkGray = color(NAMED.DarkGray);
+export const Red = color(NAMED.Red), Green = color(NAMED.Green), Blue = color(NAMED.Blue);
+export const Cyan = color(NAMED.Cyan), Magenta = color(NAMED.Magenta), Yellow = color(NAMED.Yellow);
+export const Brown = color(NAMED.Brown), Orange = color(NAMED.Orange), Pink = color(NAMED.Pink), Purple = color(NAMED.Purple);
+export const LightRed = color(NAMED.LightRed), LightBlue = color(NAMED.LightBlue), LightGreen = color(NAMED.LightGreen);
+/** Darker[c, f] = Blend[{c, Black}, f]; Lighter[c, f] = Blend[{c, White}, f] (default f = 1/3). */
+export const Darker = (c, f = 1 / 3) => color(blend(c.rgb, NAMED.Black, f));
+export const Lighter = (c, f = 1 / 3) => color(blend(c.rgb, NAMED.White, f));
+/** Blend[{a, b}, t]. */
+export const Blend = ([a, b], t = 0.5) => color(blend(a.rgb, b.rgb, t));
+/** The CSS colour of an RGBColor ("rgb(255,0,0)"). */
+export const cssColor = (c) => css(c.rgb);
+/** Mathematica's None (no edge, no glyph, no colour). */
+export const None = Object.freeze({ dir: 'none' });
+
+// ---- directives ----------------------------------------------------------------------------------------------------
+const directive = (dir, value) => Object.freeze({ dir, value });
+export const Opacity = (a) => directive('opacity', a);
+/** Thickness[t]: fraction of the plot width. */
+export const Thickness = (t) => directive('thickness', t);
+/** AbsoluteThickness[px]. */
+export const AbsoluteThickness = (px) => directive('thickness', { abs: px });
+export const Thin = AbsoluteThickness(0.25), Thick = AbsoluteThickness(2); // as documented for Thin and Thick
+/** AbsoluteDashing[{d1, d2, …}] in px; Dashed = AbsoluteDashing[{3, 3}] (approximation); Dashing[None] = solid. */
+export const AbsoluteDashing = (ds) => directive('dash', ds);
+export const Dashed = AbsoluteDashing([3, 3]), Dotted = AbsoluteDashing([0.5, 2]);
+/** CapForm["Butt" | "Round" | "Square"]. */
+export const CapForm = (c) => directive('cap', c === 'Square' ? 'square' : c === 'Round' ? 'round' : 'butt');
+/** PointSize[d] (fraction of the width), AbsolutePointSize[px], or a named size 'Small' | 'Medium' | 'Large'. */
+export const PointSize = (d) => directive('pointSize', d);
+export const AbsolutePointSize = (px) => directive('pointSize', { abs: px });
+/** Arrowheads[s]: head length as a fraction of the plot width. */
+export const Arrowheads = (s) => directive('arrowheads', s);
+/** EdgeForm[] (no edges), EdgeForm[c], EdgeForm[Directive[c, AbsoluteThickness[t], …]]. */
+export const EdgeForm = (...ds) => directive('edge', ds.length === 0 || ds[0] === None ? null : ds.flatMap((d) => (d.dir === 'directive' ? d.value : [d])));
+/** FaceForm[c] (filled primitives only); FaceForm[None] = no fill. */
+export const FaceForm = (c) => directive('face', c === None ? null : c);
+/** Transparent as a face colour: filled primitives get no fill (their EdgeForm still draws). */
+export const Transparent = FaceForm(None);
+/** Directive[d1, d2, …]. */
+export const Directive = (...ds) => directive('directive', ds);
+/** FontSize, FontFamily, FontWeight, FontSlant for Text (also usable as Style options). */
+export const FontSize = (px) => directive('fontSize', px);
+export const FontFamily = (f) => directive('fontFamily', f);
+export const Italic = directive('fontSlant', 'italic');
+export const Bold = directive('fontWeight', 'bold');
+
+// ---- primitives ----------------------------------------------------------------------------------------------------
+const prim = (head, props) => Object.freeze({ head, ...props });
+export const Line = (pts) => prim('Line', { pts });
+export const Polygon = (pts) => prim('Polygon', { pts });
+/** Rectangle[{x0, y0}, {x1, y1}, RoundingRadius -> r]. */
+export const Rectangle = (a, b, { RoundingRadius = 0 } = {}) => prim('Rectangle', { a, b, r: RoundingRadius });
+export const Disk = (c, r) => prim('Disk', { c, r });
+/** Circle[c, r] or the arc Circle[c, r, {a0, a1}]. */
+export const Circle = (c, r, angles = null) => prim('Circle', { c, r, angles });
+/** Point[p] or Point[{p1, p2, …}]. */
+export const Point = (p) => prim('Point', { pts: Array.isArray(p[0]) ? p : [p] });
+/** Arrow[{p1, …, pn}]: the line and a filled head at pn (Arrowheads sets the head size). */
+export const Arrow = (pts) => prim('Arrow', { pts });
+/** Text[expr, pos]: expr a string, number, Style[…] or Subscript[…]; anchor 'middle' (default) | 'start' | 'end'. */
+export const Text = (expr, pos, { anchor = 'middle' } = {}) => prim('Text', { expr, pos, anchor });
+/**
+ * Rotate[g, θ, {x, y}] (radians, counter-clockwise, about the point). Without the point, as in Mathematica, about the
+ * centre of g's bounding box (Line, Polygon, Point, Arrow, Rectangle, Disk, Circle and lists of them; give the point
+ * for anything else).
+ */
+export const Rotate = (g, angle, about) => prim('Rotate', { g, angle, about: about ?? boxCentre(g) });
+
+/** Bounding box [[xmin, ymin], [xmax, ymax]] of simple primitives and lists of them (pure). */
+export function bounds(g) {
+  const pts = [];
+  const add = (q) => {
+    if (Array.isArray(q)) { q.forEach(add); return; }
+    if (!q || !q.head) return;
+    if (['Line', 'Polygon', 'Point', 'Arrow'].includes(q.head)) pts.push(...flatPts(q.pts));
+    else if (q.head === 'Rectangle') pts.push(q.a, q.b);
+    else if (q.head === 'Disk' || q.head === 'Circle') pts.push([q.c[0] - q.r, q.c[1] - q.r], [q.c[0] + q.r, q.c[1] + q.r]);
+    else if (q.head === 'Annotation') add(q.g);
+    else throw new Error(`graphics: give Rotate a centre point for ${q.head}`);
+  };
+  add(g);
+  if (!pts.length) throw new Error('graphics: Rotate of nothing needs a centre point');
+  const xs = pts.map((q) => q[0]), ys = pts.map((q) => q[1]);
+  return [[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)]];
+}
+const boxCentre = (g) => { const [[a, b], [c, d]] = bounds(g); return [(a + c) / 2, (b + d) / 2]; };
+/** A point list, or a list of point lists (several lines/polygons), flattened to points. */
+const isMulti = (pts) => Array.isArray(pts[0]?.[0]);
+const flatPts = (pts) => (isMulti(pts) ? pts.flat() : pts);
+/** Translate[g, {dx, dy}]. */
+export const Translate = (g, v) => prim('Translate', { g, v });
+/** Inset[Graphics[…, PlotRange, ImageSize], pos]: a small picture of its own (e.g. a locator icon) centred at pos. */
+export const Inset = (graphics, pos) => prim('Inset', { graphics, pos });
+/** An RGBA image {width, height, data} (row 1 at the TOP, as ArrayPlot and Image) over [[x0, y0], [x1, y1]]. */
+export const ImageRaster = (image, [[x0, y0], [x1, y1]]) => prim('ImageRaster', { image, box: [[x0, y0], [x1, y1]] });
+/**
+ * Raw(draw): MIGRATION AID, no Wolfram Language counterpart — draw(plot, group) appends SVG itself and returns the node.
+ * Lets a picture written as data reuse an older drawing helper until that helper is rewritten as data.
+ */
+export const Raw = (fn) => prim('Raw', { fn });
+/** Annotation[g, id, attrs]: data-testid and further attributes for the element drawn for g. */
+export const Annotation = (g, id, attrs = {}) => prim('Annotation', { g, id, attrs });
+
+// ---- text expressions ----------------------------------------------------------------------------------------------
+/** Style[expr, directives…] — Italic, Bold, a colour, FontSize[n], or an options object {FontSize, FontFamily}. */
+export function Style(expr, ...opts) {
+  const ds = opts.flatMap((o) => (typeof o === 'number' ? [FontSize(o)] // Style[expr, 14]: a number is the font size
+    : o?.dir ? [o] : Object.entries(o).map(([k, v]) => ({ FontSize, FontFamily })[k]?.(v)).filter(Boolean)));
+  return Object.freeze({ head: 'Style', expr, ds });
+}
+/** Subscript[a, b]. */
+export const Subscript = (a, b) => Object.freeze({ head: 'Subscript', a, b });
+
+/** Plain text of a text expression (for labels and accessibility): Subscript['θ', 1] → "θ1". */
+export function textOf(e, { sep = '' } = {}) {
+  if (e == null) return '';
+  if (typeof e !== 'object') return String(e);
+  if (e.head === 'Style') return textOf(e.expr, { sep });
+  if (e.head === 'Subscript') return textOf(e.a, { sep }) + sep + textOf(e.b, { sep });
+  return '';
+}
+
+/** HTML of a text expression, for control labels: Style('Q', Italic) → "<i>Q</i>". */
+export function htmlOf(e) {
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  if (e == null) return '';
+  if (typeof e !== 'object') return esc(e);
+  if (e.head === 'Subscript') return `${htmlOf(e.a)}<sub>${htmlOf(e.b)}</sub>`;
+  if (e.head === 'Style') {
+    let h = htmlOf(e.expr);
+    for (const d of e.ds) {
+      if (d.dir === 'fontSlant') h = `<i>${h}</i>`;
+      else if (d.dir === 'fontWeight') h = `<b>${h}</b>`;
+      else if (d.dir === 'color') h = `<span style="color:${css(d.rgb)}">${h}</span>`;
+    }
+    return h;
+  }
+  return '';
+}
+
+// ---- Graphics ------------------------------------------------------------------------------------------------------
+/** Graphics[list, options]: options PlotRange, ImageSize, PlotRangePadding (fraction, default 0.02). */
+export const Graphics = (list, options = {}) => Object.freeze({ head: 'Graphics', list, options });
+
+/**
+ * The style in effect at the start of a picture (Mathematica's defaults for 2D Graphics, as svg-plot draws them; the
+ * default point size 0.008 of the width is the approximation measured for the ports, D-RM-05).
+ */
+export const DEFAULT_STYLE = Object.freeze({
+  color: NAMED.Black, opacity: undefined, thickness: undefined, dash: undefined, cap: undefined, pointSize: 0.008,
+  arrowheads: 0.02, edge: null, face: undefined, fontSize: 12, fontFamily: undefined, fontSlant: undefined, fontWeight: undefined,
+});
+
+/** Apply one directive to a style (returns a new style). Pure. */
+export function applyDirective(style, d) {
+  switch (d.dir) {
+    case 'color': return { ...style, color: d.rgb };
+    case 'none': return style;
+    case 'directive': return d.value.reduce(applyDirective, style);
+    case 'edge': {
+      if (d.value === null) return { ...style, edge: null };
+      const e = d.value.reduce((s, x) => applyDirective(s, x), { color: NAMED.Black, thickness: { abs: 1 }, opacity: undefined, dash: undefined });
+      return { ...style, edge: { color: e.color, thickness: e.thickness, opacity: e.opacity, dash: e.dash } };
+    }
+    case 'face': return { ...style, face: d.value ? d.value.rgb : null }; // null = no fill
+    default: return { ...style, [d.dir]: d.value };
+  }
+}
+
+/**
+ * Walk a graphics list in drawing order: calls visit(primitive, style) for every primitive with the style in effect
+ * there. Pure (the renderer and the unit tests both use it).
+ */
+export function walk(list, visit, style = DEFAULT_STYLE) {
+  let st = style;
+  for (const item of list) {
+    if (item == null || item === false || item === 0 || item === '') continue; // what a failed `cond && x` leaves
+    if (Array.isArray(item)) walk(item, visit, st);
+    else if (item.dir) st = applyDirective(st, item);
+    else if (item.head) visit(item, st);
+    else throw new Error(`graphics: not a primitive or directive: ${JSON.stringify(item)}`);
+  }
+}
+
+// ---- drawing (browser) ---------------------------------------------------------------------------------------------
+const deg = (a) => (a * 180) / Math.PI;
+const rasterCache = new WeakMap(); // image object → { href, nodes: Map(box key → <image>) } (encoded once)
+
+function rasterNode(image, box) {
+  let entry = rasterCache.get(image);
+  if (!entry) { entry = { href: encode(image), nodes: new Map() }; rasterCache.set(image, entry); }
+  const key = JSON.stringify(box);
+  let node = entry.nodes.get(key);
+  if (node && !node.isConnected) { // reuse the decoded element from the previous redraw
+    for (const a of [...node.attributes]) if (a.name.startsWith('data-') && a.name !== 'data-width' && a.name !== 'data-height') node.removeAttribute(a.name);
+    return node;
+  }
+  node = imageNode(entry.href, image, box);
+  if (!entry.nodes.has(key)) entry.nodes.set(key, node);
+  return node;
+}
+
+function encode(image) {
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, image.width);
+  canvas.height = Math.max(1, image.height);
+  if (image.width && image.height) canvas.getContext('2d').putImageData(new ImageData(image.data, image.width, image.height), 0, 0);
+  return canvas.toDataURL('image/png');
+}
+
+function imageNode(href, image, [[x0, y0], [x1, y1]]) {
+  const w = x1 - x0, h = y1 - y0;
+  // the world is flipped (y up): an inner scale(1,-1) puts the picture upright with its top edge at y1
+  const node = svgNode('image', {
+    href, x: x0, y: -(y0 + h), width: w, height: h, preserveAspectRatio: 'none',
+    transform: 'scale(1,-1)', style: 'image-rendering:pixelated;image-rendering:crisp-edges',
+    'data-width': image.width, 'data-height': image.height,
+  });
+  node.style.imageRendering = 'pixelated';
+  return node;
+}
+
+/**
+ * Draw a graphics list (or a Graphics[…]) into group `g` of an svg-plot picture `plot`. Returns the elements drawn
+ * for the top-level primitives (in order).
+ */
+export function render(plot, g, graphics, style = DEFAULT_STYLE) {
+  const list = graphics?.head === 'Graphics' ? graphics.list : graphics;
+  const out = [];
+  walk(list, (p, st) => { const n = draw(plot, g, p, st); if (n) out.push(n); }, style);
+  return out;
+}
+
+const fillOf = (st) => (st.face === undefined ? st.color : st.face);
+function edgePaint(st) {
+  return st.edge ? { stroke: st.edge.color, thickness: st.edge.thickness, strokeOpacity: st.edge.opacity, dash: st.edge.dash } : {};
+}
+
+function textNode(plot, g, expr, pos, anchor, st) {
+  let s = st;
+  let e = expr;
+  while (e && e.head === 'Style') { s = e.ds.reduce(applyDirective, s); e = e.expr; }
+  const sub = e && e.head === 'Subscript' ? e : null;
+  const t = plot.text(g, sub ? '' : textOf(e), pos, {
+    fontPx: s.fontSize, color: s.color, anchor, italic: s.fontSlant === 'italic', weight: s.fontWeight, family: s.fontFamily,
+  });
+  if (sub) {
+    t.append(document.createTextNode(textOf(sub.a)));
+    const span = svgNode('tspan', { 'font-size': s.fontSize * 0.72 * plot.unitsPerPx, dy: s.fontSize * 0.28 * plot.unitsPerPx });
+    span.textContent = textOf(sub.b);
+    t.append(span);
+  }
+  return t;
+}
+
+function draw(plot, g, p, st) {
+  const opacity = st.opacity;
+  switch (p.head) {
+    case 'Line': {
+      const paint = { stroke: st.color, thickness: st.thickness, dash: st.dash, cap: st.cap, opacity };
+      if (!isMulti(p.pts)) return plot.line(g, p.pts, paint);
+      const grp = plot.group(g); // Line[{{p1, p2}, {p3, p4}}]: several lines
+      for (const q of p.pts) plot.line(grp, q, paint);
+      return grp;
+    }
+    case 'Polygon': {
+      const paint = { fill: fillOf(st), fillOpacity: opacity, ...edgePaint(st) };
+      if (!isMulti(p.pts)) return plot.polygon(g, p.pts, paint);
+      const grp = plot.group(g); // Polygon[{poly1, poly2, …}]: several polygons
+      for (const q of p.pts) plot.polygon(grp, q, paint);
+      return grp;
+    }
+    case 'Disk':
+      return plot.disk(g, p.c, p.r, { fill: fillOf(st), fillOpacity: opacity, ...edgePaint(st) });
+    case 'Rectangle': {
+      const [[a, b], [c, d]] = [p.a, p.b];
+      const e = st.edge;
+      return g.appendChild(svgNode('rect', {
+        x: Math.min(a, c), y: Math.min(b, d), width: Math.abs(c - a), height: Math.abs(d - b), rx: p.r || undefined, ry: p.r || undefined,
+        fill: fillOf(st) ? css(fillOf(st)) : 'none', 'fill-opacity': opacity,
+        stroke: e ? css(e.color) : undefined, 'stroke-width': e ? plot.strokeWidth(e.thickness) : undefined, 'stroke-opacity': e?.opacity,
+      }));
+    }
+    case 'Circle':
+      if (p.angles) return plot.arc(g, p.c, p.r, p.angles[0], p.angles[1], { stroke: st.color, thickness: st.thickness, dash: st.dash, cap: st.cap, opacity });
+      return g.appendChild(svgNode('circle', {
+        cx: p.c[0], cy: p.c[1], r: p.r, fill: 'none', stroke: css(st.color), 'stroke-opacity': opacity,
+        'stroke-width': plot.strokeWidth(st.thickness),
+        'stroke-dasharray': st.dash ? st.dash.map((d) => d * plot.unitsPerPx).join(' ') : undefined,
+        'stroke-linejoin': st.dash || st.cap ? 'round' : undefined, 'stroke-linecap': st.dash || st.cap ? st.cap ?? 'round' : undefined,
+      }));
+    case 'Point': {
+      if (p.pts.length === 1) return plot.point(g, p.pts[0], st.pointSize, st.color);
+      const grp = plot.group(g);
+      for (const q of p.pts) plot.point(grp, q, st.pointSize, st.color);
+      return grp;
+    }
+    case 'Arrow': {
+      const grp = plot.group(g);
+      plot.line(grp, p.pts, { stroke: st.color, thickness: st.thickness, dash: st.dash, opacity });
+      const n = p.pts.length;
+      const [tx, ty] = p.pts[n - 1], [px, py] = p.pts[n - 2];
+      const len = Math.hypot(tx - px, ty - py) || 1;
+      const ux = (tx - px) / len, uy = (ty - py) / len;
+      const s = st.arrowheads * (plot.plotRange[0][1] - plot.plotRange[0][0]);
+      const bx = tx - s * ux, by = ty - s * uy, hw = 0.3 * s;
+      plot.polygon(grp, [[tx, ty], [bx - hw * uy, by + hw * ux], [bx + hw * uy, by - hw * ux]], { fill: st.color, fillOpacity: opacity });
+      return grp;
+    }
+    case 'Text':
+      return textNode(plot, g, p.expr, p.pos, p.anchor, st);
+    case 'Rotate':
+    case 'Translate': {
+      const transform = p.head === 'Rotate' ? `rotate(${deg(p.angle)} ${p.about[0]} ${p.about[1]})` : `translate(${p.v[0]},${p.v[1]})`;
+      // a plain shape takes the transform itself; anything that may carry its own transform gets a group
+      const single = !Array.isArray(p.g) && ['Line', 'Polygon', 'Disk', 'Rectangle', 'Circle'].includes(p.g.head) && !isMulti(p.g.pts ?? []);
+      if (single) { const n = draw(plot, g, p.g, st); n.setAttribute('transform', transform); return n; }
+      const grp = plot.group(g, { transform });
+      walk(Array.isArray(p.g) ? p.g : [p.g], (q, s) => draw(plot, grp, q, s), st);
+      return grp;
+    }
+    case 'Inset': {
+      // a Graphics with its own PlotRange and ImageSize (px), centred at pos: world = pos + k·(inner − centre)
+      const { list, options } = p.graphics;
+      const [[x0, x1], [y0, y1]] = options.PlotRange;
+      const size = Array.isArray(options.ImageSize) ? options.ImageSize[0] : options.ImageSize;
+      const k = (size * plot.unitsPerPx) / (x1 - x0); // ImageSize sets the width; the inset keeps its aspect ratio
+      const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+      const outer = plot.group(g, { transform: `translate(${p.pos[0]},${p.pos[1]})` });
+      const inner = plot.group(outer, { transform: `scale(${k}) translate(${-cx},${-cy})` });
+      // inside, absolute sizes must stay absolute: draw with a plot whose pixels are 1/k as large
+      const sub = { ...plot, unitsPerPx: plot.unitsPerPx / k, strokeWidth: (t) => plot.strokeWidth(t) / k };
+      walk(list, (q, s) => drawInset(sub, inner, q, s), st);
+      return outer;
+    }
+    case 'ImageRaster':
+      return g.appendChild(rasterNode(p.image, p.box));
+    case 'Raw':
+      return p.fn(plot, g);
+    case 'Annotation': {
+      let n;
+      if (Array.isArray(p.g)) { n = plot.group(g); walk(p.g, (q, s) => draw(plot, n, q, s), st); } else n = draw(plot, g, p.g, st);
+      if (n) {
+        n.setAttribute('data-testid', p.id);
+        for (const [k, v] of Object.entries(p.attrs)) n.setAttribute(k, String(v));
+      }
+      return n;
+    }
+    default:
+      throw new Error(`graphics: unknown primitive ${p.head}`);
+  }
+}
+
+// Inset content: lines and circles drawn with the inner pixel size (strokes in absolute px of the outer picture).
+function drawInset(sub, g, p, st) {
+  if (p.head === 'Line') {
+    const segs = Array.isArray(p.pts[0][0]) ? p.pts : [p.pts];
+    for (const s of segs) {
+      for (let i = 0; i + 1 < s.length; i++) {
+        g.appendChild(svgNode('line', {
+          x1: s[i][0], y1: s[i][1], x2: s[i + 1][0], y2: s[i + 1][1], stroke: css(st.color), 'stroke-opacity': st.opacity,
+          'stroke-width': sub.strokeWidth(st.thickness),
+        }));
+      }
+    }
+    return null;
+  }
+  if (p.head === 'Circle' && !p.angles) return draw(sub, g, p, st);
+  throw new Error(`graphics: Inset content supports Line and Circle so far, not ${p.head}`);
+}

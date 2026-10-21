@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.18 |
+| Code version: | 0.1.19 |
 | Document revision | 5 (2026-10-17) — §11 Errors in the original (R-C); checklist items as operator procedures (R-B) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Shortest Path for Forward and Reverse Motion of a Car", contributed by Francesco Bernardini and Aaron T. Becker, published January 4, 2023 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ShortestPathForForwardAndReverseMotionOfACar/>. Readable source: [`docs/original-source/car-paths.txt`](../../docs/original-source/car-paths.txt); snapshots: `docs/original-snapshots/car-paths-*.png` |
@@ -215,6 +215,7 @@ Open proposal (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
 | 6 | v0.1.16 | 2026-10-18 | version number only (batch B release); no change to this app |
 | 7 | v0.1.17 | 2026-10-18 | version number only (harness run 2 accepted); no change to this app |
 | 8 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
+| 9 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
 
 ## 10. Improvements to consider (not implemented)
 

@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.18 |
+| Code version: | 0.1.19 |
 | Document revision | 1 (2026-10-17) — first implementation |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Robot Motion with Obstacles", contributed by Aaron T. Becker and Haoran Zhao, published 2016-04-18 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/RobotMotionWithObstacles/>. Readable source: `docs/original-source/robot-motion-obstacles.txt`; snapshots: `docs/original-snapshots/robot-motion-obstacles-1.png` … `-4.png` (the extraction's pictures 5 and 6 are the Wolfram logo, N-RM-03); stored output cell (Body, Initialization, Specifications and the initial settings): raw definition notebook lines 1074–1340 (Body 1133, Specifications 1281, Initialization 1305); fixture `tests/golden/robot-motion-obstacles.original-states.json` (`states[0]` live state, raw line 1076; `snapshots[1…4]` the snapshot Settings, raw lines 2117, 2946, 3747, 4533; `specs` the initial settings) |
-| Port files | `demos/robot-motion-obstacles/model.js` (constants, one evaluation of the Manipulate body; pure), `main.js` (SVG drawing, locators, Q slider, ControlActive tracking), `index.html`; shared with "Breadth-First Search Robot Motion Planning" and owned by this app (COMMON-DECISIONS §3): `demos/common/arm-grid.js` (new, pure, CC BY-NC-SA) and `demos/common/arm-view.js` (new, browser-only, CC BY-NC-SA); they compose `demos/common/two-link.js` (`armSegments`, `armGeometry`) and `demos/common/arrow-arcs.js` (`arrowArc`) owned by two-link-kinematics, and `LOC_ICON` of `demos/common/prm-core.js` |
+| Port files | `demos/robot-motion-obstacles/model.js` (constants, one evaluation of the Manipulate body; pure), `main.js` (the Manipulate on `shared/manipulate.js`: Q slider, locators, Graphics data; v0.1.19), `index.html`; shared with "Breadth-First Search Robot Motion Planning" and owned by this app (COMMON-DECISIONS §3): `demos/common/arm-grid.js` (new, pure, CC BY-NC-SA) and `demos/common/arm-view.js` (new, Graphics data since v0.1.19, CC BY-NC-SA); they compose `demos/common/two-link.js` (`armSegments`, `armGeometry`) and `demos/common/arrow-arcs.js` (`arrowArc`) owned by two-link-kinematics, and `LOC_ICON` of `demos/common/prm-core.js` |
 | Role in the project | further demonstration (batch A) |
 
 ## 1. Purpose and background
@@ -67,7 +67,7 @@ port's code), more links or obstacles, exact obstacle-region boundaries.
 | ID | Feature | Reason | Since | Verified by |
 |----|---------|--------|-------|-------------|
 | F-RM-13 | Outer graphic: `PlotRange -> {{-2.2, 7.1}, {-2.4, 2.4}}`, `ImageSize -> {600, 320}`, no plot-range padding (measured: 64.5 px per unit in the snapshots, D-RM-05); texts in Gray (the list's first directive): "robot workspace" at {0, 2.25}, "robot phase space" at {4.8, 2.25}, θ1 at {4.8, −2.2}, θ2 at {2.8, 0} | the original's layout | v0.1.15 | e2e "loads without errors and draws the arm, the obstacles and the phase space"; golden "robot-motion: snapshot 1 shows Q 2, a green glyph at {5, 0} and the arm at 198.9 and 189.5 degrees"; M-RM-02 |
-| F-RM-14 | Arm and obstacles: Gray fill and `If[inCollision, EdgeForm[Red], EdgeForm[Black]]` at the top of the Graphics list, so the edge colour applies to both bars AND to the Brown obstacle disks (black outline in snapshot 1, red in collision); `Arrowheads[0.02]`; link 1 = `Rotate[Rectangle[{-w, -w}, {l + w, w}, RoundingRadius -> w], Theta1, {0, 0}]`; black base point; Darker[Gray] `arrowArc[Circle[{0, 0}, l/3, {0, Theta1}]]` and, if `Abs[Theta1] > Pi/4` (tolerant Greater, Q-RM-05), the label θ1 (Medium) at (l/2){Cos[θ1/2], Sin[θ1/2]}; link 2 = the same bar from the elbow, rotated by θ1 + θ2 about the elbow, with the black text "Robot Arm" at its middle, rotated with it; black elbow point; `arrowArc[Circle[elbow, l/3, {Theta1, Theta1 + Theta2}]]` and label θ2 if `Abs[Theta2] > Pi/4`; `arrowArc` = the arc plus an arrow whose shaft is r/10^6 long, ending at the arc's end point along the counter-clockwise tangent there (only the head is visible); then the Brown disks of radius w (on top of the arm). Geometry from `two-link.js` `armGeometry({r1: 1, r2: 1, theta1, theta2, w: 1/8, theta1LabelRadius: 1/2, robotArmLabel: 'link2'})` and `arrow-arcs.js` `arrowArc`, drawn by `arm-view.js` `drawArm` | the arm, its angles and the obstacles (UC-RM-01) | v0.1.15 | unit "armGeometry and arrowArc: stadiums, arcs, arrowheads and label positions at the initial settings"; unit "the theta labels are shown only when Abs[theta] > pi/4"; e2e "the configuration glyph and the arm outline turn red when the arm touches an obstacle"; e2e "loads without errors and draws the arm, the obstacles and the phase space"; harness "H-RM-08"; M-RM-02; M-RM-08; golden "robot-motion: snapshot 1 shows Q 2, a green glyph at {5, 0} and the arm at 198.9 and 189.5 degrees" |
+| F-RM-14 | Arm and obstacles: Gray fill and `If[inCollision, EdgeForm[Red], EdgeForm[Black]]` at the top of the Graphics list, so the edge colour applies to both bars AND to the Brown obstacle disks (black outline in snapshot 1, red in collision); `Arrowheads[0.02]`; link 1 = `Rotate[Rectangle[{-w, -w}, {l + w, w}, RoundingRadius -> w], Theta1, {0, 0}]`; black base point; Darker[Gray] `arrowArc[Circle[{0, 0}, l/3, {0, Theta1}]]` and, if `Abs[Theta1] > Pi/4` (tolerant Greater, Q-RM-05), the label θ1 (Medium) at (l/2){Cos[θ1/2], Sin[θ1/2]}; link 2 = the same bar from the elbow, rotated by θ1 + θ2 about the elbow, with the black text "Robot Arm" at its middle, rotated with it; black elbow point; `arrowArc[Circle[elbow, l/3, {Theta1, Theta1 + Theta2}]]` and label θ2 if `Abs[Theta2] > Pi/4`; `arrowArc` = the arc plus an arrow whose shaft is r/10^6 long, ending at the arc's end point along the counter-clockwise tangent there (only the head is visible); then the Brown disks of radius w (on top of the arm). Geometry from `two-link.js` `armGeometry({r1: 1, r2: 1, theta1, theta2, w: 1/8, theta1LabelRadius: 1/2, robotArmLabel: 'link2'})` and `arrow-arcs.js` `arrowArc`, written as Graphics data by `arm-view.js` `armGraphics` (v0.1.19; before: drawn by `drawArm`) | the arm, its angles and the obstacles (UC-RM-01) | v0.1.15 | unit "armGeometry and arrowArc: stadiums, arcs, arrowheads and label positions at the initial settings"; unit "the theta labels are shown only when Abs[theta] > pi/4"; e2e "the configuration glyph and the arm outline turn red when the arm touches an obstacle"; e2e "loads without errors and draws the arm, the obstacles and the phase space"; harness "H-RM-08"; M-RM-02; M-RM-08; golden "robot-motion: snapshot 1 shows Q 2, a green glyph at {5, 0} and the arm at 198.9 and 189.5 degrees" |
 | F-RM-15 | Phase-space inset: `Inset[ArrayPlot[freeConfigSpace, Mesh -> None, ImageMargins -> None, ImagePadding -> None, PlotRangePadding -> None, FrameStyle -> {{Red, Directive[Red, Dashed]}, {Blue, Directive[Blue, Dashed]}}], {xMin, yMin}, {0, 0}, xMax - xMin]`: square of side 3.7999999999999994 from (2.9, −2); row 1 at the top; ArrayPlot's default colours (0 white, 1 black); frame left Red, right Red dashed, bottom Blue, top Blue dashed, no ticks (snapshots) | the phase space (UC-RM-01) | v0.1.15 | unit "arrayPlotColors: 0 white, 1 black, row 1 at the top"; golden "robot-motion: the snapshot pictures show the saved grids (at least 99 percent of cell centres agree)"; harness "H-RM-09"; harness "H-RM-10"; e2e "the Q slider changes the grid to 32Q by 32Q cells"; M-RM-02; e2e "loads without errors and draws the arm, the obstacles and the phase space" |
 | F-RM-16 | Configuration glyph: the Locator primitive `Locator[pConfig, If[inCollision, loc[Red], loc[Darker[Green]]]]` drawn last; `loc[col]` is the original's 17 px icon, drawn from `LOC_ICON` of `demos/common/prm-core.js` (identical definition) by `arm-view.js` `locIcon`; such a Locator primitive is itself draggable in Mathematica (K-RM-05) | shows the configuration and whether it collides | v0.1.15 | e2e "the configuration glyph and the arm outline turn red when the arm touches an obstacle"; M-RM-02; M-RM-08; harness "H-RM-08"; unit "inCollision is False at the initial settings (green glyph in snapshot 1)" |
 | F-RM-17 | Title, caption and Details text of the original (with the reference) | explains the Demonstration | v0.1.15 | M-RM-01 |
@@ -138,17 +138,25 @@ Not in arm-grid.js (COMMON-DECISIONS §3): the arm geometry (`armSegments`, `arm
 arcs (`arrowArc`, in `arrow-arcs.js`), `LOC_ICON` (imported from `prm-core.js` only), and the original's unused
 helper (`isCollided` in the Input cell, `inCollision[{seg, pointlist}, d]` in the stored Initialization; N-RM-01).
 
-`demos/common/arm-view.js` (browser-only, CC BY-NC-SA, owned by this app): `drawArm(plot, layer, geometry, arcs,
-{edge, link1Fill, link2Fill, labelColor})` (draws `armGeometry` + the two `arrowArc` results; RM: link 2 Gray, BF:
-LightGray), `drawGridInset(plot, layer, rgba)` (rgba = `arrayPlotColors(array)`, whose width and height give n: an
-n × n canvas turned into an SVG `<image>` over the inset square with `image-rendering: pixelated`; one element instead
-of up to 102 400 rects at Q = 10; test id `grid-image` with `data-width`/`data-height`), `drawInsetFrame(plot, layer)`
-(the FrameStyle lines, no ticks; 0.5 px lines, 2 px dashes as measured in the snapshots), `locIcon(plot, color)` (draws
-prm-core's `LOC_ICON`, the drawing that `prm-robot-arm/main.js` has inline). Helpers added while building (no
-behaviour of their own): `drawArrowArc` (one `arrowArc` result: the arc polyline and its arrowhead triangle),
-`drawThetaLabel` (θ with a subscript), `drawObstacles` (the Brown disks under the arm's EdgeForm), `obstacleGlyph`
-(the default locator glyph of the obstacle locators: `shared/svg-plot.js` `darkLocatorGlyph`, `locatorGlyph` with a
-dark translucent ring, as measured in the snapshots; rrt's goal locator uses the same) and `FONT` (the two font sizes of D-RM-05).
+`demos/common/arm-view.js` (pure since v0.1.19: it returns Graphics data of `shared/graphics.js`, which
+`shared/manipulate.js` draws; CC BY-NC-SA, owned by this app): `armGraphics(geometry, arcs, {link1Fill, link2Fill,
+labelColor})` (`armGeometry` + the two `arrowArc` results in the originals' order; the edge colour comes from the
+enclosing `EdgeForm`; RM: link 2 Gray, BF: LightGray), `gridInset(rgba)` (rgba = `arrayPlotColors(array)`, whose width
+and height give n: one `Raster` = an n × n canvas turned into an SVG `<image>` over the inset square with
+`image-rendering: pixelated`; one element instead of up to 102 400 rects at Q = 10; test id `grid-image` with
+`data-width`/`data-height`; pass the same rgba object while the array is unchanged and it is not re-encoded),
+`insetFrame()` (the FrameStyle lines, no ticks; 0.5 px lines, 2 px dashes as measured in the snapshots), `locIcon(color,
+pos)` (prm-core's `LOC_ICON` as an `Inset` of a 17 px Graphics, the drawing that `prm-robot-arm/main.js` has inline),
+`configGlyph(p, inCollision, id)` (`Locator[p, loc[…]]` with test id and `data-color`). Helpers: `thetaLabel` (θ with a
+subscript), `plainText`, `obstacleDisks` (the Brown disks under the arm's EdgeForm), `obstacleGlyph` (the default
+locator glyph of the obstacle locators: `shared/svg-plot.js` `darkLocatorGlyph`, `locatorGlyph` with a dark translucent
+ring, as measured in the snapshots; rrt's goal locator uses the same) and `FONT` (the two font sizes of D-RM-05).
+
+**Page (v0.1.19).** `main.js` is one `Manipulate({…})` call of `shared/manipulate.js`: the control specs in
+Mathematica's form (`[['Quality', 2, Style('Q', Italic)], 1, 10, 1, {Appearance: 'Labeled'}]`, the three `Locator`
+controls with their ranges), `ControlActive: true`, `body: evaluate`, and `draw(view, state)` returning the Graphics
+list in the original's order. The layer keeps the Manipulate variables, re-evaluates after every change, tracks
+ControlActive, wires "Initial settings" and builds the `window.__demo` hook (A-RM-03).
 
 **Tests.** `tests/unit/arm-grid.test.js` (the shared grid module), `tests/unit/robot-motion-obstacles.test.js`,
 `tests/golden/robot-motion-obstacles.golden.test.js` (saved states and snapshot pictures; `tests/support/png.js` reads
@@ -157,9 +165,9 @@ replays `tests/harness/robot-motion-obstacles.scenarios.json` on the model and c
 `tests/golden/robot-motion-obstacles.harness.json`; skipped with "no harness data (owner run pending)" until the owner's
 Mathematica run is accepted), `tests/e2e/robot-motion-obstacles.spec.js`.
 
-**Reused (existing).** `shared/svg-plot.js` (`createPlot` with `padding: 0`, `addLocators` with `pickAnywhere: true`,
-`onStart`/`onEnd`, `darkLocatorGlyph` for the two obstacle locators), `shared/ui.js` (`Controls.slider` with ⊕ panel and
-`steps: 'mma'`),
+**Reused (existing).** `shared/manipulate.js` and `shared/graphics.js` (v0.1.19; they build on `shared/svg-plot.js`
+`createPlot` with `padding: 0`, `addLocators` with `pickAnywhere: true` and `darkLocatorGlyph` for the two obstacle
+locators, and `shared/ui.js` `Controls.slider` with ⊕ panel and `steps: 'mma'`),
 `shared/mma.js` (`mLess`, `mGreater`, `mUnequal`, `mEqual`), `shared/mma-colors.js` (`NAMED.Gray`, `NAMED.Brown`,
 `darker`), `demos/common/prm-core.js` (`LOC_ICON`, `TWO_PI`), `demos/common/two-link.js` (`armSegments`,
 `armGeometry`), `demos/common/arrow-arcs.js` (`arrowArc`), `shared/requirements.js` (start-up notice). Not
@@ -198,7 +206,7 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/robot-motion-obstacles/`) | 3 | `index.html`, `main.js`, `model.js` |
-| `shared/` | 9 | `exact-pi.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `requirements.js`, `style.css`, `svg-plot.js`, `ui.js` |
+| `shared/` | 11 | `exact-pi.js`, `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `requirements.js`, `style.css`, `svg-plot.js`, `ui.js` |
 | `demos/common/` | 5 | `arm-grid.js`, `arm-view.js`, `arrow-arcs.js`, `prm-core.js`, `two-link.js` |
 | added by the bundler | 7 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/robot-motion-obstacles/DESIGN.md` |
 <!-- bundle-contents:end -->
@@ -262,6 +270,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 2 | v0.1.16 | 2026-10-18 | version number only (batch B release); no change to this app |
 | 3 | v0.1.17 | 2026-10-18 | harness run 2 accepted (Mathematica 15.0.1): all 20 records match the port, no app code changed. Golden test adapter: an unassigned local recorded as null (H-RM-20, N-RM-08). K-RM-06 resolved (a·(1/b)); evidence added to K-RM-03 (count) and K-RM-04 (not decided) |
 | 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
+| 5 | v0.1.19 | 2026-10-21 | main.js rewritten on the new shared Manipulate layer (`shared/manipulate.js`, `shared/graphics.js`): the controls are written as Manipulate control specs and the picture as Graphics data; no change to behaviour or picture (all unit, golden and browser tests unchanged and passing; screenshots and Manipulate state identical to v0.1.18 at sample settings); `demos/common/arm-view.js` now returns Graphics data (§6) |
 
 ## 10. Improvements to consider (not implemented)
 

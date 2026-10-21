@@ -1,0 +1,74 @@
+// SPDX-FileCopyrightText: 2026 Tico Hannan
+// SPDX-License-Identifier: MIT
+// tests/unit/manipulate.test.js — the pure parts of shared/manipulate.js: Manipulate control specs, the test-hook copy,
+// cacheLast. The browser behaviour is covered by the e2e tests of the apps built on it.
+import { describe, it, expect } from 'vitest';
+import { parseControl, Locator, Delimiter, None, Rule, hookCopy, hookRead, cacheLast } from '../../shared/manipulate.js';
+import { Style, Italic } from '../../shared/graphics.js';
+
+describe('manipulate: Manipulate control specs', () => {
+  it('{{x, x0, label}, min, max, step, opts} is a slider', () => {
+    expect(parseControl([['Quality', 2, 'Q'], 1, 10, 1, { Appearance: 'Labeled' }])).toEqual({
+      kind: 'slider', name: 'Quality', init: 2, label: 'Q', min: 1, max: 10, step: 1, opts: { Appearance: 'Labeled' },
+    });
+  });
+  it('a slider without a step is continuous; the label defaults to the name', () => {
+    const c = parseControl([['progress', 0.25], 0, 1]);
+    expect([c.kind, c.step, c.label, c.opts]).toEqual(['slider', 0, 'progress', {}]);
+  });
+  it('{{x, x0, label}, {v1, v2, …}} is a setter bar; Rule gives a value its own label', () => {
+    expect(parseControl([['s', 1, 'number of guards'], [1, 2, 3]]).values).toEqual([{ value: 1, label: '1' }, { value: 2, label: '2' }, { value: 3, label: '3' }]);
+    expect(parseControl([['m', 'a'], [Rule('a', 'first'), 'b']]).values).toEqual([{ value: 'a', label: 'first' }, { value: 'b', label: 'b' }]);
+  });
+  it('{{p, p0}, min, max, Locator, opts} is a locator; a list of points gives several', () => {
+    const c = parseControl([['p', [1, 2]], [-2, -2], [2, 2], Locator, { Appearance: None }]);
+    expect([c.kind, c.min, c.max, c.multi, c.opts.Appearance]).toEqual(['locator', [-2, -2], [2, 2], false, None]);
+    expect(parseControl([['pts', [[0, 0], [1, 1]]], [-4, -4], [4, 4], Locator]).multi).toBe(true);
+  });
+  it('{{p, p0, label}, {xmin, ymin}, {xmax, ymax}} is a 2D slider', () => {
+    expect(parseControl([['v', [0, 0], 'v'], [-1, -1], [1, 1]]).kind).toBe('slider2D');
+  });
+  it('hidden variables, delimiters and headings', () => {
+    expect(parseControl(['freeConfigSpace', 0, None])).toEqual({ kind: 'hidden', name: 'freeConfigSpace', init: 0 });
+    expect(parseControl([['highRes', false], None]).kind).toBe('hidden');
+    expect(parseControl(Delimiter).kind).toBe('delimiter');
+    expect(parseControl('plot parameters')).toEqual({ kind: 'heading', label: 'plot parameters' });
+  });
+  it('a label may be a Style expression', () => {
+    expect(parseControl([['Q', 2, Style('Q', Italic)], 1, 10, 1]).label).toEqual(Style('Q', Italic));
+  });
+  it('the short forms {x, xmin, xmax(, step)} and {x, {v1, …}} start at xmin and v1', () => {
+    expect(parseControl(['x', 0, 1])).toMatchObject({ kind: 'slider', name: 'x', init: 0, min: 0, max: 1, step: 0 });
+    expect(parseControl(['n', 1, 10, 1])).toMatchObject({ kind: 'slider', init: 1, step: 1 });
+    expect(parseControl(['mode', ['a', 'b']])).toMatchObject({ kind: 'setter', init: 'a' });
+    expect(parseControl(['mode', [Rule('a', 'first'), 'b']])).toMatchObject({ kind: 'setter', init: 'a' });
+  });
+  it('None anywhere after the variable, or ControlType -> None, hides it ({{goalTheta, 0}, -π, π, None})', () => {
+    expect(parseControl([['goalTheta', 0], -Math.PI, Math.PI, None]).kind).toBe('hidden');
+    expect(parseControl([['t', 0], 0, 1, { ControlType: None }]).kind).toBe('hidden');
+  });
+  it('{{p, p0}, Locator} is a locator with no range', () => {
+    expect(parseControl([['p', [0, 0]], Locator])).toMatchObject({ kind: 'locator', min: null, max: null });
+  });
+  it('a malformed spec is reported with the variable name', () => {
+    expect(() => parseControl([['x', 1], 'nonsense'])).toThrow(/unrecognised control spec for x/);
+    expect(() => parseControl([1, 2, 3])).toThrow(/starts with \[name, init, label\]/);
+  });
+});
+
+describe('manipulate: test hook copies and cacheLast', () => {
+  it('hookCopy writes ±Infinity as "Infinity"/"-Infinity" and hookRead reads them back', () => {
+    const x = { a: [1, Infinity], b: { c: -Infinity } };
+    expect(hookCopy(x)).toEqual({ a: [1, 'Infinity'], b: { c: '-Infinity' } });
+    expect(hookRead(hookCopy(x))).toEqual(x);
+  });
+  it('cacheLast recomputes only when a key changes (===)', () => {
+    let n = 0;
+    const c = cacheLast();
+    const grid = [[0]];
+    expect(c([grid], () => ++n)).toBe(1);
+    expect(c([grid], () => ++n)).toBe(1);
+    expect(c([[[0]]], () => ++n)).toBe(2);
+    expect(c([grid, 1], () => ++n)).toBe(3);
+  });
+});

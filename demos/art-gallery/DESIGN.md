@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.18 |
+| Code version: | 0.1.19 |
 | Document revision | 6 (2026-10-17) — `sameQ` and `lineList` moved to `demos/common/polygon-core.js`; §11 Errors in the original (R-C); checklist items as operator procedures (R-B) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Art Gallery Problem", contributed by Shreyas Poyrekar, Arifa Sultana and Aaron T. Becker, published September 13, 2019 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ArtGalleryProblem/>. Readable source: [`docs/original-source/art-gallery.txt`](../../docs/original-source/art-gallery.txt); snapshots: `docs/original-snapshots/art-gallery-*.png` |
-| Port files | `visibility.js` (the Initialization code: `visiblePolys` and its helpers; pure), `model.js` (environments, Manipulate variables, one evaluation of the Manipulate body with the original's caching; pure), `main.js` (SVG drawing, locators, controls), `index.html` |
+| Port files | `visibility.js` (the Initialization code: `visiblePolys` and its helpers; pure), `model.js` (environments, Manipulate variables, one evaluation of the Manipulate body with the original's caching; pure), `main.js` (the Manipulate on `shared/manipulate.js`: controls, locators, Graphics data; v0.1.19), `index.html` |
 | Role in the project | further demonstration (extra proof of concept alongside the motion-planning port); developed in a separate, unpublished repository and added to this site in v0.1.12 |
 
 ## 1. Purpose and background
@@ -125,8 +125,11 @@ matches any text. Checked by the browser test "every control on … is specified
 - An independent reference (angular ray casting of the true visibility polygon, in the unit test) agrees with the
   port for generic guard positions (development sweep: 1199 of 1200 random positions, obstacles not overlapping; the
   exception was a guard level with a vertex, Q-AG-07).
-- Drawing: `shared/svg-plot.js` with PlotRange ±4 and no padding (an explicit PlotRange). Locators:
-  `addLocators` with ten invisible locators (`locator-pts-1` … `locator-pts-10`).
+- Drawing (v0.1.19): `main.js` is one `Manipulate({…})` call of `shared/manipulate.js`; `draw` returns the Graphics
+  list (`shared/graphics.js`) with PlotRange ±4 and no padding (an explicit PlotRange). Locators: the control
+  `{{pts, {…}}, 4{-1,-1}, 4{1,1}, Locator, Appearance -> None}` gives ten invisible locators (`locator-pts-1` …
+  `locator-pts-10`, drawn by `shared/svg-plot.js` `addLocators`); the layer keeps them inside the control's range, the
+  same box as `model.js` `clampPt` (which the unit tests cover).
 - Shared helpers (since v0.1.15): `sameQ` (1-ulp `SameQ` of points) and `lineList` are in
   `demos/common/polygon-core.js` (CC BY-NC-SA 3.0, owned by minkowski-sum, COMMON-DECISIONS §3), shared with "Minkowski
   Sum of Convex Robot and Obstacle" (same authors). They were moved there unchanged; `visibility.js` imports them and
@@ -149,7 +152,7 @@ Owner rule R-A: this one app can be taken out of the repository and hosted anywh
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/art-gallery/`) | 4 | `index.html`, `main.js`, `model.js`, `visibility.js` |
-| `shared/` | 8 | `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `requirements.js`, `style.css`, `svg-plot.js`, `ui.js` |
+| `shared/` | 10 | `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `requirements.js`, `style.css`, `svg-plot.js`, `ui.js` |
 | `demos/common/` | 1 | `polygon-core.js` |
 | added by the bundler | 7 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/art-gallery/DESIGN.md` |
 <!-- bundle-contents:end -->
@@ -223,6 +226,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 7 | v0.1.16 | 2026-10-18 | version number only (batch B release); no change to this app |
 | 8 | v0.1.17 | 2026-10-18 | version number only (harness run 2 accepted); no change to this app |
 | 9 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
+| 10 | v0.1.19 | 2026-10-21 | main.js rewritten on the new shared Manipulate layer (`shared/manipulate.js`, `shared/graphics.js`): the controls are written as Manipulate control specs and the picture as Graphics data; no change to behaviour or picture (all unit, golden and browser tests unchanged and passing; screenshots and Manipulate state identical to v0.1.18 at sample settings); the undocumented `data-reg`/`data-s` attributes on the picture were dropped (no test or feature used them) |
 
 ## 10. Improvements to consider (not implemented)
 
