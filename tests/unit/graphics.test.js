@@ -5,7 +5,7 @@ import { describe, it, expect } from 'vitest';
 import {
   walk, DEFAULT_STYLE, Line, Disk, Polygon, Text, Rotate, Annotation, Style, Subscript, Italic, Bold, FontSize,
   Red, Blue, Black, Gray, Darker, Lighter, RGBColor, GrayLevel, EdgeForm, FaceForm, Directive, Opacity, Thin, Thick,
-  AbsoluteThickness, Transparent, None, textOf, htmlOf, bounds, Rectangle, Point,
+  AbsoluteThickness, Transparent, None, textOf, htmlOf, bounds, Rectangle, Point, Superscript, Row, Tooltip, cachedGraphics,
 } from '../../shared/graphics.js';
 
 const styles = (list) => { const out = []; walk(list, (p, st) => out.push([p.head, st])); return out; };
@@ -51,6 +51,18 @@ describe('graphics: directives apply to later primitives in the same list and in
   });
   it('the default style is black, no edge', () => {
     expect([DEFAULT_STYLE.color, DEFAULT_STYLE.edge]).toEqual([[0, 0, 0], null]);
+  });
+});
+
+describe('graphics: text and other primitives', () => {
+  it('Superscript and Row give plain text and HTML', () => {
+    expect(textOf(Row(['r (', Subscript('L', 1), ')']))).toBe('r (L1)');
+    expect(htmlOf(Row([Superscript('RRT', '*'), ' tree']))).toBe('RRT<sup>*</sup> tree');
+  });
+  it('Text offsets map to anchors and baselines; Tooltip, ellipse and cached parts are primitives', () => {
+    expect(Text('a', [0, 0], [-1, 1])).toMatchObject({ anchor: 'start', baseline: 'text-before-edge' });
+    expect(Text('a', [0, 0], [1, 0])).toMatchObject({ anchor: 'end', baseline: null });
+    expect(styles([Tooltip(Disk([0, 0], [2, 1]), 'tip'), cachedGraphics()([1], () => [])]).map(([h]) => h)).toEqual(['Tooltip', 'Cached']);
   });
 });
 

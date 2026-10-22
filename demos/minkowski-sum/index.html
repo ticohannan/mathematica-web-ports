@@ -14,9 +14,9 @@
        (Row[{a, Spacer[10], c, Spacer[10], m, Spacer[10], n}]) or the move slider */
     #controls .ctl-setter, #controls .ctl-slider { flex-direction: row; align-items: center; gap: 8px; flex-wrap: wrap; }
     #controls .ctl-row { align-items: center !important; gap: 16px !important; }
-    #controls .ctl-row[hidden], #controls .move-box[hidden] { display: none !important; }
-    #controls .ctl-check.label-first { flex-direction: row-reverse; justify-content: flex-end; }
-    #controls .move-box .ctl-line input[type=range] { flex: 0 1 400px; width: 400px; }
+    #controls .ctl-row[hidden], #controls .ctl-slider[hidden] { display: none !important; }
+    #controls .label-first .ctl-check { flex-direction: row-reverse; justify-content: flex-end; }
+    #controls [data-testid=ctl-s] .ctl-line input[type=range] { flex: 0 1 400px; width: 400px; }
     #graphic { width: 100%; max-width: 700px; flex: none; }
   </style>
 </head>

@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.19 |
+| Code version: | 0.1.20 |
 | Document revision | 6 (2026-10-17) — polygon helpers moved to `demos/common/polygon-core.js`; §11 Errors in the original (R-C); checklist items as operator procedures (R-B) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Motion Planning for Robot Path around Obstacles" by Shreyas Poyrekar, Aaron T. Becker and Arifa Sultana (CC BY-NC-SA 3.0); author notebook made with Mathematica 10.2. Readable source: [`docs/original-source/motion-planning.txt`](../../docs/original-source/motion-planning.txt) |
-| Port files | `planner.js` (computation, pure), `main.js` (SVG drawing and interaction), `index.html` (page) |
+| Port files | `planner.js` (computation, pure), `main.js` (the Manipulate on `shared/manipulate.js`: controls, locators, Graphics data, readout, scene link; v0.1.20), `index.html` (page) |
 
 ## 1. Purpose and background
 
@@ -140,8 +140,8 @@ document" fails if the page has an element not listed here, or a row here matche
 - **Pure model, separate rendering.** `planner.js` contains only computation: each original
   function is ported with the same name, arguments and order of operations, so that its results can be
   compared with the original number for number. `computeScene(state)` evaluates the whole Manipulate
-  body for one set of control values and returns every quantity that is drawn. `main.js` owns the
-  state, builds the controls (`shared/ui.js`), draws the SVG and handles pointer and keyboard input.
+  body for one set of control values and returns every quantity that is drawn. `main.js` (v0.1.20) is one
+  `Manipulate({…})` call of `shared/manipulate.js` (below).
 - **State.** `{configOrWork, x, n, s, r1, r2, o1…o4}` — the Manipulate variables of the original.
   Moving a locator or changing x or n recomputes the scene (on the next animation frame while
   dragging) and redraws it; the view setter and the progress slider only redraw.
@@ -161,6 +161,22 @@ document" fails if the page has an element not listed here, or a row here matche
   with a structural one, and a whole scene computes in about 35 ms in Node (41 ms in v0.1.6).
 - **Drawing.** SVG in the original's coordinates (y up); Mathematica sizes (`Thin`, `Thick`,
   `Thickness`, `PointSize`, "Large" text) converted for the 425-pixel image size.
+- **Page (v0.1.20).** `main.js` is one `Manipulate({…})` call of `shared/manipulate.js`: the control specs in
+  Mathematica's form (the view setter with an empty label, `Delimiter`, the heading "number of sides", the two side
+  setters, `Delimiter`, the progress slider `[['s', 1, 'progress'], 1, () => Length@discretePath, 1, {Enabled, …}]`
+  whose range and Enabled follow the scene, the six `Locator` controls with their ranges); `body` calls `computeScene`
+  (only when a locator, `n` or `x` changed: `cacheLast`, the original's `prev…` variables) and returns the state with
+  `s` reset to 1 after a locator move or a robot-sides click (F-MP-07) or clamped to the path length (D-MP-01); the
+  layer writes the clamped `s` back into the slider. `draw(scene, state)` returns the Graphics list
+  (`shared/graphics.js`) in the original's order, each element under its test id (`Annotation`), PlotRange ±4.65 with
+  no padding. Kept as before, to give the same picture and behaviour: `Thin`/`Thick` as non-scaling 0.5/2-pixel
+  strokes with butt caps (attributes on the `Annotation`, D-MP-05); the locator glyph (SVG drawn by `appearance`,
+  styled by `index.html`); the locator dragging (a press on a glyph grabs it, a press elsewhere moves none, pointer
+  → world through the SVG's own matrix, one evaluation per animation frame; D-MP-04), registered on the layer's
+  locator nodes, whose arrow keys (0.05, Shift 0.25) and ranges are the layer's. Outside the Manipulate: the scene
+  from URL parameters (the first evaluation's `initial`; "Initial settings" restores the original's defaults), the
+  "show numbers" readout (`after`) and the scene link; the hook adds `scene`, `setState` (clamps locators, restarts
+  progress unless `s` is given), `locatorClientPoint`, `worldToClient` and `sceneLink` (A-MP-05).
 - **Verification.** Golden tests compare with results stored in the original notebook; the
   comparison tool (`npm run compare:original`) runs the original code in Mathematica on many scenes;
   an independent reference planner checks paths for collisions and optimality.
@@ -185,7 +201,7 @@ Owner rule R-A: this one app can be taken out of the repository and hosted anywh
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/motion-planning/`) | 3 | `index.html`, `main.js`, `planner.js` |
-| `shared/` | 5 | `mma-exact.js`, `mma-extra.js`, `mma.js`, `style.css`, `ui.js` |
+| `shared/` | 12 | `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `random.js`, `style.css`, `svg-plot.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
 | `demos/common/` | 1 | `polygon-core.js` |
 | added by the bundler | 7 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/motion-planning/DESIGN.md` |
 <!-- bundle-contents:end -->
@@ -256,6 +272,7 @@ No open proposal. Template for a request: copy a row (see [`docs/DESIGN_PROCESS.
 | 8 | v0.1.17 | 2026-10-18 | version number only (harness run 2 accepted); no change to this app |
 | 9 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 10 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
+| 11 | v0.1.20 | 2026-10-21 | `main.js` rewritten on the shared Manipulate layer (`shared/manipulate.js`, `shared/graphics.js`): control specs in Mathematica's form, the picture as Graphics data; no change to behaviour or picture (all unit, golden and browser tests unchanged and passing; screenshots and Manipulate state identical to v0.1.19 at sample settings) |
 
 ## 10. Improvements to consider (not implemented)
 

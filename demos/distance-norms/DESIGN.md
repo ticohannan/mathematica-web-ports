@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.19 |
+| Code version: | 0.1.20 |
 | Document revision | 1 (2026-10-17) — first implementation |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Distance Norms in Robot Workspace and Phase Space", contributed by Aaron T. Becker and Benedict Isichei, published 2017-12-13 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/DistanceNormsInRobotWorkspaceAndPhaseSpace/>. Readable source: [`docs/original-source/distance-norms.txt`](../../docs/original-source/distance-norms.txt); saved states: `tests/golden/distance-norms.original-states.json` (`states[0]` = the output cell's saved state, `snapshots[1…6]` = the six snapshot cells' `Settings`, raw notebook lines 2407, 3613, 4818, 6021, 7213, 8429; `specs` = the initial settings; exact values kept as `{"wl": …}`); snapshots: `docs/original-snapshots/distance-norms-1…6.png` (the notebook's snapshot cells 7 and 8 are the Wolfram icon placeholder, N-DN-05) |
-| Port files | `model.js` (initial values, one evaluation of the Manipulate body: arm data, the parameter-space norm ball, its sheets and their images; picture layout and styles as data; pure), `main.js` (SVG drawing, frame and ticks, controls, the invisible locator, test hook), `index.html`; common with "Forward and Inverse Kinematics for Two-Link Arm": `demos/common/two-link.js`, `demos/common/arrow-arcs.js`, `demos/common/dial-control.js` (CC BY-NC-SA 3.0, owner two-link-kinematics, used unchanged); shared helper `shared/svg-frame.js` (MIT: Frame, FrameTicks and Axes of a 2D plot; owned by this app, used unchanged) |
+| Port files | `model.js` (initial values, one evaluation of the Manipulate body: arm data, the parameter-space norm ball, its sheets and their images; picture layout and styles as data; pure), `main.js` (the Manipulate on `shared/manipulate.js`: controls, the invisible locator, the picture as Graphics data, test hook; v0.1.20), `index.html`; common with "Forward and Inverse Kinematics for Two-Link Arm": `demos/common/two-link.js`, `demos/common/arrow-arcs.js`, `demos/common/dial-control.js` (CC BY-NC-SA 3.0, owner two-link-kinematics, used unchanged); shared helper `shared/svg-frame.js` (MIT: Frame, FrameTicks and Axes of a 2D plot; owned by this app, used unchanged) |
 | Role in the project | further demonstration (batch A) |
 
 ## 1. Purpose and background
@@ -127,16 +127,17 @@ testids follow `shared/ui.js` (`setter-<name>-<value>` with spaces as `-`): `set
   returning `{locals: {r2, Theta1, Theta2}, arm, region: {mode, sheets: [{param, lo, hi, world, area}], boundary,
   totalArea, degenerate}}`; the picture's layout and styles as data: `IMAGE` (ImageSize 360 and the measured image
   padding), `FRAME` (the `drawFrame` options), `REGION_STYLE` (colour and opacity), `PLOT_RANGE`, the control ranges.
-- `demos/distance-norms/main.js`: keeps the Manipulate variables (`cORw, p, bound, r1, p1, p2, pEnd, pEndp,
-  IsElbowUpp`), builds the controls in the original's order (`Controls.setterBar` ×2, `Controls.slider` ×2,
-  `makeDialControl` ×2), evaluates after every change of cORw, p, bound, r1, p1, p2 and redraws; a pEnd move only moves
-  the invisible locator (no evaluation: the body does not depend on it, N-DN-03). Drawing layers in this order: arm
-  (Prolog), frame with ticks, labels and axes, region (one polygon per sheet), outline; region and outline are clipped
-  to the frame.
-- `demos/distance-norms/main.js`: keeps the Manipulate variables (`cORw, p, bound, r1, p1, p2, pEnd, pEndp,
-  IsElbowUpp`), builds the controls in the original's order (`Controls.setterBar` ×2, `Controls.slider` ×2,
-  `makeDialControl` ×2), evaluates after every change of cORw, p, bound, r1, p1, p2 and redraws; a pEnd move only moves
-  the invisible locator (no evaluation needed: the body does not depend on it, N-DN-03).
+- `demos/distance-norms/main.js` (v0.1.20): one `Manipulate({…})` call of `shared/manipulate.js` with the Manipulate
+  variables (`cORw, p, bound, r1, p1, p2, pEnd, pEndp, IsElbowUpp`) as control specs in the original's order (two
+  setter bars, two sliders with the `parse`/`format` hooks for "1/2" and typed π, two
+  `Control(makeDialControl, …)` dials); the body is `evaluate`, except that a pEnd move reuses the last result (no
+  evaluation: the body does not depend on it, N-DN-03). The picture is Graphics data in this order: arm (Prolog;
+  stadiums, points, `arcArrowGraphics` arcs of the new `demos/common/arrow-graphics.js`), frame with ticks, labels and axes (the
+  `framePrimitives` data of `shared/svg-frame.js`, drawn once with `cachedGraphics`), region (one polygon per sheet),
+  outline; region and outline are clipped to the frame (a clip path made once in `after`). The θ labels are drawn
+  through the layer's `Raw` migration aid (their script size and shift differ from the shared `Subscript`).
+- `demos/distance-norms/main.js`: the Manipulate (above); a pEnd move only moves the invisible locator (no
+  evaluation needed: the body does not depend on it, N-DN-03).
 - `shared/svg-frame.js` (MIT; owned by this app, built with the v0.1.15 foundation and used here unchanged):
   `frameLayout(range, {imageSize, margins})` (plot range with room for the labels), `drawFrame(plot, layer, {range,
   majorStep, minorStep, axes, fontPx, tickLengthsPx, …})` — Frame lines, FrameTicks on four sides with labels on the left
@@ -187,7 +188,7 @@ are read as π). `shared/svg-frame.js`: `frameLayout`, `drawFrame`, `clipToRange
    so the model gives every sheet the area 0 and nothing is filled (D-DN-08); the boundary runs back and forth on the
    circle of radius 2 — as the original, whose `ParametricPlot` adds only invisible chord slivers (K-DN-02, H-DN-07/08).
 
-**State model.** Manipulate variables in `main.js`, `evaluate` pure. The body assigns nothing, so there is no feedback
+**State model.** Manipulate variables in the `main.js` Manipulate (`shared/manipulate.js`), `evaluate` pure. The body assigns nothing, so there is no feedback
 between evaluations. Exact initial numbers (1/2, 1, the dial vectors) are machine numbers in the port (D-DN-04).
 
 **Evaluation order** = the body's: r2, θ<sub>1</sub>, θ<sub>2</sub>, arm, region. Once per update (slider drags at most
@@ -218,8 +219,8 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/distance-norms/`) | 3 | `index.html`, `main.js`, `model.js` |
-| `shared/` | 11 | `exact-pi.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma-text.js`, `mma.js`, `requirements.js`, `style.css`, `svg-frame.js`, `svg-plot.js`, `ui.js` |
-| `demos/common/` | 4 | `arrow-arcs.js`, `dial-control.js`, `prm-core.js`, `two-link.js` |
+| `shared/` | 16 | `exact-pi.js`, `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma-text.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-frame.js`, `svg-plot.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
+| `demos/common/` | 5 | `arrow-arcs.js`, `arrow-graphics.js`, `dial-control.js`, `prm-core.js`, `two-link.js` |
 | added by the bundler | 7 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/distance-norms/DESIGN.md` |
 <!-- bundle-contents:end -->
 
@@ -286,6 +287,7 @@ Open proposal (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
 | 3 | v0.1.17 | 2026-10-18 | harness run 2: no change to the app's code; K-DN-02 resolved (H-DN-07/08, D-DN-08 kept: invisible slivers), K-DN-01 and K-DN-03 answered for the kernel (H-DN-05, H-DN-11), P-DN-01 proposed (dial centre); golden H-DN-08 asserts the recorded slivers, H-DN-14 reads the `%plotRange` record as encoded |
 | 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 5 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
+| 6 | v0.1.20 | 2026-10-21 | `main.js` rewritten on the shared Manipulate layer (`shared/manipulate.js`, `shared/graphics.js`): control specs in Mathematica's form, the picture as Graphics data; no change to behaviour or picture (all unit, golden and browser tests unchanged and passing; screenshots and Manipulate state identical to v0.1.19 at sample settings) |
 
 ## 10. Improvements to consider (not implemented)
 

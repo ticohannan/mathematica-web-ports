@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.19 |
+| Code version: | 0.1.20 |
 | Document revision | 5 (2026-10-17) — §11 Errors in the original (R-C); checklist items as operator procedures (R-B) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Shortest Path for Forward and Reverse Motion of a Car", contributed by Francesco Bernardini and Aaron T. Becker, published January 4, 2023 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ShortestPathForForwardAndReverseMotionOfACar/>. Readable source: [`docs/original-source/car-paths.txt`](../../docs/original-source/car-paths.txt); snapshots: `docs/original-snapshots/car-paths-*.png` |
-| Port files | `carpaths.js` (constants, the Reeds–Shepp and Dubins formulas, path/car geometry as data, one evaluation of the Manipulate body; pure), `main.js` (SVG drawing, locators, controls), `index.html` |
+| Port files | `carpaths.js` (constants, the Reeds–Shepp and Dubins formulas, path/car geometry as data, one evaluation of the Manipulate body; pure), `main.js` (the Manipulate on `shared/manipulate.js`: controls, locators, Graphics data; v0.1.20), `index.html`; shared: `demos/common/car-icon.js` (`drawCar`, `wheelAngle`; owner dubins-path, COMMON-DECISIONS §3; since v0.1.20, before a copy in `carpaths.js`, which re-exports both) and `demos/common/car-graphics.js` (`carGraphics`: the car as Graphics data; new in v0.1.20) |
 | Role in the project | further demonstration (extra proof of concept alongside the motion-planning port); developed in a separate, unpublished repository and added to this site in v0.1.12 |
 
 ## 1. Purpose and background
@@ -120,12 +120,21 @@ matches any text. Checked by the browser test "every control on … is specified
 - Mathematica semantics come from the shared helpers: tolerant `==`, `<`, `>`, `<=`, `>=` (`shared/mma.js`) wherever
   the original compares reals, `Mod`, `Round[x, 0.01]` (half to even), `Total` (compensated sum), `MinimalBy` (input
   order), a bit-exact `ArcTan[x, y]` (`shared/mma-exact.js`, Mathematica argument order) and BLAS-style `Norm`.
-- `main.js` keeps the Manipulate variables (`locs`, `locsOld`, `progress`, `progressOld`, `optPath`, `minRadius`,
-  `type`) and calls `evaluate` after every control change, as Mathematica re-evaluates the body. A locator drag sets
+- `main.js` (v0.1.20) is one `Manipulate({…})` call of `shared/manipulate.js`: the four locators as one `Locator`
+  control over the list `locs` (the page keeps their test ids `locator-1` … `locator-4`), the progress slider and the
+  `Row` of *r*<sub>min</sub>, type and the swap `Button` as Mathematica control specs (the sliders keep the port's own
+  steps and number fields, `steps: undefined`; their widths 500 and 150 px are set on the page), `body: evaluate`
+  (the body's corrections of progress and *r*<sub>min</sub> are written back into the controls by the layer), `draw`
+  returning the Graphics list, and `after` for the plot label. The layer keeps the Manipulate variables (`locs`,
+  `locsOld`, `progress`, `progressOld`, `optPath`, `minRadius`, `type`) and evaluates the body after every control
+  change, as Mathematica re-evaluates the body. A locator drag sets
   `locs[i]` to the pointer position (limited to the locator range) once per animation frame and evaluates.
 - The invisible Manipulate locators sit at `locs`; the drawn glyphs sit at `locsOld`, as in the original.
 - Drawing order follows the original's `Graphics` list: path (with construction), start car, goal car, moving car,
-  locator glyphs. The plot label is an HTML line above the SVG (D-CP-05).
+  locator glyphs. The cars are `drawCar` of `demos/common/car-icon.js` (its default options are this Demonstration's
+  car) drawn by `demos/common/car-graphics.js` `carGraphics`; the default locator glyphs are written as data, the two
+  orientation glyphs `Rotate[colorLocatorOrient[…], θ]` still as SVG through the layer's `Raw` (the browser tests
+  read their `rotate(θ)` transform). The plot label is an HTML line above the SVG (D-CP-05).
 
 ### 6.1 Building and deploying this app alone
 
@@ -142,7 +151,8 @@ Owner rule R-A: this one app can be taken out of the repository and hosted anywh
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/car-paths/`) | 3 | `carpaths.js`, `index.html`, `main.js` |
-| `shared/` | 9 | `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `requirements.js`, `style.css`, `svg-plot.js`, `ui-extra.js`, `ui.js` |
+| `shared/` | 13 | `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-plot.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
+| `demos/common/` | 2 | `car-graphics.js`, `car-icon.js` |
 | added by the bundler | 8 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/car-paths/DESIGN.md`, `docs/third-party/reeds-shepp-curves-LICENSE.txt` |
 <!-- bundle-contents:end -->
 
@@ -216,6 +226,7 @@ Open proposal (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
 | 7 | v0.1.17 | 2026-10-18 | version number only (harness run 2 accepted); no change to this app |
 | 8 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 9 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
+| 10 | v0.1.20 | 2026-10-21 | `main.js` rewritten on the shared Manipulate layer (`shared/manipulate.js`, `shared/graphics.js`): control specs in Mathematica's form, the picture as Graphics data; no change to behaviour or picture (all unit, golden and browser tests unchanged and passing; screenshots and Manipulate state identical to v0.1.19 at sample settings); the car icon now comes from `demos/common/car-icon.js` (`carpaths.js` re-exports `drawCar`, `wheelAngle`) and `demos/common/car-graphics.js` |
 
 ## 10. Improvements to consider (not implemented)
 

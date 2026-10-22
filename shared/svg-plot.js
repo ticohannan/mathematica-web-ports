@@ -21,6 +21,15 @@ export function svgNode(tag, attrs = {}) {
 }
 const colour = (c) => (c == null ? 'none' : typeof c === 'string' ? c : css(c));
 
+/**
+ * World units per nominal pixel of a picture with this PlotRange, ImageSize and PlotRangePadding (the arithmetic of
+ * createPlot below), so that Graphics data can size things in pixels exactly as drawn. Pure.
+ */
+export function plotUnitsPerPx([[x0, x1]], imageSize, padding = 0.02) {
+  const px = (x1 - x0) * padding;
+  return ((x1 + px) - (x0 - px)) / imageSize;
+}
+
 /** Approximate Mathematica named sizes. */
 export const POINT_SIZE = { Tiny: 0.004, Small: 0.007, Medium: 0.01, Large: 0.013 }; // fraction of plot width (diameter)
 export const ABS_THICK = { Thin: 0.5, Normal: 1, Thick: 2 }; // px at ImageSize
@@ -167,13 +176,15 @@ export const darkLocatorGlyph = (plot) => locatorGlyph(plot, { color: [0, 0, 0],
  *   A press that grabs a locator also gives it keyboard focus, so a value typed into a control field is committed
  *   (its change event fires) before the drag starts.
  *   throttle: 'raf' (default: at most one onMove per animation frame, with the latest position) | 'none'
+ *   pointer (default true): false = no pointer picking on the picture at all (keyboard moves stay)
+ *   testid(name) (default `locator-${name}`): the data-testid of each locator
  * Returns { redraw(), nodes, dragging() }.
  */
-export function addLocators(plot, { names, get, onMove, onStart, onEnd, appearance, hitPx = 12, keyStep = 0.05, throttle = 'raf', pickAnywhere = false, describe = (n) => `${n} locator; arrow keys move it`, layerName = 'locators' }) {
+export function addLocators(plot, { names, get, onMove, onStart, onEnd, appearance, hitPx = 12, keyStep = 0.05, throttle = 'raf', pickAnywhere = false, describe = (n) => `${n} locator; arrow keys move it`, layerName = 'locators', pointer = true, testid = (n) => `locator-${n}` }) {
   const g = plot.layer(layerName);
   const nodes = {};
   for (const name of names) {
-    const holder = svgNode('g', { class: 'locator', 'data-testid': `locator-${name}`, tabindex: 0, role: 'button', 'aria-label': describe(name) });
+    const holder = svgNode('g', { class: 'locator', 'data-testid': testid(name), tabindex: 0, role: 'button', 'aria-label': describe(name) });
     const glyph = appearance ? appearance(name) : locatorGlyph(plot);
     if (glyph) holder.append(glyph);
     else holder.append(svgNode('circle', { r: 6 * plot.unitsPerPx, fill: 'transparent', class: 'locator-invisible' })); // keeps a focus target
@@ -202,7 +213,8 @@ export function addLocators(plot, { names, get, onMove, onStart, onEnd, appearan
     }
     return [best, bd];
   };
-  plot.svg.addEventListener('pointerdown', (e) => {
+  // pointer: false — no picking on the picture (a page that handles presses on the glyphs itself); keys still work
+  if (pointer) plot.svg.addEventListener('pointerdown', (e) => {
     if (e.button !== 0) return;
     const p = plot.clientToWorld(e.clientX, e.clientY);
     const [n, d] = nearestTo(p);

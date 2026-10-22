@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.19 |
+| Code version: | 0.1.20 |
 | Document revision | 6 (2026-10-17) — §11 Errors in the original (R-C); checklist items as operator procedures (R-B) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Probabilistic Roadmap Method with Seven-Link Articulated Robot", contributed by Aaron T. Becker and Yitong Lu, published April 29, 2020 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ProbabilisticRoadmapMethodWithSevenLinkArticulatedRobot/>. Readable source: [`docs/original-source/prm-seven-link.txt`](../../docs/original-source/prm-seven-link.txt); snapshots: `docs/original-snapshots/prm-seven-link-*.png` |
-| Port files | `model.js` (constants, geometry, one evaluation of the Manipulate body; pure), `main.js` (SVG drawing, locators, controls), `index.html` |
+| Port files | `model.js` (constants, geometry, one evaluation of the Manipulate body; pure), `main.js` (the Manipulate on `shared/manipulate.js`: controls, locators, Graphics data; v0.1.20), `index.html` |
 | Role in the project | further demonstration (extra proof of concept alongside the motion-planning port); developed in a separate, unpublished repository and added to this site in v0.1.12 |
 
 ## 1. Purpose and background
@@ -97,8 +97,13 @@ matches any text. Checked by the browser test "every control on … is specified
   `segmentIntersectionQ`, `angDiff`, `lineList`, `listofAllLines`) and `evaluate(state)`, which performs exactly one
   evaluation of the Manipulate body: worst error and success (from the state *before* the update), the joint update,
   the collision test and the collision bookkeeping. It has no DOM code and is unit-tested.
-- `main.js` keeps the Manipulate variables (`loc`, `locOld`, `isCollide`, `collideState`, `collisions`, `movement`,
-  `goal`) and calls `evaluate` after every control change — as Mathematica re-evaluates the body. A locator drag
+- `main.js` (v0.1.20) is one `Manipulate({…})` call of `shared/manipulate.js`: the restart `Button`, the movement
+  setter (`Enabled` as a function of `isCollide`) and the goal setter as Mathematica control specs, the seven joint
+  locators as one `Locator` control over the list `loc` (one locator per point; the page keeps their test ids
+  `locator-1` … `locator-7`), `body: evaluate`, `draw` returning the Graphics list in the original's order, and
+  `after` for the beep and the disabled setter. The layer keeps the Manipulate variables (`loc`, `locOld`, `isCollide`,
+  `collideState`, `collisions`, `movement`, `goal`) and evaluates the body after every control change — as Mathematica
+  re-evaluates the body. A locator drag
   sets `loc[i]` to the pointer position once per animation frame (the port's "front-end update", see D-SL-01) and
   evaluates.
 - The invisible Manipulate locators sit at `loc`; the drawn locator glyphs sit at `locOld`, as in the original.
@@ -106,9 +111,10 @@ matches any text. Checked by the browser test "every control on … is specified
 - The beep (F-SL-14) uses `shared/beep.js` (MIT): `createBeeper()` creates the Web Audio context on the first press,
   touch, click or key press on the page and resumes it on later ones when it is not running (browsers allow sound only
   after a user gesture); `beep()` plays a 0.15 s, 880 Hz tone while the context is running, unless muted (A-SL-07). `model.js` reports `view.beep` when an update counts a new collision; `main.js`
-  calls the beeper. `window.__demo.beeps()` counts the `Beep[]` evaluations, `__demo.sounds()` the tones started.
-- Drawing uses `shared/svg-plot.js` (PlotRange → viewBox, Thickness/PointSize as fractions of the plot width,
-  container-level locator hit-testing).
+  calls the beeper in the layer's `after` step. `window.__demo.beeps()` counts the `Beep[]` evaluations, `__demo.sounds()` the tones started.
+- Drawing uses `shared/graphics.js` Graphics data rendered into a `shared/svg-plot.js` picture (PlotRange → viewBox,
+  Thickness/PointSize as fractions of the plot width, container-level locator hit-testing); the locator glyphs at
+  `locOld` are the default glyph with a grey ring written as data (a `Disk` and four `Line`s).
 
 ### 6.1 Building and deploying this app alone
 
@@ -125,7 +131,7 @@ Owner rule R-A: this one app can be taken out of the repository and hosted anywh
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/prm-seven-link/`) | 3 | `index.html`, `main.js`, `model.js` |
-| `shared/` | 10 | `beep.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `requirements.js`, `style.css`, `svg-plot.js`, `ui-extra.js`, `ui.js` |
+| `shared/` | 14 | `beep.js`, `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-plot.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
 | added by the bundler | 7 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/prm-seven-link/DESIGN.md` |
 <!-- bundle-contents:end -->
 
@@ -187,6 +193,7 @@ No open proposal (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)).
 | 8 | v0.1.17 | 2026-10-18 | version number only (harness run 2 accepted); no change to this app |
 | 9 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 10 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
+| 11 | v0.1.20 | 2026-10-21 | `main.js` rewritten on the shared Manipulate layer (`shared/manipulate.js`, `shared/graphics.js`): control specs in Mathematica's form, the picture as Graphics data; no change to behaviour or picture (all unit, golden and browser tests unchanged and passing; screenshots and Manipulate state identical to v0.1.19 at sample settings) |
 
 ## 10. Improvements to consider (not implemented)
 

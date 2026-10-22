@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.19 |
+| Code version: | 0.1.20 |
 | Document revision | 3 (2026-10-18) — harness run 2 evaluated (15.0.1 numerics model, K-RT-02/06 resolved, P-RT-01 proposed) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Rapidly Exploring Random Tree (RRT) and RRT*", contributed by Aaron T. Becker and Li Huang, published 2018-01-16 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/RapidlyExploringRandomTreeRRTAndRRT/>. Readable source: [`docs/original-source/rrt.txt`](../../docs/original-source/rrt.txt); snapshots: `docs/original-snapshots/rrt-1.png` … `rrt-6.png` (pictures 7 and 8 of the extraction are the Wolfram logo placeholder, not snapshots); saved states (COMMON-DECISIONS §1): [`tests/golden/rrt.original-states.json`](../../tests/golden/rrt.original-states.json), written by `python3 tools/extract_state.py --snapshots`, with `states[0]` = the live output-cell state, `snapshots[1…6]` = the six snapshot cells' `"Settings"` (raw notebook lines 3360, 4786, 9538, 16507, 21317, 24564) and `specs` = the initial settings (see §6, *Golden data*) |
-| Port files | `model.js` (obstacles, the Initialization functions, `addNode` and `updateCostToGo`, one evaluation of the Manipulate body, the data of the picture; pure, no DOM), `main.js` (SVG drawing, goal locator, controls, the self-triggered re-evaluation loop), `index.html`; shared: [`demos/common/prm-core.js`](../../demos/common/prm-core.js) (`angtest`, `ptInPoly`), `demos/common/segments.js` (created and owned by this app, COMMON-DECISIONS §3; prm-seven-link's export names `Gamma` — the original's `λ` —, `lineIntersectionPoint`, `segmentIntersectionQ`; also used by camera-lasers), `shared/mma-extra.js` `normalizeDnrm2` |
+| Port files | `model.js` (obstacles, the Initialization functions, `addNode` and `updateCostToGo`, one evaluation of the Manipulate body, the data of the picture; pure, no DOM), `main.js` (the Manipulate on `shared/manipulate.js`: controls, goal locator, Graphics data, the self-triggered re-evaluation as `settle`; v0.1.20), `index.html`; shared: [`demos/common/prm-core.js`](../../demos/common/prm-core.js) (`angtest`, `ptInPoly`), `demos/common/segments.js` (created and owned by this app, COMMON-DECISIONS §3; prm-seven-link's export names `Gamma` — the original's `λ` —, `lineIntersectionPoint`, `segmentIntersectionQ`; also used by camera-lasers), `shared/mma-extra.js` `normalizeDnrm2` |
 | Role in the project | further demonstration (batch A) |
 
 ## 1. Purpose and background
@@ -48,7 +48,7 @@ obstacle editor, saving/loading trees in the UI, path smoothing, a real-time ani
 | F-RT-01 | "tree type" setter bar (`{{treeType, "RRT", ""}, {"Random Tree", "RRT", "RRT*"}}`; the third label is the typeset string `"\!\(\*SuperscriptBox[\(RRT\), \(*\)]\)"`, shown as RRT with a superscript \*), default RRT; a change resets the tree (F-RT-08) | choose the growth rule (UC-RT-01) | v0.1.15 | e2e "has the controls of the original with their defaults: RRT, narrow passage, five add buttons, bias 0, goal radius 1"; e2e "the tree type setter and the obstacle popup reset the tree to 1 node"; unit "changing tree type or obstacles resets verts, path, newrand and reachGoal but keeps cost"; M-RT-04 |
 | F-RT-02 | "obstacle type" popup menu (`{{obstacles, "narrow passage", ""}, {"none", "sparse", "narrow passage", "concave"}, ControlType -> PopupMenu}`), default narrow passage; a change resets the tree | choose the workspace (UC-RT-01) | v0.1.15 | e2e "has the controls of the original with their defaults: RRT, narrow passage, five add buttons, bias 0, goal radius 1"; e2e "the obstacle popup draws 4, 4, 1 and 0 obstacle polygons"; e2e "the tree type setter and the obstacle popup reset the tree to 1 node"; M-RT-04 |
 | F-RT-03 | "number of nodes to add:" `ButtonBar[{"1" :> (nodestoadd += 1), "10" :> (nodestoadd += 10), "100" :> …, "200" :> …, "500" :> …}]` (one segmented row of five buttons) | grow the tree in batches (UC-RT-01) | v0.1.15 | e2e "pressing 10 grows the tree to 11 nodes (seeded)"; unit "a press of 10 adds 5 nodes in the first evaluation and one per evaluation after that"; golden "H-RT-03"; M-RT-03 |
-| F-RT-04 | "exploration bias" slider 0…0.9, step 0.05, default 0 (`{{explorationBias, 0, ""}, 0, .9, 0.05, ControlType -> Slider, ImageSize -> 80, Appearance -> "Labeled"}`): a plain slider with its value as text on the right and **no** ⊕ animation panel (ControlType Slider, snapshot 1); port: `shared/ui.js` `Controls.slider` with `plus: false` and `steps: 'mma'` (values 0 + k·0.05, COMMON-DECISIONS §4); the value text comes from `steps: 'mma'`, which prints the value as Mathematica does (`0` before the first move, then `0.`, `0.05`, `0.15000000000000002` as `0.15`) | goal-biased sampling (UC-RT-03) | v0.1.15 | e2e "the sliders show their values as text: 0 at start, 0.05 after one step"; unit "exploration bias: a biased attempt samples finalGoal itself and adds duplicate nodes once a node sits on the goal"; golden "H-RT-10"; M-RT-06; M-RT-10 |
+| F-RT-04 | "exploration bias" slider 0…0.9, step 0.05, default 0 (`{{explorationBias, 0, ""}, 0, .9, 0.05, ControlType -> Slider, ImageSize -> 80, Appearance -> "Labeled"}`): a plain slider with its value as text on the right and **no** ⊕ animation panel (ControlType Slider, snapshot 1); port: the control spec with `ControlType -> Slider`, `ImageSize -> 80` of `shared/manipulate.js` (v0.1.20; `shared/ui.js` `Controls.slider` with `plus: false` and `steps: 'mma'`) (values 0 + k·0.05, COMMON-DECISIONS §4); the value text comes from `steps: 'mma'`, which prints the value as Mathematica does (`0` before the first move, then `0.`, `0.05`, `0.15000000000000002` as `0.15`) | goal-biased sampling (UC-RT-03) | v0.1.15 | e2e "the sliders show their values as text: 0 at start, 0.05 after one step"; unit "exploration bias: a biased attempt samples finalGoal itself and adds duplicate nodes once a node sits on the goal"; golden "H-RT-10"; M-RT-06; M-RT-10 |
 | F-RT-05 | "goal radius" slider 0…5, step 0.1, default 1, same appearance and port control (`{{goalRadius, 1, ""}, 0, 5, 0.1, ControlType -> Slider, ImageSize -> 80, Appearance -> "Labeled"}`; values 0 + k·0.1, snapshots 2–6 save 2.5) | size of the goal region (UC-RT-02) | v0.1.15 | e2e "the sliders show their values as text: 0 at start, 0.05 after one step"; unit "moving the goal or changing goalRadius resets reachGoal and path and recomputes the path"; unit "goalRadius 0: only a node exactly on the goal reaches it"; golden "H-RT-11"; M-RT-11 |
 | F-RT-06 | Goal locator `{{finalGoal, {18, -18}}, {-19, -19}, {19, 19}, ControlType -> Locator}`: default locator glyph (drawn as measured in the RM/BF snapshots: black lines and a dark translucent ring, `shared/svg-plot.js` `darkLocatorGlyph`), positions limited to −19…19 in both coordinates; Manipulate Locator controls are LocatorPane locators: a press anywhere in the picture moves the locator there (shared `addLocators`, `pickAnywhere: true`) | choose the goal (UC-RT-02) | v0.1.15 | e2e "dragging the goal locator with the mouse moves the goal disk"; e2e "a press away from the goal locator moves it there (LocatorPane)"; e2e "dragging the goal onto the root turns the disk green and reads 1 node, path length 0"; M-RT-05 |
 | F-RT-07 | Layout `ControlPlacement -> Left`: text lines "tree type", "obstacle type", "number of nodes to add:", "exploration bias", "goal radius" above their controls, with the original's empty-string spacers | same arrangement as the original (snapshot 1) | v0.1.15 | inventory; M-RT-02 |
@@ -125,20 +125,23 @@ No `plus-`, `play-`, `stepback-`, `stepfwd-` entries: both sliders are `ControlT
   `inCollision`), the body-local `addNode(treeType, obsedges)` and `updateCostToGo(index)`, the constant
   `OBSEDGES` (the Piecewise), `rrtDist = 3`, and `evaluate(state, rng, {normalize})`, which performs exactly one evaluation of the
   Manipulate body and returns `{state, view, treeChanged}` (`treeChanged`: a node was added or the tree was reset;
-  `main.js` redraws the edges and nodes only then). `addNode` is split into named steps that the golden tests call on
+  `main.js` redraws the edges and nodes only then, with `cachedGraphics`). `addNode` is split into named steps that the golden tests call on
   their own, in the same order as the original: `samplePoint`, `pickNode`, `extend`, `rrtStarChooseParent`,
-  `appendNode`, `rrtStarRewire`. No DOM; unit-tested in Node. `main.js` keeps the Manipulate variables, the controls
-  and the SVG; `index.html` the page chrome.
+  `appendNode`, `rrtStarRewire`. No DOM; unit-tested in Node. `main.js` (v0.1.20) is one `Manipulate({…})` call of `shared/manipulate.js`: the
+  controls as Mathematica control specs (the RRT\* label as `Rule["RRT*", Superscript["RRT", "*"]]`, the ButtonBar as
+  a `Row` of `Button`s), `random: true`, `body` wrapping `evaluate`, `settle` and `draw` returning the Graphics list
+  in the original's order; the layer keeps the Manipulate variables. `index.html` the page chrome.
 - **Reused code** (exact imports): `model.js`: `shared/mma.js` `mLess`, `mGreater`, `mEqual`, `roundTo`;
   `shared/mma-exact.js` `norm` (dnrm2); `shared/mma-extra.js` `euclidean` (with the rule of `nearest`: stable ties,
   inclusive radius — K-PR-01 answer; `model.js` `nearestFirst` and `nearestWithin` apply it by one linear scan, a unit
   test compares them with `nearest`), `mmaNumberString`, `normalizeDnrm2`; `demos/common/prm-core.js` `angtest`,
   `ptInPoly` (the identical definitions of the PRM Demonstrations by the same author); `demos/common/segments.js`
-  `Gamma`, `lineIntersectionPoint`, `segmentIntersectionQ`, `isExactSegment`. `main.js`: `shared/ui.js` `Controls`
-  (`setterBar`, `slider` with `plus: false` and `steps: 'mma'`); `shared/ui-extra.js` `addPopup`, `addButton`, `addRow`
-  (the ButtonBar as one row); `shared/svg-plot.js` `createPlot` (padding 0), `addLocators` (`pickAnywhere: true`),
-  `svgNode`, `darkLocatorGlyph` (`POINT_SIZE` is **not** used: sizes below); `shared/mma-colors.js` `NAMED`, `darker`;
-  `shared/random.js` `createRng`, `replayRng`. `index.html`: `shared/requirements.js`. (`det` of `shared/mma-exact.js`
+  `Gamma`, `lineIntersectionPoint`, `segmentIntersectionQ`, `isExactSegment`. `main.js` (v0.1.20): `shared/manipulate.js` (`Manipulate` with
+  `random`, `settle`, `Locator`, `Rule`, `Button`, `Row`, `PopupMenu`, `Slider`, `hookCopy`, `darkLocatorGlyph`) and
+  `shared/graphics.js` (primitives, `Tooltip`, `cachedGraphics` for the tree, `AbsolutePointSize`; named sizes are
+  **not** used: sizes below); the layer builds on `shared/ui.js` `Controls` (`setterBar`, `slider` with `plus: false`
+  and `steps: 'mma'`), `shared/ui-extra.js` `addPopup`, `addButton`, `addRow`, `shared/svg-plot.js` `createPlot`
+  (padding 0), `addLocators` (`pickAnywhere: true`) and `shared/random.js` `createRng`, `replayRng`. `index.html`: `shared/requirements.js`. (`det` of `shared/mma-exact.js`
   is used through `segments.js`.)
 - **New code.** (1) `demos/common/segments.js` (CC BY-NC-SA 3.0, owned by this app, COMMON-DECISIONS §3) with
   prm-seven-link's export names: `Gamma` (the original's `λ[{a, b}][p]`; `model.js` imports it as `λ`),
@@ -155,9 +158,9 @@ No `plus-`, `play-`, `stepback-`, `stepfwd-` entries: both sliders are `ControlT
   `"\!\(\*SuperscriptBox[\(RRT\), \(*\)]\)"` to `"RRT*"`. Exactness that the display needs is tracked explicitly: the
   root's cost is the exact integer 0 (tooltip `0`, label K-RT-06); every other cost is a machine real.
 - **Evaluation order** (one call of `evaluate`): goal-change check; reset check; `If[nodestoadd > 0, …]`;
-  `While[nodestoadd > 5, …]`; goal check; view. `main.js` calls `evaluate` after every control change (one evaluation
+  `While[nodestoadd > 5, …]`; goal check; view. The layer calls the body after every control change (one evaluation
   per animation frame while the locator is dragged) and, as long as an evaluation changed `nodestoadd` and left it
-  above 0, schedules the next evaluation for the next animation frame — this reproduces the front end's
+  above 0 (`settle`), schedules the next evaluation for the next animation frame — this reproduces the front end's
   self-triggered re-evaluation (F-RT-17, D-RT-02). A button press while nodes are still pending simply adds to
   `nodestoadd`, as in the original.
 - **Performance.** `Position[verts[[;;, 1]], x]` is a linear search in the original; the port keeps a map from the
@@ -196,7 +199,7 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/rrt/`) | 3 | `index.html`, `main.js`, `model.js` |
-| `shared/` | 10 | `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-plot.js`, `ui-extra.js`, `ui.js` |
+| `shared/` | 13 | `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-plot.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
 | `demos/common/` | 2 | `prm-core.js`, `segments.js` |
 | added by the bundler | 7 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/rrt/DESIGN.md` |
 <!-- bundle-contents:end -->
@@ -269,6 +272,7 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 | 3 | v0.1.17 | 2026-10-18 | harness run 2 (Mathematica 15.0.1) evaluated: the numerics model is selectable (`MODEL_1501` default, `MODEL_2018` for the saved snapshots); 15.0.1 `Normalize` with the x87 extended-precision length (`lengthExtended`, `normalizeExtended`) and `EuclideanDistance` in plain doubles (K-RT-02 resolved); K-RT-01, K-RT-03, K-RT-06 (→ P-RT-01) resolved, K-RT-04, K-RT-05, K-RT-08 with evidence; N-RT-07 (scenarios without recorded draw values, typeset strings). Golden harness tests: `%text` read as recorded Text objects, `treeTypeOld` as the kernel string, records without draw values replayed structurally |
 | 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 5 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
+| 6 | v0.1.20 | 2026-10-21 | `main.js` rewritten on the shared Manipulate layer (`shared/manipulate.js`, `shared/graphics.js`): control specs in Mathematica's form, the picture as Graphics data; no change to behaviour or picture (all unit, golden and browser tests unchanged and passing; screenshots and Manipulate state identical to v0.1.19 at sample settings) |
 
 ## 10. Improvements to consider (not implemented)
 

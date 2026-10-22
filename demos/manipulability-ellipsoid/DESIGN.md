@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.19 |
+| Code version: | 0.1.20 |
 | Document revision | 1 (2026-10-18) — first implementation |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Manipulability Ellipsoid of a Robot Arm", contributed by Aaron T. Becker and Mary Burbage, published 2016-06-24 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ManipulabilityEllipsoidOfARobotArm/>. Readable source: [`docs/original-source/manipulability-ellipsoid.txt`](../../docs/original-source/manipulability-ellipsoid.txt); snapshots: `docs/original-snapshots/manipulability-ellipsoid-1.png` … `-4.png`; golden data: `tests/golden/manipulability-ellipsoid.original-states.json` (COMMON-DECISIONS §1, written by `tools/extract_state.py --snapshots`: `states[0]` = output-cell state, raw notebook line 1715; `snapshots[1…4]` = the snapshot cells' Settings, raw lines 5000, 7841, 10766, 14286; `specs` = the stored Specifications) |
@@ -280,6 +280,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 3 | v0.1.17 | 2026-10-18 | harness run 2: exact angles as N[kπ/32] = (k/32)·π (K-ME-09 reversed, H-ME-01/H-ME-04); π/8 table values = the recorded N[Cos[π/8]], N[Sin[π/8]] as constants (K-ME-02, H-ME-12; `shared/exact-pi.js`); the dial's nearest32 setter with the squared machine distance, centre → k = −24 (K-ME-05, H-CL-16; `dial-control.js`); K-ME-01 and K-ME-04 answered (H-ME-05 … H-ME-08, H-ME-01); H-ME-11's TESTPLAN line replaced by `drag` steps (prelude-failed in run 1; rerun pending); golden harness comparison reads `{"sym": "Pi"}` angles and `%plotRange` records as encoded (N-ME-06) |
 | 4 | v0.1.18 | 2026-10-18 | harness run 3: H-ME-11 recorded and accepted; K-ME-05 resolved (ties of the dial setter: first point in table order); no change to the app |
 | 5 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
+| 6 | v0.1.20 | 2026-10-21 | version number only (Manipulate layer extended, eleven more apps migrated to it); no change to this app |
 
 ## 10. Improvements to consider (not implemented)
 

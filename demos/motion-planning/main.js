@@ -1,289 +1,198 @@
 // SPDX-FileCopyrightText: 2026 Tico Hannan
 // SPDX-FileCopyrightText: Original Wolfram Demonstration by Shreyas Poyrekar, Aaron T. Becker and Arifa Sultana
 // SPDX-License-Identifier: CC-BY-NC-SA-3.0
-// demos/motion-planning/main.js — SVG rendering + locator dragging (browser only).
-import { Controls, svgEl } from '../../shared/ui.js';
-import { computeScene, lineList, pathLength, DEFAULTS, LOCATOR_RANGES, PLOT_RANGE, regularPolygon } from './planner.js';
+// demos/motion-planning/main.js — the Manipulate: view, side counts, progress, six locators and the Graphics
+// (workspace or configuration space, visibility lines, C-obstacles), on shared/manipulate.js (browser only).
+import { Manipulate, Locator, Delimiter, cacheLast } from '../../shared/manipulate.js';
+import {
+  Annotation, Rectangle, Polygon, Line, Point, Text, Style, EdgeForm, Directive, Opacity, Thickness, PointSize, CapForm,
+  Transparent, Thin, Thick, FontFamily, RGBColor, Darker, Lighter, White, Black, Red, Gray, Green, Blue, Orange, Purple,
+  LightGray, LightRed, LightGreen, LightBlue,
+} from '../../shared/graphics.js';
+import { svgNode } from '../../shared/svg-plot.js';
+import { computeScene, lineList, pathLength, regularPolygon, DEFAULTS, LOCATOR_RANGES, PLOT_RANGE } from './planner.js';
 
-// Mathematica named colours used by the original
-const COL = {
-  White: '#ffffff', Black: '#000000', Red: '#ff0000',
-  LightYellow: 'rgb(255,255,217)', LightGray: 'rgb(217,217,217)', LightRed: 'rgb(255,217,217)',
-  LightGreen: 'rgb(224,255,224)', LightBlue: 'rgb(222,240,255)',
-  DarkerGreen: 'rgb(0,170,0)', LighterGreen: 'rgb(85,255,85)', Orange: 'rgb(255,128,0)',
-  Purple: 'rgb(128,0,128)', Blue: '#0000ff', Gray: 'rgb(128,128,128)', DarkerRed: 'rgb(170,0,0)',
-};
-const W = 2 * PLOT_RANGE; // plot width in user units
-const IMAGE_PX = 425; // ImageSize -> 425
-const REL = (t) => t * W; // Thickness[t] / PointSize[t] are fractions of the plot width
-const PX = (p) => (p / IMAGE_PX) * W; // absolute sizes (Thin, Thick, fonts) at the nominal image size
+const LOCATORS = ['r1', 'r2', 'o1', 'o2', 'o3', 'o4'];
+const clampTo = (k, [x, y]) => { const [[x0, y0], [x1, y1]] = LOCATOR_RANGES[k]; return [Math.min(Math.max(x, x0), x1), Math.min(Math.max(y, y0), y1)]; };
+// PORT DEVIATION (D-MP-05): Thin and Thick as 0.5 and 2 screen pixels at any picture size (SVG non-scaling strokes;
+// Graphics has no such thickness, so the widths are set as attributes; a butt cap, as before v0.1.20, because
+// browsers draw the corners of a non-scaling polygon edge differently with svg-plot's round cap). The tests read
+// fill="#ff0000".
+const onScreen = (w) => ({ 'vector-effect': 'non-scaling-stroke', 'stroke-width': w, 'stroke-linecap': 'butt' });
+const THIN = onScreen(0.5), THICK = onScreen(2);
+const LightYellow = RGBColor(1, 1, 0.85); // Mathematica's LightYellow
+const red = (c) => (c === Red ? { fill: '#ff0000' } : {});
 
-let state = structuredClone(DEFAULTS);
-applyUrlParams(state);
-let scene = computeScene(state);
-
-/**
- * PORT ADDITION: a scene can be opened from a link, e.g.
- * ?r1=-2,2.75&r2=0.5,-3&o1=2,2.5&o2=-1,-0.5&o3=-2,-2.4&o4=2,-1&n=3&x=4&view=config
- * (used by tools/explore-motion.mjs reports and for sharing test cases).
- */
-function applyUrlParams(st) {
-  const q = new URLSearchParams(location.search);
-  for (const k of ['r1', 'r2', 'o1', 'o2', 'o3', 'o4']) {
+/** PORT ADDITION (A-MP-03): a scene from a link, e.g. ?r1=-2,2.75&r2=0.5,-3&o1=…&o4=…&n=3&x=4&view=config. */
+function sceneFromUrl() {
+  const q = new URLSearchParams(location.search), st = {};
+  for (const k of LOCATORS) {
     const v = q.get(k)?.split(',').map(Number);
-    if (v && v.length === 2 && v.every(Number.isFinite)) {
-      const [[x0, y0], [x1, y1]] = LOCATOR_RANGES[k];
-      st[k] = [Math.min(Math.max(v[0], x0), x1), Math.min(Math.max(v[1], y0), y1)];
-    }
+    if (v && v.length === 2 && v.every(Number.isFinite)) st[k] = clampTo(k, v);
   }
   for (const k of ['n', 'x']) { const v = Number(q.get(k)); if ([3, 4, 5].includes(v)) st[k] = v; }
   if (q.get('view') === 'config') st.configOrWork = 'configuration space';
+  return st;
 }
-const sceneLink = () => {
+const sceneLink = (st) => {
   const p = (v) => `${+v[0].toFixed(4)},${+v[1].toFixed(4)}`;
-  return `${location.origin}${location.pathname}?r1=${p(state.r1)}&r2=${p(state.r2)}&o1=${p(state.o1)}&o2=${p(state.o2)}&o3=${p(state.o3)}&o4=${p(state.o4)}&n=${state.n}&x=${state.x}${state.configOrWork === 'workspace' ? '' : '&view=config'}`;
+  return `${location.origin}${location.pathname}?r1=${p(st.r1)}&r2=${p(st.r2)}&o1=${p(st.o1)}&o2=${p(st.o2)}&o3=${p(st.o3)}&o4=${p(st.o4)}&n=${st.n}&x=${st.x}${st.configOrWork === 'workspace' ? '' : '&view=config'}`;
 };
 
-// ---- SVG skeleton -----------------------------------------------------------
-const svg = svgEl('svg', {
-  viewBox: `${-PLOT_RANGE} ${-PLOT_RANGE} ${W} ${W}`, class: 'scene', 'data-testid': 'scene-svg',
-  role: 'img', 'aria-label': 'Workspace with robot, obstacles and planned path',
-});
-const world = svgEl('g', { transform: 'scale(1,-1)' }); // math coordinates: y up
-const layer = svgEl('g');
-const locatorLayer = svgEl('g');
-world.append(layer, locatorLayer);
-svg.append(world);
-document.getElementById('graphic').append(svg);
+let fromUrl = sceneFromUrl(); // the first evaluation only: "Initial settings" restores the original's defaults
+const computed = cacheLast(); // the original's prev… variables: the scene is recomputed only when its inputs change
+let scene = null;
+let restart = null; // F-MP-07: progress restarts — true/false decided by a robot-sides click or setState; null: a moved locator decides
+let prevLocators = null;
 
-const ptsAttr = (pts) => pts.map((p) => `${p[0]},${p[1]}`).join(' ');
-function poly(pts, { fill = 'none', fillOpacity = 1, stroke = null, strokeWidth = null, strokeOpacity = 1, nonScaling = false, testid } = {}) {
-  return svgEl('polygon', {
-    points: ptsAttr(pts), fill, 'fill-opacity': fillOpacity,
-    stroke: stroke ?? 'none', 'stroke-width': strokeWidth ?? 0, 'stroke-opacity': strokeOpacity,
-    'vector-effect': nonScaling ? 'non-scaling-stroke' : null, 'stroke-linejoin': 'round', 'data-testid': testid,
-  });
+// The Manipulate body: computeScene (planner.js) and the progress s, reset to 1 when a locator moves (each move,
+// even one held at its range limit, gives a new point) or a robot-sides button is pressed.
+// PORT DEVIATION (D-MP-01): s is clamped to the new path length.
+function body(st) {
+  scene = computed([...LOCATORS.map((k) => st[k]), st.n, st.x], () => computeScene(st));
+  const moved = restart ?? (prevLocators !== null && LOCATORS.some((k, i) => st[k] !== prevLocators[i]));
+  restart = null;
+  prevLocators = LOCATORS.map((k) => st[k]);
+  return { state: { ...st, s: moved ? 1 : Math.min(st.s, Math.max(1, scene.discretePath.length)) }, view: scene };
 }
-function polyline(pts, { stroke, width, opacity = 1, nonScaling = false, testid }) {
-  return svgEl('polyline', {
-    points: ptsAttr(pts), fill: 'none', stroke, 'stroke-width': width, 'stroke-opacity': opacity,
-    'vector-effect': nonScaling ? 'non-scaling-stroke' : null, 'stroke-linecap': 'butt', 'stroke-linejoin': 'round', 'data-testid': testid,
-  });
+
+// Graphics[{…}] of the original, in its order
+function draw(sc, st) {
+  const ws = st.configOrWork === 'workspace';
+  const inside = sc.robotinsideobstcond.some(Boolean);
+  const sIdx = Math.min(Math.max(st.s, 1), Math.max(sc.discretePath.length, 1)) - 1;
+  const atS = sc.discretePath[sIdx];
+  const bg = ws ? White : inside ? Red : White;
+  return [
+    CapForm('Butt'),
+    bg, Annotation(Rectangle([-4.75, -4.75], [4.75, 4.75]), 'background', red(bg)),
+    EdgeForm(Thin),
+    ws ? [LightYellow, Annotation(Polygon(sc.borderpoly), 'boundary', THIN)]
+      : [LightGray, EdgeForm(Directive(Black, Thickness(0.003))), Annotation(Polygon(sc.configBoundary), 'config-boundary-fill'),
+        Opacity(0.5), [Opacity(1), Lighter(Green), Thick, sc.path.length && Annotation(Line(sc.path), 'path', THICK)],
+        EdgeForm(Directive(Black, Thickness(0.003), Opacity(0.5))),
+        sc.robotobstconfig.map((cob, i) => [sc.obstCollision[0][i] || sc.obstCollision[1][i] ? Red : White, Annotation(Polygon(cob), `cobstacle-fill-${i + 1}`)]),
+        [Darker(Green), Opacity(1), PointSize(0.01), st.s !== 1 && atS && Annotation(Point(atS), 'progress-point')]],
+    ws && [
+      [LightRed, sc.obstaclepoly.map((ob, i) => Annotation(Polygon(ob), `obstacle-${i + 1}`, THIN))],
+      [sc.robotinsideobstcond[1] ? Red : LightGreen, Annotation(Polygon(sc.robotEndPoly), 'robot-end', THIN)],
+      [Darker(Green), Opacity(0.5), Thick, sc.path.length && Annotation(Line(sc.path), 'path', THICK)],
+      sc.robotinsideobstcond[0] ? [Red, Annotation(Polygon(sc.robotStartPoly), 'robot-start', { ...THIN, ...red(Red) })]
+        : [LightBlue, Thickness(0.003), Annotation(Polygon(sc.robotStartPoly), 'robot-start', THIN), !inside && sc.path.length && [
+          Opacity(1), Darker(Green), Annotation(Line(lineList(sc.discretePath).slice(0, Math.max(0, sIdx))), 'path-traveled'),
+          Orange, Opacity(0.5), EdgeForm(Directive(Thin, Opacity(0.5))), Annotation(Polygon(regularPolygon(atS, st.n)), 'robot-moving', THIN),
+          Red, PointSize(0.01), Annotation(Point(atS), 'progress-point')]],
+    ],
+    [Orange, Thickness(0.003), Opacity(0.25), Annotation(Line(sc.linesStarttoObstacles), 'lines-start')],
+    [Purple, Thickness(0.003), Opacity(0.25), Annotation(Line(sc.linesEndtoObstacles), 'lines-end')],
+    [Blue, Thickness(0.003), Opacity(0.25), Annotation(Line(sc.verticestoVertices), 'lines-bitangent')],
+    [Transparent, EdgeForm(Directive(Gray, Opacity(0.7), Thickness(0.003))),
+      sc.robotobstconfig.map((cob, i) => Annotation(Polygon(cob), `cobstacle-${i + 1}`)), Annotation(Polygon(sc.configBoundary), 'config-boundary'),
+      [Opacity(1), Red, PointSize(0.01), Annotation(Point(sc.robotobstconfig.flat()), 'cobstacle-vertices')]],
+    sc.path.length === 0 && Annotation(Text(Style('No path exists.', Darker(Red), { FontSize: 18 }, FontFamily('Times New Roman, serif')),
+      [st.r1[0], st.r1[1] + 0.5]), 'no-path'),
+  ];
 }
-function lines(segs, opts) {
-  const g = svgEl('g', { 'data-testid': opts.testid });
-  for (const s of segs) g.append(polyline(s, { ...opts, testid: undefined }));
+
+// PORT DEVIATION (D-MP-04): the port's locator glyph (ring and hairs one screen pixel wide, styled in index.html),
+// kept as SVG: the shared glyphs differ from it
+function locatorGlyph(plot) {
+  const R = 7 * plot.unitsPerPx;
+  const g = svgNode('g');
+  g.append(svgNode('circle', { r: R, class: 'ring', 'stroke-width': 1, 'vector-effect': 'non-scaling-stroke' }));
+  for (const [x1, y1, x2, y2] of [[-R * 1.5, 0, -R * 0.45, 0], [R * 0.45, 0, R * 1.5, 0], [0, -R * 1.5, 0, -R * 0.45], [0, R * 0.45, 0, R * 1.5]]) {
+    g.append(svgNode('line', { x1, y1, x2, y2, class: 'hair', 'stroke-width': 1, 'vector-effect': 'non-scaling-stroke' }));
+  }
+  g.append(svgNode('circle', { r: R * 2, fill: 'transparent' })); // the area the focus outline surrounds
   return g;
 }
-function point(p, color, sizeFrac = 0.01, testid) {
-  return svgEl('circle', { cx: p[0], cy: p[1], r: REL(sizeFrac) / 2, fill: color, 'data-testid': testid });
-}
 
-// ---- drawing (mirrors the Graphics[...] list of the original, in order) -------
-function draw() {
-  const sc = scene;
-  const inside = sc.robotinsideobstcond.some(Boolean);
-  const ws = state.configOrWork === 'workspace';
-  const s = state.s;
-  const sIdx = Math.min(Math.max(s, 1), Math.max(sc.discretePath.length, 1)) - 1;
-  const atS = sc.discretePath[sIdx];
-  const thin = { stroke: COL.Black, strokeWidth: 0.5, nonScaling: true }; // EdgeForm[{Thin}]
-  layer.replaceChildren();
-  const add = (n) => { layer.append(n); return n; };
-
-  // Background rectangle 4.75 {{-1,-1},{1,1}}
-  add(svgEl('rect', { x: -4.75, y: -4.75, width: 9.5, height: 9.5, fill: ws ? COL.White : inside ? COL.Red : COL.White, 'data-testid': 'background' }));
-
-  if (ws) {
-    add(poly(sc.borderpoly, { fill: COL.LightYellow, ...thin, testid: 'boundary' }));
-  } else {
-    const edge = { stroke: COL.Black, strokeWidth: REL(0.003) };
-    add(poly(sc.configBoundary, { fill: COL.LightGray, ...edge, testid: 'config-boundary-fill' }));
-    if (sc.path.length) add(polyline(sc.path, { stroke: COL.LighterGreen, width: 2, nonScaling: true, testid: 'path' }));
-    sc.robotobstconfig.forEach((cob, i) => {
-      const hit = sc.obstCollision[0][i] || sc.obstCollision[1][i];
-      add(poly(cob, { fill: hit ? COL.Red : COL.White, fillOpacity: 0.5, ...edge, strokeOpacity: 0.5, testid: `cobstacle-fill-${i + 1}` }));
-    });
-    if (s !== 1 && atS) add(point(atS, COL.DarkerGreen, 0.01, 'progress-point'));
-  }
-
-  if (ws) {
-    sc.obstaclepoly.forEach((ob, i) => add(poly(ob, { fill: COL.LightRed, ...thin, testid: `obstacle-${i + 1}` })));
-    add(poly(sc.robotEndPoly, { fill: sc.robotinsideobstcond[1] ? COL.Red : COL.LightGreen, ...thin, testid: 'robot-end' }));
-    if (sc.path.length) add(polyline(sc.path, { stroke: COL.DarkerGreen, width: 2, opacity: 0.5, nonScaling: true, testid: 'path' }));
-    if (sc.robotinsideobstcond[0]) {
-      add(poly(sc.robotStartPoly, { fill: COL.Red, ...thin, testid: 'robot-start' }));
-    } else {
-      add(poly(sc.robotStartPoly, { fill: COL.LightBlue, ...thin, testid: 'robot-start' }));
-      if (!inside && sc.path.length) {
-        const traveled = lineList(sc.discretePath).slice(0, Math.max(0, sIdx));
-        add(lines(traveled, { stroke: COL.DarkerGreen, width: REL(0.003), testid: 'path-traveled' }));
-        add(poly(regularPolygon(atS, state.n), { fill: COL.Orange, fillOpacity: 0.5, ...thin, strokeOpacity: 0.5, testid: 'robot-moving' }));
-        add(point(atS, COL.Red, 0.01, 'progress-point'));
-      }
-    }
-  }
-
-  // Visibility lines (drawn in both views)
-  add(lines(sc.linesStarttoObstacles, { stroke: COL.Orange, width: REL(0.003), opacity: 0.25, testid: 'lines-start' }));
-  add(lines(sc.linesEndtoObstacles, { stroke: COL.Purple, width: REL(0.003), opacity: 0.25, testid: 'lines-end' }));
-  add(lines(sc.verticestoVertices, { stroke: COL.Blue, width: REL(0.003), opacity: 0.25, testid: 'lines-bitangent' }));
-
-  // Configuration-space outlines (transparent fill, gray edges) + red vertex points
-  const outline = { stroke: COL.Gray, strokeWidth: REL(0.003), strokeOpacity: 0.7 };
-  sc.robotobstconfig.forEach((cob, i) => add(poly(cob, { ...outline, testid: `cobstacle-${i + 1}` })));
-  add(poly(sc.configBoundary, { ...outline, testid: 'config-boundary' }));
-  const vg = add(svgEl('g', { 'data-testid': 'cobstacle-vertices' }));
-  for (const v of sc.robotobstconfig.flat()) vg.append(point(v, COL.Red));
-
-  if (sc.path.length === 0) {
-    const [x, y] = [state.r1[0], state.r1[1] + 0.5];
-    const t = svgEl('text', {
-      x: 0, y: 0, transform: `translate(${x},${y}) scale(1,-1)`, 'text-anchor': 'middle', 'dominant-baseline': 'middle',
-      'font-size': PX(18), fill: COL.DarkerRed, 'font-family': 'Times New Roman, serif', 'data-testid': 'no-path',
-    });
-    t.textContent = 'No path exists.';
-    add(t);
-  }
-  drawLocators();
-  updateReadout();
-}
-
-// ---- locators ---------------------------------------------------------------
-const LOCATORS = ['r1', 'r2', 'o1', 'o2', 'o3', 'o4'];
-const locatorNodes = {};
-const LOC_R = PX(7);
-function makeLocator(name) {
-  const g = svgEl('g', { class: 'locator', 'data-testid': `locator-${name}`, tabindex: 0, role: 'button',
-    'aria-label': `${name.startsWith('r') ? (name === 'r1' ? 'robot start' : 'robot end') : 'obstacle ' + name.slice(1)} locator; arrow keys move it` });
-  g.append(svgEl('circle', { r: LOC_R, class: 'ring', 'stroke-width': 1, 'vector-effect': 'non-scaling-stroke' }));
-  for (const [x1, y1, x2, y2] of [[-LOC_R * 1.5, 0, -LOC_R * 0.45, 0], [LOC_R * 0.45, 0, LOC_R * 1.5, 0], [0, -LOC_R * 1.5, 0, -LOC_R * 0.45], [0, LOC_R * 0.45, 0, LOC_R * 1.5]]) {
-    g.append(svgEl('line', { x1, y1, x2, y2, class: 'hair', 'stroke-width': 1, 'vector-effect': 'non-scaling-stroke' }));
-  }
-  g.append(svgEl('circle', { r: LOC_R * 2, fill: 'transparent' })); // bigger hit area
-  locatorLayer.append(g);
-  locatorNodes[name] = g;
-
-  let dragging = false;
-  g.addEventListener('pointerdown', (e) => { dragging = true; g.setPointerCapture(e.pointerId); g.classList.add('dragging'); e.preventDefault(); });
-  g.addEventListener('pointermove', (e) => { if (dragging) moveLocator(name, clientToWorld(e.clientX, e.clientY)); });
-  const end = () => { dragging = false; g.classList.remove('dragging'); };
-  g.addEventListener('pointerup', end);
-  g.addEventListener('pointercancel', end);
-  g.addEventListener('keydown', (e) => {
-    const d = e.shiftKey ? 0.25 : 0.05;
-    const delta = { ArrowLeft: [-d, 0], ArrowRight: [d, 0], ArrowUp: [0, d], ArrowDown: [0, -d] }[e.key];
-    if (!delta) return;
-    e.preventDefault();
-    moveLocator(name, [state[name][0] + delta[0], state[name][1] + delta[1]]);
-  });
-}
-function drawLocators() {
-  for (const name of LOCATORS) locatorNodes[name].setAttribute('transform', `translate(${state[name][0]},${state[name][1]})`);
-}
-function clientToWorld(cx, cy) {
-  const pt = svg.createSVGPoint();
-  pt.x = cx; pt.y = cy;
-  const p = pt.matrixTransform(world.getScreenCTM().inverse());
-  return [p.x, p.y];
-}
-const clampTo = (name, [x, y]) => {
-  const [[x0, y0], [x1, y1]] = LOCATOR_RANGES[name];
-  return [Math.min(Math.max(x, x0), x1), Math.min(Math.max(y, y0), y1)];
-};
-let pending = false;
-function moveLocator(name, p) {
-  state[name] = clampTo(name, p);
-  state.s = 1; // the original resets progress whenever robot/obstacle locators change
-  drawLocators();
-  if (!pending) {
-    pending = true;
-    requestAnimationFrame(() => { pending = false; recompute(); });
-  }
-}
-LOCATORS.forEach(makeLocator);
-
-// ---- controls -----------------------------------------------------------------
-const controls = new Controls(document.getElementById('controls'));
-const C = {};
-C.configOrWork = controls.setterBar({
-  name: 'configOrWork', value: state.configOrWork,
-  options: [{ value: 'workspace', label: 'workspace' }, { value: 'configuration space', label: 'configuration space' }],
-  onChange: (v) => { state.configOrWork = v; draw(); },
-});
-controls.delimiter();
-controls.heading('number of sides');
-C.x = controls.setterBar({ name: 'x', label: 'boundary', value: state.x, options: [3, 4, 5].map((v) => ({ value: v })), onChange: (v) => { state.x = v; recompute(); } });
-C.n = controls.setterBar({ name: 'n', label: 'robot', value: state.n, options: [3, 4, 5].map((v) => ({ value: v })), onChange: (v) => { state.n = v; state.s = 1; recompute(); } });
-controls.delimiter();
-C.s = controls.slider({ name: 's', label: 'progress', min: 1, max: Math.max(1, scene.discretePath.length), step: 1, value: 1, labeled: false, animSeconds: 8,
-  onInput: (v) => { state.s = v; draw(); } });
-C.s.row.id = 'progress-row';
-
-function recompute() {
-  scene = computeScene(state);
-  const len = Math.max(1, scene.discretePath.length);
-  // PORT DEVIATION: the original does not clamp s when the path gets shorter
-  // (e.g. after a boundary change); the port clamps it to the new path length.
-  state.s = Math.min(state.s, len);
-  C.s.setRange(1, len);
-  C.s.set(state.s);
-  C.s.setEnabled(scene.discretePath.length > 0);
-  draw();
-}
-
-// ---- optional numeric readout (port addition, for testing) -------------------
+// PORT ADDITION (A-MP-02): numeric readout and scene link, outside the Manipulate
 const readout = document.getElementById('readout');
 const showReadout = document.getElementById('show-readout');
-showReadout.addEventListener('change', () => { readout.hidden = !showReadout.checked; updateReadout(); });
 const f = (v) => v.toFixed(4);
-function updateReadout() {
+function updateReadout(st, sc) {
   if (readout.hidden) return;
-  const sc = scene;
   readout.textContent = [
-    `start ${state.r1.map(f)}  end ${state.r2.map(f)}  robot sides ${state.n}  boundary sides ${state.x}`,
+    `start ${st.r1.map(f)}  end ${st.r2.map(f)}  robot sides ${st.n}  boundary sides ${st.x}`,
     `start valid: ${!sc.robotinsideobstcond[0]}  end valid: ${!sc.robotinsideobstcond[1]}`,
     `path vertices: ${sc.path.map((p) => `(${p.map(f).join(', ')})`).join(' → ') || '(none)'}`,
-    `path length: ${sc.path.length ? f(pathLength(sc.path)) : '–'}   discretised points: ${sc.discretePath.length}   progress s = ${state.s}`,
+    `path length: ${sc.path.length ? f(pathLength(sc.path)) : '–'}   discretised points: ${sc.discretePath.length}   progress s = ${st.s}`,
     sc.graph ? `graph: ${sc.graph.allPoints.length} nodes, ${sc.graph.allLines.length} edges` : 'graph: not needed (direct line or invalid start/end)',
     sc.diagnostics.length ? `diagnostics: ${sc.diagnostics.join('; ')}` : '',
-    `link to this scene: ${sceneLink()}`,
+    `link to this scene: ${sceneLink(st)}`,
   ].filter(Boolean).join('\n');
   readout.style.whiteSpace = 'pre-wrap';
 }
+const compact = (sc) => structuredClone({ ...sc, graph: sc.graph && { nodes: sc.graph.allPoints.length, edges: sc.graph.allLines.length } });
+const DESCR = { r1: 'robot start', r2: 'robot end', o1: 'obstacle 1', o2: 'obstacle 2', o3: 'obstacle 3', o4: 'obstacle 4' };
 
-document.getElementById('reset').addEventListener('click', () => {
-  state = structuredClone(DEFAULTS);
-  for (const k of ['configOrWork', 'x', 'n']) C[k].set(state[k]);
-  recompute();
+const M = Manipulate({
+  name: 'motion-planning',
+  initial: () => { const st = structuredClone({ ...DEFAULTS, ...fromUrl }); fromUrl = {}; return st; },
+  body,
+  draw,
+  graphics: { PlotRange: [[-PLOT_RANGE, PLOT_RANGE], [-PLOT_RANGE, PLOT_RANGE]], ImageSize: 425, PlotRangePadding: 0, label: 'Workspace with robot, obstacles and planned path',
+    svgClass: 'scene', maxWidth: null }, // the page's own picture style: no svg-plot locator CSS, no width cap
+  controls: [
+    [['configOrWork', 'workspace', ''], ['workspace', 'configuration space']],
+    Delimiter,
+    'number of sides',
+    [['x', 4, 'boundary'], [3, 4, 5]],
+    [['n', 3, 'robot'], [3, 4, 5], { onChange: (v) => { restart = true; M.set('n', v); } }], // F-MP-07: any click restarts
+    Delimiter,
+    // {{s, 1, ""}, 1, Length@discretePath, 1}: disabled while start or goal is invalid (D-MP-03); the slider's own
+    // value grid (steps: null; its max attribute is the path length); the track is at most 120 px wide (D-MP-05, index.html)
+    [['s', 1, 'progress'], 1, () => Math.max(1, scene?.discretePath.length ?? 0), 1,
+      { Enabled: () => !scene || scene.discretePath.length > 0, animSeconds: 8, steps: null }],
+    ...LOCATORS.map((k) => [[k, DEFAULTS[k]], ...LOCATOR_RANGES[k], Locator]),
+  ],
+  // a press away from every locator moves none (D-MP-04); arrow keys 0.05, Shift 0.25 (A-MP-04)
+  // pointer: false — presses are handled on the glyphs below; arrow keys move the glyph at once, the scene follows on the
+  // next frame with progress restarted (as before)
+  locators: {
+    pickAnywhere: false, pointer: false, throttle: 'frame', onPlace: (n, m) => { m.state.s = 1; }, keyStep: 0.05,
+    appearance: (n, plot) => locatorGlyph(plot), describe: (n) => `${DESCR[n]} locator; arrow keys move it`,
+  },
+  after: (m) => updateReadout(m.state, m.view),
+  hook: { // port addition A-MP-05
+    copy: structuredClone,
+    view: compact,
+    scene: (m) => () => compact(m.view),
+    setState: (m) => (partial) => { // locators clamped; progress restarts when the scene moves and s is not given
+      const p = structuredClone(partial);
+      for (const k of LOCATORS) if (k in p) p[k] = clampTo(k, p[k]);
+      restart = (LOCATORS.some((k) => k in p) || 'n' in p) && !('s' in p);
+      m.setState(p);
+    },
+    /** client (page) pixel coordinates of a locator centre, for real mouse-drag tests */
+    locatorClientPoint: (m) => (name) => {
+      const r = m.plot.svg.querySelector(`[data-testid="locator-${name}"] circle`).getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    },
+    worldToClient: (m) => ([x, y]) => { const p = svgPoint(m, x, y).matrixTransform(m.plot.world.getScreenCTM()); return { x: p.x, y: p.y }; },
+    sceneLink: (m) => () => sceneLink(m.state),
+  },
 });
 
-recompute();
-
-// ---- test / automation hook -------------------------------------------------
-window.__demo = {
-  name: 'motion-planning',
-  getState: () => structuredClone(state),
-  setState: (partial) => {
-    const p = structuredClone(partial);
-    const movesScene = LOCATORS.some((k) => k in p) || 'n' in p;
-    for (const k of LOCATORS) if (k in p) p[k] = clampTo(k, p[k]);
-    state = { ...state, ...p };
-    if (movesScene && !('s' in partial)) state.s = 1;
-    for (const k of ['configOrWork', 'x', 'n']) C[k].set(state[k]);
-    recompute();
-  },
-  scene: () => structuredClone({ ...scene, graph: scene.graph && { nodes: scene.graph.allPoints.length, edges: scene.graph.allLines.length } }),
-  /** client (page) pixel coordinates of a locator centre, for real mouse-drag tests */
-  locatorClientPoint: (name) => {
-    const r = locatorNodes[name].querySelector('circle').getBoundingClientRect();
-    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
-  },
-  worldToClient: ([x, y]) => {
-    const pt = svg.createSVGPoint(); pt.x = x; pt.y = y;
-    const p = pt.matrixTransform(world.getScreenCTM());
-    return { x: p.x, y: p.y };
-  },
-  sceneLink,
-  ready: true,
-};
+// The port's locator dragging (D-MP-04), kept instead of the layer's LocatorPane picking: a press on a locator's glyph
+// grabs it without focusing it, its centre follows the pointer (screen → world through the SVG's own matrix), the
+// scene is evaluated once per animation frame; a press elsewhere moves none.
+function svgPoint(m, x, y) { const pt = m.plot.svg.createSVGPoint(); pt.x = x; pt.y = y; return pt; }
+for (const k of LOCATORS) {
+  const g = M.plot.svg.querySelector(`[data-testid="locator-${k}"]`);
+  let dragging = false, frame = 0;
+  g.addEventListener('pointerdown', (e) => { dragging = true; g.setPointerCapture(e.pointerId); g.classList.add('dragging'); e.preventDefault(); });
+  g.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const p = svgPoint(M, e.clientX, e.clientY).matrixTransform(M.plot.world.getScreenCTM().inverse());
+    M.state[k] = clampTo(k, [p.x, p.y]);
+    M.state.s = 1; // F-MP-07; the glyph follows at once, the scene on the next frame
+    g.setAttribute('transform', `translate(${M.state[k][0]},${M.state[k][1]})`);
+    if (!frame) frame = requestAnimationFrame(() => { frame = 0; M.moveLocator(k, M.state[k]); });
+  });
+  const end = () => { dragging = false; g.classList.remove('dragging'); };
+  g.addEventListener('pointerup', end);
+  g.addEventListener('pointercancel', end);
+}
+showReadout.addEventListener('change', () => { readout.hidden = !showReadout.checked; updateReadout(M.state, M.view); });

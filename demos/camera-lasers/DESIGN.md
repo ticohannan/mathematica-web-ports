@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.19 |
+| Code version: | 0.1.20 |
 | Document revision | 1 (2026-10-17) — first implementation |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Measuring Distance and Orientation Using Camera and Lasers", contributed by Shiva Shahrokhi and Aaron T. Becker, published 2016-06-29 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/MeasuringDistanceAndOrientationUsingCameraAndLasers/>. Readable source: [`docs/original-source/camera-lasers.txt`](../../docs/original-source/camera-lasers.txt); snapshots: `docs/original-snapshots/camera-lasers-1.png` … `camera-lasers-4.png` (pictures 5 and 6 of the extraction are the Wolfram logo placeholder); saved states (COMMON-DECISIONS §1): [`tests/golden/camera-lasers.original-states.json`](../../tests/golden/camera-lasers.original-states.json), written by `python3 tools/extract_state.py --snapshots`, with `states[0]` = the live output-cell state, `snapshots[1…4]` = the four snapshot cells' `"Settings"` (raw notebook lines 3870, 5398, 7079, 8753) and `specs`, exact values kept as `{"wl":"-1/5"}` |
-| Port files | `model.js` (the Initialization functions, one evaluation of the Manipulate body, the top view and the camera image as data; pure, no DOM), `main.js` (two SVG pictures, the object locator, the dial, sliders), `index.html`; shared (COMMON-DECISIONS §3): `demos/common/segments.js` (owner rrt; `Gamma` = the original's `γ`, `lineIntersectionPoint`, `segmentIntersectionQ` — spelled `LineIntersectionPoint`, `SegmentIntersectionQ` in this original), `demos/common/dial-control.js` and `demos/common/arrow-arcs.js` (owner two-link-kinematics), `shared/mma-text.js` (MIT, owner two-link-kinematics since COMMON-DECISIONS §6, specified here: exact fractions and multiples of π; `main.js` draws them as stacked SVG text), `demos/common/prm-core.js` `LOC_ICON` |
+| Port files | `model.js` (the Initialization functions, one evaluation of the Manipulate body, the top view and the camera image as data; pure, no DOM), `main.js` (the Manipulate on `shared/manipulate.js`: controls, the object locator, the dial, the two pictures as Graphics data; v0.1.20), `index.html` (the two picture containers `top-view` and `camera-image`); shared (COMMON-DECISIONS §3): `demos/common/segments.js` (owner rrt; `Gamma` = the original's `γ`, `lineIntersectionPoint`, `segmentIntersectionQ` — spelled `LineIntersectionPoint`, `SegmentIntersectionQ` in this original), `demos/common/dial-control.js` and `demos/common/arrow-arcs.js` (owner two-link-kinematics), `shared/mma-text.js` (MIT, owner two-link-kinematics since COMMON-DECISIONS §6, specified here: exact fractions and multiples of π; `main.js` draws them as stacked text in Graphics data), `demos/common/prm-core.js` `LOC_ICON` |
 | Role in the project | further demonstration (batch A) — 2D: both pictures are `Graphics` (no `Graphics3D`); the "3D" cuboid in the camera image is the original's own pinhole projection drawn as 2D polygons |
 
 ## 1. Purpose and background
@@ -116,16 +116,22 @@ interactive element is its locator `locator-p1`.)
   `lineIntersectionPoint`, `segmentIntersectionQ`), and `evaluate(state)`, which performs exactly one evaluation of the
   Manipulate body (sc, L1/L2, θ, locator rule, objectPts, laser hits, InterPt3D, both pictures as lists of primitives
   with colours and sizes, the tick labels with their exactness). `arrowArc`, `myArrowArc2` and `makeHand` come from
-  the common modules. No DOM; unit-tested in Node. `main.js` keeps the variables, draws the two pictures with
-  `shared/svg-plot.js`, creates the dial with `dial-control.js`, and the sliders.
+  the common modules. No DOM; unit-tested in Node. `main.js` (v0.1.20) is one `Manipulate({…})` call of `shared/manipulate.js`: the
+  object locator, `pFixed`, the three headings, the dial (`Control(makeDialControl, DIAL_OPTIONS)`), the vertical s
+  slider (`Control` of `addVerticalSlider` with the `mmaGrid` values 0.1 + k·0.01) and the λ slider as Mathematica
+  control specs; `body: evaluate`; `draw` turns the model's two primitive lists into two Graphics lists (the layer's
+  several pictures, `graphics: [{id: 'top-view'}, {id: 'camera-image'}]`), the top view's grid lines first (drawn once,
+  `cachedGraphics`; arrowheads with `arrowheadPolygon` of `demos/common/arrow-graphics.js`). The `loc[Black]` icon is drawn through the layer's `Raw` migration aid (its scaled-group SVG gives
+  the same pixels; the shared `Inset` nests its transforms differently).
 - **Reused code** (exact exports): `shared/mma.js` `mEqual`, `mLess`, `mGreater`, `mLessEq`, `roundHalfEven`;
   `shared/mma-exact.js` `arcTan`, `det`; `shared/mma-extra.js` `mmaNumberString`; `shared/mma-colors.js` `NAMED`,
-  `darker`; `shared/svg-plot.js` `createPlot` (padding 0), `addLocators` (`pickAnywhere: true`); `shared/ui.js`
-  `Controls.slider` (λ, with ⊕ panel, `steps: 'mma'`), `Controls.heading`; `shared/ui-extra.js` `addVerticalSlider`
-  (s); `shared/requirements.js`; `demos/common/segments.js` `Gamma`, `lineIntersectionPoint`, `segmentIntersectionQ`;
+  `darker`; `shared/manipulate.js` (v0.1.20; it creates the pictures with `shared/svg-plot.js` `createPlot`, padding 0, the
+  locator with `addLocators`, `pickAnywhere: true`, the λ slider with `Controls.slider`, ⊕ panel, `steps: 'mma'`, and
+  the headings), `shared/graphics.js` (the pictures as data); `shared/ui.js` `mmaGrid`; `shared/ui-extra.js`
+  `addVerticalSlider` (s); `shared/requirements.js`; `demos/common/segments.js` `Gamma`, `lineIntersectionPoint`, `segmentIntersectionQ`;
   `demos/common/dial-control.js` `makeDialControl` (`setter: 'nearest32'`, `arc: 'myArrowArc2'`, `imageSize: 120`,
   `keyStep: 'grid'`, colour Red) and `makeHand`; `demos/common/arrow-arcs.js` `arrowArc` (the top view's orientation arc), `myArrowArc2`
-  and `bsplineCurve` (inside the dial); `demos/common/prm-core.js` `LOC_ICON` (the `loc[col]` icon; drawn by `main.js` `locIcon` from these data,
+  and `bsplineCurve` (inside the dial); `demos/common/prm-core.js` `LOC_ICON` (the `loc[col]` icon; drawn by `main.js` `locIcon` (via `Raw`) from these data,
   because the shared `locIcon` of `demos/common/arm-view.js` (owner robot-motion-obstacles, COMMON-DECISIONS §3) did
   not exist when this app was built — N-CL-03).
 - **New code.** (1) `shared/mma-text.js` (MIT, owned by two-link-kinematics since COMMON-DECISIONS §6; this app is its main user and specifies it): Text of exact numbers — a
@@ -140,8 +146,8 @@ interactive element is its locator `locator-p1`.)
   setter gives instead of the original's exact `{Cos[kπ/32], Sin[kπ/32]}`. The saved states keep `Rational[-1, 5]` as
   `{"wl":"-1/5"}` next to −0.2; the loader uses the double (D-CL-01).
 - **Evaluation order** (one call of `evaluate`): sc; L1, L2; θ; locator rule; objectPts; InterPt1/2 (the edge loop,
-  laser 1 before laser 2 per edge); InterPt3D1/2; top view; camera image (with the second closing point). `main.js`
-  evaluates after every control change, once per animation frame while dragging.
+  laser 1 before laser 2 per edge); InterPt3D1/2; top view; camera image (with the second closing point). The Manipulate layer
+  evaluates after every control change, once per animation frame while dragging (the locator's pointer throttle).
 - **Numerics.** As F-CL-15. Bit-exactness with the original is not a goal here because the original computes exactly
   (symbolically) in the opening state and after every dial move; decisions (hit or miss, which face is visible, sc,
   grid-line counts) are compared exactly and coordinates with a tolerance of 1e-12 (harness). Products are grouped as
@@ -173,8 +179,8 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/camera-lasers/`) | 3 | `index.html`, `main.js`, `model.js` |
-| `shared/` | 11 | `exact-pi.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma-text.js`, `mma.js`, `requirements.js`, `style.css`, `svg-plot.js`, `ui-extra.js`, `ui.js` |
-| `demos/common/` | 4 | `arrow-arcs.js`, `dial-control.js`, `prm-core.js`, `segments.js` |
+| `shared/` | 15 | `exact-pi.js`, `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma-text.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-plot.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
+| `demos/common/` | 5 | `arrow-arcs.js`, `arrow-graphics.js`, `dial-control.js`, `prm-core.js`, `segments.js` |
 | added by the bundler | 7 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/camera-lasers/DESIGN.md` |
 <!-- bundle-contents:end -->
 
@@ -211,7 +217,7 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 | D-CL-05 | deviation | Update rate while dragging: one evaluation per animation frame. |
 | D-CL-06 | deviation | Locator picking: a press within 12 px of the object locator grabs it in place, farther away it jumps (LocatorPane); Mathematica's no-jump distance is unknown (as D-CP-06). Presses in the camera image do nothing (the locator belongs to the top view, K-CL-01). |
 | D-CL-07 | deviation | Division by zero (a face or a hit exactly at x = 0): JavaScript gives ±Infinity/NaN where Mathematica gives `ComplexInfinity`/`Indeterminate` with messages; the port leaves out primitives with non-finite coordinates or sizes (regression pin until K-CL-03 is answered). |
-| D-CL-08 | deviation | Drawing only (`main.js` `drawPrims`): every dashed line primitive is clipped to the picture's plot range plus 20 px on each side (`model.js` `clipPolyline`, Liang–Barsky) before its SVG element is made; a dashed line keeps the dash phase of the whole line (`stroke-dashoffset` = the length cut off). Reason: a missing laser's dashed reflection runs from x = 10000 (Q-CL-04), and Chromium rasterised every dash of the 10000-unit line (about 1.1 s per repaint, dragging stalled). Solid lines (the beam to x = 10000, the camera image's ground lines) are drawn unclipped, one SVG element per primitive. The picture is unchanged (the cut parts lie outside the image); the model's primitive lists keep the original's points (unit "the model keeps the original points (beam to x = 10000)"). |
+| D-CL-08 | deviation | Drawing only (`main.js` `prim`, Graphics data since v0.1.20; formerly `drawPrims`): every dashed line primitive is clipped to the picture's plot range plus 20 px on each side (`model.js` `clipPolyline`, Liang–Barsky) before its SVG element is made; a dashed line keeps the dash phase of the whole line (`stroke-dashoffset` = the length cut off). Reason: a missing laser's dashed reflection runs from x = 10000 (Q-CL-04), and Chromium rasterised every dash of the 10000-unit line (about 1.1 s per repaint, dragging stalled). Solid lines (the beam to x = 10000, the camera image's ground lines) are drawn unclipped, one SVG element per primitive. The picture is unchanged (the cut parts lie outside the image); the model's primitive lists keep the original's points (unit "the model keeps the original points (beam to x = 10000)"). |
 | K-CL-01 | known issue (lead) | Which picture the Manipulate's `Locator` control lives in (assumed: the first `Graphics` of the `Column`, the top view) and its range ("Automatic": assumed the top view's plot range −1…15 × −4…4). Check in M-CL-04 (drag into the camera image and past the top and right edges). |
 | K-CL-02 | known issue (lead) — **resolved** (harness run 2) | Exact evaluation in the original: `ArcTan[Cos[π/32], Sin[π/32]]` simplifies to the exact π/32 (H-CL-07 records θ = `Pi/32`, `Pi/16`, `Pi/4`, `Pi/2`, `31 Pi/32`, `63 Pi/32`, `3 Pi/2` and, for {−1, 0}, the symbol `Pi`; also H-CL-15), objectPts and InterPt stay exact symbolic expressions; their N values agree with the port's machine computation within the golden tolerance 1e-12 (D-CL-01). |
 | K-CL-03 | known issue (lead) — kernel side answered (harness run 2) | A face exactly at x = 0 (p = {1/2, 0}, θ = 0): `PointSize[λ 0.2/0]` and `P[[2]]/P[[1]]` divide by zero. H-CL-11 (exact and machine p): `Power::infy` and `Greater::nord` messages (12 per evaluation), InterPt1 = {0, 1}, InterPt3D1 = {−500., 0.}, and the picture keeps 3 Points and 7 Polygons (3 more than for a face at x = 0.05) with ComplexInfinity inside; the port draws no laser dot and no degenerate face (regression pin of the unit test). What the front end shows for those primitives (nothing, or a pink error box) is still M-CL-08 (N-CL-05). |
@@ -244,6 +250,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 3 | v0.1.17 | 2026-10-18 | harness run 2: the dial's nearest32 setter in `demos/common/dial-control.js` uses the squared machine distance, so a press at the exact centre gives k = −24 as in Mathematica (K-CL-09 resolved by H-CL-16; was k = −29); K-CL-02 resolved (H-CL-07), K-CL-03 kernel side answered (H-CL-11); golden harness replay reads `%text` and symbol values as encoded and checks texts with positions (N-CL-05); `shared/exact-pi.js` π/8 values now Math.cos/Math.sin(π/8) (H-ME-12; no camera-lasers value uses them) |
 | 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 5 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
+| 6 | v0.1.20 | 2026-10-21 | `main.js` rewritten on the shared Manipulate layer (`shared/manipulate.js`, `shared/graphics.js`): control specs in Mathematica's form, the picture as Graphics data; no change to behaviour or picture (all unit, golden and browser tests unchanged and passing; screenshots and Manipulate state identical to v0.1.19 at sample settings) |
 
 ## 10. Improvements to consider (not implemented)
 

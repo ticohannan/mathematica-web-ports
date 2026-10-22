@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.19 |
+| Code version: | 0.1.20 |
 | Document revision | 1 (2026-10-18) — first implementation |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Probabilistic Roadmap Method in 3D", contributed by Aaron T. Becker and Yitong Lu, published 2020-02-26 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ProbabilisticRoadmapMethodIn3D/>. Readable source: [`docs/original-source/prm-3d.txt`](../../docs/original-source/prm-3d.txt); snapshots: `docs/original-snapshots/prm-3d-1.png` … `-5.png` (files 6 and 7 of the extraction are 96 × 100 placeholder icons); golden data: `tests/golden/prm-3d.original-states.json` (written with `tools/extract_state.py --snapshots` from the raw notebook, COMMON-DECISIONS §1: `states[0]` = the live state, `snapshots[1…5]` = the five snapshot cells' Settings — complete states with samples, roadmaps and, in 3 and 4, the RegionPlot3D volumes; raw notebook lines 10908, 12996, 16776, 21566, 24913 — and `specs` = the initial settings, equal to the live state up to the option form of `freeConfigSpacea/b`; Greek names and exact 1/2 kept, N-P3-01) |
@@ -293,6 +293,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 3 | v0.1.17 | 2026-10-18 | harness run 2 accepted (Mathematica 15.0.1): all 22 records match the port, no app code changed. Golden test adapter: H-P3-19's draws from H-P3-18 (N-P3-08); volume reader fixed for the `{h, a}` encoding (H-P3-16/22 had passed vacuously). K-P3-02 resolved; K-P3-03 evidence (vertices bit-identical to the stored volumes, connectivity differs by version) |
 | 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 5 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
+| 6 | v0.1.20 | 2026-10-21 | version number only (Manipulate layer extended, eleven more apps migrated to it); no change to this app |
 
 ## 10. Improvements to consider (not implemented)
 

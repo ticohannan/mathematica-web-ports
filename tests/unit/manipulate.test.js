@@ -3,13 +3,16 @@
 // tests/unit/manipulate.test.js — the pure parts of shared/manipulate.js: Manipulate control specs, the test-hook copy,
 // cacheLast. The browser behaviour is covered by the e2e tests of the apps built on it.
 import { describe, it, expect } from 'vitest';
-import { parseControl, Locator, Delimiter, None, Rule, hookCopy, hookRead, cacheLast } from '../../shared/manipulate.js';
+import {
+  parseControl, Locator, Delimiter, None, Rule, hookCopy, hookRead, cacheLast, Control, Button, Row, PopupMenu, VerticalSlider,
+  IntervalSlider, Slider, SetterBar,
+} from '../../shared/manipulate.js';
 import { Style, Italic } from '../../shared/graphics.js';
 
 describe('manipulate: Manipulate control specs', () => {
   it('{{x, x0, label}, min, max, step, opts} is a slider', () => {
     expect(parseControl([['Quality', 2, 'Q'], 1, 10, 1, { Appearance: 'Labeled' }])).toEqual({
-      kind: 'slider', name: 'Quality', init: 2, label: 'Q', min: 1, max: 10, step: 1, opts: { Appearance: 'Labeled' },
+      kind: 'slider', name: 'Quality', init: 2, label: 'Q', min: 1, max: 10, step: 1, plain: false, opts: { Appearance: 'Labeled' },
     });
   });
   it('a slider without a step is continuous; the label defaults to the name', () => {
@@ -49,6 +52,25 @@ describe('manipulate: Manipulate control specs', () => {
   });
   it('{{p, p0}, Locator} is a locator with no range', () => {
     expect(parseControl([['p', [0, 0]], Locator])).toMatchObject({ kind: 'locator', min: null, max: null });
+  });
+  it('{False, True} is a checkbox, as in Mathematica, unless ControlType -> SetterBar', () => {
+    expect(parseControl([['show', false, 'show'], [false, true]]).kind).toBe('checkbox');
+    expect(parseControl([['show', false], [false, true], { ControlType: SetterBar }]).kind).toBe('setter');
+  });
+  it('ControlType gives popups, vertical, interval and plain sliders', () => {
+    expect(parseControl([['m', 'a'], ['a', 'b'], { ControlType: PopupMenu }]).kind).toBe('popup');
+    expect(parseControl([['h', 0], 0, 2, { ControlType: VerticalSlider }]).kind).toBe('vslider');
+    expect(parseControl([['w', [0, 1]], 0, 2, 0.1, { ControlType: IntervalSlider }])).toMatchObject({ kind: 'interval', min: 0, max: 2, step: 0.1 });
+    expect(parseControl([['k', 1], 0, 2, { ControlType: Slider }])).toMatchObject({ kind: 'slider', plain: true });
+  });
+  it('a range may depend on the state (functions), Control(factory) and Button and Row parse', () => {
+    const f = (s) => s.n;
+    expect(parseControl([['s', 1], 1, f, 1])).toMatchObject({ kind: 'slider', min: 1, max: f });
+    const factory = () => ({});
+    expect(parseControl([['d', [1, 0], 'θ'], Control(factory, { size: 3 })])).toMatchObject({ kind: 'custom', factory, options: { size: 3 } });
+    expect(parseControl(Button('restart', () => {}))).toMatchObject({ kind: 'button', buttonName: 'restart' });
+    const r = parseControl(Row([Button('1', () => {}, { name: 'add-1' }), [['x', 0], 0, 1]], { name: 'add' }));
+    expect([r.kind, r.items.map((i) => i.kind), r.opts.name]).toEqual(['row', ['button', 'slider'], 'add']);
   });
   it('a malformed spec is reported with the variable name', () => {
     expect(() => parseControl([['x', 1], 'nonsense'])).toThrow(/unrecognised control spec for x/);

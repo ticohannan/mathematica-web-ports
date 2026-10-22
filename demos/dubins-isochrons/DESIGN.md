@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.19 |
+| Code version: | 0.1.20 |
 | Document revision | 1 (2026-10-17) — first implementation |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Isochrons for a Dubins Car", contributed by Aaron T. Becker and Shiva Shahrokhi, published 2017-12-18 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/IsochronsForADubinsCar/>. Readable source: [`docs/original-source/dubins-isochrons.txt`](../../docs/original-source/dubins-isochrons.txt); snapshots: `docs/original-snapshots/dubins-isochrons-1.png` … `dubins-isochrons-5.png` (pictures 6 and 7 of the extraction are the Wolfram icon, not snapshots); golden fixture (COMMON-DECISIONS §1): `tests/golden/dubins-isochrons.original-states.json` with `states[0]` = the live output-cell state including the original's cached `ParametricPlot` output `plotReach` (raw definition notebook line 1111), `specs` = the initial settings (stored `"Variables"`, raw line 3792, equal to the live state; the output cell `"Specifications"`, line 5286, also hold the cached plot), `snapshots[1…5]` = the `"Settings"` of the five snapshot cells with their own cached plots (lines 7853, 10287, 17941, 25604, 33224; 2–4 hold the "≤" region meshes) |
-| Port files | `isochrons.js` (the original's `mRS`, `mLS`, `mRL`, `mLR`, the car state and path graphics of the `Piecewise`, Mathematica's `Table` iterator, the grey polygons, the sampled isochrons and region meshes, the plot-cache rule, one evaluation of the Manipulate body; pure), `main.js` (SVG drawing incl. axes, controls on the left), `index.html`; shared car icon `demos/common/car-icon.js` (owned by dubins-path, CC BY-NC-SA 3.0, §6); axes and ticks from `shared/svg-frame.js` (owner distance-norms, MIT) |
+| Port files | `isochrons.js` (the original's `mRS`, `mLS`, `mRL`, `mLR`, the car state and path graphics of the `Piecewise`, Mathematica's `Table` iterator, the grey polygons, the sampled isochrons and region meshes, the plot-cache rule, one evaluation of the Manipulate body; pure), `main.js` (the Manipulate on `shared/manipulate.js`: controls on the left, Graphics data incl. axes; v0.1.20), `index.html`; shared car icon `demos/common/car-icon.js` (owned by dubins-path, CC BY-NC-SA 3.0, §6); axes and ticks from `shared/svg-frame.js` (owner distance-norms, MIT) |
 | Role in the project | further demonstration (batch A) |
 
 ## 1. Purpose and background
@@ -160,13 +160,20 @@ of the graphic (the grey bands carry their point count as `data-points`): `isoch
   `opacity="0.3"`, so a region is one translucent union (TransparentPolygonMesh) even where the map folds; the boundary
   is the image of the rectangle's edges (*s* = 0 for *t*1: 0 → *t*, *t*1 = *t* for *s*: 0 → 1, *s* = 1 for *t*1: *t* → 0),
   sampled like the curves. Regions are recomputed only by the cache rule; performance is checked by hand (M-DI-06).
-- `main.js`: `shared/svg-plot.js` (`createPlot` with `plotRange [[-15,15],[-16,16]]`, `imageSize 440`, `padding 0.05`;
-  `svgNode`, `arcPoints`), `shared/svg-frame.js` (owner distance-norms; COMMON-DECISIONS §3) for the axis lines through the origin, ticks and labels
-  (F-DI-15), `shared/mma-colors.js` (`NAMED`, `darker`, `css`; the four
-  ColorData[97] colours as constants), `shared/ui.js` (`Controls.heading`, `slider` ×4 with step 0 / 0 / 0.01 / 1 and `steps: 'mma'`,
-  `setterBar` ×2, `delimiter`), `shared/requirements.js`. Layout: controls in a left column (`ControlPlacement->Left`),
-  stacked above the graphic below ~760 px width (D-DI-06). Drawing order: plot (grey polygons + curves, or regions +
-  boundaries), axes, `epiGraphics`.
+- `main.js` (v0.1.20) is one `Manipulate({…})` call of `shared/manipulate.js`: the controls as Mathematica control
+  specs in the original's order (headings "plot parameters" and "move car", the sliders `r`, `t`, `τ` (test id `tau`),
+  `p` with `Appearance -> "Labeled"`, `ImageSize -> 100` and the typeset labels `Row[{Style["r", Italic], " (m)"}]` …,
+  the setter bars `set` (with the italic suffix " t" added after the call) and `path`, `Delimiter`, the hidden `rold`,
+  `told`, `plotReach`, `setold`), `body: evaluate`, and `draw` returning `Show[{plotReach, Graphics[epiGraphics]}]` as
+  `shared/graphics.js` data: plot (grey polygons + curves, or regions + boundaries; redrawn only when `plotReach`
+  changes, `cachedGraphics`), axes through the origin with ticks and labels (F-DI-15; `shared/svg-frame.js`
+  `axesPrimitives` as data via `demos/common/plot-extras.js` `axesGraphics`, drawn once), `epiGraphics` (dashed
+  turning circles, the thick path, the two cars). `PlotRange [[-15,15],[-16,16]]`, `ImageSize 440`,
+  `PlotRangePadding 0.05`. Still through the layer's `Raw`: the cars (`demos/common/car-icon.js` `drawCar`,
+  `drawCarSvg`, as dubins-path) and each "≤" region's quads as one `<path>` (one translucent union; separate polygons
+  would change the picture). `shared/mma-colors.js` (`NAMED`, `css`; the four ColorData[97] colours as constants),
+  `shared/requirements.js`. Layout: controls in a left column (`ControlPlacement->Left`), stacked above the graphic
+  below ~760 px width (D-DI-06).
 - Reuse from car-paths/dubins-path: only the car icon. `drawCar` differs from car-paths' (headlights optional via
   `lights`, beams to x = 8, `EdgeForm[None]`, extra unused `sc`); with `demos/common/car-icon.js` (owned by dubins-path,
   CC BY-NC-SA 3.0, credits in its header; `drawCar(xy, Theta, Alpha, opac, {lights, beam: 8, headlightEdge: null})`,
@@ -188,8 +195,8 @@ npm run bundle -- dubins-isochrons
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/dubins-isochrons/`) | 3 | `index.html`, `isochrons.js`, `main.js` |
-| `shared/` | 9 | `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `requirements.js`, `style.css`, `svg-frame.js`, `svg-plot.js`, `ui.js` |
-| `demos/common/` | 1 | `car-icon.js` |
+| `shared/` | 14 | `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-frame.js`, `svg-plot.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
+| `demos/common/` | 2 | `car-icon.js`, `plot-extras.js` |
 | added by the bundler | 7 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/dubins-isochrons/DESIGN.md` |
 <!-- bundle-contents:end -->
 
@@ -257,6 +264,7 @@ Template: see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md).
 | 3 | v0.1.17 | 2026-10-18 | harness run 2 accepted: `mRS`/`mLS` multiply `t (τ-1) X` from left to right, `(t*(s-1))*X`, as Mathematica 15.0.1 (K-DI-04 resolved, N-DI-07 superseded; car states bit-identical in all 23 scenarios, grey polygons except K-DI-03's last bits); K-DI-01, K-DI-05, K-DI-07 resolved, K-DI-03 updated with the evidence; P-DI-01 proposed (15.0.1's plot style). Golden tests: the `{"h", "a"}` encoding read, scenario values converted to doubles, a fresh state per step, the symbol `Pi` in Circle angles (`toJSNumeric`), a point-on-curve search that also finds the nearest arc of curves with many turns and cusps, polygon tolerance one ulp of max(*t*, *r*) with ≥ 95 % identical (≥ 90 % for the saved cache) |
 | 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 5 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
+| 6 | v0.1.20 | 2026-10-21 | `main.js` rewritten on the shared Manipulate layer (`shared/manipulate.js`, `shared/graphics.js`): control specs in Mathematica's form, the picture as Graphics data; no change to behaviour or picture (all unit, golden and browser tests unchanged and passing; screenshots and Manipulate state identical to v0.1.19 at sample settings) |
 
 ## 10. Improvements to consider (not implemented)
 

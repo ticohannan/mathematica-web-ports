@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.19 |
+| Code version: | 0.1.20 |
 | Document revision | 6 (2026-10-17) — `sameQ` and `lineList` moved to `demos/common/polygon-core.js`; §11 Errors in the original (R-C); checklist items as operator procedures (R-B) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Art Gallery Problem", contributed by Shreyas Poyrekar, Arifa Sultana and Aaron T. Becker, published September 13, 2019 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ArtGalleryProblem/>. Readable source: [`docs/original-source/art-gallery.txt`](../../docs/original-source/art-gallery.txt); snapshots: `docs/original-snapshots/art-gallery-*.png` |
@@ -152,7 +152,7 @@ Owner rule R-A: this one app can be taken out of the repository and hosted anywh
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/art-gallery/`) | 4 | `index.html`, `main.js`, `model.js`, `visibility.js` |
-| `shared/` | 10 | `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `requirements.js`, `style.css`, `svg-plot.js`, `ui.js` |
+| `shared/` | 13 | `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-plot.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
 | `demos/common/` | 1 | `polygon-core.js` |
 | added by the bundler | 7 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/art-gallery/DESIGN.md` |
 <!-- bundle-contents:end -->
@@ -227,6 +227,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 8 | v0.1.17 | 2026-10-18 | version number only (harness run 2 accepted); no change to this app |
 | 9 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 10 | v0.1.19 | 2026-10-21 | main.js rewritten on the new shared Manipulate layer (`shared/manipulate.js`, `shared/graphics.js`): the controls are written as Manipulate control specs and the picture as Graphics data; no change to behaviour or picture (all unit, golden and browser tests unchanged and passing; screenshots and Manipulate state identical to v0.1.18 at sample settings); the undocumented `data-reg`/`data-s` attributes on the picture were dropped (no test or feature used them) |
+| 11 | v0.1.20 | 2026-10-21 | bundle table only (the Manipulate layer now also loads `shared/ui-extra.js`, `ui-interval.js`, `random.js`); no change to this app |
 
 ## 10. Improvements to consider (not implemented)
 

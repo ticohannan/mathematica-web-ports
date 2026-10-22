@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.19 |
+| Code version: | 0.1.20 |
 | Document revision | 6 (2026-10-18) — `demos/common/prm-core.js` generalised to n dimensions (by prm-3d); no change to this app |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Probabilistic Roadmap Method", contributed by Aaron T. Becker and Yitong Lu, published January 13, 2020 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ProbabilisticRoadmapMethod/>. Readable source: [`docs/original-source/prm.txt`](../../docs/original-source/prm.txt); snapshots: `docs/original-snapshots/prm-*.png`; saved state: `tests/golden/prm.original-state.json` |
-| Port files | `model.js` (obstacles, the Manipulate body as one pure evaluation, the data of the picture), `main.js` (SVG drawing, locators, controls), `index.html`; shared with "PRM for Robot Arm" and "PRM in 3D" (generalised to n dimensions in v0.1.16): [`demos/common/prm-core.js`](../common/prm-core.js) (`toroidDist`, `angtest`, `ptInPoly`, `ptInPolys`, `pathOKT`, `myAstar`, `toroidLine(s)`, `toroidPt`, `connectPoints` core, the query and progress code, the `loc` icon) |
+| Port files | `model.js` (obstacles, the Manipulate body as one pure evaluation, the data of the picture), `main.js` (the Manipulate on `shared/manipulate.js`: controls, locators, Graphics data; v0.1.20), `index.html`; shared with "PRM for Robot Arm" and "PRM in 3D" (generalised to n dimensions in v0.1.16): [`demos/common/prm-core.js`](../common/prm-core.js) (`toroidDist`, `angtest`, `ptInPoly`, `ptInPolys`, `pathOKT`, `myAstar`, `toroidLine(s)`, `toroidPt`, `connectPoints` core, the query and progress code, the `loc` icon) |
 | Role in the project | further demonstration (extra proof of concept alongside the motion-planning port); developed in a separate, unpublished repository and added to this site in v0.1.12 |
 
 ## 1. Purpose and background
@@ -119,9 +119,13 @@ matches any text. Checked by the browser test "every control on … is specified
 - `model.js` `evaluate(state, rng)` performs exactly one evaluation of the Manipulate body and returns the new state
   (the Manipulate variables) and a `view` with everything the Graphics draws (line pieces with colours, points,
   label, icon colours, whether "progress" is enabled). No DOM; unit-tested in Node.
-- `main.js` keeps the Manipulate variables, calls `evaluate` after every control change (one evaluation per animation
-  frame while dragging) and draws with `shared/svg-plot.js`. Thickness and PointSize fractions refer to the total
-  width of the picture, as in Mathematica.
+- `main.js` (v0.1.20) is one `Manipulate({…})` call of `shared/manipulate.js`: the two locators, the two `Button`s,
+  the radius and progress sliders (progress with `Enabled` as a function of the state; both keep the port's own steps
+  and number fields, `steps: undefined`) and the checkbox as Mathematica control specs, `random: true`, `body` =
+  `evaluate`, and `draw` returning the Graphics list in the original's order (`shared/graphics.js`; the axes as a
+  `cachedGraphics` part drawn once, the `loc[col]` icons as `demos/common/arm-view.js` `configGlyph`). The layer keeps
+  the Manipulate variables and evaluates the body after every control change (one evaluation per animation frame while
+  dragging). Thickness and PointSize fractions refer to the total width of the picture, as in Mathematica.
 - Random numbers come from `shared/random.js` (`createRng`; `replayRng` replays the original's numbers in the golden
   test). Mathematica's tolerant comparisons come from `shared/mma.js`.
 
@@ -140,8 +144,8 @@ Owner rule R-A: this one app can be taken out of the repository and hosted anywh
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/prm/`) | 3 | `index.html`, `main.js`, `model.js` |
-| `shared/` | 10 | `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-plot.js`, `ui-extra.js`, `ui.js` |
-| `demos/common/` | 1 | `prm-core.js` |
+| `shared/` | 14 | `exact-pi.js`, `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-plot.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
+| `demos/common/` | 4 | `arm-grid.js`, `arm-view.js`, `prm-core.js`, `two-link.js` |
 | added by the bundler | 7 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/prm/DESIGN.md` |
 <!-- bundle-contents:end -->
 
@@ -209,6 +213,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 7 | v0.1.17 | 2026-10-18 | version number only (harness run 2 accepted); no change to this app |
 | 8 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 9 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
+| 10 | v0.1.20 | 2026-10-21 | `main.js` rewritten on the shared Manipulate layer (`shared/manipulate.js`, `shared/graphics.js`): control specs in Mathematica's form, the picture as Graphics data; no change to behaviour or picture (all unit, golden and browser tests unchanged and passing; screenshots and Manipulate state identical to v0.1.19 at sample settings) |
 
 ## 10. Improvements to consider (not implemented)
 

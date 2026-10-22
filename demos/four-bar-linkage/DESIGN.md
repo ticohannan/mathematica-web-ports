@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.19 |
+| Code version: | 0.1.20 |
 | Document revision | 3 (2026-10-18) — harness run 2 evaluated (K-FB-02/03 resolved, P-FB-01/02 proposed) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Configuration Space for Four-Bar Linkage", contributed by Aaron T. Becker and Shiva Shahrokhi, published 2018-01-11 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ConfigurationSpaceForFourBarLinkage/>. Readable source: `docs/original-source/four-bar-linkage.txt`; snapshots: `docs/original-snapshots/four-bar-linkage-1.png` … `-4.png` (the extraction's pictures 5 and 6 are the Wolfram logo); golden data (`tests/golden/four-bar-linkage.original-states.json`, COMMON-DECISIONS §1): the live state, the Settings of the four snapshot cells (raw notebook lines 4030, 6009, 7933, 9769, each with `pvals`, `plot`, `pnear`, `p`, `spacing`, `links`) and the initial settings |
-| Port files | `demos/four-bar-linkage/fourbar.js` (Φpos, Φneg, mod2pi, the impossible-length test, the sampler that stands in for `Plot` + `EvaluationMonitor`, the replay table, `Nearest`, the linkage geometry, one evaluation of the Manipulate body; pure), `main.js` (two SVG graphics, controls, the locator), `index.html`, `recorded-samples.json` (the original's samples of the four stored settings, CC BY-NC-SA, §6.3); shared: `shared/ui.js` slider with `steps: 'mma'`, `shared/ui-interval.js` `addIntervalSlider` (new, owned by this app, COMMON-DECISIONS §6), `shared/svg-frame.js` (frame, ticks, axes; owner distance-norms), `demos/common/arrow-arcs.js` (`bsplineCurve`, `tableStep`, `myArrowArc`; owner two-link-kinematics) |
+| Port files | `demos/four-bar-linkage/fourbar.js` (Φpos, Φneg, mod2pi, the impossible-length test, the sampler that stands in for `Plot` + `EvaluationMonitor`, the replay table, `Nearest`, the linkage geometry, one evaluation of the Manipulate body; pure), `main.js` (the Manipulate on `shared/manipulate.js`: controls, the locator, the two pictures as Graphics data; v0.1.20), `index.html`, `recorded-samples.json` (the original's samples of the four stored settings, CC BY-NC-SA, §6.3); shared: `shared/ui.js` slider with `steps: 'mma'`, `shared/ui-interval.js` `addIntervalSlider` (new, owned by this app, COMMON-DECISIONS §6), `shared/svg-frame.js` (frame, ticks, axes; owner distance-norms), `demos/common/arrow-arcs.js` (`bsplineCurve`, `tableStep`, `myArrowArc`; owner two-link-kinematics) |
 | Role in the project | further demonstration (batch A) |
 
 ## 1. Purpose and background
@@ -137,13 +137,22 @@ inventory (whether the original's label can be edited is K-FB-10); the e2e tests
   first Line) and `pvals` (the original's records; exact `Pi` written as its double). Extracted from
   `tests/golden/four-bar-linkage.original-states.json`; golden "four-bar: recorded-samples.json holds the pvals of the
   live state and of snapshots 2 to 4" keeps them equal. `main.js` loads it with `fetch` before the first evaluation.
-- `main.js`: the Manipulate variables `{p, spacing, links, pnear, plot, pvals, spacingOld, linksOld}`, the controls
-  (`shared/ui.js` `Controls.slider` with `steps: 'mma'` for the separation; `shared/ui-interval.js`
-  `addIntervalSlider` with `method: 'Push'`, `minIntervalSize: 0.1`, `labeled`, `trackPress` for the link lengths), two
-  SVG graphics (`shared/svg-plot.js` `createPlot`; the first with the locator `p` via `addLocators` with
-  `pickAnywhere: true` and the glyph `locatorGlyph` at `pnear`; its axes and ticks from `shared/svg-frame.js`
-  `drawAxes`, the curves clipped with `clipToRange`), the plot labels as text above each picture, and `evaluate` after
-  every change.
+- `main.js` (v0.1.20) is one `Manipulate({…})` call of `shared/manipulate.js`, made after `recorded-samples.json` is
+  loaded: the Manipulate variables `{p, spacing, links, pnear, plot, pvals, spacingOld, linksOld}` as Mathematica control
+  specs (the hidden `pnear`, `plot`, `pvals`, `spacingOld`, `linksOld`; the locator `p` with range [−π, π]² and
+  `Appearance -> None`; the separation slider; the link lengths as `ControlType -> IntervalSlider`, `Method -> "Push"`,
+  `MinIntervalSize -> 0.1`, plus the port options `trackPress` and `look: 'mma'`), `body: evaluate`, and `draw`
+  returning the two pictures of `Row[{…}]` (`graphics` with two entries, containers `cspace` and `linkage` in
+  `index.html`, the plot labels as text above each picture) as `shared/graphics.js` data in the original's order: the
+  configuration space (axes as data from `demos/common/plot-extras.js` `axesGraphics`, drawn once with
+  `cachedGraphics`; the curves; the glyph of `Locator[pnear]` as data, `locatorGlyph`; the Epilog text) and the
+  linkage (rectangles, coupler, arrows, labels, circles, arcs). The notched arrowheads (D-FB-04) are `Polygon` data
+  (`plot-extras.js` `notchedArrowhead`; `shared/graphics.js` `Arrow` draws a plain triangle). Through the layer's `Raw`
+  (`plot-extras.js`): the curves' clip group (`clipped`, PlotRangeClipping widened by half the curve width, §6.5) and
+  the texts made of `<tspan>` pieces (`tspanText`: L<sub>k</sub> with the subscript 0.3em down at 75 %, θ and φ, the
+  two-line red message), whose pixels `Text`/`Subscript` data would change. The hook keeps its functions
+  (`getState`, `view`, `samples`, `moveLocator(p)`, `setState(partial, {linksExact})`, `worldToClient`,
+  `linkageToClient`).
 - Shared code (COMMON-DECISIONS §3, §6): `shared/ui-interval.js`, owned by this app (first in the build order; MIT),
   `addIntervalSlider(controls, {name, label, min, max, step, steps: 'mma', value: [lo, hi], minIntervalSize, method:
   'Push' | 'Stop' | 'Free', labeled, barDrag, trackPress, onInput})` — a track with two thumbs (`role="slider"`, pointer
@@ -260,8 +269,8 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/four-bar-linkage/`) | 4 | `fourbar.js`, `index.html`, `main.js`, `recorded-samples.json` |
-| `shared/` | 10 | `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `requirements.js`, `style.css`, `svg-frame.js`, `svg-plot.js`, `ui-interval.js`, `ui.js` |
-| `demos/common/` | 2 | `arrow-arcs.js`, `prm-core.js` |
+| `shared/` | 14 | `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-frame.js`, `svg-plot.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
+| `demos/common/` | 3 | `arrow-arcs.js`, `plot-extras.js`, `prm-core.js` |
 | added by the bundler | 7 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/four-bar-linkage/DESIGN.md` |
 <!-- bundle-contents:end -->
 
@@ -331,6 +340,7 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 | 3 | v0.1.17 | 2026-10-18 | harness run 2 (Mathematica 15.0.1) evaluated: α of the impossible branch uses exact Cos/Sin of the Piecewise's 0 and π (H-FB-06; D-FB-03, D-FB-11); K-FB-02, K-FB-03, K-FB-04, K-FB-09, K-FB-11 resolved, K-FB-01 resolved for the records, K-FB-05 and K-FB-07 with evidence; proposals P-FB-01 (15.0.1 samples at the recorded settings) and P-FB-02 (empty plot when nothing is sampled); N-FB-05 (empty `Plot` log, 15.0.1 plot style). Golden harness tests read the 15.0.1 encoding (exact `Pi` as a symbol, the new plot colours, multi-segment Lines) and assert the recorded differences of P-FB-01/P-FB-02 exactly |
 | 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 5 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
+| 6 | v0.1.20 | 2026-10-21 | `main.js` rewritten on the shared Manipulate layer (`shared/manipulate.js`, `shared/graphics.js`): control specs in Mathematica's form, the picture as Graphics data; no change to behaviour or picture (all unit, golden and browser tests unchanged and passing; screenshots and Manipulate state identical to v0.1.19 at sample settings) |
 
 ## 10. Improvements to consider (not implemented)
 

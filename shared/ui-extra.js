@@ -37,7 +37,10 @@ export function addPopup(controls, { name, label = '', options, value, onChange,
   sel.addEventListener('change', () => onChange?.(options[Number(sel.value)].value));
   const row = el('div', { class: 'ctl ctl-popuprow', 'data-testid': `ctl-${name}` }, label ? el('label', { class: 'ctl-label' }, label) : null, sel);
   (parent ?? controls.root).append(row);
-  const api = { row, get: () => options[Number(sel.value)].value, set: (v) => { sel.value = String(Math.max(0, idx(v))); } };
+  const api = {
+    row, get: () => options[Number(sel.value)].value, set: (v) => { sel.value = String(Math.max(0, idx(v))); },
+    setEnabled: (on) => { sel.disabled = !on; row.classList.toggle('is-disabled', !on); },
+  };
   controls.controls.set(name, api);
   return api;
 }

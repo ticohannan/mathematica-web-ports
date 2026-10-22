@@ -94,6 +94,7 @@ export const Line = (pts) => prim('Line', { pts });
 export const Polygon = (pts) => prim('Polygon', { pts });
 /** Rectangle[{x0, y0}, {x1, y1}, RoundingRadius -> r]. */
 export const Rectangle = (a, b, { RoundingRadius = 0 } = {}) => prim('Rectangle', { a, b, r: RoundingRadius });
+/** Disk[c, r]; Disk[c, {rx, ry}] is an ellipse. */
 export const Disk = (c, r) => prim('Disk', { c, r });
 /** Circle[c, r] or the arc Circle[c, r, {a0, a1}]. */
 export const Circle = (c, r, angles = null) => prim('Circle', { c, r, angles });
@@ -102,7 +103,29 @@ export const Point = (p) => prim('Point', { pts: Array.isArray(p[0]) ? p : [p] }
 /** Arrow[{p1, …, pn}]: the line and a filled head at pn (Arrowheads sets the head size). */
 export const Arrow = (pts) => prim('Arrow', { pts });
 /** Text[expr, pos]: expr a string, number, Style[…] or Subscript[…]; anchor 'middle' (default) | 'start' | 'end'. */
-export const Text = (expr, pos, { anchor = 'middle' } = {}) => prim('Text', { expr, pos, anchor });
+export const Text = (expr, pos, offset = null) => {
+  // Text[expr, pos, {ox, oy}]: Mathematica's offset; {-1, 0} puts the left end at pos, {0, 1} the top, … (horizontal
+  // start / middle / end, vertical top / middle / bottom). The options form { anchor } is kept.
+  if (Array.isArray(offset)) {
+    const [ox, oy] = offset;
+    return prim('Text', {
+      expr, pos, anchor: ox < 0 ? 'start' : ox > 0 ? 'end' : 'middle',
+      baseline: oy < 0 ? 'text-after-edge' : oy > 0 ? 'text-before-edge' : null,
+    });
+  }
+  return prim('Text', { expr, pos, anchor: offset?.anchor ?? 'middle', baseline: null });
+};
+/** Tooltip[g, label]: g with a hover text (an SVG <title>). */
+export const Tooltip = (g, label) => prim('Tooltip', { g, label });
+/**
+ * cachedGraphics() → part(keys, () => graphics): a part of the picture drawn again only when one of `keys` differs (===)
+ * from its last draw; otherwise the elements drawn last time are reused. For large, rarely changing parts (a tree of a
+ * thousand nodes, a static frame). No Mathematica counterpart (its front end decides this by itself).
+ */
+export function cachedGraphics() {
+  const slot = { byPlot: new WeakMap() }; // one remembered drawing per picture
+  return (keys, thunk) => prim('Cached', { slot, keys, thunk });
+}
 /**
  * Rotate[g, θ, {x, y}] (radians, counter-clockwise, about the point). Without the point, as in Mathematica, about the
  * centre of g's bounding box (Line, Polygon, Point, Arrow, Rectangle, Disk, Circle and lists of them; give the point
@@ -154,13 +177,21 @@ export function Style(expr, ...opts) {
 }
 /** Subscript[a, b]. */
 export const Subscript = (a, b) => Object.freeze({ head: 'Subscript', a, b });
+/** Superscript[a, b]. */
+export const Superscript = (a, b) => Object.freeze({ head: 'Superscript', a, b });
+/**
+ * Row[{e1, e2, …}]: text pieces side by side (strings, Style, Subscript, Superscript); in a Manipulate's control list,
+ * controls side by side (opts: { name } gives the group the test id row-<name>, { class } a CSS class).
+ */
+export const Row = (items, opts = {}) => Object.freeze({ head: 'Row', items, opts });
 
 /** Plain text of a text expression (for labels and accessibility): Subscript['θ', 1] → "θ1". */
 export function textOf(e, { sep = '' } = {}) {
   if (e == null) return '';
   if (typeof e !== 'object') return String(e);
   if (e.head === 'Style') return textOf(e.expr, { sep });
-  if (e.head === 'Subscript') return textOf(e.a, { sep }) + sep + textOf(e.b, { sep });
+  if (e.head === 'Subscript' || e.head === 'Superscript') return textOf(e.a, { sep }) + sep + textOf(e.b, { sep });
+  if (e.head === 'Row') return e.items.map((x) => textOf(x, { sep })).join('');
   return '';
 }
 
@@ -170,6 +201,8 @@ export function htmlOf(e) {
   if (e == null) return '';
   if (typeof e !== 'object') return esc(e);
   if (e.head === 'Subscript') return `${htmlOf(e.a)}<sub>${htmlOf(e.b)}</sub>`;
+  if (e.head === 'Superscript') return `${htmlOf(e.a)}<sup>${htmlOf(e.b)}</sup>`;
+  if (e.head === 'Row') return e.items.map(htmlOf).join('');
   if (e.head === 'Style') {
     let h = htmlOf(e.expr);
     for (const d of e.ds) {
@@ -280,21 +313,50 @@ function edgePaint(st) {
   return st.edge ? { stroke: st.edge.color, thickness: st.edge.thickness, strokeOpacity: st.edge.opacity, dash: st.edge.dash } : {};
 }
 
-function textNode(plot, g, expr, pos, anchor, st) {
+function textNode(plot, g, expr, pos, anchor, st, baseline) {
   let s = st;
   let e = expr;
   while (e && e.head === 'Style') { s = e.ds.reduce(applyDirective, s); e = e.expr; }
-  const sub = e && e.head === 'Subscript' ? e : null;
-  const t = plot.text(g, sub ? '' : textOf(e), pos, {
+  const scripted = e && ['Subscript', 'Superscript', 'Row'].includes(e.head);
+  const t = plot.text(g, scripted ? '' : textOf(e), pos, {
     fontPx: s.fontSize, color: s.color, anchor, italic: s.fontSlant === 'italic', weight: s.fontWeight, family: s.fontFamily,
   });
-  if (sub) {
-    t.append(document.createTextNode(textOf(sub.a)));
-    const span = svgNode('tspan', { 'font-size': s.fontSize * 0.72 * plot.unitsPerPx, dy: s.fontSize * 0.28 * plot.unitsPerPx });
-    span.textContent = textOf(sub.b);
-    t.append(span);
-  }
+  if (baseline) t.setAttribute('dominant-baseline', baseline);
+  if (scripted) appendPieces(plot, t, e, s.fontSize);
   return t;
+}
+
+// The pieces of Subscript / Superscript / Row as text and <tspan>s (a script is 72 % high, 28 % down or 40 % up).
+// Returns the baseline shift left behind (world units); a Row undoes it before its next piece.
+function appendPieces(plot, t, e, fontPx) {
+  const u = plot.unitsPerPx;
+  if (e && e.head === 'Row') {
+    let shift = 0;
+    for (const x of e.items) {
+      // undo a script's shift: dy on a tspan that holds the next piece (dy on an empty tspan is ignored by SVG)
+      let into = t;
+      if (shift) { into = svgNode('tspan', { dy: -shift }); t.append(into); }
+      const s2 = appendPieces(plot, into, x, fontPx);
+      shift = s2;
+    }
+    return shift;
+  }
+  if (e && (e.head === 'Subscript' || e.head === 'Superscript')) {
+    appendPieces(plot, t, e.a, fontPx);
+    const dy = fontPx * (e.head === 'Subscript' ? 0.28 : -0.4) * u;
+    const span = svgNode('tspan', { 'font-size': fontPx * 0.72 * u, dy });
+    span.textContent = textOf(e.b);
+    t.append(span);
+    return dy;
+  }
+  if (e && e.head === 'Style') {
+    const span = svgNode('tspan', { 'font-style': e.ds.some((d) => d.dir === 'fontSlant') ? 'italic' : undefined });
+    span.textContent = textOf(e.expr);
+    t.append(span);
+    return 0;
+  }
+  t.append(document.createTextNode(textOf(e)));
+  return 0;
 }
 
 function draw(plot, g, p, st) {
@@ -314,8 +376,14 @@ function draw(plot, g, p, st) {
       for (const q of p.pts) plot.polygon(grp, q, paint);
       return grp;
     }
-    case 'Disk':
-      return plot.disk(g, p.c, p.r, { fill: fillOf(st), fillOpacity: opacity, ...edgePaint(st) });
+    case 'Disk': {
+      if (!Array.isArray(p.r)) return plot.disk(g, p.c, p.r, { fill: fillOf(st), fillOpacity: opacity, ...edgePaint(st) });
+      const e = st.edge, f = fillOf(st); // Disk[c, {rx, ry}]: an ellipse
+      return g.appendChild(svgNode('ellipse', {
+        cx: p.c[0], cy: p.c[1], rx: p.r[0], ry: p.r[1], fill: f ? css(f) : 'none', 'fill-opacity': opacity,
+        stroke: e ? css(e.color) : 'none', 'stroke-width': e ? plot.strokeWidth(e.thickness) : undefined, 'stroke-opacity': e?.opacity,
+      }));
+    }
     case 'Rectangle': {
       const [[a, b], [c, d]] = [p.a, p.b];
       const e = st.edge;
@@ -352,7 +420,25 @@ function draw(plot, g, p, st) {
       return grp;
     }
     case 'Text':
-      return textNode(plot, g, p.expr, p.pos, p.anchor, st);
+      return textNode(plot, g, p.expr, p.pos, p.anchor, st, p.baseline);
+    case 'Tooltip': {
+      let n;
+      if (Array.isArray(p.g)) { n = plot.group(g); walk(p.g, (q, s2) => draw(plot, n, q, s2), st); } else n = draw(plot, g, p.g, st);
+      const title = svgNode('title');
+      title.textContent = textOf(p.label);
+      n.append(title);
+      return n;
+    }
+    case 'Cached': {
+      const key = plot.svg ?? plot;
+      const last = p.slot.byPlot.get(key);
+      const same = last && last.keys.length === p.keys.length && last.keys.every((k, i) => k === p.keys[i]);
+      if (same && !last.node.isConnected) return g.appendChild(last.node);
+      const grp = plot.group(g);
+      walk([p.thunk()], (q, s2) => draw(plot, grp, q, s2), st);
+      p.slot.byPlot.set(key, { keys: p.keys, node: grp });
+      return grp;
+    }
     case 'Rotate':
     case 'Translate': {
       const transform = p.head === 'Rotate' ? `rotate(${deg(p.angle)} ${p.about[0]} ${p.about[1]})` : `translate(${p.v[0]},${p.v[1]})`;

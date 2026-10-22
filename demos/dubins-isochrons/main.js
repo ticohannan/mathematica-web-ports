@@ -1,146 +1,89 @@
 // SPDX-FileCopyrightText: 2026 Tico Hannan
 // SPDX-FileCopyrightText: Original Wolfram Demonstration by Aaron T. Becker and Shiva Shahrokhi
 // SPDX-License-Identifier: CC-BY-NC-SA-3.0
-// demos/dubins-isochrons/main.js — page: controls, SVG drawing (browser only).
-import { Controls, el } from '../../shared/ui.js';
-import { createPlot, svgNode } from '../../shared/svg-plot.js';
-import { drawAxes } from '../../shared/svg-frame.js';
+// demos/dubins-isochrons/main.js — the Manipulate: plot parameters r, t, set and the car controls path, τ, p (on the
+// left), and Show[{plotReach, Graphics[epiGraphics]}] as Graphics data, on shared/manipulate.js (browser only).
+import { Manipulate, Delimiter, None } from '../../shared/manipulate.js';
+import {
+  Annotation, Polygon, Line, Circle, Raw, Style, Row, Italic, Opacity, AbsoluteThickness, AbsoluteDashing, CapForm, Thick,
+  RGBColor, Gray, Blue, Orange, Red, Green, cachedGraphics,
+} from '../../shared/graphics.js';
+import { svgNode } from '../../shared/svg-plot.js';
 import { NAMED, css } from '../../shared/mma-colors.js';
 import { drawCar, drawCarSvg } from '../common/car-icon.js';
+import { pxSize, axesGraphics } from '../common/plot-extras.js';
 import { initialState, evaluate, SHOW_RANGE, SETS, PATHS, PLOT_ORDER, PLOT_COLOURS } from './isochrons.js';
 
-let state = initialState();
-let view = null;
-let drawnPlot = null; // the plotReach object currently drawn (the plot layer is redrawn only when it changes)
-
-// Show[{plotReach, Graphics[epiGraphics]}, AspectRatio -> Automatic, ImageSize -> {440}, AxesOrigin -> {0, 0},
-//   PlotRange -> {{-15, 15}, {-16, 16}}] with the plot's PlotRangePadding -> Scaled[0.05]
-const graphicEl = document.getElementById('graphic');
-const plot = createPlot(graphicEl, {
-  plotRange: SHOW_RANGE, imageSize: 440, padding: 0.05,
-  label: 'Isochrons (or reachable regions) of a Dubins car with the path and the car at time p t / 100',
-});
-const L = { plot: plot.layer('plot'), axes: plot.layer('axes'), epi: plot.layer('epi') };
-const VISIBLE = [[-16.5, 16.5], [-17.6, 17.6]];
-// Axes through the origin with automatic ticks (labelled majors every 5, minors every 1), in front of the plot (F-DI-15)
-drawAxes(plot, L.axes, { range: VISIBLE, fontPx: 11, thicknessPx: 1, color: [0.6, 0.6, 0.6], labelColor: [0.2, 0.2, 0.2] });
-
-const PATH_COLOUR = { Blue: NAMED.Blue, Orange: NAMED.Orange, Red: NAMED.Red, Green: NAMED.Green };
-const DASHED = [4, 4]; // Dashed: about 4 px dashes and gaps at ImageSize 440 (D-DI-04)
-
+const PATH_COLOUR = { Blue, Orange, Red, Green };
+const COL = Object.fromEntries(PLOT_ORDER.map((w) => [w, RGBColor(...PLOT_COLOURS[w])]));
+const DASHED = AbsoluteDashing([4, 4]); // Dashed: about 4 px dashes and gaps at ImageSize 440 (D-DI-04)
+const axes = cachedGraphics(), plotPart = cachedGraphics(); // the axes once; plotReach only when it changes
 const fmt = (x) => (Math.round(x * 1e4) / 1e4).toString();
 const pathD = (polys) => polys.map((q) => `M${q.map((p) => `${fmt(p[0])},${fmt(p[1])}`).join('L')}Z`).join('');
 
-function drawPlot() {
-  L.plot.replaceChildren();
-  const pr = state.plotReach;
-  if (pr.set === '=') {
-    // Prolog -> {{Opacity[0.4], Gray, Polygon[…], Polygon[…]}}: each self-intersecting polygon filled by the even-odd rule
-    pr.polygons.forEach((P, i) => {
-      L.plot.append(svgNode('path', {
-        d: pathD([P]), fill: css(NAMED.Gray), 'fill-opacity': 0.4, 'fill-rule': 'evenodd', stroke: 'none', 'data-testid': `grey-band-${i + 1}`, 'data-points': P.length,
-      }));
-    });
-    for (const w of PLOT_ORDER) plot.line(L.plot, pr.curves[w], { stroke: PLOT_COLOURS[w], thickness: { abs: 1.6 }, testid: `isochron-${w}` });
-  } else {
-    // the four regions, each one translucent union (TransparentPolygonMesh), then their boundaries opaque
-    for (const w of PLOT_ORDER) {
-      const g = plot.group(L.plot, { opacity: 0.3, 'data-testid': `region-${w}` });
-      g.append(svgNode('path', { d: pathD(pr.regions[w].quads), fill: css(PLOT_COLOURS[w]), 'fill-rule': 'nonzero', stroke: 'none' }));
-    }
-    for (const w of PLOT_ORDER) plot.line(L.plot, pr.regions[w].boundary, { stroke: PLOT_COLOURS[w], thickness: { abs: 1 }, testid: `region-boundary-${w}` });
-  }
-  drawnPlot = pr;
-}
+/** drawCar[xy, θ, α, opac, .5, lights] in a colour (demos/common/car-icon.js, not yet written as Graphics data) */
+const car = (c, xy, theta, alpha, opac, lights, id) => Raw((plot, g) => drawCarSvg(plot, g, drawCar(xy, theta, alpha, opac, { lights, beam: 8, headlightEdge: null }), { colour: c, testid: id }));
 
-function drawEpi() {
-  L.epi.replaceChildren();
-  const r = state.r;
-  // {Dashed, Gray, Circle[{r, 0}, r], Circle[{-r, 0}, r]}
-  plot.disk(L.epi, [r, 0], r, { stroke: NAMED.Gray, dash: DASHED, cap: 'butt', testid: 'turning-circle-right' });
-  plot.disk(L.epi, [-r, 0], r, { stroke: NAMED.Gray, dash: DASHED, cap: 'butt', testid: 'turning-circle-left' });
-  // {Thick, pathGraphics}
-  const pg = view.pathGraphics;
-  const g = plot.group(L.epi, { 'data-testid': 'path-graphics', 'data-path': pg.path });
-  for (const p of pg.pieces) {
-    if (p.kind === 'arc') plot.arc(g, p.c, p.r, p.a1, p.a2, { stroke: PATH_COLOUR[pg.colour], thickness: 'Thick' });
-    else plot.line(g, [p.from, p.to], { stroke: PATH_COLOUR[pg.colour], thickness: 'Thick' });
-  }
-  // Red, drawCar[{0, 0}, π/2, 0, .5, .5, False], Green, drawCar[cxy, cθ, cα, .8, .5, True]
-  drawCarSvg(plot, L.epi, drawCar([0, 0], Math.PI / 2, 0, 0.5, { lights: false, beam: 8, headlightEdge: null }), { colour: NAMED.Red, testid: 'start-car' });
-  drawCarSvg(plot, L.epi, drawCar(view.cxy, view.cTheta, view.cAlpha, 0.8, { lights: true, beam: 8, headlightEdge: null }), { colour: NAMED.Green, testid: 'moving-car' });
-}
+/** plotReach: ParametricPlot of the four isochrons with the Prolog's grey polygons, or the four "≤" regions */
+const plotReach = (pr) => (pr.set === '=' ? [
+  // Prolog -> {{Opacity[0.4], Gray, Polygon[…], Polygon[…]}}: each self-intersecting polygon filled by the even-odd rule
+  ...pr.polygons.map((P, i) => [Opacity(0.4), Gray, Annotation(Polygon(P), `grey-band-${i + 1}`, { 'fill-rule': 'evenodd', 'data-points': P.length })]),
+  ...PLOT_ORDER.map((w) => [COL[w], AbsoluteThickness(1.6), Annotation(Line(pr.curves[w]), `isochron-${w}`)]),
+] : [
+  // each region one translucent union (TransparentPolygonMesh): all its quads as one non-zero path, in a group at
+  // opacity 0.3 (as data, separate polygons would show seams between the quads, hence Raw), then the boundaries opaque
+  ...PLOT_ORDER.map((w) => Annotation(Raw((plot, g) => g.appendChild(svgNode('path', {
+    d: pathD(pr.regions[w].quads), fill: css(PLOT_COLOURS[w]), 'fill-rule': 'nonzero', stroke: 'none',
+  }))), `region-${w}`, { opacity: 0.3 })),
+  ...PLOT_ORDER.map((w) => [COL[w], AbsoluteThickness(1), Annotation(Line(pr.regions[w].boundary), `region-boundary-${w}`)]),
+]);
 
-function run() {
-  const res = evaluate(state);
-  state = res.state;
-  view = res.view;
-  if (state.plotReach !== drawnPlot) drawPlot();
-  drawEpi();
-}
-
-// ---- controls (ControlPlacement -> Left) -------------------------------------------------------
-const controls = new Controls(document.getElementById('controls'));
-controls.heading('plot parameters'); // Style["plot parameters", 12]
-const slider = (name, label, min, max, step, html) => {
-  const api = controls.slider({
-    name, label, min, max, step, steps: 'mma', value: state[name],
-    onInput: (v) => { state[name] = v; run(); },
-  });
-  api.row.querySelector('.ctl-label').innerHTML = html;
-  return api;
-};
-// {{r, 2, Row[{Style["r", Italic], " (m)"}]}, .5, 10, Appearance -> "Labeled", ImageSize -> 100}
-const rCtl = slider('r', 'r (m)', 0.5, 10, 0, '<i>r</i> (m)');
-// {{t, 10, Row[{Style["t", Italic], " (s)"}]}, .1, 14, Appearance -> "Labeled", ImageSize -> 100}
-const tCtl = slider('t', 't (s)', 0.1, 14, 0, '<i>t</i> (s)');
-// Row[{Control@{set, {"=", "≤"}}, Style[" t", Italic]}]
-const setCtl = controls.setterBar({
-  name: 'set', label: 'set', value: state.set, options: SETS.map((v) => ({ value: v })),
-  onChange: (v) => { state.set = v; run(); },
-});
-setCtl.row.append(el('span', { class: 'set-suffix' }, 't'));
-controls.delimiter();
-controls.heading('move car'); // Style["move car", 12]
-// Row[{Control@{path, {"RS", "LS", "LR", "RL"}}}]
-const pathCtl = controls.setterBar({
-  name: 'path', label: 'path', value: state.path, options: PATHS.map((v) => ({ value: v })),
-  onChange: (v) => { state.path = v; run(); },
-});
-// {{τ, 0.5, "τ (s)"}, 0, 14, 0.01, …} and {{p, 100, Row[{Style["p", Italic], " (%)"}]}, 0, 100, 1, …}
-const tauCtl = controls.slider({
-  name: 'tau', label: 'τ (s)', min: 0, max: 14, step: 0.01, steps: 'mma', value: state.tau,
-  onInput: (v) => { state.tau = v; run(); },
-});
-const pCtl = slider('p', 'p (%)', 0, 100, 1, '<i>p</i> (%)');
-
-function syncControls(moved) {
-  const how = moved === undefined ? undefined : { moved };
-  rCtl.set(state.r, how); tCtl.set(state.t, how); tauCtl.set(state.tau, how); pCtl.set(state.p, how);
-  setCtl.set(state.set); pathCtl.set(state.path);
-}
-document.getElementById('reset').addEventListener('click', () => {
-  state = initialState();
-  syncControls(false);
-  run();
-});
-
-run();
-
-// ---- test / automation hook (port addition A-DI-02) ----------------------------
-const clone = (x) => JSON.parse(JSON.stringify(x));
-const plotSummary = () => {
-  const pr = state.plotReach;
-  if (pr.set === '=') {
-    return { set: '=', t: pr.t, r: pr.r, curvePoints: Object.fromEntries(PLOT_ORDER.map((w) => [w, pr.curves[w].length])), polygonPoints: pr.polygons.map((P) => P.length), polygons: pr.polygons, firstPoints: Object.fromEntries(PLOT_ORDER.map((w) => [w, pr.curves[w][0]])) };
-  }
-  return { set: pr.set, t: pr.t, r: pr.r, regionQuads: Object.fromEntries(PLOT_ORDER.map((w) => [w, pr.regions[w].quads.length])) };
-};
-window.__demo = {
+const m = Manipulate({
   name: 'dubins-isochrons',
-  getState: () => { const { plotReach, ...rest } = state; return clone(rest); },
-  view: () => clone({ fs: view.fs, maxAlpha: view.maxAlpha, cxy: view.cxy, cTheta: view.cTheta, cAlpha: view.cAlpha, pathGraphics: view.pathGraphics, polySteps: view.polySteps, plot: plotSummary() }),
-  setState: (partial) => { state = { ...state, ...clone(partial) }; syncControls(); run(); },
-  worldToClient: (p) => plot.worldToClient(p),
-  ready: true,
-};
+  initial: initialState, // the live state = the initial settings, with plotReach computed (F-DI-14, D-DI-10)
+  body: evaluate,
+  // Show[{plotReach, Graphics[epiGraphics]}, AspectRatio -> Automatic, ImageSize -> {440}, AxesOrigin -> {0, 0},
+  //   PlotRange -> {{-15, 15}, {-16, 16}}]; axes with automatic ticks in front of the plot (F-DI-15)
+  draw: (v, s) => [
+    plotPart([s.plotReach], () => plotReach(s.plotReach)),
+    axes([], () => axesGraphics({
+      range: [[-16.5, 16.5], [-17.6, 17.6]], unitsPerPx: pxSize(SHOW_RANGE, 440, 0.05), fontPx: 11, thicknessPx: 1,
+      color: [0.6, 0.6, 0.6], labelColor: [0.2, 0.2, 0.2],
+    })),
+    // epiGraphics = {{Dashed, Gray, Circle[{r, 0}, r], Circle[{-r, 0}, r]}, {Thick, pathGraphics},
+    //   Red, drawCar[{0, 0}, π/2, 0, .5, .5, False], Green, drawCar[cxy, cθ, cα, .8, .5, True]}
+    [DASHED, Gray, CapForm('Butt'), Annotation(Circle([s.r, 0], s.r), 'turning-circle-right'), Annotation(Circle([-s.r, 0], s.r), 'turning-circle-left')],
+    [Thick, PATH_COLOUR[v.pathGraphics.colour], Annotation(v.pathGraphics.pieces.map((p) => (p.kind === 'arc' ? Circle(p.c, p.r, [p.a1, p.a2]) : Line([p.from, p.to]))),
+      'path-graphics', { 'data-path': v.pathGraphics.path })],
+    car(NAMED.Red, [0, 0], Math.PI / 2, 0, 0.5, false, 'start-car'),
+    car(NAMED.Green, v.cxy, v.cTheta, v.cAlpha, 0.8, true, 'moving-car'),
+  ],
+  graphics: { PlotRange: SHOW_RANGE, ImageSize: 440, PlotRangePadding: 0.05, label: 'Isochrons (or reachable regions) of a Dubins car with the path and the car at time p t / 100' },
+  controls: [ // ControlPlacement -> Left
+    'plot parameters', // Style["plot parameters", 12]
+    [['r', 2, Row([Style('r', Italic), ' (m)'])], 0.5, 10, { Appearance: 'Labeled', ImageSize: 100 }],
+    ['rold', 1, None],
+    [['t', 10, Row([Style('t', Italic), ' (s)'])], 0.1, 14, { Appearance: 'Labeled', ImageSize: 100 }],
+    ['told', 1, None], ['plotReach', 1, None],
+    [['set', '=', 'set'], SETS], // Row[{Control@{set, {"=", "<="}}, Style[" t", Italic]}] (the suffix is added below)
+    Delimiter,
+    'move car', // Style["move car", 12]
+    ['setold', 1, None],
+    [['path', 'RS', 'path'], PATHS], // Row[{Control@{path, {"RS", "LS", "LR", "RL"}}}]
+    [['tau', 0.5, 'τ (s)'], 0, 14, 0.01, { Appearance: 'Labeled', ImageSize: 100 }],
+    [['p', 100, Row([Style('p', Italic), ' (%)'])], 0, 100, 1, { Appearance: 'Labeled', ImageSize: 100 }],
+  ],
+  hook: { // port addition A-DI-02
+    view: (v, { plotReach: pr }) => ({
+      fs: v.fs, maxAlpha: v.maxAlpha, cxy: v.cxy, cTheta: v.cTheta, cAlpha: v.cAlpha, pathGraphics: v.pathGraphics, polySteps: v.polySteps,
+      plot: pr.set === '='
+        ? { set: '=', t: pr.t, r: pr.r, curvePoints: Object.fromEntries(PLOT_ORDER.map((w) => [w, pr.curves[w].length])), polygonPoints: pr.polygons.map((P) => P.length), polygons: pr.polygons, firstPoints: Object.fromEntries(PLOT_ORDER.map((w) => [w, pr.curves[w][0]])) }
+        : { set: pr.set, t: pr.t, r: pr.r, regionQuads: Object.fromEntries(PLOT_ORDER.map((w) => [w, pr.regions[w].quads.length])) },
+    }),
+    getState: (ctx) => () => { const { plotReach, ...rest } = ctx.state; return JSON.parse(JSON.stringify(rest)); },
+    setState: (ctx) => (partial) => { ctx.setState(JSON.parse(JSON.stringify(partial))); }, // returns nothing, as before (no plotReach copy)
+  },
+});
+const suffix = document.createElement('span');
+Object.assign(suffix, { className: 'set-suffix', textContent: 't' });
+m.controls.get('set').row.append(suffix);

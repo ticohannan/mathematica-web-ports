@@ -307,7 +307,10 @@ export class Controls {
       if (fire && onChange) onChange(v);
     };
     buttons.forEach((b, i) => b.addEventListener('click', () => set(options[i].value)));
-    const api = { get: () => value, set: (v) => set(v, false), row };
+    const api = {
+      get: () => value, set: (v) => set(v, false), row,
+      setEnabled: (b) => { buttons.forEach((n) => { n.disabled = !b; }); row.classList.toggle('is-disabled', !b); },
+    };
     this.controls.set(name, api);
     return api;
   }

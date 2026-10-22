@@ -63,49 +63,9 @@ export function getPos(path, pose, minRadius = 1, progress = 0) {
 }
 
 // ---- drawCar: geometry of the car icon as data --------------------------------------
-const rot = ([x, y], a, [cx, cy] = [0, 0]) => {
-  const c = Math.cos(a), s = Math.sin(a), dx = x - cx, dy = y - cy;
-  return [cx + c * dx - s * dy, cy + s * dx + c * dy];
-};
-const rectPts = ([a, b], [c, d]) => [[a, b], [c, b], [c, d], [a, d]];
-
-/** Front-wheel angle of drawCar: If[Alpha == 0, 0, ArcTan[Alpha ∓ .375, 1.4]] (Mathematica ArcTan[x, y]!). */
-export function wheelAngle(Alpha, side) {
-  if (mEqual(Alpha, 0)) return 0;
-  return side === 'left' ? arcTan(Alpha - 0.375, 1.4) : arcTan(Alpha + 0.375, 1.4);
-}
-
-/**
- * drawCar[xy, Theta, Alpha, opac]: car icon centred at the middle of the rear axle, as a list of primitives in WORLD
- * coordinates (the original's Translate[Rotate[Translate[{...}, {0.7, 0}], Theta, {0, 0}], xy] applied).
- *   { kind: 'polygon' | 'line' | 'arrow', pts, role, fill: 'inherit' | colour name, opacity, edge }
- * 'inherit' = the colour set by the caller (Green / Red / Blue). Colours named as in the original.
- */
-export function drawCar(xy, Theta, Alpha, opac) {
-  const inner = (p) => [p[0] + 0.7, p[1]]; // Translate[..., {0.7, 0}]
-  const outer = (p) => { const q = rot(inner(p), Theta, [0, 0]); return [q[0] + xy[0], q[1] + xy[1]]; };
-  const T = (pts) => pts.map(outer);
-  const edge = { color: 'Black', opacity: opac }; // EdgeForm[Directive[Opacity[opac], Black]]
-  const prims = [];
-  // Rectangle[{-1, -1/2}, {1, 1/2}] in the caller's colour
-  prims.push({ kind: 'polygon', role: 'body', pts: T(rectPts([-1, -1 / 2], [1, 1 / 2])), fill: 'inherit', opacity: opac, edge });
-  // {Yellow, Opacity[0.8*opac], EdgeForm[{Thin, Black}], Polygon[...], Polygon[...]}
-  const lightEdge = { color: 'Black', opacity: 0.8 * opac, thin: true };
-  prims.push({ kind: 'polygon', role: 'headlight', pts: T([[1, 0.35], [4, 0.05], [4, 0.55]]), fill: 'Yellow', opacity: 0.8 * opac, edge: lightEdge });
-  prims.push({ kind: 'polygon', role: 'headlight', pts: T([[1, -0.35], [4, -0.05], [4, -0.55]]), fill: 'Yellow', opacity: 0.8 * opac, edge: lightEdge });
-  // Darker[Gray]: axles and tyres
-  prims.push({ kind: 'line', role: 'axle', pts: T([[-0.7, 0.35], [-0.7, -0.35]]), stroke: 'DarkerGray', opacity: opac });
-  prims.push({ kind: 'line', role: 'axle', pts: T([[0.7, 0.35], [0.7, -0.35]]), stroke: 'DarkerGray', opacity: opac });
-  const aL = wheelAngle(Alpha, 'left'), aR = wheelAngle(Alpha, 'right');
-  // Rotate[Rectangle[{.5, .35}, {.9, .4}], angle, {.7, .375}] (front left tyre)
-  prims.push({ kind: 'polygon', role: 'tyre-front-left', pts: T(rectPts([0.5, 0.35], [0.9, 0.4]).map((p) => rot(p, aL, [0.7, 0.375]))), fill: 'DarkerGray', opacity: opac, edge });
-  prims.push({ kind: 'polygon', role: 'tyre-back', pts: T(rectPts([-0.5, 0.35], [-0.9, 0.4])), fill: 'DarkerGray', opacity: opac, edge });
-  prims.push({ kind: 'polygon', role: 'tyre-back', pts: T(rectPts([-0.5, -0.35], [-0.9, -0.4])), fill: 'DarkerGray', opacity: opac, edge });
-  prims.push({ kind: 'polygon', role: 'tyre-front-right', pts: T(rectPts([0.5, -0.35], [0.9, -0.4]).map((p) => rot(p, aR, [0.7, -0.375]))), fill: 'DarkerGray', opacity: opac, edge });
-  // Black, Arrowheads[.02], Arrow[{{0, 0}, {1.0, 0}}]
-  prims.push({ kind: 'arrow', role: 'arrow', pts: T([[0, 0], [1.0, 0]]), stroke: 'Black', opacity: opac, arrowhead: 0.02 });
-  return { prims, wheelAngles: [aL, aR] };
-}
+// drawCar[xy, Theta, Alpha, opac] and its wheel angles: the shared car icon of the three car Demonstrations
+// (demos/common/car-icon.js; its default options are this Demonstration's car; v0.1.20, before: a copy here).
+export { drawCar, wheelAngle } from '../common/car-icon.js';
 
 // ---- drawPath: geometry of the path as data -------------------------------------
 /**

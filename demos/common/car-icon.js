@@ -4,8 +4,8 @@
 // demos/common/car-icon.js — the car icon `drawCar` of three car Demonstrations: "Shortest Path for Forward and
 // Reverse Motion of a Car" (Francesco Bernardini and Aaron T. Becker), "Shortest Path for the Dubins Car" (Aaron T.
 // Becker and Shiva Shahrokhi) and "Isochrons for a Dubins Car" (Aaron T. Becker and Shiva Shahrokhi). Owner:
-// dubins-path (COMMON-DECISIONS §3). car-paths keeps its own copy until the owner approves the switch (its unit tests
-// "drawCar: …" guard it).
+// dubins-path (COMMON-DECISIONS §3). car-paths uses it since v0.1.20 (before: its own copy); its carpaths.js re-exports
+// drawCar and wheelAngle, so car-paths' unit tests "drawCar: …" guard this module.
 //
 // The three originals share one definition; they differ only in the headlights:
 //   car-paths          {Yellow, Opacity[0.8 opac], EdgeForm[{Thin, Black}], Polygon[{{1,.35},{4,.05},{4,.55}}], …}
@@ -13,7 +13,8 @@
 //   dubins-isochrons   If[lights, {Yellow, Opacity[0.8 opac], EdgeForm[None], Polygon[{{1,.35},{8,.05},{8,.55}}], …}]
 //                      (lights, beam: 8, headlightEdge: null; its extra argument `sc` is never used)
 // drawCar is pure (data in world coordinates); drawCarSvg renders that data with a shared/svg-plot.js picture (it
-// calls only the picture's own drawing functions, so this module needs no DOM itself).
+// calls only the picture's own drawing functions, so this module needs no DOM itself). The same picture as
+// shared/graphics.js Graphics data: demos/common/car-graphics.js carGraphics (v0.1.20).
 import { mEqual } from '../../shared/mma.js';
 import { arcTan } from '../../shared/mma-exact.js';
 import { NAMED, darker } from '../../shared/mma-colors.js';

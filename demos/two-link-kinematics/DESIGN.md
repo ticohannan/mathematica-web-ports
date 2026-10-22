@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.19 |
+| Code version: | 0.1.20 |
 | Document revision | 2 (2026-10-18) — `matrixRank` imported from `demos/common/svd3.js` (DH-family move) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Forward and Inverse Kinematics for Two-Link Arm", contributed by Aaron T. Becker and Lillian Lin, published 2016-06-20 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ForwardAndInverseKinematicsForTwoLinkArm/>. Readable source: [`docs/original-source/two-link-kinematics.txt`](../../docs/original-source/two-link-kinematics.txt); saved states: `tests/golden/two-link-kinematics.original-states.json` (`states[0]` = the output cell's saved state, `snapshots[1…4]` = the four snapshot cells' `Settings`, raw notebook lines 3580, 5050, 6589, 8110; `specs` = the initial settings (stored `"Variables"`); exact values kept as `{"wl": …}` next to their double); snapshots: `docs/original-snapshots/two-link-kinematics-1…4.png` (the notebook's snapshot cells 5 and 6 are the Wolfram icon placeholder, N-TK-06) |
-| Port files | `model.js` (initial values, one evaluation of the Manipulate body including the Jacobian, `Theta2inv`/`Theta1inv`, `svd2`, the pseudoinverse and the `loc` icon data; pure), `velocity-pad.js` (the original's `make2VelControl`; browser-only), `main.js` (SVG drawing, controls, locators, test hook), `index.html`; common modules owned by this app (COMMON-DECISIONS §3, all CC BY-NC-SA 3.0): `demos/common/two-link.js` (arm geometry; users TK, DN, robot-motion-obstacles, bfs-motion-planning), `demos/common/arrow-arcs.js` (arc arrows; TK, DN, RM, BFS, torus chart, four-bar, manipulability ellipsoid, camera-lasers), `demos/common/dial-control.js` (every `makeDialControl` variant; TK, DN, torus chart, manipulability ellipsoid, camera-lasers); shared module owned by this app (MIT, COMMON-DECISIONS §6): `shared/mma-text.js` (`piFraction` and the text of exact numbers; users: dial-control.js, camera-lasers, torus chart, manipulability ellipsoid, dh-parameters, arm-configurations) |
+| Port files | `model.js` (initial values, one evaluation of the Manipulate body including the Jacobian, `Theta2inv`/`Theta1inv`, `svd2`, the pseudoinverse and the `loc` icon data; pure), `velocity-pad.js` (the original's `make2VelControl`; browser-only), `main.js` (the Manipulate on `shared/manipulate.js`: controls, locators, the Graphics data, test hook; v0.1.20), `index.html`; common modules owned by this app (COMMON-DECISIONS §3, all CC BY-NC-SA 3.0): `demos/common/two-link.js` (arm geometry; users TK, DN, robot-motion-obstacles, bfs-motion-planning), `demos/common/arrow-arcs.js` (arc arrows; TK, DN, RM, BFS, torus chart, four-bar, manipulability ellipsoid, camera-lasers), `demos/common/dial-control.js` (every `makeDialControl` variant; TK, DN, torus chart, manipulability ellipsoid, camera-lasers); shared module owned by this app (MIT, COMMON-DECISIONS §6): `shared/mma-text.js` (`piFraction` and the text of exact numbers; users: dial-control.js, camera-lasers, torus chart, manipulability ellipsoid, dh-parameters, arm-configurations) |
 | Role in the project | further demonstration (batch A) |
 
 ## 1. Purpose and background
@@ -132,10 +132,14 @@ gets `check-IsElbowUp` because that is the testid `shared/ui-extra.js` `addCheck
 - `demos/two-link-kinematics/velocity-pad.js` (browser-only): `make2VelControl(controls, {name, value, onInput})`, a
   140 pt `createPlot` with one locator (`addLocators`, `pickAnywhere: true`), setter clamp of F-TK-05 (`padSetter`,
   exported pure for the unit test).
-- `demos/two-link-kinematics/main.js`: keeps the Manipulate variables (`r1, pEnd, pEndp, pVel, pVelp, p1, p2,
-  IsElbowUp, IsElbowUpp, jointVel`), builds the controls in the original's order, calls `evaluate` after every control
-  change (slider input, dial or pad move, check box, locator move, key press) and redraws the graphic and every
-  control from the new state (dials, pad and check box follow the body's assignments).
+- `demos/two-link-kinematics/main.js` (v0.1.20): one `Manipulate({…})` call of `shared/manipulate.js` with the
+  Manipulate variables (`r1, pEnd, pEndp, pVel, pVelp, p1, p2, IsElbowUp, IsElbowUpp, jointVel`) as control specs in
+  the original's order (the dials and the pad as `Control(makeDialControl, …)` and `Control(make2VelControl)`, the
+  check box `{True, False}`); the body is `evaluate` (keeping the previous state where the original would compute
+  with Indeterminate, D-TK-07) and `draw` turns `scene` into Graphics data (disks, ellipse, arrows, stadiums, points,
+  `arcArrowGraphics` arcs of the new `demos/common/arrow-graphics.js`, the `loc` icons). The layer evaluates after every control change
+  (slider input, dial or pad move, check box, locator move, key press) and writes the new state back into every
+  control (dials, pad and check box follow the body's assignments).
 - `index.html` as in the other 2D ports (crumbs, title, `#controls` left of `#graphic`, caption, details, credits,
   `shared/requirements.js`).
 
@@ -200,7 +204,7 @@ variant 'nearest32'). `demos/common/svd3.js`: `matrixRank`, `RANK_TOL_REL` (Matr
 of Σ, tolerance K-RS-05b) — robot-singularities' module, moved unchanged to `demos/common/` by dh-parameters in
 v0.1.16 (DH-family move, COMMON-DECISIONS §6; until then this app imported `demos/robot-singularities/svd3.js`).
 
-**State model.** Manipulate variables (above) live in `main.js`; `evaluate` is pure and gets/returns them all.
+**State model.** Manipulate variables (above) live in the `main.js` Manipulate (`shared/manipulate.js`); `evaluate` is pure and gets/returns them all.
 Locals are recomputed on every evaluation. Exact Mathematica numbers (the initial values, a typed integer r1) are
 machine numbers in the port (D-TK-01).
 
@@ -260,8 +264,8 @@ npm run bundle -- two-link-kinematics
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/two-link-kinematics/`) | 4 | `index.html`, `main.js`, `model.js`, `velocity-pad.js` |
-| `shared/` | 11 | `exact-pi.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma-text.js`, `mma.js`, `requirements.js`, `style.css`, `svg-plot.js`, `ui-extra.js`, `ui.js` |
-| `demos/common/` | 6 | `arrow-arcs.js`, `dial-control.js`, `g3d.js`, `prm-core.js`, `svd3.js`, `two-link.js` |
+| `shared/` | 15 | `exact-pi.js`, `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma-text.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-plot.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
+| `demos/common/` | 7 | `arrow-arcs.js`, `arrow-graphics.js`, `dial-control.js`, `g3d.js`, `prm-core.js`, `svd3.js`, `two-link.js` |
 | added by the bundler | 7 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/two-link-kinematics/DESIGN.md` |
 <!-- bundle-contents:end -->
 
@@ -332,6 +336,7 @@ Template: see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md).
 | 3 | v0.1.17 | 2026-10-18 | harness run 2 accepted, no change to the app code: K-TK-01, K-TK-04, K-TK-07, K-TK-10, K-TK-11 resolved with the recorded values, K-TK-08 and K-TK-09 updated, K-TK-03 not decided by the record (decisive pose proposed); D-TK-07 decided; P-TK-01 (dial press at the centre), P-TK-02 (LAPACK SVD bits) proposed. Golden tests: H-TK-13 asserts the recorded θ1 = 0 without messages, H-TK-14/H-TK-15 jointVel bit for bit from the recorded U, Σ, V (the port's own within 2 ulps, P-TK-02), H-TK-05 jointVel within 4 ulps of max \|pEnd\|·‖J⁺‖ (cancellation, K-TK-08), H-TK-23 PseudoInverse against the recorded truncated SVD and MatrixRank through svd2 |
 | 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 5 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
+| 6 | v0.1.20 | 2026-10-21 | `main.js` rewritten on the shared Manipulate layer (`shared/manipulate.js`, `shared/graphics.js`): control specs in Mathematica's form, the picture as Graphics data; no change to behaviour or picture (all unit, golden and browser tests unchanged and passing; screenshots and Manipulate state identical to v0.1.19 at sample settings) |
 
 ## 10. Improvements to consider (not implemented)
 

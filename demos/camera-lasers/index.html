@@ -15,7 +15,7 @@
     #controls .ctl-heading { font-size: 1rem; font-weight: 700; }
     #controls .ctl-vslider { flex-direction: row; align-items: center; gap: 10px; flex-wrap: wrap; }
     #controls .ctl-vslider .ctl-vvalue { flex-basis: 100%; padding-left: 28px; }
-    #controls .ctl-inline { flex-direction: row; align-items: center; flex-wrap: wrap; gap: 6px; }
+    #controls [data-testid=ctl-lambda] { flex-direction: row; align-items: center; flex-wrap: wrap; gap: 6px; }
     #graphic { max-width: 560px; flex-basis: 470px; border: 0; background: transparent; display: flex; flex-direction: column; gap: 6px; }
     #graphic .top-view { background: #fff; }
     #graphic .camera-image { background: #fff; border: 1px solid #000; }
@@ -33,7 +33,7 @@
       </div>
       <div class="controls" id="controls"></div>
       <div class="graphic" id="graphic" data-testid="graphic">
-        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser.</div></noscript>
+        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser.</div></noscript><div class="top-view" id="top-view"></div><div class="camera-image" id="camera-image" data-testid="camera-frame"></div>
       </div>
     </section>
 
