@@ -8,6 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Three Parametrizations of Rotations</title>
   <link rel="stylesheet" href="../../shared/style.css">
+  <script src="../../shared/requirements.js" data-needs-webgl2></script>
   <script type="importmap">
     { "imports": { "three": "../../vendor/three/three.module.js", "three/addons/": "../../vendor/three/addons/" } }
   </script>
@@ -24,7 +25,9 @@
       </div>
       <div class="controls" id="top-controls" style="max-width:none;width:100%"></div>
       <div class="controls" id="controls"></div>
-      <div class="graphic" id="graphic" data-testid="graphic"></div>
+      <div class="graphic" id="graphic" data-testid="graphic">
+        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser with WebGL 2.</div></noscript>
+      </div>
     </section>
 
     <div class="caption">

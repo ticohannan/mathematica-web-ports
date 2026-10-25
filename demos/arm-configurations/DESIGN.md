@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.20 |
+| Code version: | 0.1.21 |
 | Document revision | 1 (2026-10-18) — first implementation |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Common Robot Arm Configurations", contributed by Mohammad Sultan and Aaron T. Becker, published 2017-06-28 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/CommonRobotArmConfigurations/>. Readable source: [`docs/original-source/arm-configurations.txt`](../../docs/original-source/arm-configurations.txt); snapshots: `docs/original-snapshots/arm-configurations-1.png` … `-6.png` (pictures 1 and 2 are identical, N-AC-01); golden data: `tests/golden/arm-configurations.original-states.json` (written with `tools/extract_state.py --snapshots` from the raw notebook, COMMON-DECISIONS §1: `states[0]` = output-cell state, raw notebook line 1948; `snapshots[1…6]` = the snapshot cells' Settings, raw lines 5256, 7471, 9130, 10505, 12137, 13574; `specs` = the stored Specifications) |
-| Port files | app: `robots.js` (the nine DH tables of the popup with the exactness of every entry, the rows of the DH-table control; pure), `model.js` (the opening state, the slider-grid reset of a robot change, one evaluation of the body: Ad, Td, the Graphics3D content, the per-entry exactness of H and the H strings, `drawShaft` transcribed but unreachable, the framing helpers, `stateFromSettings`; pure), `main.js` (slider grid, grip, check box, popup, DH table, H display, three.js viewer with clipping, automation hook), `index.html`; common (CC BY-NC-SA, DH family, owner dh-parameters): `demos/common/dh-chain.js` (`dhTransform` with the explicit exact-angle path, `computeTd(Ad, {chop: false})`), `demos/common/robot-draw.js` (`drawJoint` variant `'ac'`, `drawGripper`, `GROUND`), `demos/common/g3d.js`, `demos/common/g3d-three.js` (`addPrims`, `disposeGroup`); shared (MIT): `shared/exact-pi.js` (`trigPi`, through `dh-chain.js` and for the exactness flags), `shared/mma-text.js` (`piFraction`, `fractionText`), `shared/ui.js` (joint sliders with `labeled: 'text'`, `plus: false`, `steps: 'mma'` and `format`; grip slider with `steps: 'mma'`), `shared/ui-extra.js` (`addCheckbox`, `addPopup`), `shared/mma-extra.js` (`mmaNumberString`, `nDigits`), `shared/mma-lighting.js`, `shared/three-helpers.js` (non-square `createViewer`) |
+| Port files | app: `robots.js` (the nine DH tables of the popup with the exactness of every entry, the rows of the DH-table control; pure), `model.js` (the opening state, the slider-grid reset of a robot change, one evaluation of the body: Ad, Td, the Graphics3D content, the per-entry exactness of H and the H strings, `drawShaft` transcribed but unreachable, the framing helpers, `stateFromSettings`; pure), `main.js` (the Manipulate on `shared/manipulate.js`: slider grid as a custom control, grip, check box, popup, DH table, H display, the model's Graphics3D drawn by `shared/graphics3d-view.js` `View3D` with clipping; automation hook; v0.1.21), `index.html`; common (CC BY-NC-SA, DH family, owner dh-parameters): `demos/common/dh-chain.js` (`dhTransform` with the explicit exact-angle path, `computeTd(Ad, {chop: false})`), `demos/common/robot-draw.js` (`drawJoint` variant `'ac'`, `drawGripper`, `GROUND`), `shared/graphics3d.js`, `shared/graphics3d-three.js` (`addPrims`, `disposeGroup`); shared (MIT): `shared/exact-pi.js` (`trigPi`, through `dh-chain.js` and for the exactness flags), `shared/mma-text.js` (`piFraction`, `fractionText`), `shared/ui.js` (joint sliders with `labeled: 'text'`, `plus: false`, `steps: 'mma'` and `format`; grip slider with `steps: 'mma'`), `shared/ui-extra.js` (`addCheckbox`, `addPopup`), `shared/mma-extra.js` (`mmaNumberString`, `nDigits`), `shared/mma-lighting.js`, `shared/three-helpers.js` (non-square `createViewer`) |
 | Role in the project | further demonstration (batch B) |
 
 ## 1. Purpose and background
@@ -123,13 +123,16 @@ stable test ids of the page: `value-params-*` (the plain value text beside each 
   `GROUND` of `demos/common/robot-draw.js`; `drawShaft` transcribed, never called), the per-entry exactness of Ad, Td and
   H (`dhKinds`, `dotKinds`, §6.4) and the H strings (`hDisplay`, `entryString`); `valueText` (slider value texts),
   `fixedCamera` / `groundWidthPt` (framing check, D-AC-01), `stateFromSettings` (golden data → port state).
-- `main.js`: the slider grid with `shared/ui.js` `Controls.slider` (`plus: false`, `labeled: 'text'` — a plain value text
-  as the original's `Dynamic[params[[i]]]`; revolute on the integer n = −32 … 32, value nπ/32 exact; prismatic on
-  k = 10 … 30, value k/20 exact; the reset value 0.5 is machine and shown "0.5" until the slider moves; `format` from
-  `shared/mma-text.js`), rebuilt on a robot change; grip via `Controls.slider` with `steps:'mma'` and its ⊕ panel;
-  `addCheckbox`, `addPopup` (shared/ui-extra.js); the DH table and H as HTML tables; one non-square `createViewer`
-  420 × 350 (box ±3, viewAngle 12°) with `addMathematicaLighting`, `LinearSRGBColorSpace` and six clipping planes at ±3;
-  `addPrims` / `disposeGroup` from `demos/common/g3d-three.js`; the automation hook `window.__demo`.
+- `main.js` (v0.1.21) is one `Manipulate({…})` call of `shared/manipulate.js`: the slider grid as a `Control` with
+  `shared/ui.js` `Controls.slider` (`plus: false`, `labeled: 'text'` — a plain value text as the original's
+  `Dynamic[params[[i]]]`; revolute on the integer n = −32 … 32, value nπ/32 exact; prismatic on k = 10 … 30, value k/20
+  exact; the reset value 0.5 is machine and shown "0.5" until the slider moves; `format` from `shared/mma-text.js`),
+  rebuilt with the DH table on a robot change, a reset and setState (`buildGrid`); the grip slider spec on the path
+  `g.v` with its ⊕ panel (`Assign` records the exactness, `Moved` restores "1" vs "1."); the check box and the popup
+  (`Assign` = `selectRobot`) placed in their own containers (`parent`); the H display in `after`; `merge` = the hook's
+  setState rule. The picture is the model's `graphic` with its own options (PlotRange ±3, ViewAngle 12°, ImageSize
+  {420, 350}): `View3D` (`shared/graphics3d-view.js`) makes the non-square viewer (fixed camera, never refitted) with
+  `addMathematicaLighting`, `LinearSRGBColorSpace` and the six clipping planes at ±3; the automation hook `window.__demo`.
 
 ### 6.2 Reuse, line by line against robot-singularities (RS)
 
@@ -146,7 +149,7 @@ stable test ids of the page: `value-params-*` (the plain value text beside each 
 | `drawShaft` | — | — | transcribed but unreachable (Q-AC-01) |
 | slider grid `Slider[params[[i]] = 0; Dynamic[…], {-π, π, π/32}]`, `{1/2, 3/2, 1/20}` reset 0.5 | same idiom (`{-π 1.01, π 1.01, 0.01π}`, `{0, 1, 0.01}`, Appearance "Labeled") | `main.js` `buildSliders` (index range input, text field) | same rebuild pattern with `shared/ui.js` sliders (`plus: false`, `format`); different ranges, exact values, plain (non-editable) value text, no 6.28 wrap |
 | popup of robots | `iType` popup of 16 names | `addPopup` | same helper; here the popup value is the table itself |
-| `Graphics3D` options `ViewAngle->12Degree, PlotRange->±3, ImageSize->{420,350}` | automatic range and angle, ImageSize 325 | `fitViewer` (bounding sphere × 1.26) | different framing: fixed box and angle, non-square, clipping (D-AC-01) |
+| `Graphics3D` options `ViewAngle->12Degree, PlotRange->±3, ImageSize->{420,350}` | automatic range and angle, ImageSize 325 | `View3D` SphericalRegion fit (bounding sphere × 1.26) | different framing: fixed box and angle, non-square, clipping (D-AC-01) |
 | H display `MatrixForm[N[Chop[Td[dof]], 2]]` | — | — | new `hDisplay` (`mmaNumberString` for machine entries, `nDigits(x, 2)` of shared/mma-extra.js for exact ones) |
 | DH table `makeDHControl` | — | — | new |
 
@@ -198,8 +201,8 @@ npm run bundle -- arm-configurations
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/arm-configurations/`) | 4 | `index.html`, `main.js`, `model.js`, `robots.js` |
-| `shared/` | 12 | `exact-pi.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma-lighting.js`, `mma-text.js`, `mma.js`, `requirements.js`, `style.css`, `three-helpers.js`, `ui-extra.js`, `ui.js` |
-| `demos/common/` | 4 | `dh-chain.js`, `g3d-three.js`, `g3d.js`, `robot-draw.js` |
+| `shared/` | 20 | `exact-pi.js`, `graphics.js`, `graphics3d-three.js`, `graphics3d-view.js`, `graphics3d.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma-lighting.js`, `mma-text.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-plot.js`, `three-helpers.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
+| `demos/common/` | 2 | `dh-chain.js`, `robot-draw.js` |
 | `vendor/three/` | 9 | `addons/controls/OrbitControls.js`, `addons/lines/Line2.js`, `addons/lines/LineGeometry.js`, `addons/lines/LineMaterial.js`, `addons/lines/LineSegments2.js`, `addons/lines/LineSegmentsGeometry.js`, `addons/renderers/CSS2DRenderer.js`, `three.core.js`, `three.module.js` |
 | added by the bundler | 8 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/arm-configurations/DESIGN.md`, `vendor/three/LICENSE` |
 <!-- bundle-contents:end -->
@@ -265,6 +268,7 @@ Template: [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md).
 | 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 5 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
 | 6 | v0.1.20 | 2026-10-21 | version number only (Manipulate layer extended, eleven more apps migrated to it); no change to this app |
+| 7 | v0.1.21 | 2026-10-23 | `main.js` rewritten on the shared Manipulate layer with a 3D picture (`shared/manipulate.js` + `shared/graphics3d-view.js` `View3D`; Graphics3D data model and renderer moved to MIT `shared/graphics3d.js` / `shared/graphics3d-three.js`, owner decision D1); no change to behaviour or picture (all unit, golden and browser tests passing; three.js scene graph, full-page pixels (SwiftShader) and Manipulate state identical to v0.1.20 at sample settings) |
 
 ## 10. Improvements to consider (not implemented)
 

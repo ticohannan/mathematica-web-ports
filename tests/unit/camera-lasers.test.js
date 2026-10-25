@@ -8,11 +8,13 @@
 import { describe, it, expect } from 'vitest';
 import {
   reticuleScale, majorTicks, minorTicks, Q, Convert3DtoCam, orientation, objectPoints, laserHits, visibleFaces,
-  evaluate, initialSettings, SegmentIntersectionQ, LineIntersectionPoint, γ, DIAL_OPTIONS, negate, clipPolyline,
+  evaluate, initialSettings, SegmentIntersectionQ, LineIntersectionPoint, γ, DIAL_OPTIONS, negate, clipPolyline, fromSaved,
 } from '../../demos/camera-lasers/model.js';
 import { numberText, numberParts } from '../../shared/mma-text.js';
 import { dialPointer, nearest32Index, dialGraphics, DIAL_TABLE_32, HAND } from '../../demos/common/dial-control.js';
 import { NAMED } from '../../shared/mma-colors.js';
+import { annotations, annotation, Cases, bounds } from '../../shared/graphics.js';
+import { preGraphics, sameDrawing } from '../support/pre-graphics.js';
 
 const close = (a, b, tol = 1e-12) => {
   if (Array.isArray(b)) { expect(a.length).toBe(b.length); a.forEach((x, i) => close(x, b[i], tol)); return; }
@@ -21,6 +23,11 @@ const close = (a, b, tol = 1e-12) => {
 const state = (o = {}) => ({ ...initialSettings(), ...o, pFixed: (o.p ?? initialSettings().p).slice() });
 const dial = (k) => DIAL_TABLE_32[k + 32].slice();
 const closed = (pts) => [...pts, pts[0]];
+/** the two pictures of one evaluation (Graphics data: top view = [grid, parts], camera image) */
+const pictures = (st) => { const r = evaluate(st); const [[, top], cam] = r.graphics; return { top, cam, view: r.view }; };
+const ids = (g) => annotations(g).map((a) => a.id);
+/** PointSize of the laser dots (dot-1, dot-2) in the camera image */
+const dotSizes = (st) => annotations(pictures(st).cam).filter((a) => /^dot-/.test(a.id)).map((a) => a.style.pointSize);
 
 describe('camera-lasers model', () => {
   it('reticule scale sc: 1/50, 1/10, 1/2, 1 by λ s with tolerant Less at 0.1, 0.25, 0.5', () => {
@@ -89,7 +96,7 @@ describe('camera-lasers model', () => {
     expect(view.InterPt2).toEqual([10000, -1]);
     close(view.InterPt3D1, [-5e-5, 0]);
     close(view.InterPt3D2, [5e-5, 0]);
-    close(view.cam.filter((c) => c.kind === 'point').map((c) => c.size), [1e-5, 1e-5]);
+    close(dotSizes(state({ p: [8, 0], p1: [0, 1] })), [1e-5, 1e-5]);
   });
 
   it('a laser through a corner hits it (inclusive ends, parallel edges ignored)', () => {
@@ -129,7 +136,7 @@ describe('camera-lasers model', () => {
   });
 
   it('laser dot sizes are PointSize[λ 0.2/x]: 0.04 at the default', () => {
-    const size = (o) => evaluate(state(o)).view.cam.filter((c) => c.kind === 'point').map((c) => c.size);
+    const size = (o) => dotSizes(state(o));
     close(size({}), [0.04, 0.04]);
     close(size({ p: [6.94, -0.040000000000000036], p1: [1.0, 0.0] }), [0.015527950310559006, 0.015527950310559006]);
     close(size({ p: [8, 0], p1: [0, 1] }), [1e-5, 1e-5]);
@@ -137,13 +144,14 @@ describe('camera-lasers model', () => {
 
   it('ground grid: Round[20λ] horizontal lines and 2 Round[3/λ] + 1 converging lines, halves to even (λ 1.2 gives 5)', () => {
     const counts = (lambda) => {
-      const v = evaluate(state({ lambda })).view;
-      return [v.cam.filter((c) => c.role === 'ground-row').length, v.cam.filter((c) => c.role === 'ground-ray').length];
+      const { cam } = pictures(state({ lambda }));
+      return [ids(cam).filter((r) => r === 'ground-row').length, ids(cam).filter((r) => r === 'ground-ray').length];
     };
     expect([0.5, 0.24, 1.2, 0.4, 2, 0.1].map(counts)).toEqual([[10, 13], [5, 25], [24, 5], [8, 17], [40, 5], [2, 61]]);
-    const band = evaluate(initialSettings()).view.cam.find((c) => c.role === 'horizon-band');
-    expect(band.from[1]).toBe(-0.045454545454545456);
-    expect(band.to).toEqual([0.8, 0]);
+    // Rectangle[{-cw, y}, {cw, 0}] (drawn as its polygon)
+    const band = bounds(annotation(pictures(initialSettings()).cam, 'horizon-band').g);
+    expect(band[0][1]).toBe(-0.045454545454545456);
+    expect(band[1]).toEqual([0.8, 0]);
   });
 
   it('objectPts gets its closing point twice (original quirk, no visible effect)', () => {
@@ -153,7 +161,7 @@ describe('camera-lasers model', () => {
     expect(v.objectPts[5]).toEqual(v.objectPts[0]);
     expect(v.faces.length).toBe(1);
     expect(visibleFaces(0.5, [[2.5, 1], [2.5, 1]])).toEqual([]); // the {P1, P1} edge: P.y/P.x > P.y/P.x is False
-    expect(v.top.find((t) => t.role === 'object').pts.length).toBe(5);
+    expect(Cases(annotation(pictures(initialSettings()).top, 'object').g, 'Polygon')[0].pts.length).toBe(5);
   });
 
   it('the dial snaps to the nearest of the 65 points {Cos a, Sin a}, a = -π … π in steps of π/32', () => {
@@ -174,8 +182,8 @@ describe('camera-lasers model', () => {
 
   it('θ label only for θ >= π/16 (tolerant), so for every clockwise dial position', () => {
     const shown = (k) => {
-      const v = evaluate(state({ p1: dial(k) })).view;
-      return [v.top.some((t) => t.role === 'theta-label'), v.theta];
+      const { top, view } = pictures(state({ p1: dial(k) }));
+      return [ids(top).includes('theta-label'), view.theta];
     };
     expect(shown(0)).toEqual([false, 0]);
     expect(shown(1)[0]).toBe(false);
@@ -188,52 +196,65 @@ describe('camera-lasers model', () => {
   });
 
   it('orientation arc from π/2 to π/2 + θ, counter-clockwise', () => {
-    const a0 = evaluate(initialSettings()).view.top;
-    const arrow0 = a0.find((t) => t.role === 'orientation-arrow');
+    // the arrow's head: arrowheadPolygon(tip, direction, L) = Polygon[{tip, base ± half-width}] (base = tip − L direction)
+    const head = (top) => { const [tip, b1, b2] = Cases(annotation(top, 'orientation-arrow').g, 'Polygon')[0].pts, b = [(b1[0] + b2[0]) / 2, (b1[1] + b2[1]) / 2], l = Math.hypot(tip[0] - b[0], tip[1] - b[1]); return { tip, direction: [(tip[0] - b[0]) / l, (tip[1] - b[1]) / l] }; };
+    const arcOf = (top) => Cases(annotation(top, 'orientation-arc').g, 'Line')[0].pts;
+    const a0 = pictures(initialSettings()).top;
+    const arrow0 = head(a0);
     close(arrow0.tip, [3, 0.8]);
     close(arrow0.direction, [-1, 0]);
-    const arc0 = a0.find((t) => t.role === 'orientation-arc').pts;
+    const arc0 = arcOf(a0);
     close(arc0[0], arc0[arc0.length - 1]); // zero length
-    const a1 = evaluate(state({ p1: [0, 1] })).view.top;
-    const arc1 = a1.find((t) => t.role === 'orientation-arc').pts;
+    const a1 = pictures(state({ p1: [0, 1] })).top;
+    const arc1 = arcOf(a1);
     close(arc1[0], [3, 0.8]);
     close(arc1[arc1.length - 1], [2, -0.2]);
     close(arc1[Math.floor(arc1.length / 2)], [3 - Math.SQRT1_2, -0.2 + Math.SQRT1_2]); // through the upper left quadrant
-    const arrow1 = a1.find((t) => t.role === 'orientation-arrow');
+    const arrow1 = head(a1);
     close(arrow1.tip, [2, -0.2]);
     close(arrow1.direction, [0, -1]);
   });
 
   it("top view elements in the original's order with their colours", () => {
-    const kinds = (v) => v.top.map((t) => t.kind);
-    const base = ['polygon', 'polygon', 'arc', 'arrow', 'line'];
-    const rest = ['line', 'rect', 'rect', 'rect', 'line', 'line', 'line', 'line', 'line', 'line', 'point', 'text', 'arrow', 'arrow', 'text', 'line', 'line', 'polygon', 'arrow', 'arrow', 'text', 'loc'];
-    expect(kinds(evaluate(initialSettings()).view)).toEqual([...base, ...rest]);
-    const v8 = evaluate(state({ p1: dial(8) })).view;
-    expect(kinds(v8)).toEqual([...base, 'text', ...rest]);
-    const top = v8.top;
-    expect(top[0]).toMatchObject({ role: 'field-of-view', fill: NAMED.Blue, opacity: 0.2 });
-    expect(top[1]).toMatchObject({ role: 'object', fill: [0.6, 0.4, 0.2], edge: NAMED.Black });
-    expect(top.find((t) => t.role === 'camera').fill).toEqual([1 / 3, 1 / 3, 1 / 3]);
-    expect(top.find((t) => t.role === 'laser-1')).toMatchObject({ fill: [1, 0.5, 0], edge: NAMED.Black });
-    expect(top.find((t) => t.role === 'beam-1').stroke).toEqual(NAMED.Red);
-    expect(top.find((t) => t.role === 'reflection-2')).toMatchObject({ stroke: NAMED.Red, dashed: true });
-    expect(top.find((t) => t.role === 'image-plane')).toMatchObject({ stroke: NAMED.Blue, thicknessPx: 2 });
-    expect(top.find((t) => t.role === 'pinhole')).toMatchObject({ color: NAMED.Blue, sizePx: 7.5 });
+    const base = ['field-of-view', 'object', 'orientation-arc', 'orientation-arrow', 'orientation-lines'];
+    const rest = ['optical-axis', 'camera', 'laser-1', 'laser-2', 'beam-1', 'beam-2', 'reflection-1', 'reflection-2', 'image-plane',
+      'image-plane-back', 'pinhole', 'title', 'lambda-arrow-1', 'lambda-arrow-2', 'lambda-label', 'lambda-guide-1', 'lambda-guide-2',
+      'inner-cone', 's-arrow-1', 's-arrow-2', 's-label', 'locator-icon'];
+    expect(ids(pictures(initialSettings()).top)).toEqual([...base, ...rest]);
+    const top = pictures(state({ p1: dial(8) })).top;
+    expect(ids(top)).toEqual([...base, 'theta-label', ...rest]);
+    // the kinds of primitive: Rectangle[…] drawn as its polygon, the arc a Line, Arrow a Line and its head, loc an Inset
+    const kind = (a) => (a.g.head === 'Inset' ? 'loc' : Cases(a.g, 'Text').length ? 'text' : Cases(a.g, 'Point').length ? 'point'
+      : Cases(a.g, 'Line').length && Cases(a.g, 'Polygon').length ? 'arrow' : Cases(a.g, 'Polygon').length ? 'polygon' : 'line');
+    expect(annotations(top).map(kind)).toEqual(['polygon', 'polygon', 'line', 'arrow', 'line', 'text', 'line', 'polygon', 'polygon', 'polygon',
+      'line', 'line', 'line', 'line', 'line', 'line', 'point', 'text', 'arrow', 'arrow', 'text', 'line', 'line', 'polygon', 'arrow', 'arrow', 'text', 'loc']);
+    const st = (id) => annotation(top, id).style;
+    expect(st('field-of-view')).toMatchObject({ color: NAMED.Blue, opacity: 0.2 });
+    expect(annotations(top)[0].id).toBe('field-of-view');
+    expect(st('object')).toMatchObject({ color: [0.6, 0.4, 0.2], edge: { color: NAMED.Black } });
+    expect(annotations(top)[1].id).toBe('object');
+    expect(st('camera').color).toEqual([1 / 3, 1 / 3, 1 / 3]);
+    expect(st('laser-1')).toMatchObject({ color: [1, 0.5, 0], edge: { color: NAMED.Black } });
+    expect(st('beam-1').color).toEqual(NAMED.Red);
+    expect(st('reflection-2')).toMatchObject({ color: NAMED.Red, dash: [4, 3] });
+    expect(st('image-plane')).toMatchObject({ color: NAMED.Blue, thickness: { abs: 2 } });
+    expect(st('pinhole')).toMatchObject({ color: NAMED.Blue, pointSize: { abs: 7.5 } });
   });
 
   it("camera image elements in the original's order", () => {
-    const cam = evaluate(initialSettings()).view.cam;
-    const roles = cam.map((c) => c.role);
+    const { cam } = pictures(initialSettings());
+    const roles = ids(cam);
     const runs = [];
     for (const r of roles) { if (runs.length && runs[runs.length - 1][0] === r) runs[runs.length - 1][1]++; else runs.push([r, 1]); }
     expect(runs.slice(0, 8)).toEqual([['ground-row', 10], ['ground-ray', 13], ['horizon-band', 1], ['ground', 1], ['face', 1], ['dot-1', 1], ['dot-2', 1], ['reticule', 1]]);
     expect(roles.filter((r) => r === 'major-tick').length).toBe(16);
     expect(roles.filter((r) => r === 'tick-label').length).toBe(16);
     expect(roles.filter((r) => r === 'minor-tick').length).toBe(58);
-    expect(cam[cam.length - 1]).toMatchObject({ role: 'title', text: 'camera image' });
-    close(cam[cam.length - 1].at, [0, 0.32]);
-    const labels = cam.filter((c) => c.role === 'tick-label').map((c) => numberText(c.value));
+    const title = annotations(cam).at(-1);
+    expect(title.id).toBe('title');
+    expect(Cases(title.g, 'Text')[0].expr.expr).toBe('camera image');
+    close(Cases(title.g, 'Text')[0].pos, [0, 0.32]);
+    const labels = annotations(cam).filter((a) => a.id === 'tick-label').map((a) => a.attrs['data-text']);
     expect(labels.slice(0, 4)).toEqual(['0.8', '−0.8', '1', '−1']);
   });
 
@@ -254,7 +275,7 @@ describe('camera-lasers model', () => {
 
   it('an object face at x = 0 gives no laser dot and no face instead of an error (port deviation)', () => {
     const { view } = evaluate(state({ p: [0.5, 0] }));
-    expect(view.cam.filter((c) => c.kind === 'point').length).toBe(0); // REGRESSION PIN until H-CL-11 / M-CL-08
+    expect(dotSizes(state({ p: [0.5, 0] })).length).toBe(0); // REGRESSION PIN until H-CL-11 / M-CL-08
     for (const f of view.faces) for (const q of f) expect(Number.isFinite(q[0]) && Number.isFinite(q[1])).toBe(true);
     expect(view.faces.some((f) => f.some((q) => Math.abs(q[0]) > 100))).toBe(false); // no face with a vertex at x = 0
   });
@@ -277,7 +298,57 @@ describe('drawing: lines clipped to the plot range (D-CL-08)', () => {
     expect(runs.map((r) => r.offset)).toEqual([0, 16]);
   });
   it('the model keeps the original points (beam to x = 10000)', () => {
-    const v = evaluate({ ...initialSettings(), p: [3, 3.5] }).view;
-    expect(v.top.find((t) => t.role === 'beam-1').pts[1][0]).toBe(10000);
+    const { top } = pictures({ ...initialSettings(), p: [3, 3.5] });
+    expect(Cases(annotation(top, 'beam-1').g, 'Line')[0].pts[1][0]).toBe(10000);
+  });
+});
+
+// ---- v0.1.21 (owner decision D2): the model returns both pictures as Graphics data. The drawing output of the page
+// before that change is frozen in tests/unit/fixtures/camera-lasers-drawing.pre-graphics.json (commit f04c973): the
+// Graphics data the page drew and the model's own primitive lists (top, cam) it drew them from.
+describe('camera-lasers: Graphics data = the drawing before v0.1.21', () => {
+  const fx = preGraphics('camera-lasers');
+  const replay = (steps) => {
+    let r = evaluate(initialSettings());
+    for (const st of steps) r = evaluate({ ...r.state, ...fromSaved(st) }); // the hook loadState: setState(fromSaved(s))
+    return r;
+  };
+  it.each(fx.states.map((s) => [s.name, s]))('%s: the same Graphics data, number for number', (name, s) => {
+    const r = replay(s.steps);
+    expect(r.state).toEqual(s.state);
+    const { replaced } = sameDrawing(r.graphics, s.graphics, name);
+    // the one Raw part before (the loc[Black] icon) is now an Inset of demos/common/arm-view.js locIcon
+    expect(replaced.map((x) => [x.head, x.id, x.g.head])).toEqual([['Annotation', 'locator-icon', 'Inset']]);
+    expect(replaced[0].g.pos).toEqual(s.state.p);
+  });
+  it.each(fx.states.map((s) => [s.name, s]))('%s: every part of the old primitive lists, read back through annotations()', (name, s) => {
+    const r = replay(s.steps);
+    const [[, top], cam] = r.graphics;
+    for (const [old, pic] of [[s.model.top, top], [s.model.cam, cam]]) {
+      const as = annotations(pic).filter((a) => a.id !== 'locator-icon' || old.some((p) => p.kind === 'loc'));
+      // one Annotation per primitive, in the same order (a dashed line: one per visible run, at most one here)
+      const ids = as.map((a) => a.id), want = old.filter((p) => !(p.dashed && !ids.includes(p.role))).map((p) => p.role);
+      expect(ids).toEqual(want);
+      as.forEach((a, i) => {
+        const p = old.filter((q) => want.includes(q.role))[i], st = a.style;
+        const prim = (h) => Cases(a.g, h)[0];
+        switch (p.kind) {
+          case 'polygon': expect(prim('Polygon').pts).toEqual(p.pts); break;
+          case 'rect': expect(bounds(a.g)).toEqual([[Math.min(p.from[0], p.to[0]), Math.min(p.from[1], p.to[1])], [Math.max(p.from[0], p.to[0]), Math.max(p.from[1], p.to[1])]]); break;
+          case 'line': case 'arc': if (!p.dashed) expect(prim('Line').pts).toEqual(p.pts); else expect(st.dash).toEqual([4, 3]); break;
+          case 'arrow': expect(prim('Line').pts).toEqual(p.pts); expect(prim('Polygon').pts[0]).toEqual(p.tip ?? p.pts[p.pts.length - 1]); break;
+          case 'point': expect(prim('Point').pts).toEqual([p.at]); expect(st.pointSize).toEqual(p.sizePx ? { abs: p.sizePx } : p.size); break;
+          case 'text': expect(prim('Text').pos).toEqual(p.at); expect(prim('Text').expr.expr).toBe(p.text); break;
+          case 'label': expect(a.attrs['data-text']).toBe(numberText(p.value)); break;
+          case 'loc': expect(a.g.pos).toEqual(p.at); break;
+          default: throw new Error(p.kind);
+        }
+        if (p.fill) expect(st.color).toEqual(p.fill);
+        if (p.stroke) expect(st.color).toEqual(p.stroke);
+        if (p.color && p.kind !== 'loc' && p.kind !== 'label') expect(st.color).toEqual(p.color);
+        if (p.opacity != null) expect(st.opacity).toBe(p.opacity);
+        if (p.thicknessPx) expect(st.thickness).toEqual({ abs: p.thicknessPx });
+      });
+    }
   });
 });

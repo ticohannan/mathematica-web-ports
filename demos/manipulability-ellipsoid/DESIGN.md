@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.20 |
+| Code version: | 0.1.21 |
 | Document revision | 1 (2026-10-18) — first implementation |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Manipulability Ellipsoid of a Robot Arm", contributed by Aaron T. Becker and Mary Burbage, published 2016-06-24 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ManipulabilityEllipsoidOfARobotArm/>. Readable source: [`docs/original-source/manipulability-ellipsoid.txt`](../../docs/original-source/manipulability-ellipsoid.txt); snapshots: `docs/original-snapshots/manipulability-ellipsoid-1.png` … `-4.png`; golden data: `tests/golden/manipulability-ellipsoid.original-states.json` (COMMON-DECISIONS §1, written by `tools/extract_state.py --snapshots`: `states[0]` = output-cell state, raw notebook line 1715; `snapshots[1…4]` = the snapshot cells' Settings, raw lines 5000, 7841, 10766, 14286; `specs` = the stored Specifications) |
-| Port files | app: `model.js` (JvRRRanthro, the joint points, the θ/θprev/p logic of the body with its angle encodings, `settle`, the SVD and μ, `splineCircle` as a sampled arc, the robot and ellipsoid graphics as Graphics3D data; pure), `main.js` (μ label, three dials, three.js viewer with PlotRange clipping, automation hook), `index.html` — no app-level dial file; common (CC BY-NC-SA): `demos/common/dial-control.js` and through it `demos/common/arrow-arcs.js` (owner two-link-kinematics; `setter: 'nearest32'`, `arc: 'myArrowArc2'`, `imageSize: 'automatic'`, `keyStep: 'grid'`, `labels: 'stacked'`), `demos/common/g3d.js`, `demos/common/g3d-three.js`, `demos/common/svd3.js` (`manipEllip(J, c, {scale: 1, zeroTol: 100 * 2 ** -53})`) (DH family, owner dh-parameters; used unchanged); shared (MIT): `shared/exact-pi.js` (owner: this app; used unchanged), `shared/three-helpers.js` (non-square `createViewer` with `imageSize`, owner: this app; used unchanged), `shared/mma-lighting.js`, `shared/mma-text.js` (π-fraction dial labels, owner two-link-kinematics, through dial-control.js), `shared/mma-extra.js` (`nearest`, `engineeringForm`), `shared/mma-exact.js` (`det`, `arcTan`), `shared/mma.js` (tolerant `!=`), `shared/svg-plot.js`, `shared/ui.js`, `shared/mma-colors.js` |
+| Port files | app: `model.js` (JvRRRanthro, the joint points, the θ/θprev/p logic of the body with its angle encodings, `settle`, the SVD and μ, `splineCircle` as a sampled arc, the robot and ellipsoid graphics as Graphics3D data; pure), `main.js` (the Manipulate on `shared/manipulate.js`: three dials as custom controls, μ label, the model's Graphics3D drawn by `shared/graphics3d-view.js` `View3D` with PlotRange clipping; automation hook; v0.1.21), `index.html` — no app-level dial file; common (CC BY-NC-SA): `demos/common/dial-control.js` and through it `demos/common/arrow-arcs.js` (owner two-link-kinematics; `setter: 'nearest32'`, `arc: 'myArrowArc2'`, `imageSize: 'automatic'`, `keyStep: 'grid'`, `labels: 'stacked'`), `shared/graphics3d.js`, `shared/graphics3d-three.js`, `demos/common/svd3.js` (`manipEllip(J, c, {scale: 1, zeroTol: 100 * 2 ** -53})`) (DH family, owner dh-parameters; used unchanged); shared (MIT): `shared/exact-pi.js` (owner: this app; used unchanged), `shared/three-helpers.js` (non-square `createViewer` with `imageSize`, owner: this app; used unchanged), `shared/mma-lighting.js`, `shared/mma-text.js` (π-fraction dial labels, owner two-link-kinematics, through dial-control.js), `shared/mma-extra.js` (`nearest`, `engineeringForm`), `shared/mma-exact.js` (`det`, `arcTan`), `shared/mma.js` (tolerant `!=`), `shared/svg-plot.js`, `shared/ui.js`, `shared/mma-colors.js` |
 | Role in the project | further demonstration (batch B) |
 
 ## 1. Purpose and background
@@ -109,7 +109,7 @@ listed `mu-label`; the inventory test collects only interactive elements).
   `updateAngles(state)` (the prev tests, the three ArcTan lines, the 2π shift of θ1); `trig`, `JvRRRanthro(angles)`,
   `points(angles)` (o0, o1, o2, oc, z1); `manipulability(J)` (`svd3(J, {zeroTol: 100 * 2 ** -53})`, rank, μ = `det` of
   the diagonal Σfull); `muText` (`engineeringForm`); `splineArcAngles` and `splineCircle(m, r, angles)` (a sampled `Line`,
-  D-ME-12); `armPlaneRotation(θ1)`; `robotContent(angles, points)` (Graphics3D data, `demos/common/g3d.js`);
+  D-ME-12); `armPlaneRotation(θ1)`; `robotContent(angles, points)` (Graphics3D data, `shared/graphics3d.js`);
   `evaluate(state)` = one evaluation of the body (order in 6.3; the ellipsoid by `manipEllip(J, oc, {scale: 1, zeroTol:
   100 * 2 ** -53})` of `demos/common/svd3.js`, then the robot); `settle(state)` = evaluations until no variable changes
   (D-ME-10); `ellipsoidSummary(view)`; `initialState()` (= live state = initial settings), `SOURCE_DEFAULTS` (the Input
@@ -122,18 +122,22 @@ listed `mu-label`; the inventory test collects only interactive elements).
   `demos/common/arrow-arcs.js` (always an Arrow, Q-ME-03), automatic image size (180 px, F-ME-01), LocatorPane picking
   via `shared/svg-plot.js` `addLocators` (`pickAnywhere: true`), and `keyStep: 'grid'` (A-ME-02). A dial's `onInput`
   stores the index m of the snapped table point (−32 stored as 32, the same point {−1, 0}).
-- `main.js` (browser): the μ label (HTML, 18 px, mantissa and superscript exponent; `data-text` holds the plain
-  EngineeringForm text, D-ME-09), three dials, one `createViewer` of `shared/three-helpers.js` with the non-square size
-  (box = PlotRange, viewPoint {1.3, −2.4, 2}, viewAngle 18°, `imageSize: [440, 420]`), `addMathematicaLighting` of
-  `shared/mma-lighting.js` + `LinearSRGBColorSpace` (as robot-singularities), `localClippingEnabled` and six clipping
-  planes at the PlotRange, `addPrims` / `disposeGroup` of `demos/common/g3d-three.js` (points with the image width as
-  size, everything else with the box diagonal, D-ME-03), the automation hook. Each change runs `settle` (D-ME-10).
+- `main.js` (browser, v0.1.21) is one `Manipulate({…})` call of `shared/manipulate.js`: three dials as `Control`s
+  on the paths `m.0`, `m.1`, `m.2` (the dial shows the point of m[i]; `Assign` stores the snapped table index), the
+  μ label (HTML, 18 px, mantissa and superscript exponent; `data-text` holds the plain EngineeringForm text, D-ME-09)
+  in `after`, `merge` = the hook's setState rule. The body runs `settle` (D-ME-10) and returns the model's graphic
+  with the port's default `PointSize` (D-ME-03) and its own options; `View3D` (`shared/graphics3d-view.js`) makes the
+  non-square viewer from them (box = PlotRange, viewPoint {1.3, −2.4, 2}, ViewAngle 18°, ImageSize {440, 420}; fixed
+  camera), `addMathematicaLighting` of `shared/mma-lighting.js` + `LinearSRGBColorSpace` (as robot-singularities),
+  `localClippingEnabled` and six clipping planes at the PlotRange (`clipOrder: 'max-first'`), points with the image
+  width as size (`pointLength: 'ImageWidth'`), everything else with the box diagonal (D-ME-03); without WebGL 2 the
+  picture is left out (`webgl2Fallback`); the automation hook.
 
 ### 6.2 Reuse, line by line against robot-singularities (RS)
 
 | Original code here | RS original | RS port code | Verdict for this app |
 |--------------------|-------------|--------------|----------------------|
-| `splineCircle[m_List, r_, angles_List: {0, 2π}]` (Initialization) | identical definition | `g3d.js` `UnitCircle()` (only the full unit circle, sampled 129 points) | identical code; this app also needs ARCS `{0, θ1}`, `{0, θ2}`, `{θ2, θ2+θ3}` with the `Mod[angles//N, 2π]`, `If[end <= start, end += 2π]` logic → `splineCircle(m, r, angles)` in this app's `model.js`, a sampled `Line` primitive (Q-ME-01, Q-ME-02; `demos/common/g3d.js` has no `SplineArc`, D-ME-12) |
+| `splineCircle[m_List, r_, angles_List: {0, 2π}]` (Initialization) | identical definition | `g3d.js` `UnitCircle()` (only the full unit circle, sampled 129 points) | identical code; this app also needs ARCS `{0, θ1}`, `{0, θ2}`, `{θ2, θ2+θ3}` with the `Mod[angles//N, 2π]`, `If[end <= start, end += 2π]` logic → `splineCircle(m, r, angles)` in this app's `model.js`, a sampled `Line` primitive (Q-ME-01, Q-ME-02; `shared/graphics3d.js` has no `SplineArc`, D-ME-12) |
 | `{U, Σfull, V} = SingularValueDecomposition[N[J]]` | identical | `svd3.js` `svd3` | shared (`demos/common/svd3.js`) with its `zeroTol` option (COMMON-DECISIONS §5, documented by dh-parameters): this app passes `100 * 2 ** -53`, the documented tolerance 100·10^-p·σ1 (K-ME-01); the default 0 keeps RS unchanged |
 | `MatrixRank[Σ] > 2` | identical (`MatrixRank[Σfull]`) | `svd3.js` `matrixRank` (3 eps relative, K-RS-05) | shared unchanged |
 | ellipsoid `GeometricTransformation[{Arrowheads[.02], If[…>0.1, …] ×3, If[MatrixRank…, Ellipsoid[{0,0,0}, Σ^2]]}, {U, oc}]` | identical text, but `Σfull = Σfull/2` and translation `o3coords[params]`; here `Σ = Σfull/1` (separate variable) and translation `oc` | `svd3.js` `manipEllip(J, o3)` (halves inside) | `manipEllip(J, c, {scale = 1/2, zeroTol = 0})` (COMMON-DECISIONS §3, §5; here `scale: 1`, `zeroTol: 100 * 2 ** -53`); colours Blue/Red/Green/Darker[Green], LightBlue at Opacity 0.5, thresholds and rotations identical |
@@ -141,15 +145,15 @@ listed `mu-label`; the inventory test collects only interactive elements).
 | o0 … oc, z1 closed form | `o3coords` from the DH chain | `robots.js` `makeO3coords` | not shared (no DH chain here) |
 | robot: Cylinders, thick arcs, Points with PointSize[Medium/Large], `EdgeForm[Black]` | `drawJoint`, `drawCoordAxes`, `drawWristCenter` | `model.js` | new (colours: red base, blue and green joints, gray links) |
 | three dial controls (LocatorPane) | popup + slider grid | `main.js` | `demos/common/dial-control.js` + `arrow-arcs.js` (owner two-link-kinematics), not in this app |
-| Graphics3D options `PlotRange` fixed, `ViewAngle->18Degree`, `ImageSize->{440,420}` | workspace: no PlotRange, automatic ViewAngle, `ImageSize->325` | `main.js` `fitViewer` (bounding sphere × 1.26) | different framing (D-ME-01): fixed box, fixed angle, non-square image, clipping |
+| Graphics3D options `PlotRange` fixed, `ViewAngle->18Degree`, `ImageSize->{440,420}` | workspace: no PlotRange, automatic ViewAngle, `ImageSize->325` | `main.js` `View3D` SphericalRegion fit (bounding sphere × 1.26) | different framing (D-ME-01): fixed box, fixed angle, non-square image, clipping |
 | `Det[Σfull]`, `EngineeringForm` | — | — | `det` of shared/mma-exact.js, `engineeringForm` of shared/mma-extra.js (COMMON-DECISIONS §3) |
 | exact angles (multiples of π/32) | machine slider values (−1.01π + k·0.01π) | `robots.js` `cosSinConst` for table constants only | `shared/exact-pi.js` (MIT, octant reduction; owner: this app, present since the v0.1.15 foundation, used unchanged); `dhTransform` keeps its machine path |
-| directives, scoping, `GeometricTransformation[g, {m, v}]`, Show, flatten, primitiveBounds | same language | `g3d.js` | shared (`demos/common/g3d.js`, unchanged): `EdgeForm` (added by dh-parameters); `PointSize[Medium]`/`PointSize[Large]` passed as the numbers 0.01 / 0.013 (D-ME-03); the arcs by this app's `splineCircle` (D-ME-12); the arm-plane rotation `RotationMatrix[θ1, {0,0,1}].RotationMatrix[π/2, {1,0,0}]` built in `model.js` from the exact trig of θ1 (`rotationMatrix` stays on Math.cos/sin) |
-| three.js conversion (`addPrims`, cylinders with rims, arrows as line + cone, ellipsoid, translucent double-sided), lighting, colour space | same | `main.js` (not exported) | `demos/common/g3d-three.js` (`addPrims`, `disposeGroup(groups)`, `fitViewer(viewer, vp)`); clipping planes passed through `addPrims`' context as RS's phase space does |
+| directives, scoping, `GeometricTransformation[g, {m, v}]`, Show, flatten, primitiveBounds | same language | `g3d.js` | shared (`shared/graphics3d.js`, unchanged): `EdgeForm` (added by dh-parameters); `PointSize[Medium]`/`PointSize[Large]` passed as the numbers 0.01 / 0.013 (D-ME-03); the arcs by this app's `splineCircle` (D-ME-12); the arm-plane rotation `RotationMatrix[θ1, {0,0,1}].RotationMatrix[π/2, {1,0,0}]` built in `model.js` from the exact trig of θ1 (`rotationMatrix` stays on Math.cos/sin) |
+| three.js conversion (`addPrims`, cylinders with rims, arrows as line + cone, ellipsoid, translucent double-sided), lighting, colour space | same | `main.js` (not exported) | `shared/graphics3d-three.js` (`addPrims`, `disposeGroup(groups)`, `fitViewer(viewer, vp)`); clipping planes passed through `addPrims`' context as RS's phase space does |
 
 Moving RS code into `demos/common/` (g3d.js, svd3.js, dh-chain.js, robot-draw.js, g3d-three.js) is owned by
 "Denavit–Hartenberg Parameters for a Three-Link Robot", whose design §6 holds the move plan and its conditions (RS keeps
-re-export shims, RS's suite gates the move). This app uses g3d.js, svd3.js and g3d-three.js only. Of the other users,
+re-export shims, RS's suite gates the move). This app uses g3d.js, svd3.js and g3d-three.js only. (Since v0.1.21 `g3d.js` and `g3d-three.js` are the MIT modules `shared/graphics3d.js` and `shared/graphics3d-three.js`, the generic SVD is `shared/svd3.js`, and the page draws through `shared/graphics3d-view.js` `View3D`; this table records the v0.1.16 move.) Of the other users,
 "Robot Manipulator Workspaces" shares RS's `drawJoint` and `drawWristCenter`; the DH and Arm-Configurations
 Demonstrations have their own `drawJoint` variants and share `drawGripper`.
 
@@ -209,8 +213,8 @@ npm run bundle -- manipulability-ellipsoid
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/manipulability-ellipsoid/`) | 3 | `index.html`, `main.js`, `model.js` |
-| `shared/` | 12 | `exact-pi.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma-lighting.js`, `mma-text.js`, `mma.js`, `requirements.js`, `style.css`, `svg-plot.js`, `three-helpers.js`, `ui.js` |
-| `demos/common/` | 6 | `arrow-arcs.js`, `dial-control.js`, `g3d-three.js`, `g3d.js`, `prm-core.js`, `svd3.js` |
+| `shared/` | 21 | `exact-pi.js`, `graphics.js`, `graphics3d-three.js`, `graphics3d-view.js`, `graphics3d.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma-lighting.js`, `mma-text.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svd3.js`, `svg-plot.js`, `three-helpers.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
+| `demos/common/` | 4 | `arrow-arcs.js`, `dial-control.js`, `prm-core.js`, `svd3.js` |
 | `vendor/three/` | 9 | `addons/controls/OrbitControls.js`, `addons/lines/Line2.js`, `addons/lines/LineGeometry.js`, `addons/lines/LineMaterial.js`, `addons/lines/LineSegments2.js`, `addons/lines/LineSegmentsGeometry.js`, `addons/renderers/CSS2DRenderer.js`, `three.core.js`, `three.module.js` |
 | added by the bundler | 8 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/manipulability-ellipsoid/DESIGN.md`, `vendor/three/LICENSE` |
 <!-- bundle-contents:end -->
@@ -246,7 +250,7 @@ Verified by e2e "bundle: manipulability-ellipsoid runs from its own folder" (A-M
 | D-ME-09 | deviation | The μ label is HTML text (18 px) above the canvas; the `Invisible["9"^"9"]` spacer is replaced by a fixed line height with room for the exponent. |
 | D-ME-10 | deviation | Update rate: a dial update (at most one per animation frame while dragging, one per key press) runs `settle`: evaluations of the body until no variable changes (normally three); Mathematica's front end decides its own update rate (as D-CP-02); the final picture is the same. Decided at implementation, differing from the draft's "one evaluation per change": with one evaluation the stale θiprev of the previous move puts p_i back at the next move (the second arrow key or the second drag step was undone in the first browser run), while the front end re-evaluates the body after its own assignments to θi; the harness keeps "one evaluation per `set` step" (COMMON-DECISIONS §2) and so does `evaluate`. |
 | D-ME-11 | deviation | Translucent ellipsoid drawn double-sided and sorted per object (as D-RS-08). |
-| D-ME-12 | deviation | `splineCircle` lives in this app's `model.js` (a `Line` of points m + r{Cos t, Sin t, 0}, at most 2π/128 apart, after the original's `Mod`/`If` angle logic) instead of the draft's `SplineArc` primitive in `demos/common/g3d.js`: the DH-family owner did not add `SplineArc` (no other user) and the module is not this app's to change. The picture is the same as with a g3d primitive (D-ME-04). |
+| D-ME-12 | deviation | `splineCircle` lives in this app's `model.js` (a `Line` of points m + r{Cos t, Sin t, 0}, at most 2π/128 apart, after the original's `Mod`/`If` angle logic) instead of the draft's `SplineArc` primitive in `shared/graphics3d.js`: the DH-family owner did not add `SplineArc` (no other user) and the module is not this app's to change. The picture is the same as with a g3d primitive (D-ME-04). |
 | K-ME-01 | known issue (lead) — **resolved** (harness run 2) | μ at exactly singular dial positions. A raw LAPACK SVD leaves a tiny σ3 in 3840 of the 12032 singular grid configurations (NumPy; e.g. θ = (0, π/4, 0): σ3 = 8.8e-17, μ = 2.79e-16 → "279.442×10^-18"), but SingularValueDecomposition's documented Tolerance sets singular values ≤ 100·10^-p·σ1 (≈ 1.1e-14 relative) to 0 (COMMON-DECISIONS §4). The port applies that rule (`zeroTol` of `svd3`/`manipEllip`, COMMON-DECISIONS §5), so the label reads "0." at every singular configuration. To be confirmed by H-ME-05 … H-ME-08 (Σfull and the μ text). Confirmed by H-ME-05 … H-ME-08: Σfull has exact 0. where the port has 0 (θ3 = π: σ = {0.9999999999999998, 0., 0.}, rank 1; θ3 = 0: σ3 = 0.; H-ME-07: σ3 = 0.; H-ME-08: rank 1), Det[Σfull] = 0. and the μ text "0.". |
 | K-ME-02 | known issue (lead) — **resolved** (harness run 2) | Which doubles Mathematica's `N` gives for Cos/Sin of kπ/32: H-ME-12 records N[Table[{Cos[kπ/32], Sin[kπ/32]}, {k, 0, 32}]]; Cos[π/8], Sin[π/8] stay unevaluated (H-ME-04 records p1 = {Cos[Pi/8], −Sin[Pi/8]}) and N[Sin[π/8]] = 0.3826834323650898 = Math.sin(π/8), not the machine radical ½√(2−√2) = 0.3826834323650897 the port used. Port fixed in `shared/exact-pi.js` (the π/8 base uses Math.cos/Math.sin); all 33 points now agree bit for bit (golden "H-ME-12"); N[1/√2] = 0.7071067811865475 as before. |
 | K-ME-03 | known issue (lead) | MatrixRank tolerance shared with K-RS-05 (extra-checks-2, K-RS-05b); on this grid the decision is safe either way (σ3 is 0 after the SVD tolerance at singular points, σ3/σ1 ≥ 0.0048 elsewhere). |
@@ -281,6 +285,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 4 | v0.1.18 | 2026-10-18 | harness run 3: H-ME-11 recorded and accepted; K-ME-05 resolved (ties of the dial setter: first point in table order); no change to the app |
 | 5 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
 | 6 | v0.1.20 | 2026-10-21 | version number only (Manipulate layer extended, eleven more apps migrated to it); no change to this app |
+| 7 | v0.1.21 | 2026-10-23 | `main.js` rewritten on the shared Manipulate layer with a 3D picture (`shared/manipulate.js` + `shared/graphics3d-view.js` `View3D`; Graphics3D data model and renderer moved to MIT `shared/graphics3d.js` / `shared/graphics3d-three.js`, owner decision D1); no change to behaviour or picture (all unit, golden and browser tests passing; three.js scene graph, full-page pixels (SwiftShader) and Manipulate state identical to v0.1.20 at sample settings) |
 
 ## 10. Improvements to consider (not implemented)
 

@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.20 |
+| Code version: | 0.1.21 |
 | Document revision | 5 (2026-10-17) — §11 Errors in the original (R-C); checklist items as operator procedures (R-B) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Three Parametrizations of Rotations" by Aaron T. Becker and Benedict Isichei (CC BY-NC-SA 3.0). Readable source: [`docs/original-source/three-parametrizations.txt`](../../docs/original-source/three-parametrizations.txt) |
-| Port files | `rotations.js` (rotation matrices, conversions, progress; pure), `teapot-data.js` (the original's teapot mesh), `main.js` (three.js scene and controls), `index.html` |
+| Port files | `rotations.js` (rotation matrices, conversions, progress; pure), `teapot-data.js` (the original's teapot mesh), `main.js` (the Manipulate on `shared/manipulate.js`: progress, method and the three groups of controls, the teapots and frames as a three.js scene that is the picture's renderer; v0.1.21), `index.html` (with the start-up notice, A-TP-08) |
 | Role in the project | practice port (the assignment evaluates only the motion-planning app) |
 
 ## 1. Purpose and background
@@ -91,6 +91,7 @@ quaternions), other models, numeric matrix display.
 | A-TP-05 | Credit footer: original title, authors, licence, adaptation notice, links | required by the CC BY-NC-SA 3.0 licence | v0.1.1 | e2e "attribution on" |
 | A-TP-06 | Recovers by itself after the browser restores a lost WebGL context (GPU reset, driver update, sleep): redraws the same view on the white background | without it the scene vanished and came back on black only after the next interaction | v0.1.11 | e2e "redraws by itself after the WebGL context is lost and restored" |
 | A-TP-07 | Standalone bundle: `npm run bundle -- three-parametrizations` writes this app alone, with exactly the files it loads, a root page, README and licence texts, to `dist/three-parametrizations/` (§6.1) | owner rule R-A: anyone can take this one app and host it elsewhere | v0.1.15 | e2e "bundle: three-parametrizations runs from its own folder"; unit "bundle contents listed in DESIGN.md match the collector" |
+| A-TP-08 | Start-up notice (DEC-22): `shared/requirements.js` with `data-needs-webgl2` (watchdog: the page counts as started when `window.__demo.ready` is set) and a `<noscript>` notice in the picture; a clear message when the browser lacks JavaScript modules or WebGL 2 or the page does not start | a clear message instead of an empty or dead page; the last apps without it (owner decision 2026-10-23, DEC-37) | v0.1.21 | e2e "start-up notice when"; e2e "WebGL 2 notice on" |
 
 ## 5. UI inventory
 
@@ -124,9 +125,23 @@ its design document".
   progress interpolation) without DOM or WebGL; `evaluate(state)` computes the Manipulate body:
   the rotation R for the chosen method, the progress rotation Rprog, the rotation axis k, and the
   state with the converted parameters written back (as the original writes them into its sliders).
-- `main.js` keeps the state, builds the controls (`shared/ui.js`) and the three.js scene, enables
-  only the chosen method's controls and redraws teapots, frames and axis after every change.
-- Mathematica's view, line thickness and labels are emulated by `shared/three-helpers.js`.
+- `main.js` (v0.1.21) is one `Manipulate({…})` call of `shared/manipulate.js`: `body` = `evaluate` (its state, with
+  the converted parameters, replaces the Manipulate variables; the layer writes them back into the controls), the
+  method setter bar, the three headed groups of sliders and the axis pad as Mathematica control specs whose
+  `Enabled -> (typeRot == k)` the layer applies after every evaluation (sliders with the port's own number fields,
+  `steps: undefined`), and the progress slider as a `Control` whose factory puts it in the top container
+  `top-controls` (ControlPlacement -> Top for it only; the layer has one controls element). The picture
+  `{id: 'graphic', renderer}`: the renderer (`Teapots`) builds the scene once and before the controls (same canvas size
+  as before): three teapots, the fixed frame, axes and box; its `draw({R, Rprog, k})` places the progress and final
+  teapots and rebuilds the current frame and the axis, in world coordinates as the original. Not `View3D` (its content
+  group and camera refit would change the scene; gap reported).
+- Mathematica's view, line thickness and labels are emulated by `shared/three-helpers.js`. Lighting (since v0.1.21,
+  owner decision 2026-10-23, DEC-36, D-TP-06): as View3D's `Lighting -> Automatic` — Mathematica's documented default
+  lights from `shared/mma-lighting.js`, attached to the camera, on the displayed colour values
+  (`outputColorSpace = LinearSRGBColorSpace`), as in dh-parameters (D-DH-02).
+- Start-up notice (since v0.1.21, owner decision 2026-10-23, DEC-37, A-TP-08): `index.html` loads
+  `shared/requirements.js` with `data-needs-webgl2` before the module and has the `<noscript>` notice in `#graphic`,
+  as the other apps; the layer's hook (`window.__demo.ready`) tells the watchdog that the page started.
 
 ### 6.1 Building and deploying this app alone
 
@@ -143,7 +158,7 @@ Owner rule R-A: this one app can be taken out of the repository and hosted anywh
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/three-parametrizations/`) | 4 | `index.html`, `main.js`, `rotations.js`, `teapot-data.js` |
-| `shared/` | 7 | `linalg.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `style.css`, `three-helpers.js`, `ui.js` |
+| `shared/` | 16 | `graphics.js`, `linalg.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma-lighting.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-plot.js`, `three-helpers.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
 | `vendor/three/` | 9 | `addons/controls/OrbitControls.js`, `addons/lines/Line2.js`, `addons/lines/LineGeometry.js`, `addons/lines/LineMaterial.js`, `addons/lines/LineSegments2.js`, `addons/lines/LineSegmentsGeometry.js`, `addons/renderers/CSS2DRenderer.js`, `three.core.js`, `three.module.js` |
 | added by the bundler | 8 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/three-parametrizations/DESIGN.md`, `vendor/three/LICENSE` |
 <!-- bundle-contents:end -->
@@ -154,7 +169,7 @@ Owner rule R-A: this one app can be taken out of the repository and hosted anywh
   copied files, and `vendor/three/LICENSE` (three.js).
 - Requirements: any static web server (`npx serve`, `python -m http.server`, GitHub Pages); not `file://` (browsers
   block ES modules there); a browser with ES modules and import maps (Firefox ≥ 108, Chrome/Edge ≥ 89, Safari ≥ 16.4);
-  WebGL 2 (three.js draws the whole picture; this app has no start-up notice yet). No server-side code.
+  WebGL 2 (three.js draws the whole picture; without it the start-up notice explains why, A-TP-08). No server-side code.
 - Checked by e2e "bundle: three-parametrizations runs from its own folder" (`tests/e2e/bundle.spec.js`): the bundle folder alone is
   served, its root page must open the app, the app must start (`window.__demo.ready`) without page errors, every request
   must stay inside the folder and succeed, and every script and stylesheet of the bundle must be loaded.
@@ -165,10 +180,11 @@ Owner rule R-A: this one app can be taken out of the repository and hosted anywh
 |----|------|-------------|
 | D-TP-01 | deviation | `findAxisAngle` clamps the ArcCos argument to [−1, 1]. Mathematica would give a tiny complex number which its own `Chop[…,10^-7]` removes; near the identity the original may show k = {0,0,0} where the port shows {1,0,0}. |
 | D-TP-02 | deviation | `Sqrt[1 - R31²]` (findRollPitchYaw), `Sqrt[1 - R33²]` (findZYZEuler) and the ArcSin argument in vectorToAzimuthAngle are guarded against rounding just outside their domain; `ArcTan[0,0]` is Indeterminate in Mathematica but 0 in JS (degenerate branch only). |
-| D-TP-03 | deviation | Lighting, colours of the solid teapot and line widths approximate Mathematica's defaults; axis tick placement is simplified (fixed box edges). |
+| D-TP-03 | deviation | Colours of the solid teapot and line widths approximate Mathematica's defaults (lighting: D-TP-06 since v0.1.21); axis tick placement is simplified (fixed box edges). |
 | D-TP-04 | deviation | Details text: the original writes R_ZYZ = R_z,φ R_y,θ R_z,φ (φ twice) and gives k with latitude/longitude swapped relative to its code; the port's text follows the code (noted on the page). |
 | D-TP-05 | deviation | The 3D picture is as wide as its column, at most 520 px (original `ImageSize -> {375, 375}`); the progress slider is full width (original `ImageSize -> 480`); slider animation speed (6 s per sweep) is a guess. The 2D axis pad can be focused but has no keyboard control. |
-| K-TP-01 | known issue (lead) | Lighting lead (found with K-RS-10 of the robot-singularities app, whose `shared/mma-lighting.js` reproduces Mathematica's documented default `Lighting`, confirmed in Mathematica 15.0.1): `shared/three-helpers.js` places the default lights with the colours of directional lights 1 and 3 swapped, the 4th light RGBColor[0, 0.18, 0.5] instead of RGBColor[0, 0, 0.18] and the green light at z = 2 instead of 3. Not changed (it is part of D-TP-03); to be compared with the original's snapshots before any change, which would go through §8. |
+| D-TP-06 | deviation (owner decision 2026-10-23, DEC-36) | Colours and lighting as the other 3D ports (D-DH-02, D-RS-02): the renderer writes the displayed colour values directly (`outputColorSpace = LinearSRGBColorSpace`, no linear→sRGB encoding) and the lights are Mathematica's documented default lights of `shared/mma-lighting.js` (what `shared/graphics3d-view.js` View3D does for `Lighting -> Automatic`), instead of `shared/three-helpers.js`'s older approximation with sRGB output (K-TP-01). An intentional visible change of v0.1.21: the teapots are shaded with the coloured lights (darker, more saturated), and the unlit lines (frames, axis, box) show their colour values unencoded (darker); everything else in the scene is unchanged (3D parity tool: the scene graph differs only in the lights under the camera and the output colour space; state identical). |
+| K-TP-01 | known issue (lead) | Lighting lead (found with K-RS-10 of the robot-singularities app, whose `shared/mma-lighting.js` reproduces Mathematica's documented default `Lighting`, confirmed in Mathematica 15.0.1): `shared/three-helpers.js` places the default lights with the colours of directional lights 1 and 3 swapped, the 4th light RGBColor[0, 0.18, 0.5] instead of RGBColor[0, 0, 0.18] and the green light at z = 2 instead of 3. Not changed (it is part of D-TP-03); to be compared with the original's snapshots before any change, which would go through §8. Resolved in v0.1.21: the page now uses `shared/mma-lighting.js` (owner decision 2026-10-23, DEC-36, D-TP-06). |
 | Q-TP-01 | quirk kept | `findRollPitchYaw` degenerate branch always returns β = +π/2 (−π/2 also possible). |
 | Q-TP-02 | quirk kept | `findZYZEuler` degenerate branch always returns θ = 0 (θ = π also degenerate). |
 | Q-TP-03 | quirk kept | `findAxisAngle` returns θ in [0, π] (comment says −π…π); k is numerically ill-conditioned at exactly θ = π. |
@@ -204,6 +220,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 8 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 9 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
 | 10 | v0.1.20 | 2026-10-21 | version number only (Manipulate layer extended, eleven more apps migrated to it); no change to this app |
+| 11 | v0.1.21 | 2026-10-23 | `main.js` on the shared Manipulate layer; **owner decision 2026-10-23 (DEC-36):** the newer lighting (Mathematica's documented default lights of `shared/mma-lighting.js`, linear output colour space) replaces createViewer's older approximation — a visible, intentional change (D-TP-06; scene graph otherwise identical); **DEC-37:** the DEC-22 start-up notice (`shared/requirements.js` with WebGL 2 check, `<noscript>`) added (A-TP-08) |
 
 ## 10. Improvements to consider (not implemented)
 

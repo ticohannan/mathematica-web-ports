@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // demos/two-link-kinematics/model.js — "Forward and Inverse Kinematics for Two-Link Arm": one evaluation of the
 // Manipulate body (forward/inverse kinematics, the Jacobian, its singular value decomposition, forward/inverse velocity
-// kinematics) and everything its Graphics list draws, as data. Pure: no DOM, importable in Node.
+// kinematics) and its Graphics list as shared/graphics.js data. Pure: no DOM, importable in Node.
 //
 // Names and order of operations are the original's (Initialization: Theta2inv, Theta1inv, loc; Body: the statements of
 // F-TK-09 … F-TK-15 in DESIGN.md). Arm geometry is demos/common/two-link.js, the arc arrows demos/common/arrow-arcs.js
@@ -14,11 +14,17 @@
 //   Theta1inv[x_, y_, r1_, r2_, Theta2_] := Re[ArcTan[x, y] - ArcTan[r1 + r2 Cos[Theta2], r2 Sin[Theta2]]]
 //   loc[col_, c_] := Module[{sc = 1/25}, {col, Line[{c + sc{0, 1.5}, c + sc{0, 3}}], … four hairs …, Circle[c, sc 2],
 //     {Thickness[1/100], Opacity[0.5], Circle[c, sc 2*.7]}}]
-import { mUnequal, mGreater, mGreaterEq, mLessEq } from '../../shared/mma.js';
+import { mEqual, mUnequal, mGreater, mGreaterEq, mLessEq } from '../../shared/mma.js';
 import { arcTan, norm, fma } from '../../shared/mma-exact.js';
 import { matrixRank } from '../common/svd3.js';
 import { elbowPosition, tipPosition, armGeometry } from '../common/two-link.js';
 import { myArrowArc } from '../common/arrow-arcs.js';
+import { NAMED, darker } from '../../shared/mma-colors.js';
+import {
+  Annotation, Rotate, Rectangle, Disk, Point, Line, Text, Style, RGBColor, Directive, EdgeForm, FaceForm, Opacity, Thickness,
+  AbsoluteThickness, AbsolutePointSize, PointSize, CapForm, FontSize, FontFamily, Italic, None,
+} from '../../shared/graphics.js';
+import { arcArrowGraphics, arrowheadPolygon } from '../../shared/graphics-extras.js';
 
 const nz = (x) => x + 0; // Mathematica has no negative zero
 
@@ -224,73 +230,101 @@ export function evaluate(stateIn) {
   return { state: s, locals: L, indeterminate: false };
 }
 
+// ---- the Graphics list as shared/graphics.js data ---------------------------------------------------------------
+const COLOURS = { ...NAMED, DarkerGray: darker(NAMED.Gray), DarkerGreen: darker(NAMED.Green) };
+/** A Mathematica colour name ('DarkerGray' = Darker[Gray], 'DarkerGreen' = Darker[Green]) as an RGBColor. */
+const col = (name) => RGBColor(...COLOURS[name]);
+// Default arrowhead (Arrowheads[Automatic]) as one fitted length in plot units: about 27–30 px of the 801 px plot
+// width of snapshot 1 (D-TK-04, K-TK-05). POINT: the default point size.
+export const HEAD_LEN = 0.21;
+const POINT = AbsolutePointSize(3.5);
+// Thin = AbsoluteThickness[0.25]: the shared 'Thin' (0.5 px) drew the workspace circle much darker than the snapshots
+// (cf. car-paths D-CP-03); Thick = AbsoluteThickness[2]
+const THIN = AbsoluteThickness(0.25), THICK = AbsoluteThickness(2);
+const FONT = { default: 11, Medium: 13 };
+const FAMILY = 'system-ui, "Segoe UI", Helvetica, Arial, sans-serif';
+
+/** {fill, EdgeForm[Directive[Blue, Thin]], Disk[c, r]} (the edge left out when the hole's edge draws it, below). */
+const disk = (role, c, r, fill, edge = EdgeForm(Directive(col('Blue'), THIN))) => [col(fill), edge, Annotation(Disk(c, r), role)];
+/** Text[Style[text, size], at] (Black unless given): the Greek letters in italics as Mathematica sets symbols. */
+function text(role, str, at, { color = 'Black', size = 'default', rotate } = {}) {
+  const t = [col(color), Annotation(Text(Style(str, ...(/^θ/.test(str) ? [Italic] : []), FontSize(FONT[size]), FontFamily(FAMILY)), at), role)];
+  return rotate ? Rotate(t, rotate.angle, rotate.about) : t;
+}
+/** Arrow[{from, to}]: the shaft to 0.6 of the head, the head (nothing for a zero-length arrow, K-TK-05); opacity: of the whole arrow. */
+function arrow(role, color, from, to, { thick = false, opacity } = {}) {
+  const [dx, dy] = [to[0] - from[0], to[1] - from[1]], len = Math.hypot(dx, dy), u = [dx / len, dy / len];
+  return Annotation(len === 0 ? [] : [col(color), thick ? THICK : null, CapForm('Butt'), EdgeForm(),
+    len > HEAD_LEN && Line([from, [to[0] - u[0] * HEAD_LEN * 0.6, to[1] - u[1] * HEAD_LEN * 0.6]]),
+    arrowheadPolygon(to, u, HEAD_LEN)], role, opacity != null ? { opacity } : {});
+}
+/** Rotate[Rectangle[{x0, y0}, {x1, y1}, RoundingRadius -> w], angle, about] in Gray with EdgeForm[Black]. */
+const stadium = (role, g) => [col('Gray'), EdgeForm(col('Black')), Annotation(Rotate(Rectangle(...g.rect, { RoundingRadius: g.radius }), g.angle, g.about), role)];
+/** myArrowArc[c, r, {a0, a1}]: a Point (zero angle) or the arc with its head; data-kind 'Point' | 'Arrow' | … */
+const arc = (role, color, data, { thick = false, pointSize = POINT } = {}) => [col(color),
+  Annotation(arcArrowGraphics(data, { thickness: thick ? THICK : null, headLength: HEAD_LEN, pointSize }), role, { 'data-kind': data.kind })];
+
 /**
- * loc[col, c] as drawing data (sc = 1/25): four hair lines from 1.5 sc to 3 sc, Circle[c, 2 sc] and the half-transparent
- * Circle[c, 1.4 sc] with Thickness[1/100].
+ * loc[col, c] (sc = 1/25): four hair lines from 1.5 sc to 3 sc, Circle[c, 2 sc] and the half-transparent Circle[c, 1.4 sc]
+ * with Thickness[1/100] (the circles as unfilled disks with an edge).
  */
-export function loc(col, c) {
+export function loc(color, c, role) {
   const sc = 1 / 25;
   const P = (dx, dy) => [c[0] + sc * dx, c[1] + sc * dy];
-  return {
-    kind: 'loc', color: col,
-    hairs: [[P(0, 1.5), P(0, 3)], [P(0, -1.5), P(0, -3)], [P(-1.5, 0), P(-3, 0)], [P(1.5, 0), P(3, 0)]],
-    circle: { center: c.slice(), r: sc * 2 },
-    ring: { center: c.slice(), r: sc * 2 * 0.7, thickness: 1 / 100, opacity: 0.5 },
-  };
+  return Annotation([col(color), CapForm('Butt'), [[P(0, 1.5), P(0, 3)], [P(0, -1.5), P(0, -3)], [P(-1.5, 0), P(-3, 0)], [P(1.5, 0), P(3, 0)]].map((h) => Line(h)),
+    FaceForm(None), [EdgeForm(col(color)), Disk(c.slice(), sc * 2)],
+    [EdgeForm(Directive(col(color), Thickness(1 / 100), Opacity(0.5))), Disk(c.slice(), sc * 2 * 0.7)]], role);
 }
 
 /** GeometricTransformation[…, {U, pEnd}] of a point: U.x + pEnd. */
 const affine = (U, b, x) => add(matVec(U, x), b);
 
 /**
- * Everything the Graphics list draws, in the original's order (F-TK-18 … F-TK-24), as data:
- * {kind: 'disk' | 'text' | 'ellipse' | 'arrow' | 'stadium' | 'point' | 'arc' | 'loc', role, …}. Colours are Mathematica
- * colour names ('DarkerGray' = Darker[Gray], 'DarkerGreen' = Darker[Green]).
+ * The Graphics list in the original's order (F-TK-18 … F-TK-24) as shared/graphics.js data; each part an Annotation
+ * with its role (workspace, hole, workspace-label, ellipse, sigma1-plus …, link1, robot-arm, base, jointVel1,
+ * theta1-arc, theta1-label, link2, elbow, jointVel2, theta2-arc, theta2-label, loc-pVel, loc-pEnd, velocity).
  */
 export function scene(state, locals) {
   const { r1 } = state;
   const { r2, Theta1, Theta2, U, S, Sigma } = locals;
   const pEnd = state.pEnd, pVel = state.pVel, jv = state.jointVel;
   const out = [];
-  // workspace
-  const edge = { color: 'Blue', thickness: 'Thin' };
-  out.push({ kind: 'disk', role: 'workspace', center: [0, 0], r: 2, fill: 'LightBlue', edge });
-  if (mUnequal(r1, 1)) out.push({ kind: 'disk', role: 'hole', center: [0, 0], r: Math.abs(r1 - r2), fill: 'White', edge });
-  out.push({ kind: 'text', role: 'workspace-label', text: 'Workspace', at: [0, 1.8], color: 'Black' });
-  // manipulability ellipse and its axes, under GeometricTransformation[…, {U, pEnd}], Opacity[0.5]
+  // workspace; r1 = 0 or 2: the white hole's edge lies exactly on the workspace edge; the circle is stroked once (by
+  // the hole, drawn last), not twice, which would draw it darker than the snapshot (snapshot 4; D-TK-04)
+  const hole = mUnequal(r1, 1), holeR = Math.abs(r1 - r2);
+  out.push(disk('workspace', [0, 0], 2, 'LightBlue', hole && mEqual(holeR, 2) ? EdgeForm() : undefined));
+  if (hole) out.push(disk('hole', [0, 0], holeR, 'White'));
+  out.push(text('workspace-label', 'Workspace', [0, 1.8]));
+  // manipulability ellipse and its axes, under GeometricTransformation[…, {U, pEnd}], Opacity[0.5]: Ellipsoid[{0, 0}, Σ²]
   const rank = matrixRank(S);
   if (rank > 1) {
-    out.push({
-      kind: 'ellipse', role: 'ellipse', center: pEnd.slice(), radii: [S[0], S[1]], axis: [U[0][0], U[1][0]],
-      fill: 'LightRed', opacity: 0.5, edge,
-    });
+    out.push([col('LightRed'), Opacity(0.5), EdgeForm(Directive(col('Blue'), THIN, Opacity(0.5))),
+      Annotation(Rotate(Disk(pEnd.slice(), [S[0], S[1]]), Math.atan2(U[1][0], U[0][0]), pEnd.slice()), 'ellipse')]);
   }
-  const axisArrow = (role, color, row, sign) => ({
-    kind: 'arrow', role, color, opacity: 0.5, from: pEnd.slice(), to: affine(U, pEnd, Sigma[row].map((v) => nz(sign * v))),
-  });
+  const axisArrow = (role, color, row, sign) => arrow(role, color, pEnd.slice(), affine(U, pEnd, Sigma[row].map((v) => nz(sign * v))), { opacity: 0.5 });
   out.push(axisArrow('sigma1-plus', 'Blue', 0, 1), axisArrow('sigma1-minus', 'Blue', 0, -1));
   out.push(axisArrow('sigma2-plus', 'Red', 1, 1), axisArrow('sigma2-minus', 'Red', 1, -1));
   // the arm
   const g = armGeometry({ r1, r2, theta1: Theta1, theta2: Theta2, w: 1 / 8, theta1LabelRadius: 2 / 5, robotArmLabel: 'byR2' });
-  const robotArm = { kind: 'text', role: 'robot-arm', text: 'Robot Arm', at: g.robotArm.anchor, rotate: { angle: g.robotArm.angle, about: g.robotArm.about }, color: 'Black' };
-  out.push({ kind: 'stadium', role: 'link1', ...g.link1, fill: 'Gray', edgeColor: 'Black' });
+  const robotArm = text('robot-arm', 'Robot Arm', g.robotArm.anchor, { rotate: { angle: g.robotArm.angle, about: g.robotArm.about } });
+  out.push(stadium('link1', g.link1));
   if (g.robotArm.link === 1) out.push(robotArm);
-  out.push({ kind: 'point', role: 'base', at: [0, 0], color: 'Black' });
-  out.push({ kind: 'arc', role: 'jointVel1', color: 'Red', pointSize: 'Large', data: myArrowArc([0, 0], 1 / 2, [Theta1 + 0, Theta1 + jv[0]]) });
-  out.push({ kind: 'arc', role: 'theta1-arc', color: 'DarkerGray', data: myArrowArc([0, 0], 1 / 4, [0, Theta1]) });
-  if (g.theta1Label.visible) out.push({ kind: 'text', role: 'theta1-label', text: 'θ₁', at: g.theta1Label.at, color: 'DarkerGray', size: 'Medium' });
-  out.push({ kind: 'stadium', role: 'link2', ...g.link2, fill: 'Gray', edgeColor: 'Black' });
+  out.push([col('Black'), POINT, Annotation(Point([0, 0]), 'base')]);
+  out.push(arc('jointVel1', 'Red', myArrowArc([0, 0], 1 / 2, [Theta1 + 0, Theta1 + jv[0]]), { pointSize: PointSize('Large') }));
+  out.push(arc('theta1-arc', 'DarkerGray', myArrowArc([0, 0], 1 / 4, [0, Theta1])));
+  if (g.theta1Label.visible) out.push(text('theta1-label', 'θ₁', g.theta1Label.at, { color: 'DarkerGray', size: 'Medium' }));
+  out.push(stadium('link2', g.link2));
   if (g.robotArm.link === 2) out.push(robotArm);
   const elbow = elbowPosition(r1, Theta1);
-  out.push({ kind: 'point', role: 'elbow', at: elbow, color: 'Black' });
+  out.push([col('Black'), POINT, Annotation(Point(elbow), 'elbow')]);
   const phi = Theta1 + Theta2;
-  out.push({ kind: 'arc', role: 'jointVel2', color: 'Blue', thickness: 'Thick', data: myArrowArc(elbow, 2 / 3, [phi + 0, phi + jv[1]]) });
-  out.push({ kind: 'arc', role: 'theta2-arc', color: 'DarkerGray', data: myArrowArc(elbow, 1 / 3, [Theta1, phi]) });
-  if (g.theta2Label.visible) out.push({ kind: 'text', role: 'theta2-label', text: 'θ₂', at: g.theta2Label.at, color: 'DarkerGray', size: 'Medium' });
+  out.push(arc('jointVel2', 'Blue', myArrowArc(elbow, 2 / 3, [phi + 0, phi + jv[1]]), { thick: true }));
+  out.push(arc('theta2-arc', 'DarkerGray', myArrowArc(elbow, 1 / 3, [Theta1, phi])));
+  if (g.theta2Label.visible) out.push(text('theta2-label', 'θ₂', g.theta2Label.at, { color: 'DarkerGray', size: 'Medium' }));
   // locator icons and the end-effector velocity
-  out.push({ ...loc('DarkerGreen', pVel), role: 'loc-pVel' });
-  out.push({ ...loc('Black', pEnd), role: 'loc-pEnd' });
-  out.push({ kind: 'arrow', role: 'velocity', color: 'Green', thickness: 'Thick', from: pEnd.slice(), to: pVel.slice() });
+  out.push(loc('DarkerGreen', pVel, 'loc-pVel'));
+  out.push(loc('Black', pEnd, 'loc-pEnd'));
+  out.push(arrow('velocity', 'Green', pEnd.slice(), pVel.slice(), { thick: true }));
   return out;
 }
 

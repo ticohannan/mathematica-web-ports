@@ -6,6 +6,7 @@ import {
   walk, DEFAULT_STYLE, Line, Disk, Polygon, Text, Rotate, Annotation, Style, Subscript, Italic, Bold, FontSize,
   Red, Blue, Black, Gray, Darker, Lighter, RGBColor, GrayLevel, EdgeForm, FaceForm, Directive, Opacity, Thin, Thick,
   AbsoluteThickness, Transparent, None, textOf, htmlOf, bounds, Rectangle, Point, Superscript, Row, Tooltip, cachedGraphics,
+  Graphics, Translate, Circle, Cases, annotations, annotation,
 } from '../../shared/graphics.js';
 
 const styles = (list) => { const out = []; walk(list, (p, st) => out.push([p.head, st])); return out; };
@@ -105,5 +106,36 @@ describe('graphics: text expressions', () => {
     expect(Style('x', { FontSize: 14 }).ds).toEqual([FontSize(14)]);
     expect(Style('x', 14, Bold).ds).toEqual([FontSize(14), Bold]); // Style[expr, 14]
     expect(Text('x', [0, 0]).anchor).toBe('middle');
+  });
+});
+
+describe('graphics: Cases and annotations read a picture', () => {
+  const pic = Graphics([
+    Red, Annotation([Thick, Line([[0, 0], [1, 1]]), Disk([1, 1], 0.1)], 'arm', { 'data-k': 1 }),
+    [Blue, Rotate(Annotation(Point([2, 2]), 'tip'), 1, [0, 0]), Translate(Disk([0, 0], 2), [1, 0])],
+    Tooltip(Annotation(Circle([0, 0], 3), 'ring'), 'r = 3'),
+    false && Line([[9, 9], [9, 9]]),
+  ], { PlotRange: [[-3, 3], [-3, 3]] });
+  it('Cases by head finds primitives inside Annotation, Rotate, Translate and Tooltip, in drawing order', () => {
+    expect(Cases(pic, 'Disk').map((d) => d.r)).toEqual([0.1, 2]);
+    expect(Cases(pic, 'Point')[0].pts).toEqual([[2, 2]]); // as written (before Rotate)
+    expect(Cases(pic, 'Line')).toHaveLength(1);
+  });
+  it('Cases with a predicate sees the style in effect', () => {
+    const blue = Cases(pic, (q, st) => q.head === 'Disk' && st.color === Blue.rgb);
+    expect(blue.map((d) => d.r)).toEqual([2]);
+  });
+  it('annotations lists ids, contents, attributes and the style in effect; annotation(g, id) finds one', () => {
+    expect(annotations(pic).map((a) => a.id)).toEqual(['arm', 'tip', 'ring']);
+    const arm = annotation(pic, 'arm');
+    expect(arm.attrs).toEqual({ 'data-k': 1 });
+    expect(arm.style.color).toEqual(Red.rgb);
+    expect(Cases(arm.g, 'Line')).toHaveLength(1);
+    expect(annotation(pic, 'tip').style.color).toEqual(Blue.rgb);
+    expect(annotation(pic, 'none')).toBe(null);
+  });
+  it('cachedGraphics parts are searched too', () => {
+    const part = cachedGraphics();
+    expect(Cases([part([1], () => [Annotation(Disk([0, 0], 4), 'big')])], 'Disk')[0].r).toBe(4);
   });
 });

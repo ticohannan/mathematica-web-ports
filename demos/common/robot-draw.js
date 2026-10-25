@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Original Wolfram Demonstrations "Robot Singularities in Three-Link Manipulators" by Aaron T. Becker and Yitong Lu and "Denavit-Hartenberg Parameters for a Three-Link Robot" by Aaron T. Becker and Mary Burbage and "Common Robot Arm Configurations" by Mohammad Sultan and Aaron T. Becker
 // SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // demos/common/robot-draw.js — the robot drawing functions of the DH-family Demonstrations as Graphics3D data
-// (demos/common/g3d.js): drawZArrow, drawCoordAxes, the ground cylinder, drawJoint (three variants of the
+// (shared/graphics3d.js): drawZArrow, drawCoordAxes, the ground cylinder, drawJoint (three variants of the
 // originals), drawWristCenter, drawGripper. Pure: no DOM, no three.js.
 // drawZArrow, drawCoordAxes, GROUND, drawJoint 'rs' and drawWristCenter moved unchanged from
 // demos/robot-singularities/model.js (v0.1.16, DH-family move; that file re-exports them). drawJoint 'dh' and
@@ -12,7 +12,7 @@
 import { mUnequal } from '../../shared/mma.js';
 import {
   Rotate, Line, Cuboid, Cylinder, Point, PointSize, Opacity, Thick, Red, Blue, Green, Gray, Orange, LightBlue, LightBrown,
-} from './g3d.js';
+} from '../../shared/graphics3d.js';
 
 const π = Math.PI;
 

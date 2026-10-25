@@ -14,7 +14,7 @@ import {
 } from '../../demos/dh-parameters/model.js';
 import { dhTransform, computeTd, joints, makeO3coords } from '../../demos/common/dh-chain.js';
 import { drawJoint, drawGripper, drawCoordAxes, GROUND } from '../../demos/common/robot-draw.js';
-import { flatten, cuboidCorners, EdgeForm, Cuboid, Gray } from '../../demos/common/g3d.js';
+import { flatten, cuboidCorners, EdgeForm, Cuboid, Gray } from '../../shared/graphics3d.js';
 import { svd3, manipEllip } from '../../demos/common/svd3.js';
 import { piFraction } from '../../shared/mma-text.js';
 import { mmaGrid, mmaSliderText } from '../../shared/ui.js';

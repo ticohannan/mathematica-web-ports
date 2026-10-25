@@ -4,7 +4,8 @@
 // demos/four-bar-linkage/fourbar.js — pure port of "Configuration Space for Four-Bar Linkage"
 // (docs/original-source/four-bar-linkage.txt): mod2pi, Φpos, Φneg, the impossible-length test with its Piecewise, the
 // sampler that stands in for Plot + EvaluationMonitor (PORT DEVIATION D-FB-01), the replay of the original's recorded
-// samples (DESIGN §6.3), Nearest, the linkage geometry and one evaluation of the Manipulate body. No DOM.
+// samples (DESIGN §6.3), Nearest, the linkage geometry, the two pictures as shared/graphics.js data and one evaluation
+// of the Manipulate body. No DOM.
 //
 // Numbers (DESIGN §6.4): Φpos/Φneg are evaluated inside Plot in the original; there the stored values are reproduced by
 // Times of several factors in ascending order, Plus in written order and a/b = a·(1/b) (empirical rule, K-FB-05). The
@@ -15,6 +16,13 @@ import { mEqual, mUnequal, mGreaterEq } from '../../shared/mma.js';
 import { arcTan } from '../../shared/mma-exact.js';
 import { nearest } from '../../shared/mma-extra.js';
 import { myArrowArc } from '../common/arrow-arcs.js';
+import {
+  Annotation, Line, Circle, Point, Rectangle, Rotate, Translate, Text, Style, Subscript, Row, Column, Clip, Italic, EdgeForm,
+  Directive, AbsoluteThickness, AbsolutePointSize, Thickness, CapForm, RGBColor, Black, Red, Blue, Orange, Gray, Brown, Darker,
+  Lighter, ScriptSizeMultipliers, ScriptBaselineShifts, cachedGraphics,
+} from '../../shared/graphics.js';
+import { frameLayout } from '../../shared/svg-frame.js';
+import { pxSize, axesGraphics, locatorGlyph, notchedArrowhead } from '../../shared/graphics-extras.js';
 
 const PI = Math.PI;
 /** ImageSize -> 300 (both graphics); the linkage's PlotRange. */
@@ -233,6 +241,72 @@ export function linkageGeometry({ lenlengths: [l1, l2, l3], spacing, Thetav, Phi
   };
 }
 
+// ---- the two pictures as shared/graphics.js data ------------------------------------------------------------------
+// PORT DEVIATION (D-FB-04): Mathematica's rendering approximated — Thick curves 2.4 px, Medium text 12 px, default
+// arrowheads about 0.0215 of the image width (6.5 px at ImageSize 300), Thin 0.5 px.
+const THIN = AbsoluteThickness(0.5), CURVE_PX = 2.4, HEAD = [6.5, 2.6];
+/** The configuration-space picture's PlotRange: AspectRatio -> 1, ImageSize -> 300, axes through the origin with labels
+ * θ, φ: margins for tick and axes labels. */
+export const CS_RANGE = frameLayout(CSPACE_RANGE, { imageSize: IMAGE_SIZE, margins: { left: 26, right: 16, top: 18, bottom: 20 } }).plotRange;
+const U = pxSize(CS_RANGE, IMAGE_SIZE, 0), UL = pxSize(LINKAGE_RANGE, IMAGE_SIZE, 0); // world units per pixel
+const axes = cachedGraphics(); // drawn once
+
+/** Arrow[{a, b}] with the notched head (the head first, then the shaft up to the notch). */
+function arrow([a, b], id) {
+  const L = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  if (!L) return Annotation([], id);
+  const { head, notch } = notchedArrowhead(b, [(b[0] - a[0]) / L, (b[1] - a[1]) / L], HEAD[0] * UL, HEAD[1] * UL);
+  return Annotation([head, Line([a, notch])], id);
+}
+/** myArrowArc[c, r, {0, angle}] (demos/common/arrow-arcs.js): a Point, or the B-spline arc with a notched head. */
+function arrowArc(arc, id) {
+  if (arc.kind === 'Point') return [AbsolutePointSize(3), Point(arc.at)];
+  const { head, notch } = notchedArrowhead(arc.tip, arc.direction, HEAD[0] * UL, HEAD[1] * UL);
+  return Annotation([head, Line(arc.curve.slice(0, -1).concat([notch]))], id);
+}
+/** Text[Style[L_k, Medium], pos(, {-1, -1})] in Black: italic L, the index 0.3em down at 75 % (the snapshots' look). */
+const Lk = (k, pos, offset) => [Black, Annotation(Text(Style(Subscript(Style('L', Italic), k), ScriptSizeMultipliers('75%'), ScriptBaselineShifts(['0.3em', '0.3em'])),
+  pos, offset ? [-1, -1] : undefined), `text-L${k}`)];
+const rect = ({ from, to, r = 0 }, id) => Annotation(Rectangle(from, to, { RoundingRadius: r }), id);
+const rotated = (g, id) => Annotation(Rotate(Rectangle(g.from, g.to, { RoundingRadius: g.r }), g.angle, g.about), id);
+
+/** Show[plot, Graphics[{Locator[pnear]}]]: axes, the curves (PlotStyle -> Thick, clipped), the glyph, the Epilog text */
+export function cspaceGraphics({ plot, pnear }) {
+  const m = (CURVE_PX / 2) * U, [[x0, x1], [y0, y1]] = CSPACE_RANGE;
+  return [
+    axes([], () => axesGraphics({
+      range: CSPACE_RANGE, unitsPerPx: U, majorStep: 1, minorStep: 0.2, axesLabel: ['θ', 'φ'], fontPx: 11, labelColor: [0, 0, 0],
+      axesLabelStyle: { italic: true, color: [0.4, 0.4, 0.4] },
+    })),
+    // PlotRangeClipping -> True; the clip rectangle widened by half the curve width so that curves on the range's edge
+    // (φ = ±π) keep their full width, as in the snapshots (§6.5)
+    Clip(plot.lines.map((pieces, ci) => Annotation([RGBColor(...CURVE_COLOURS[ci]), AbsoluteThickness(CURVE_PX), ...pieces.map(Line)], `curve-${ci + 1}`)),
+      [[x0 - m, x1 + m], [y0 - m, y1 + m]], 'fb-clip'),
+    Annotation(Translate(locatorGlyph(U), pnear), 'glyph'), // Locator[pnear]: drawn, not draggable (K-FB-12)
+    plot.text && [Red, Annotation(Text(Column(plot.text.split('\n')), [0, 1]), 'cspace-message')], // Epilog -> {Style[Text[…, {0, 1}], Red, Medium]}
+  ];
+}
+
+/** The linkage Graphics, in the original's order (F-FB-17), from linkageGeometry's data. */
+export function linkageGraphics(g) {
+  const T = Object.fromEntries(g.texts.map((t) => [t.text, t.at]));
+  return [
+    [EdgeForm(Directive(THIN, Black)), // EdgeForm[Directive[Thin, Black]] (only the rectangles have edges in the port)
+      [Brown, ...g.pivots.map((p, i) => rect(p, `pivot-${i + 1}`)), rect(g.ground, 'ground')],
+      [Darker(Gray), rotated(g.crank, 'crank')], [Gray, rotated(g.rockerRect, 'rocker')]],
+    [Lighter(Gray), CapForm('Round'), Thickness(0.02), Annotation(Line(g.coupler), 'coupler')],
+    ...g.arrows.map((a, i) => arrow(a, `separation-arrow-${i + 1}`)), Lk('4', T.L4),
+    [THIN, ...g.refLines.map(Line)], // ref lines for angle arcs
+    ...[[Blue, g.blue, 'θ', 'theta', '1'], [Red, g.red, 'φ', 'phi', '3']].map(([col, part, sym, name, k]) => {
+      const c = col === Blue ? 'blue' : 'red';
+      return [col, Annotation(Circle(part.circle.c, part.circle.r), `circle-${c}`), Annotation(Line(part.line), `line-${c}`),
+        arrowArc(part.arc, `arc-${c}`), Annotation(Text(Row([Style(sym, Italic)]), T[sym]), `text-${name}`), Lk(k, T[`L${k}`])];
+    }),
+    [Orange, Annotation(Circle(g.orange.circle.c, g.orange.circle.r), 'circle-orange'), Annotation(Line(g.orange.line), 'line-orange')],
+    Lk('2', T.L2, true),
+  ];
+}
+
 // ---- one evaluation of the Manipulate body ---------------------------------------------------------------------
 
 /** The initial settings = the live state = snapshot 1's Settings (F-FB-13): the saved samples, spacingOld 0.75. */
@@ -266,8 +340,8 @@ export function fromSettings(settings) {
 
 /**
  * evaluate(state, {sampler}) — one evaluation of the body. state: {p, spacing, links, pnear, plot, pvals, spacingOld,
- * linksOld}; sampler (tests): replaces plotSamples. Returns {state, view} with view = {lenlengths, impossibleLinks,
- * Thetav, Phiv, Alpha, resampled, linkage}.
+ * linksOld}; sampler (tests): replaces plotSamples. Returns {state, view, graphics} with view = {lenlengths,
+ * impossibleLinks, Thetav, Phiv, Alpha, resampled, linkage} and graphics = [configuration space, linkage] (Graphics data).
  */
 export function evaluate(stateIn, { sampler = plotSamples } = {}) {
   const st = { ...stateIn, p: [...stateIn.p], links: [...stateIn.links] };
@@ -300,5 +374,6 @@ export function evaluate(stateIn, { sampler = plotSamples } = {}) {
   const Alpha = impossibleLinks && mEqual(st.pnear, [PI / 2, PI / 2]) ? 0
     : arcTan(lenlengths[2] * cosE(Phiv) - lenlengths[0] * cosE(Thetav) + st.spacing, lenlengths[2] * sinE(Phiv) - lenlengths[0] * sinE(Thetav));
   const linkage = linkageGeometry({ lenlengths, spacing: st.spacing, Thetav, Phiv, Alpha });
-  return { state: st, view: { lenlengths, impossibleLinks, Thetav, Phiv, Alpha, resampled, linkage } };
+  // Row[{Show[plot, Graphics[{Locator[pnear]}]], Graphics[…]}]
+  return { state: st, view: { lenlengths, impossibleLinks, Thetav, Phiv, Alpha, resampled, linkage }, graphics: [cspaceGraphics(st), linkageGraphics(linkage)] };
 }

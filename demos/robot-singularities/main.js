@@ -2,189 +2,35 @@
 // SPDX-FileCopyrightText: Original Wolfram Demonstration by Aaron T. Becker and Yitong Lu
 // SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // demos/robot-singularities/main.js — page: controls (popup, joint slider grid, check boxes, setter), the two
-// three.js graphics (workspace and phase space) drawn from the model's Graphics3D data (browser only).
-import { THREE, createViewer, fatLine, label, inkFraction } from '../../shared/three-helpers.js';
-import { Controls, el } from '../../shared/ui.js';
-import { addPopup, addCheckbox } from '../../shared/ui-extra.js';
+// Graphics3D pictures of the model (workspace and phase space) drawn by shared/graphics3d-view.js (browser only).
+// On the shared Manipulate layer since v0.1.21 (behaviour unchanged: tests and 3D parity of scene graph and pixels).
+import { Manipulate, Control, Rule, PopupMenu } from '../../shared/manipulate.js';
+import { View3D } from '../../shared/graphics3d-view.js';
+import { el } from '../../shared/ui.js';
 import { mmaNumberString } from '../../shared/mma-extra.js';
-import { addMathematicaLighting } from '../../shared/mma-lighting.js';
 import { TYPE_NAMES, typeOf, sliderSpec, jacobianFor } from './robots.js';
 import { initialState, evaluate, selectType } from './model.js';
-import { flatten } from './g3d.js';
-import { addPrims as addPrimsTo, disposeGroup as disposeGroupOf, fitViewer as fitViewerBox } from '../common/g3d-three.js';
+import { Graphics3D, Group3D, flatten } from './g3d.js';
 import { svd3, matrixRank } from './svd3.js';
 
 const VIEWPOINT = [1.3, -2.4, 2]; // Mathematica's default ViewPoint
-const THICK_PX = 3; // Thickness[Large] (Thick), measured ≈ 2.9 pt in snapshot 2; D-RS-03
-const THIN_PX = 1;
 const WS_ZOOM = 1.26; // D-RS-01
-
-let state = initialState();
-let view = null;
-
-// ---- the two viewers ----------------------------------------------------------------------------------------
-const wsEl = document.getElementById('view-workspace');
-const phEl = document.getElementById('view-phase');
-const ws = createViewer(wsEl, { box: [[-2.2, 2.2], [-2.2, 2.2], [-0.4, 4.15]], viewPoint: VIEWPOINT, size: 325, maxSize: 325 });
-ws.renderer.domElement.setAttribute('data-testid', 'scene-canvas-workspace');
-ws.renderer.domElement.setAttribute('aria-label', 'Workspace (3D, drag to rotate)');
-const UNIT = [[-0.5, 0.5], [-0.5, 0.5], [-0.5, 0.5]]; // BoxRatios -> {1,1,1}: the phase box is drawn as a unit cube
-const ph = createViewer(phEl, { box: UNIT, viewPoint: VIEWPOINT, size: 280, maxSize: 280 });
-ph.renderer.domElement.setAttribute('data-testid', 'scene-canvas-phase');
-ph.renderer.domElement.setAttribute('aria-label', 'Phase space (3D, drag to rotate)');
-ph.renderer.localClippingEnabled = true;
-// PlotRange clipping of the phase-space contents (everything inside the scaled group is clipped to the box)
-const E = 0.5 + 1e-4;
-const PHASE_CLIP = [
-  new THREE.Plane(new THREE.Vector3(1, 0, 0), E), new THREE.Plane(new THREE.Vector3(-1, 0, 0), E),
-  new THREE.Plane(new THREE.Vector3(0, 1, 0), E), new THREE.Plane(new THREE.Vector3(0, -1, 0), E),
-  new THREE.Plane(new THREE.Vector3(0, 0, 1), E), new THREE.Plane(new THREE.Vector3(0, 0, -1), E),
-];
-
-/**
- * PORT DEVIATION (D-RS-02): Mathematica lights and blends the displayed (sRGB) colour values directly, so the
- * renderers output linear values unconverted, and the lights are Mathematica's documented defaults
- * (shared/mma-lighting.js) instead of shared/three-helpers' placement.
- */
-for (const v of [ws, ph]) {
-  v.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
-  addMathematicaLighting(v.camera);
-}
-
-// fitViewer (keep the user's viewing direction; centre and scale on the new box, SphericalRegion-like fit; `zoom` > 1
-// draws larger than "the bounding sphere fills the image": the original's workspace pictures are about 1.26 times
-// larger than that, measured on all three workspace snapshots, D-RS-01), addPrims and disposeGroup moved unchanged
-// to demos/common/g3d-three.js (v0.1.16, DH-family move); they take this page's viewers and constants as parameters.
-const ADD = { thickPx: THICK_PX, thinPx: THIN_PX };
-const VIEWERS = [ws, ph];
-const fitViewer = (viewer, box, zoom = 1) => fitViewerBox(viewer, { box, zoom, viewPoint: VIEWPOINT });
-const disposeGroup = (g) => disposeGroupOf(g, VIEWERS);
-const addPrims = (group, prims, ctx) => addPrimsTo(group, prims, { ...ADD, ...ctx });
-
-// ---- workspace scene ---------------------------------------------------------------------------------------------
-const wsSingular = new THREE.Group();
-const wsDynamic = new THREE.Group();
-ws.scene.add(wsSingular, wsDynamic);
-let wsSingKey = null, wsBoxKey = null;
-
-function drawWorkspace() {
-  const box = view.workspaceBox;
-  const size = 2 * 0.5 * Math.hypot(...box.map(([a, b]) => b - a)); // ~ the width the graphic spans
-  const key = `${state.iTypeOld}|${state.isJLinearVelOld}`;
-  const singPrims = flatten(view.singSpace);
-  if (key !== wsSingKey) {
-    disposeGroup(wsSingular);
-    addPrims(wsSingular, singPrims, { viewer: ws, clip: null, box, size });
-    wsSingKey = key;
-  }
-  disposeGroup(wsDynamic);
-  // everything but the cached singular set: ground, robot (view.base), manipulability ellipsoid
-  const manipPrims = view.manip ? flatten(view.manip.graphics) : [];
-  addPrims(wsDynamic, [...flatten(view.base), ...manipPrims], { viewer: ws, clip: null, box, size });
-  const bk = box.map(([a, b]) => `${a.toFixed(4)},${b.toFixed(4)}`).join(';');
-  if (bk !== wsBoxKey) { fitViewer(ws, box, WS_ZOOM); wsBoxKey = bk; }
-  ws.render();
-}
-
-// ---- phase-space scene --------------------------------------------------------------------------------------------
-const phData = new THREE.Group(); // data coordinates, scaled to the unit cube
-const phSingular = new THREE.Group();
-const phDynamic = new THREE.Group();
-const phFrame = new THREE.Group(); // box, ticks, labels (unit-cube coordinates, not clipped)
-phData.add(phSingular, phDynamic);
-ph.scene.add(phData, phFrame);
-let phSingKey = null;
 const PH_ZOOM = 1.04; // phase box width / ground width as measured on snapshot 1 (D-RS-01)
 
-function niceTicks([a, b]) {
-  if (b - a > 2) return { major: [-2, 0, 2], minor: Array.from({ length: 13 }, (_, k) => -3 + 0.5 * k), fmt: (v) => String(v) };
-  return { major: [0, 0.5, 1], minor: Array.from({ length: 11 }, (_, k) => k / 10), fmt: (v) => v.toFixed(1) };
-}
-
-/** Box edges, tick marks and labels (Axes -> True, AxesLabel), in unit-cube coordinates. */
-function drawPhaseFrame(opt) {
-  disposeGroup(phFrame);
-  const gray = [0.55, 0.55, 0.55];
-  const c = [-0.5, 0.5];
-  for (const y of c) for (const z of c) phFrame.add(fatLine(ph, [[-0.5, y, z], [0.5, y, z]], gray, 1));
-  for (const x of c) for (const z of c) phFrame.add(fatLine(ph, [[x, -0.5, z], [x, 0.5, z]], gray, 1));
-  for (const x of c) for (const y of c) phFrame.add(fatLine(ph, [[x, y, -0.5], [x, y, 0.5]], gray, 1));
-  // axes on the edges Mathematica uses for the default view point: θ1 front-bottom, θ2 top-left, θ3 front-left
-  const axes = [
-    { k: 0, at: (t) => [t, -0.5, -0.5], out: [0, -1, -1] },
-    { k: 1, at: (t) => [-0.5, t, 0.5], out: [-1, 0, 1] },
-    { k: 2, at: (t) => [-0.5, -0.5, t], out: [-1, -1, 0] },
-  ];
-  for (const ax of axes) {
-    const [a, b] = opt.PlotRange[ax.k];
-    const s = (v) => (v - a) / (b - a) - 0.5;
-    const o = ax.out.map((v) => v / Math.hypot(...ax.out));
-    const { major, minor, fmt } = niceTicks([a, b]);
-    for (const v of minor) {
-      if (v < a || v > b) continue;
-      const p = ax.at(s(v));
-      const len = major.includes(v) ? 0.035 : 0.018;
-      phFrame.add(fatLine(ph, [p, p.map((x, i) => x + o[i] * len)], gray, 1));
-    }
-    for (const v of major) {
-      const p = ax.at(s(v));
-      phFrame.add(label(fmt(v), p.map((x, i) => x + o[i] * 0.06), [0.33, 0.33, 0.33], { cls: 'rs-tick' }));
-    }
-    const L = opt.AxesLabel[ax.k];
-    const mid = ax.at(0);
-    phFrame.add(label(`${L.sym}<sub>${L.sub}</sub>`, mid.map((x, i) => x + o[i] * 0.14), [0.33, 0.33, 0.33], { html: true, cls: 'rs-axis' }));
-  }
-}
-
-function drawPhase() {
-  const opt = view.phaseOpt;
-  const R = opt.PlotRange;
-  phData.scale.set(...R.map(([a, b]) => 1 / (b - a)));
-  phData.position.set(...R.map(([a, b]) => -(a + b) / 2 / (b - a)));
-  const key = `${state.iTypeOld}|${state.isJLinearVelOld}|${opt.PlotLabel}`;
-  if (key !== phSingKey) {
-    disposeGroup(phSingular);
-    addPrims(phSingular, flatten(view.singPhase), { viewer: ph, clip: PHASE_CLIP, box: R, size: 1 });
-    drawPhaseFrame(opt);
-    phSingKey = key;
-  }
-  disposeGroup(phDynamic);
-  const all = flatten(view.phase);
-  const nSing = flatten(view.singPhase).length;
-  addPrims(phDynamic, all.slice(nSing), { viewer: ph, clip: PHASE_CLIP, box: R, size: 1 });
-  document.querySelector('[data-testid=plotlabel-phase]').textContent = opt.PlotLabel;
-  ph.render();
-}
-
-// ---- controls (ControlPlacement -> Top) ------------------------------------------------------------------------------
-const controls = new Controls(document.getElementById('controls'));
-const typeCtl = addPopup(controls, {
-  name: 'iType',
-  options: TYPE_NAMES.map((n, i) => ({ value: i + 1, label: n })),
-  value: state.iType,
-  onChange: (v) => { state = selectType(state, v); buildSliders(); run(); },
-});
+// ---- the slider grid and the options column (ControlPlacement -> Top) ----------------------------------------------
 const row = el('div', { class: 'rs-row' });
 const sliderBox = el('div', { class: 'rs-sliders', 'data-testid': 'slider-grid' });
 const optionsBox = el('div', { class: 'rs-options' });
 row.append(sliderBox, optionsBox);
-controls.root.append(row);
-const optControls = new Controls(optionsBox);
-const robotCtl = addCheckbox(optControls, { name: 'showRobot', label: 'show robot', value: state.showRobot, onChange: (v) => { state.showRobot = v; run(); } });
-const manipCtl = addCheckbox(optControls, { name: 'showManipulability', label: 'show manipulability ellipsoid', value: state.showManipulability, onChange: (v) => { state.showManipulability = v; run(); } });
-const linCtl = optControls.setterBar({
-  name: 'isJLinearVel', label: 'velocity singularities', value: state.isJLinearVel,
-  options: [{ value: 'Linear' }, { value: 'Angular' }],
-  onChange: (v) => { state.isJLinearVel = v; run(); },
-});
 
-let sliders = [];
+let sliders = [], builtType = null, gridInput = null, M = null;
 /**
  * The Dynamic Grid of joint sliders: θ_i for a revolute joint (-1.01π … 1.01π, step 0.01π), d_i for a prismatic
  * joint (0 … 1, step 0.01), each with its value shown (Appearance -> "Labeled"). Rebuilt when the robot changes.
  */
-function buildSliders() {
+function buildSliders(state) {
   sliderBox.replaceChildren();
+  builtType = state.iType;
   const Type = typeOf(state.iType);
   sliders = [0, 1, 2].map((i) => {
     const spec = sliderSpec(Type, i);
@@ -209,15 +55,15 @@ function buildSliders() {
     field.addEventListener('change', () => {
       const v = Number(field.value);
       if (Number.isFinite(v)) setParam(i, Math.min(Math.max(v, spec.min), spec.max));
-      else showParams();
+      else showParams(M.state);
     });
     sliderBox.append(sym, range, field);
     return { range, field, spec };
   });
-  showParams();
+  showParams(state);
 }
 
-function showParams() {
+function showParams(state) {
   sliders.forEach(({ range, field, spec }, i) => {
     range.value = String(Math.round((state.params[i] - spec.min) / spec.step));
     if (document.activeElement !== field) field.value = mmaNumberString(state.params[i]);
@@ -225,88 +71,86 @@ function showParams() {
 }
 
 function setParam(i, v) {
-  state.params = state.params.slice();
-  state.params[i] = v;
-  run();
+  const p = M.state.params.slice();
+  p[i] = v;
+  gridInput(p);
 }
+const sliderGrid = (controls, { onInput }) => {
+  controls.root.append(row);
+  gridInput = onInput;
+  return { get: () => M.state.params, set: () => {} }; // shown after every evaluation (`after`)
+};
 
-function syncControls() {
-  typeCtl.set(state.iType);
-  robotCtl.set(state.showRobot);
-  manipCtl.set(state.showManipulability);
-  linCtl.set(state.isJLinearVel);
+// ---- the two pictures -----------------------------------------------------------------------------------------------
+/**
+ * Workspace: the cached singular set (redrawn only when the stored sets change), then ground, robot and manipulability
+ * ellipsoid. Phase space: the cached singular set, then the joint point (and its ellipsoid sphere), inside the unit cube
+ * of BoxRatios {1, 1, 1}, clipped at the PlotRange, with the box, ticks and AxesLabel of the stored options.
+ */
+function pictures(state, view) {
+  const key = `${state.iTypeOld}|${state.isJLinearVelOld}`;
+  const ws = Graphics3D([Group3D(view.singSpace, { key }), Group3D([view.base, view.manip ? view.manip.graphics : null])], view.workspace.options);
+  const opt = view.phaseOpt;
+  const ph = Graphics3D([Group3D(view.singPhase, { key: `${key}|${opt.PlotLabel}` }), Group3D(view.phase.content[1])],
+    { ...opt, AxesLabel: opt.AxesLabel.map((L) => `${L.sym}<sub>${L.sub}</sub>`) });
+  return [ws, ph];
 }
-
-document.getElementById('reset').addEventListener('click', () => {
-  state = initialState();
-  syncControls();
-  buildSliders();
-  run();
-});
 
 let evaluations = 0;
-function run() {
-  const r = evaluate(state);
-  state = r.state;
-  view = r.view;
-  evaluations++;
-  drawWorkspace();
-  drawPhase();
-  showParams();
-}
-
-fitViewer(ph, UNIT, PH_ZOOM);
-buildSliders();
-run();
-
-// ---- test / automation hook (port addition A-RS-03) ------------------------------------------------------------------
 const clone = (x) => JSON.parse(JSON.stringify(x));
 function summary(g) {
   const counts = {};
   for (const p of flatten(g)) counts[p.type] = (counts[p.type] || 0) + 1;
   return counts;
 }
-window.__demo = {
+
+M = Manipulate({
   name: 'robot-singularities',
-  getState: () => clone(state),
+  initial: initialState,
+  body: (st) => { const r = evaluate(st); evaluations++; return { state: r.state, view: r.view, graphics: pictures(r.state, r.view) }; },
+  graphics: [
+    // SphericalRegion with the measured zoom, refitted when the bounds change (D-RS-01); Thick 3 px, lines 1 px
+    // (D-RS-03); Mathematica's documented lights (D-RS-02)
+    { id: 'view-workspace', renderer: View3D({ ViewPoint: VIEWPOINT, zoom: WS_ZOOM, refitDigits: 4, initialBox: [[-2.2, 2.2], [-2.2, 2.2], [-0.4, 4.15]], testid: 'scene-canvas-workspace', label: 'Workspace (3D, drag to rotate)' }) },
+    {
+      id: 'view-phase',
+      renderer: View3D({
+        ViewPoint: VIEWPOINT, zoom: PH_ZOOM, size: () => 1, clipPadding: 1e-4, plotLabelElement: '[data-testid=plotlabel-phase]',
+        tickClass: 'rs-tick', axisLabelClass: 'rs-axis', testid: 'scene-canvas-phase', label: 'Phase space (3D, drag to rotate)',
+      }),
+    },
+  ],
+  controls: [
+    [['iType', 2, ''], TYPE_NAMES.map((n, i) => Rule(i + 1, n)), { ControlType: PopupMenu, Assign: (s, v) => Object.assign(s, selectType(s, v)) }],
+    [['params', null], Control(sliderGrid)],
+    [['showRobot', false, 'show robot'], [false, true], { parent: optionsBox }],
+    [['showManipulability', false, 'show manipulability ellipsoid'], [false, true], { parent: optionsBox }],
+    [['isJLinearVel', 'Linear', 'velocity singularities'], ['Linear', 'Angular'], { parent: optionsBox }],
+  ],
+  after: (ctx) => { if (ctx.state.iType !== builtType) buildSliders(ctx.state); else showParams(ctx.state); },
   /** setState({iType, params, showRobot, showManipulability, isJLinearVel}): like the controls (a new iType resets params first) */
-  setState: (partial) => {
-    if (partial.iType !== undefined) state = selectType(state, partial.iType);
-    const { iType, ...rest } = clone(partial);
-    state = { ...state, ...rest };
-    syncControls();
-    if (iType !== undefined) buildSliders();
-    run();
-    return clone(state);
+  merge: (state, partial) => {
+    const s = partial.iType !== undefined ? selectType(state, partial.iType) : state;
+    const { iType, ...rest } = partial;
+    return { ...s, ...rest };
   },
-  inkFraction: (which = 'workspace') => {
-    const v = which === 'phase' ? ph : ws;
-    v.renderer.render(v.scene, v.camera);
-    return inkFraction(v.renderer);
+  hook: { // port addition A-RS-03
+    view: (view) => ({ o3: view.o3, workspaceBox: view.workspaceBox, phaseOpt: clone(view.phaseOpt), workspace: summary(view.workspace), phase: summary(view.phase) }),
+    inkFraction: (c) => (which = 'workspace') => c.renderer(which === 'phase' ? 1 : 0).inkFraction(),
+    jacobian: (c) => () => jacobianFor(c.state.iType, c.state.isJLinearVel, c.state.params),
+    svd: (c) => () => {
+      const J = jacobianFor(c.state.iType, c.state.isJLinearVel, c.state.params);
+      const d = svd3(J);
+      return { J, ...d, Sigma: d.S.map((s) => s / 2), rank: matrixRank(d.S.map((s) => s / 2)) };
+    },
+    ellipsoid: (c) => () => (c.view.manip ? { Sigma: c.view.manip.Sigma, U: c.view.manip.U, rank: c.view.manip.rank, center: c.view.o3, prims: summary(c.view.manip.graphics) } : null),
+    singularSummary: (c) => () => ({
+      iTypeOld: c.state.iTypeOld, isJLinearVelOld: c.state.isJLinearVelOld, phaseLabel: c.view.phaseOpt.PlotLabel,
+      workspace: summary(c.view.singSpace), phase: summary(c.view.singPhase), recomputed: c.view.recomputed,
+    }),
+    evaluations: () => () => evaluations,
+    cameraPosition: (c) => (which = 'workspace') => c.renderer(which === 'phase' ? 1 : 0).viewer.camera.position.toArray(),
+    /** RGB of the workspace pixel where world point p is drawn (for colour checks against the snapshots) */
+    workspacePixelAt: (c) => (p) => c.renderer(0).pixelAt(p),
   },
-  jacobian: () => jacobianFor(state.iType, state.isJLinearVel, state.params),
-  svd: () => {
-    const J = jacobianFor(state.iType, state.isJLinearVel, state.params);
-    const d = svd3(J);
-    return { J, ...d, Sigma: d.S.map((s) => s / 2), rank: matrixRank(d.S.map((s) => s / 2)) };
-  },
-  ellipsoid: () => (view.manip ? { Sigma: view.manip.Sigma, U: view.manip.U, rank: view.manip.rank, center: view.o3, prims: summary(view.manip.graphics) } : null),
-  singularSummary: () => ({
-    iTypeOld: state.iTypeOld, isJLinearVelOld: state.isJLinearVelOld, phaseLabel: view.phaseOpt.PlotLabel,
-    workspace: summary(view.singSpace), phase: summary(view.singPhase), recomputed: view.recomputed,
-  }),
-  view: () => ({ o3: view.o3, workspaceBox: view.workspaceBox, phaseOpt: clone(view.phaseOpt), workspace: summary(view.workspace), phase: summary(view.phase) }),
-  evaluations: () => evaluations,
-  cameraPosition: (which = 'workspace') => (which === 'phase' ? ph : ws).camera.position.toArray(),
-  /** RGB of the workspace pixel where world point p is drawn (for colour checks against the snapshots) */
-  workspacePixelAt: (p) => {
-    ws.renderer.render(ws.scene, ws.camera);
-    const s = new THREE.Vector3(...p).project(ws.camera);
-    const gl = ws.renderer.getContext();
-    const x = Math.round(((s.x + 1) / 2) * gl.drawingBufferWidth), y = Math.round(((s.y + 1) / 2) * gl.drawingBufferHeight);
-    const px = new Uint8Array(4);
-    gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
-    return [px[0], px[1], px[2]];
-  },
-  ready: true,
-};
+});

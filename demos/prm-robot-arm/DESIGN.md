@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.20 |
+| Code version: | 0.1.21 |
 | Document revision | 6 (2026-10-18) — `demos/common/prm-core.js` generalised to n dimensions (by prm-3d); no change to this app |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Probabilistic Roadmap Method for Robot Arm", contributed by Aaron T. Becker and Yitong Lu, published January 29, 2020 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ProbabilisticRoadmapMethodForRobotArm/>. Readable source: [`docs/original-source/prm-robot-arm.txt`](../../docs/original-source/prm-robot-arm.txt); snapshots: `docs/original-snapshots/prm-robot-arm-*.png`; saved state: `tests/golden/prm-robot-arm.original-state.json` |
-| Port files | `model.js` (collision geometry, the Manipulate body as one pure evaluation, the C-obstacle regions; pure), `workspace3d.js` (three.js workspace inset), `main.js` (outer picture and phase-space inset in SVG, locators, controls), `index.html`; shared with "Probabilistic Roadmap Method" and "Probabilistic Roadmap Method in 3D" (generalised to n dimensions in v0.1.16): [`demos/common/prm-core.js`](../common/prm-core.js) |
+| Port files | `model.js` (collision geometry, the Manipulate body as one pure evaluation, the C-obstacle regions; pure), `workspace3d.js` (three.js workspace inset; the renderer of the Manipulate's second picture), `main.js` (the Manipulate on `shared/manipulate.js`: controls, the two locators, the outer picture with the phase-space inset as Graphics data, the 3D inset as a second picture; v0.1.21), `index.html` (the stage holding the SVG and the 3D inset); shared with "Probabilistic Roadmap Method" and "Probabilistic Roadmap Method in 3D" (generalised to n dimensions in v0.1.16): [`demos/common/prm-core.js`](../common/prm-core.js) |
 | Role in the project | further demonstration (extra proof of concept alongside the motion-planning port); developed in a separate, unpublished repository and added to this site in v0.1.12 |
 
 ## 1. Purpose and background
@@ -122,13 +122,30 @@ matches any text. Checked by the browser test "every control on … is specified
   `draw2Drobot` as data) and `evaluate(state, rng, {controlActive})`, one evaluation of the Manipulate body.
 - `freeConfigSpace` in the state describes the RegionPlot (obstacle positions and quality, or none); `main.js` turns
   it into SVG paths (cached) with `regionPolygons` (grid + marching squares, D-PA-01).
-- `main.js` draws the outer Graphics as one SVG (y up) with the phase-space inset as a scaled group in the original's
-  coordinates; the three.js canvas of the workspace inset lies UNDER the SVG (whose texts are drawn over it); the SVG
-  lets pointer events through except on the phase panel and the locators, so the 3D view can be rotated with the
-  mouse. `ControlActive` is true while a slider, pad or locator is dragged; on release the body is evaluated once more,
-  as Mathematica does.
-- `workspace3d.js` builds the Graphics3D with `shared/three-helpers.js` (camera from ViewPoint, Mathematica-like
-  lights, orbit controls, context-loss recovery). Without WebGL 2 it shows a notice instead.
+- `main.js` (v0.1.21) is one `Manipulate({…})` call of `shared/manipulate.js`: the two Rows of controls (Slider2D pads,
+  `VerticalSlider`s, the plain `ControlType -> Slider` view angle and progress, the checkbox, the two Buttons), the
+  radius slider and the two `Locator` controls with `Appearance -> None` as Mathematica control specs (`name`/`label`
+  options keep the test ids and accessible names of v0.1.20); `random: true` (`?seed=N`, hook `setRng`);
+  `ControlActive: true` (true while a slider, pad or locator is dragged; on release the body is evaluated once more, as
+  Mathematica does); `body` = `evaluate`; `draw` returns two pictures. Picture 1 (`graphics: [{id: 'stage', PlotRange,
+  ImageSize: 600}, …]`) is the outer Graphics as data (`shared/graphics.js`): the press area (the whole image minus
+  the 3D inset, transparent), the phase-space inset, the texts (θ1/θ2 as `Subscript` with `ScriptSizeMultipliers` /
+  `ScriptBaselineShifts`) and the `loc[col]` icons (`LOC_ICON` lines and circles in a `Translate`). The phase-space inset
+  is `Inset[Graphics[…], {xMin, yMin}, {0, 0}, xMax - xMin]` in the original's coordinates: its content (the RegionPlot,
+  path pieces, samples, roadmap, progress point in a `Clip` to [0, 2π]², the static frame with ticks through
+  `cachedGraphics`) is Graphics data, drawn into a scaled group through the layer's `Raw` migration aid (escape hatch:
+  the shared `Inset` draws only lines and circles); the RegionPlot itself is a second `Raw` (one SVG path per region
+  with a hairline stroke in the fill colour, no seams; graphics.js has no single-path polygon). Picture 2
+  (`{id: 'workspace-3d', renderer}`) is the 3D inset: the renderer is the object of `workspace3d.js`, whose `draw`
+  receives `{qs, qf, robotq, inCollision, pObs3, viewAng}` after every evaluation. The three.js canvas lies UNDER the
+  SVG (whose texts are drawn over it); the SVG lets pointer events through except on the press area and the locators
+  (CSS in `index.html`), so the 3D view can be rotated with the mouse. Same pictures as v0.1.20 (3D parity tool: scene
+  graph, full-page pixels and state identical in the shared cases and in eight 2D-heavy cases: seeded vertices, radius,
+  progress, locator drag with ControlActive, press anywhere, pads and heights, loadState and arrow keys, restart and
+  reset).
+- `workspace3d.js` builds the Graphics3D with `shared/three-helpers.js` (camera from ViewPoint, orbit controls,
+  context-loss recovery) and Mathematica's documented lights (`shared/mma-lighting.js`, linear output, D-PA-05). Without
+  WebGL 2 it shows a notice instead.
 
 ### 6.1 Building and deploying this app alone
 
@@ -145,7 +162,7 @@ Owner rule R-A: this one app can be taken out of the repository and hosted anywh
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/prm-robot-arm/`) | 4 | `index.html`, `main.js`, `model.js`, `workspace3d.js` |
-| `shared/` | 12 | `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma-lighting.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-plot.js`, `three-helpers.js`, `ui-extra.js`, `ui.js` |
+| `shared/` | 15 | `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma-lighting.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-plot.js`, `three-helpers.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
 | `demos/common/` | 1 | `prm-core.js` |
 | `vendor/three/` | 9 | `addons/controls/OrbitControls.js`, `addons/lines/Line2.js`, `addons/lines/LineGeometry.js`, `addons/lines/LineMaterial.js`, `addons/lines/LineSegments2.js`, `addons/lines/LineSegmentsGeometry.js`, `addons/renderers/CSS2DRenderer.js`, `three.core.js`, `three.module.js` |
 | added by the bundler | 8 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/prm-robot-arm/DESIGN.md`, `vendor/three/LICENSE` |
@@ -220,6 +237,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 8 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 9 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
 | 10 | v0.1.20 | 2026-10-21 | version number only (Manipulate layer extended, eleven more apps migrated to it); no change to this app |
+| 11 | v0.1.21 | 2026-10-23 | `main.js` rewritten on the shared Manipulate layer: the outer picture as `shared/graphics.js` Graphics data, the 3D inset as a second picture drawn by `workspace3d.js`; no change to behaviour or picture (all tests passing; scene graph, full-page pixels (SwiftShader) and state identical to v0.1.20 at sample settings) |
 
 ## 10. Improvements to consider (not implemented)
 

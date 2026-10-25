@@ -1,10 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Tico Hannan
-// SPDX-FileCopyrightText: Original Wolfram Demonstrations "Robot Singularities in Three-Link Manipulators" by Aaron T. Becker and Yitong Lu and "Denavit-Hartenberg Parameters for a Three-Link Robot" by Aaron T. Becker and Mary Burbage
-// SPDX-License-Identifier: CC-BY-NC-SA-3.0
-// demos/common/g3d-three.js — browser renderer of the flattened Graphics3D primitives of demos/common/g3d.js into
-// three.js groups, and the SphericalRegion-like camera fit of the DH-family ports. Browser only (three.js).
-// Moved from demos/robot-singularities/main.js (v0.1.16, DH-family move) with parameters instead of that page's
-// module globals; robot-singularities' main.js calls these functions with its old values (behaviour unchanged).
+// SPDX-License-Identifier: MIT
+// shared/graphics3d-three.js — browser renderer of the flattened Graphics3D primitives of shared/graphics3d.js into
+// three.js groups, and a SphericalRegion-like camera fit. Browser only (three.js).
+// Generic: moved to shared/ under MIT in v0.1.21 (owner decision D1) from demos/common/g3d-three.js (v0.1.16), unchanged.
 //
 // API
 //   addPrims(group, prims, ctx)   ctx: {viewer, clip (THREE.Plane[] or null), box (plot range, for InfinitePlane),
@@ -15,16 +13,19 @@
 //                                 planes, cylinder rims).
 //   disposeGroup(group, viewers)  frees the geometries and materials of `group` (and forgets its line materials in
 //                                 every viewer of `viewers`), then empties it.
-//   fitViewer(viewer, vp)         vp: {box, zoom = 1, viewPoint = VIEWPOINT}: keeps the user's viewing direction,
+//   fitViewer(viewer, vp)         vp: {box, zoom = 1, viewPoint = VIEWPOINT, viewAngle}: keeps the user's viewing direction,
 //                                 centres and scales on the box (half angle = atan(tan(1.04 × the bounding sphere's angular radius) / zoom); zoom > 1
-//                                 draws larger), camera distance |viewPoint| × longest side.
-import { THREE, surface, cylinderBetween, fatLine } from '../../shared/three-helpers.js';
-import { sampleCurve, sampleSurface, sampleCircle, infinitePlanePolygon, apply4, cuboidCorners } from './g3d.js';
+//                                 draws larger), camera distance |viewPoint| × longest side; with viewAngle (radians,
+//                                 ViewAngle, v0.1.21) the vertical angle is that instead.
+//   'mesh' primitives (GraphicsComplex polygons, v0.1.21): one indexed BufferGeometry (each polygon a triangle fan),
+//                                 smooth vertex normals, both faces; edges as polygons unless EdgeForm[].
+import { THREE, surface, cylinderBetween, fatLine } from './three-helpers.js';
+import { sampleCurve, sampleSurface, sampleCircle, infinitePlanePolygon, apply4, cuboidCorners } from './graphics3d.js';
 
 /** Mathematica's default ViewPoint */
 export const VIEWPOINT = [1.3, -2.4, 2];
 
-export function fitViewer(viewer, { box, zoom = 1, viewPoint = VIEWPOINT }) {
+export function fitViewer(viewer, { box, zoom = 1, viewPoint = VIEWPOINT, viewAngle }) {
   const vpLen = Math.hypot(...viewPoint);
   const c = new THREE.Vector3(...box.map(([a, b]) => (a + b) / 2));
   const longest = Math.max(...box.map(([a, b]) => b - a));
@@ -35,7 +36,7 @@ export function fitViewer(viewer, { box, zoom = 1, viewPoint = VIEWPOINT }) {
   const dist = vpLen * longest;
   viewer.controls.target.copy(c);
   viewer.camera.position.copy(c.clone().add(dir.multiplyScalar(dist)));
-  const half = Math.atan(Math.tan(Math.asin(Math.min(0.99, radius / dist)) * 1.04) / zoom);
+  const half = viewAngle !== undefined ? viewAngle / 2 : Math.atan(Math.tan(Math.asin(Math.min(0.99, radius / dist)) * 1.04) / zoom);
   viewer.camera.fov = (2 * half * 180) / Math.PI;
   viewer.camera.near = dist / 100;
   viewer.camera.far = dist * 10;
@@ -79,6 +80,19 @@ function surfaceMesh(grid, material) {
     const a = i * nv + j, b = a + 1, c = a + nv, d = c + 1;
     idx.push(a, c, b, b, c, d);
   }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setIndex(idx);
+  geo.computeVertexNormals();
+  return new THREE.Mesh(geo, material);
+}
+
+function indexedMesh(points, polygons, material) {
+  const pos = new Float32Array(points.length * 3);
+  let k = 0;
+  for (const q of points) { pos[k++] = q[0]; pos[k++] = q[1]; pos[k++] = q[2]; }
+  const idx = [];
+  for (const f of polygons) for (let i = 1; i + 1 < f.length; i++) idx.push(f[0], f[i], f[i + 1]);
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
   geo.setIndex(idx);
@@ -158,6 +172,11 @@ export function addPrims(group, prims, ctx) {
         break;
       }
       case 'line': group.add(line(p.points, p)); break;
+      case 'mesh': {
+        group.add(indexedMesh(p.points, p.polygons, mat(p, THREE.DoubleSide)));
+        if (p.edgeForm !== 'None') edges(p.polygons.flatMap((f) => loop(f.map((i) => p.points[i]))), p);
+        break;
+      }
       case 'arrow': {
         const [a, b] = p.points;
         const dir = new THREE.Vector3(b[0] - a[0], b[1] - a[1], b[2] - a[2]);

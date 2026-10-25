@@ -7,11 +7,15 @@
 // the plot cache; Table and ParametricPlot (fixed sampling, D-DI-01/D-DI-02). Greek names spelled out (τ → tau as the
 // slider variable, the formulas' first argument s; α → Alpha, β → Beta, θ → Theta).
 //
-// Path pieces as data: { kind: 'arc', c, r, a1, a2 } (Circle[c, r, {a1, a2}]) and { kind: 'line', from, to }.
+// Path pieces as shared/graphics.js data: Circle[c, r, {a1, a2}] and Line[{from, to}] (v0.1.21; before, { kind, … }
+// records); epiGraphics(r, view), the Manipulate's own Graphics, as data.
 // Numerics (DESIGN §6): a/b of machine numbers as a·(1/b), p/100 t as (p/100)·t, the products ∓t(τ−1)X from left to
 // right, (t·(s−1))·X, as Mathematica 15.0.1 evaluates them (harness run 2, K-DI-04, N-DI-07), tolerant comparisons of
 // reals (shared/mma.js).
 import { mLess, mLessEq, mUnequal } from '../../shared/mma.js';
+import { Annotation, Circle, Line, AbsoluteDashing, CapForm, Thick, Gray, Blue, Orange, Red, Green } from '../../shared/graphics.js';
+import { pxSize } from '../../shared/graphics-extras.js';
+import { drawCar } from '../common/car-icon.js';
 
 const PI = Math.PI;
 
@@ -66,32 +70,28 @@ export function carState(path, r, t, tau, p) {
     cAlpha = before ? -r : 0;
     const p0 = [r * (1 - ca), r * sa];
     pathGraphics = { colour: 'Blue', path, pieces: [
-      { kind: 'arc', c: [r, 0], r, a1: PI + 0, a2: PI + -maxAlpha },
-      { kind: 'line', from: p0, to: [p0[0] + straight * sa, p0[1] + straight * ca] }] };
+      Circle([r, 0], r, [PI + 0, PI + -maxAlpha]), Line([p0, [p0[0] + straight * sa, p0[1] + straight * ca]])] };
   } else if (path === 'LS') {
     cxy = mLS(fs, pt, r);
     cTheta = PI / 2 + turned;
     cAlpha = before ? r : 0;
     const p0 = [r * (-1 + ca), r * sa];
     pathGraphics = { colour: 'Orange', path, pieces: [
-      { kind: 'arc', c: [-r, 0], r, a1: 0, a2: maxAlpha },
-      { kind: 'line', from: p0, to: [p0[0] + straight * -sa, p0[1] + straight * ca] }] };
+      Circle([-r, 0], r, [0, maxAlpha]), Line([p0, [p0[0] + straight * -sa, p0[1] + straight * ca]])] };
   } else if (path === 'RL') {
     cxy = mRL(fs, pt, r);
     cTheta = PI / 2 - turned + after;
     cAlpha = before ? -r : r;
     pathGraphics = { colour: 'Red', path, pieces: [
-      { kind: 'arc', c: [r, 0], r, a1: PI + 0, a2: PI + -maxAlpha },
-      { kind: 'arc', c: [r * (1 - 2 * ca), r * (2 * sa)], r, a1: -maxAlpha + 0, a2: -maxAlpha + second }] };
+      Circle([r, 0], r, [PI + 0, PI + -maxAlpha]), Circle([r * (1 - 2 * ca), r * (2 * sa)], r, [-maxAlpha + 0, -maxAlpha + second])] };
   } else { // True: LR
     cxy = mLR(fs, pt, r);
     cTheta = PI / 2 + turned - after;
     cAlpha = before ? r : -r;
     // ORIGINAL QUIRK (Q-DI-05): the first arc twice
     pathGraphics = { colour: 'Green', path: 'LR', pieces: [
-      { kind: 'arc', c: [-r, 0], r, a1: 0, a2: maxAlpha },
-      { kind: 'arc', c: [-r, 0], r, a1: 0, a2: maxAlpha },
-      { kind: 'arc', c: [r * (-1 + 2 * ca), r * (2 * sa)], r, a1: PI + maxAlpha - 0, a2: PI + maxAlpha - second }] };
+      Circle([-r, 0], r, [0, maxAlpha]), Circle([-r, 0], r, [0, maxAlpha]),
+      Circle([r * (-1 + 2 * ca), r * (2 * sa)], r, [PI + maxAlpha - 0, PI + maxAlpha - second])] };
   }
   return { fs, maxAlpha, cxy, cTheta, cAlpha, pathGraphics };
 }
@@ -202,6 +202,24 @@ export const inputCellState = () => ({ ...initialState(), rold: 1, told: 1, plot
  */
 export const needsPlot = (st) => mUnequal(st.t, st.told) || st.plotReach === 1 || st.setold !== st.set || mUnequal(st.rold, st.r);
 
+// ---- epiGraphics as data (shared/graphics.js) ------------------------------------------------------
+const PATH_COLOUR = { Blue, Orange, Red, Green };
+const DASHED = AbsoluteDashing([4, 4]); // Dashed: about 4 px dashes and gaps at ImageSize 440 (D-DI-04)
+// drawCar[xy, θ, α, opac, .5, lights] (F-DI-19); Arrowheads[.02] of the 440 px wide picture, padding 0.05 included
+const ARROW = 0.02 * pxSize(SHOW_RANGE, 440, 0.05) * 440;
+const carIcon = (xy, theta, alpha, opac, lights, id) => drawCar(xy, theta, alpha, opac, { lights, beam: 8, headlightEdge: null, id, arrowSize: ARROW });
+
+/**
+ * epiGraphics = {{Dashed, Gray, Circle[{r, 0}, r], Circle[{-r, 0}, r]}, {Thick, pathGraphics},
+ *   Red, drawCar[{0, 0}, π/2, 0, .5, .5, False], Green, drawCar[cxy, cθ, cα, .8, .5, True]} (F-DI-18)
+ */
+export const epiGraphics = (r, v) => [
+  [DASHED, Gray, CapForm('Butt'), Annotation(Circle([r, 0], r), 'turning-circle-right'), Annotation(Circle([-r, 0], r), 'turning-circle-left')],
+  [Thick, PATH_COLOUR[v.pathGraphics.colour], Annotation(v.pathGraphics.pieces, 'path-graphics', { 'data-path': v.pathGraphics.path })],
+  [Red, carIcon([0, 0], Math.PI / 2, 0, 0.5, false, 'start-car')],
+  [Green, carIcon(v.cxy, v.cTheta, v.cAlpha, 0.8, true, 'moving-car')],
+];
+
 /** One evaluation of the Manipulate body. Returns { state, view } (view.recomputed: whether the plot was recomputed). */
 export function evaluate(stateIn) {
   const st = { ...stateIn };
@@ -214,5 +232,6 @@ export function evaluate(stateIn) {
     st.plotReach = computePlot(st.set, st.t, st.r);
     recomputed = true;
   }
-  return { state: st, view: { ...car, polySteps: polySteps(st.t, st.r), recomputed } };
+  const view = { ...car, polySteps: polySteps(st.t, st.r), recomputed };
+  return { state: st, view };
 }

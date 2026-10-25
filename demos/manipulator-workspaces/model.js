@@ -11,7 +11,8 @@ import { joints, makeO3coords, computeAd, computeTd, DOF } from '../common/dh-ch
 import { drawJoint, drawWristCenter, GROUND } from '../common/robot-draw.js';
 import {
   Graphics3D, GeometricTransformation, Polygon, Line, EdgeForm, LightBlue, Opacity, RGBColor, flatten, primitiveBounds,
-} from '../common/g3d.js';
+  GraphicsComplex, Group3D,
+} from '../../shared/graphics3d.js';
 
 const PI = Math.PI;
 
@@ -178,6 +179,27 @@ export function showFirstOptions(g1, g2) {
   return { head: 'Graphics3D', content: [g1.content, g2.content], options: { ...g1.options } };
 }
 
+/** the 1-based quads {i, i + n, i + n + 1, i + 1} of an n × m grid flattened row by row (GraphicsComplex indices) */
+const gridQuads = (n, m) => Array.from({ length: (n - 1) * (m - 1) }, (_, q) => {
+  const a = Math.floor(q / (m - 1)) * m + (q % (m - 1)) + 1;
+  return [a, a + m, a + m + 1, a + 1];
+});
+
+/**
+ * The picture as the page draws it (D-MW-03, D-MW-05): the robot, then the workspace as one part (redrawn only when
+ * the workspace changes), per surface the smooth-shaded GraphicsComplex of its 11 × 11 grid (the saved graphic carries
+ * VertexNormals), its blue boundary and its two mesh lines (1 px). Same primitives' bounds as view.box; the options
+ * of the combined graphic.
+ */
+export function drawnGraphic(view) {
+  const ws = view.ws.surfaces.map((s) => [
+    [EdgeForm(), LightBlue, Opacity(0.5), GraphicsComplex(s.grid.flat(), Polygon(gridQuads(s.grid.length, s.grid[0].length)))],
+    [BOUNDARY_STYLE, Line(s.boundary)],
+    [MESH_STYLE, Line(s.mesh[0]), Line(s.mesh[1])],
+  ]);
+  return Graphics3D([Group3D(view.robot), Group3D(ws, { key: view.ws })], view.graphic.options);
+}
+
 const wsKey = (st) => JSON.stringify([st.TypeOld, st.r1old, st.r2old, st.r3old]);
 
 /**
@@ -239,7 +261,7 @@ export function evaluate(stIn, cache = null) {
 /** Mathematica's default ViewPoint */
 export const VIEWPOINT = [1.3, -2.4, 2];
 /**
- * Zoom of the SphericalRegion fit (demos/common/g3d-three.js fitViewer: the bounding sphere × 1.04 fills the image,
+ * Zoom of the SphericalRegion fit (shared/graphics3d-three.js fitViewer: the bounding sphere × 1.04 fills the image,
  * zoom > 1 draws larger), fitted to the ground-disc widths of the eight snapshots (D-MW-04, golden test).
  */
 export const MW_ZOOM = 1.35;

@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.20 |
+| Code version: | 0.1.21 |
 | Document revision | 3 (2026-10-18) — harness run 2 evaluated (K-MS-01/02/03/04/07/08 resolved, P-MS-01 proposed, K-MS-11 new) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Minkowski Sum of Convex Robot and Obstacle", contributed by Shreyas Poyrekar, Arifa Sultana and Aaron T. Becker, published 2019-04-23 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/MinkowskiSumOfConvexRobotAndObstacle/>. Readable source: `docs/original-source/minkowski-sum.txt`; snapshots: `docs/original-snapshots/minkowski-sum-1.png` … `-5.png` (the extraction's pictures 6 and 7 are the Wolfram logo, not snapshots); golden data (`tests/golden/minkowski-sum.original-states.json`, COMMON-DECISIONS §1): the live state, the Settings of the five snapshot cells (raw notebook lines 4386, 5542, 6194, 7236, 7866) and the initial settings |
-| Port files | `demos/minkowski-sum/minkowski.js` (the Initialization functions under their original names and one evaluation of the Manipulate body, geometry returned as data; pure), `main.js` (the Manipulate on `shared/manipulate.js`: controls, the ten locators, Graphics data, animation; v0.1.20), `index.html`; shared: `demos/common/polygon-core.js` (CC BY-NC-SA 3.0, owned by this app: `lineList`, `vector`, `areaOfPoly`, `centroidOfPoly`, `discretizeLineRev1` moved from motion-planning, `sameQ` (and `lineList`) from art-gallery; COMMON-DECISIONS §3, §6.3) |
+| Port files | `demos/minkowski-sum/minkowski.js` (the Initialization functions under their original names and one evaluation of the Manipulate body, geometry returned as data and the picture as `shared/graphics.js` data; pure), `main.js` (the Manipulate on `shared/manipulate.js`: controls, the ten locators, animation; v0.1.21), `index.html`; shared: `demos/common/polygon-core.js` (CC BY-NC-SA 3.0, owned by this app: `lineList`, `vector`, `areaOfPoly`, `centroidOfPoly`, `discretizeLineRev1` moved from motion-planning, `sameQ` (and `lineList`) from art-gallery; COMMON-DECISIONS §3, §6.3) |
 | Role in the project | further demonstration (batch A) |
 
 ## 1. Purpose and background
@@ -130,11 +130,19 @@ static-view controls only in the static view (F-MS-07); the inventory test check
   `discretizePolyRev1`, `normalVector` (with `normalizeCR`, K-MS-02), `deleteDuplicates` (1-ulp `SameQ`), `rotateLeft`,
   `minkowskiWalk` (the `{Chop[prev = prev - #[[3]]], #[[4]]}` walk, Q-MS-06), `robotAt` (the move view's robot
   placement), constants (`OFFSET = [2.298, -2.298]`, `STEP = 0.01`, `X_LIMIT = 1.34704`, `LOCATOR_BOX`, `FRAME_HALF`,
-  `DEFAULT_PTS`, `IMAGE_SIZE`), `initialSettings()` (the stored `"Variables"`), `clampToBox`, and `evaluate(state)` = one
+  `DEFAULT_PTS`, `IMAGE_SIZE`, `RANGE`), `initialSettings()` (the stored `"Variables"`), `clampToBox`, and `evaluate(state)` = one
   evaluation of the Manipulate body: clamp → hulls → centroids → normals → sort → merge → shifted sum and side lists →
   labels → discretisation → view logic (`c`, `s`), returning the new Manipulate variables (`pts`, `rl`, `ol`, `dl`, `c`,
-  `s`), every local under its original name and every drawn item as data (`view.scene`: polygons, points, lines,
-  arrows, labels with position, text and colour, in the original's drawing order) for both views. The polygon helpers
+  `s`), every local under its original name and the picture (`graphics` = `picture(state, view)`: the Graphics list
+  of the original's `If` — the static view: sum, obstacle, robot, sorted normals; the move view: the robot moving
+  around the sum — as `shared/graphics.js` data, every part an `Annotation` with its test id). Since v0.1.21 (owner
+  decision D2) this is the one description of the picture: before, the model's `view.scene` described it for the tests
+  while `main.js` drew from other view fields (the frozen old outputs agreed number for number,
+  `tests/unit/fixtures/minkowski-sum-drawing.pre-graphics.json`). The notched arrowheads (D-MS-02) are `Polygon` data
+  (`shared/graphics-extras.js` `notchedArrowhead`; `shared/graphics.js` `Arrow` draws a plain triangle); the subscript
+  labels α<sub>i</sub>, β<sub>j</sub> are `Text[Style[Subscript[Style[α, Italic], i], ScriptSizeMultipliers -> "75%",
+  ScriptBaselineShifts -> "0.35em"]]` with `data-key` (the snapshot's subscript, 0.35em down at 75 %; same elements as
+  the former `Raw` `tspanText`). The polygon helpers
   `lineList`, `vector`, `areaCalulation`, `areaOfPoly`, `centroidCal`, `centroidOfPoly`, `discretizeLineRev1` come
   from `demos/common/polygon-core.js` and are re-exported under the original names.
 - `demos/common/polygon-core.js` (CC BY-NC-SA 3.0, owned by this app, COMMON-DECISIONS §3; header credits "Motion
@@ -149,14 +157,10 @@ static-view controls only in the static view (F-MS-07); the inventory test check
   move slider `{{s, 1, "move"}, 1, dl, 1}` whose maximum is a function of the state, the last integer `dl`, D-MS-05;
   the ten locators `pts-1` … `pts-10` with the locator box and `Appearance -> None`), `body` = `evaluate` (with
   `Enabled -> c`: a locator moved while `c` is False is put back to the last evaluated position, so the picture and the
-  state do not change), and `draw` returning the Graphics list of the original's `If` (the static view: sum, obstacle,
-  robot, sorted normals; the move view: the robot moving around the sum) as `shared/graphics.js` data. The layer writes
+  state do not change); the body's result carries the picture. The layer writes
   the body's `c`, `s` and the slider's range back into the controls after every evaluation. `after` hides the part of
   `Dynamic@If[…, Row[{a, c, m, n}], s]` not shown (both are built once, D-MS-06) and stops the animation outside the
-  move view; choosing the move view opens the slider's ⊕ panel and starts its play button (F-MS-06). The notched
-  arrowheads (D-MS-02) are `Polygon` data (`demos/common/plot-extras.js` `notchedArrowhead`; `shared/graphics.js`
-  `Arrow` draws a plain triangle); the subscript labels α<sub>i</sub>, β<sub>j</sub> are drawn through the layer's `Raw`
-  (`plot-extras.js` `tspanText`: subscript 0.35em down at 75 %, `data-key`), whose pixels `Subscript` data would change.
+  move view; choosing the move view opens the slider's ⊕ panel and starts its play button (F-MS-06).
   The hook keeps `getState`, `view`, `moveLocator(n, p)`, `setState`, `stopAnimation`, `worldToClient`.
 - `index.html`: page frame of the other ports (title, caption, controls, graphic, Details, credits, start-up notice).
 
@@ -256,8 +260,8 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/minkowski-sum/`) | 3 | `index.html`, `main.js`, `minkowski.js` |
-| `shared/` | 14 | `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-frame.js`, `svg-plot.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
-| `demos/common/` | 2 | `plot-extras.js`, `polygon-core.js` |
+| `shared/` | 15 | `graphics-extras.js`, `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-frame.js`, `svg-plot.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
+| `demos/common/` | 1 | `polygon-core.js` |
 | added by the bundler | 7 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/minkowski-sum/DESIGN.md` |
 <!-- bundle-contents:end -->
 
@@ -325,6 +329,7 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 | 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 5 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
 | 6 | v0.1.20 | 2026-10-21 | `main.js` rewritten on the shared Manipulate layer (`shared/manipulate.js`, `shared/graphics.js`): control specs in Mathematica's form, the picture as Graphics data; no change to behaviour or picture (all unit, golden and browser tests unchanged and passing; screenshots and Manipulate state identical to v0.1.19 at sample settings) |
+| 7 | v0.1.21 | 2026-10-23 | the model builds the picture as `shared/graphics.js` Graphics data (owner decision D2) and the body returns {state, view, graphics}; `main.js` shortened; the tested `view.scene` (not the drawn picture) replaced by the one builder `picture`, so test and picture cannot drift; the old drawing output frozen in `tests/unit/fixtures/minkowski-sum-drawing.pre-graphics.json` and tests that read the old format now read the same numbers through `annotations()`/`Cases()`; no change to behaviour or picture (screenshots and Manipulate state identical to v0.1.20 at sample settings) |
 
 ## 10. Improvements to consider (not implemented)
 

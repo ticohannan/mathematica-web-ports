@@ -66,15 +66,23 @@ Manipulate({
 | Module | Provides |
 |--------|----------|
 | `shared/manipulate.js` | `Manipulate(spec)`; control specs in Mathematica's own forms (slider, setter bar with `Rule`, checkbox for `{False, True}`, `ControlType` `Slider`/`VerticalSlider`/`PopupMenu`/`IntervalSlider`, `Locator` incl. a list of points, 2D slider, `Control(factory)` for custom controls such as the dials, `Button`, `Row` of controls, hidden variables, `Delimiter`, headings; `Enabled` and ranges as functions of the state); Mathematica slider values (`steps: 'mma'`) by default; the controls show the variables after every evaluation; several pictures; `ControlActive`; `random` (`?seed=`, hook `setRng`), `settle`, `throttle`, `after`; reset; the test hook (`getState`, `setState`, `view`, `moveLocator`, `worldToClient`, `controlActive`, plus app extras); `cacheLast` (the originals' "…Old" caching as one helper); pure `parseControl`, `hookCopy`, `hookRead` |
-| `shared/graphics.js` | 2D `Graphics` as data: primitives `Line`, `Polygon`, `Rectangle` (`RoundingRadius`), `Disk`, `Circle` (and arcs), `Point`, `Arrow`, `Text`, `Rotate`, `Translate`, `Inset` (of a small Graphics), `Raster`; directives (colours as `RGBColor` objects, `Darker`/`Lighter`/`Blend`, `Opacity`, `Thickness`/`AbsoluteThickness`/`Thin`/`Thick`, `AbsoluteDashing`, `CapForm`, `PointSize`, `Arrowheads`, `EdgeForm`, `FaceForm`, `Transparent`, `Directive`, fonts); `Style`/`Subscript` text; Mathematica's list scoping of directives; `Annotation[g, id, attrs]` for test ids; `Raw` as a migration aid for helpers not yet written as data; `Tooltip`, `cachedGraphics` (a part redrawn only when its keys change), ellipses (`Disk[c, {rx, ry}]`), `Text` offsets, `Superscript`, `Row` text; pure `walk`, `textOf`, `htmlOf` |
+| `shared/graphics.js` | 2D `Graphics` as data: primitives `Line`, `Polygon`, `Rectangle` (`RoundingRadius`), `Disk`, `Circle` (and arcs), `Point`, `Arrow`, `Text`, `Rotate`, `Translate`, `Inset` (of a small Graphics), `Raster`; directives (colours as `RGBColor` objects, `Darker`/`Lighter`/`Blend`, `Opacity`, `Thickness`/`AbsoluteThickness`/`Thin`/`Thick`, `AbsoluteDashing`, `CapForm`, `PointSize`, `Arrowheads`, `EdgeForm`, `FaceForm`, `Transparent`, `Directive`, fonts); `Style`/`Subscript` text; Mathematica's list scoping of directives; `Annotation[g, id, attrs]` for test ids; `Raw` as a migration aid for helpers not yet written as data; `Tooltip`, `cachedGraphics` (a part redrawn only when its keys change), ellipses (`Disk[c, {rx, ry}]`), `Text` offsets, `Superscript`, `Row` text; pure `walk`, `textOf`, `htmlOf`; v0.1.21: `Clip` (PlotRangeClipping for a part), `Column` (multi-line text), `ScriptSizeMultipliers`/`ScriptBaselineShifts`, and the queries `Cases`, `annotations`, `annotation` (tests and models read the drawn numbers from the data) |
+| `shared/graphics-extras.js` | picture parts as Graphics data not (yet) offered as options: `axesGraphics`, `locatorGlyph`, `notchedArrowhead`, `arrowheadPolygon`, `arcArrowGraphics`, `plotUnitsPerPx` (v0.1.21, from the former CC `plot-extras.js`/`arrow-graphics.js`) |
+| `shared/graphics3d.js` | `Graphics3D` as data (v0.1.21, from `demos/common/g3d.js`): directives and list scoping, `Sphere`, `Cylinder`, `Cuboid`, `Polygon`, `Line`, `Point`, `Arrow`, `Ellipsoid`, `InfinitePlane`, `GeometricTransformation`, `Rotate`, `Show`, `ParametricPlot3D`, `GraphicsComplex`, `Group3D` (cached parts), `flatten`, bounds, `mul4`/`mul4Fma`, frame/tick/clip helpers |
+| `shared/graphics3d-three.js`, `shared/graphics3d-view.js` | the three.js renderer of flattened Graphics3D (`addPrims`, `fitViewer`, `disposeGroup`) and `View3D(options)`, a picture renderer for `Manipulate` (`{ id, renderer: View3D({...}) }`): one viewer kept across evaluations, `ImageSize`, `ViewPoint`, `ViewAngle`, `PlotRange` (refit or clipping), `BoxRatios`, `Boxed`/`Axes`/`Ticks`/`AxesLabel`/`PlotLabel`, `Lighting`, WebGL 2 fallback, plus port options |
+| `shared/svd3.js`, `shared/plot3d.js`, `shared/region-plot3d.js` | 3×3 SVD and MatrixRank; a Plot3D box/ticks/lighting-shader frame; RegionPlot3D-style marching tetrahedra (v0.1.21, generic parts moved out of the apps, owner decision D1) |
 
 They build on `shared/ui.js` and `shared/svg-plot.js`, which are unchanged; apps not yet migrated keep using those
 directly. Migrated in v0.1.19: robot-motion-obstacles, bfs-motion-planning, dubins-path, art-gallery; in v0.1.20 the other
 2D apps: rrt, prm, prm-seven-link, car-paths, camera-lasers, distance-norms, two-link-kinematics, four-bar-linkage,
 minkowski-sum, dubins-isochrons, motion-planning (each with the same pictures and states as before, checked by its
-unchanged tests and a pixel comparison). Graphics-data helpers of the common drawing code: `demos/common/arm-view.js`,
-`car-graphics.js`, `arrow-graphics.js`, `plot-extras.js` (CC BY-NC-SA). The 3D apps are not on the layer yet. Tests: `tests/unit/graphics.test.js`,
-`tests/unit/manipulate.test.js` (pure parts) and the migrated apps' browser tests.
+unchanged tests and a pixel comparison). In v0.1.21 all eleven 3D apps followed (pictures `{ id, renderer }`: `View3D` or
+the app's own renderer object for special drawing — torus-chart, prm-3d, unit-balls, euler-angles,
+three-parametrizations, prm-robot-arm's inset), and nine 2D models build their pictures as Graphics data themselves (the
+body returns `{ state, view, graphics }`); the car icon `demos/common/car-icon.js` returns Graphics data. Further layer
+options: variable paths (`'theta.0'`), `Assign`, `Moved`, `merge`, `resetStops`, `initialSettings`, hook `graphics(k)`.
+All 26 apps now use the layer. Tests: `tests/unit/graphics.test.js`, `tests/unit/manipulate.test.js`,
+`tests/unit/graphics3d*.test.js` (pure parts) and the apps' browser tests.
 
 ## Mathematica semantics (`shared/mma.js`)
 
@@ -108,9 +116,10 @@ no Demonstration code in them — code derived from a Demonstration goes to `dem
 | `shared/three-helpers.js` (additive option) | `createViewer({imageSize: [w, h]})` for a non-square image (the square viewer is unchanged); pure `viewerSize`, `viewerCamera`. |
 
 The 3D apps of batch B share the DH-family modules in `demos/common/` (CC BY-NC-SA, moved from robot-singularities in
-v0.1.16, which keeps re-export shims): `g3d.js` (Graphics3D as data), `svd3.js` (3×3 SVD, `zeroTol`), `dh-chain.js`
-(`dhTransform` with an explicit exact-angle path, `computeTd`), `robot-draw.js` (joints, frames, gripper) and
-`g3d-three.js` (`addPrims`, `disposeGroup`, `fitViewer`); their APIs are listed in each file's header.
+v0.1.16, which keeps re-export shims): `svd3.js` (`manipEllip`; re-exports `shared/svd3.js`), `dh-chain.js`
+(`dhTransform` with an explicit exact-angle path, `computeTd`) and `robot-draw.js` (joints, frames, gripper); the generic
+Graphics3D model and renderer (formerly `g3d.js`, `g3d-three.js`) are MIT in `shared/` since v0.1.21. Their APIs are
+listed in each file's header.
 
 Their browser behaviour is tested on a test page that is not part of the site (`tests/e2e/fixtures/shared-controls.html`,
 `tests/e2e/shared-controls.spec.js`); the pure parts by `tests/unit/<module>.test.js`.

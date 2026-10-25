@@ -14,10 +14,10 @@ import fs from 'node:fs';
 import { computeTd, computeAd, mul4Fma } from '../../demos/common/dh-chain.js';
 import { chop } from '../../shared/mma.js';
 import { drawJoint, drawGripper } from '../../demos/common/robot-draw.js';
-import { flatten, cuboidCorners } from '../../demos/common/g3d.js';
+import { flatten, cuboidCorners } from '../../shared/graphics3d.js';
 import { mmaGrid } from '../../shared/ui.js';
 import { typeOf } from '../../demos/robot-singularities/robots.js';
-import { apply4 } from '../../demos/common/g3d.js';
+import { apply4 } from '../../shared/graphics3d.js';
 
 const π = Math.PI;
 const H3 = (v) => v.H.slice(0, 3);

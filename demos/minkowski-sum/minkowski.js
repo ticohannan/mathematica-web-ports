@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // demos/minkowski-sum/minkowski.js — pure port of "Minkowski Sum of Convex Robot and Obstacle"
 // (docs/original-source/minkowski-sum.txt): the Initialization functions under their original names and one
-// evaluation of the Manipulate body, with everything the Graphics draws returned as data. No DOM.
+// evaluation of the Manipulate body, which also returns the picture as shared/graphics.js data. No DOM.
 //
 // Numbers follow the original's Mathematica semantics (DESIGN.md §6.4): tolerant <, <=, ==, != (shared/mma.js);
 // Sort[list, p] as shared/mma.js sortMma (ties in reverse input order, Q-MS-04; a comparison with the angle None is
@@ -15,6 +15,11 @@
 import { mLess, mGreater, mLessEq, mEqual, chop, sortMma } from '../../shared/mma.js';
 import { arcTan } from '../../shared/mma-exact.js';
 import { normalizeCR } from '../../shared/mma-extra.js';
+import {
+  Annotation, Polygon, Line, Point, Disk, Text, Style, Subscript, Italic, EdgeForm, Opacity, AbsoluteThickness, AbsolutePointSize,
+  ScriptSizeMultipliers, ScriptBaselineShifts, Black, White, Red, Blue, LightRed, LightBlue, LightGreen,
+} from '../../shared/graphics.js';
+import { plotUnitsPerPx, notchedArrowhead } from '../../shared/graphics-extras.js';
 import {
   lineList, vector, areaCalulation, areaOfPoly, centroidCal, centroidOfPoly, discretizeLineRev1, sameQ, meanMma as mean,
 } from '../common/polygon-core.js';
@@ -146,8 +151,8 @@ export function minkowskiWalk(prev0, entries) {
 
 /**
  * evaluate(state) — one evaluation of the Manipulate body. state: {stableOrMove, a, c, m, n, s, step, dl, rl, ol, pts}.
- * Returns {state, view}: the new Manipulate variables (the body writes pts, rl, ol, dl, c and s) and every computed
- * local (original names) plus the drawn primitives in the original's order (`view.scene`).
+ * Returns {state, view, graphics}: the new Manipulate variables (the body writes pts, rl, ol, dl, c and s), every
+ * computed local (original names) and the picture (picture(state, view): shared/graphics.js data in the original's order).
  */
 export function evaluate(stateIn) {
   const st = { ...stateIn, pts: copyPts(stateIn.pts) };
@@ -265,54 +270,54 @@ export function evaluate(stateIn) {
 
   // View logic inside the Graphics: the static view sets c = True and s = 1 (Q-MS-03, Q-MS-08); the move view c = False
   if (st.stableOrMove !== MOVE_VIEW) { st.c = true; st.s = 1; } else st.c = false;
-  view.scene = st.stableOrMove !== MOVE_VIEW ? staticScene(st, view) : moveScene(st, view);
-  return { state: st, view };
+  return { state: st, view, graphics: picture(st, view) };
 }
 
-// ---- the Graphics as data -------------------------------------------------------------------------------------
-// Primitive kinds: polygon {pts, fill, fillOpacity, edge}, lines {segs, color}, points {pts, color}, text {text, at,
-// color, sub?}, arrows {arrows, color}, disk {c, r, fill, edge}. Colours are Mathematica colour names. `role` names
-// the part for tests.
-const FRAME = () => ({ kind: 'polygon', role: 'frame', pts: FRAME_SQUARE.map((p) => [...p]), fill: 'White', edge: 'Thin' });
+// ---- the Graphics as shared/graphics.js data ----------------------------------------------------------------------
+// Graphics[{…}, ImageSize -> .9{620, 450}]: no PlotRange, so Mathematica takes the square 7 CirclePoints[4] (§6.5) with
+// the default padding; the 558 × 405 image shows that square centred, white left and right. The port widens the x range
+// so that the SVG has the original's 558 × 405 shape with the square in the middle.
+const [IW, IH] = IMAGE_SIZE;
+export const RANGE = Object.freeze([[-(FRAME_HALF * IW) / IH, (FRAME_HALF * IW) / IH], [-FRAME_HALF, FRAME_HALF]]);
+const PX = plotUnitsPerPx(RANGE, IW); // world units per pixel
+// PORT DEVIATION (D-MS-02): Mathematica's sizes approximated. PointSize[0.01] of the 405-pixel plot width; default line
+// width 1 px; Thin 0.5 px; default arrowheads about 12 px long (0.0215 of the image width, as four-bar-linkage); text 12 px.
+const POINT = AbsolutePointSize(0.01 * IH), THIN = AbsoluteThickness(0.5), HEAD = [12, 4.6];
 
-function staticScene(st, v) {
-  const out = [FRAME()];
-  if (v.sumOk) {
-    out.push({ kind: 'polygon', role: 'mink-polygon', pts: v.shiftedMink, fill: 'LightGreen', fillOpacity: 0.5, edge: null });
-    out.push({ kind: 'lines', role: 'mink-robot-lines', segs: v.minkRobotlinelist, color: 'Blue' });
-    out.push({ kind: 'lines', role: 'mink-obstacle-lines', segs: v.minkObstlinelist, color: 'Red' });
-    out.push({ kind: 'points', role: 'mink-points', pts: v.shiftedMink, color: 'Black' });
-  }
-  out.push({ kind: 'text', role: 'mink-text', text: 'Minkowski sum', at: [2.3, -4.75], color: 'Black' });
-  if (v.sumOk) {
-    if (st.a === true) out.push({ kind: 'arrows', role: 'mink-arrows', arrows: v.minkowskiSidesNormalArrows, color: 'Black' });
-    for (const l of v.minkowskiRobotSidesLabels) out.push({ kind: 'text', role: 'mink-label', text: l.key, at: l.at, color: 'Blue', sub: true });
-    for (const l of v.minkowskiObstacleSidesLabels) out.push({ kind: 'text', role: 'mink-label', text: l.key, at: l.at, color: 'Red', sub: true });
-  }
-  // obstacle
-  out.push({ kind: 'polygon', role: 'obstacle-polygon', pts: v.obstacle, fill: 'LightRed', edge: 'Red' });
-  out.push({ kind: 'points', role: 'obstacle-locator-points', pts: st.pts.slice(5, st.n + 5), color: 'Red' });
-  out.push({ kind: 'points', role: 'obstacle-points', pts: v.obstacle, color: 'Black' });
-  out.push({ kind: 'points', role: 'obstacle-centroid', pts: [v.oc], color: 'Black' });
-  if (st.a === true) out.push({ kind: 'arrows', role: 'obstacle-arrows', arrows: v.obstacleArrows, color: 'Black' });
-  for (const l of v.obstaclelabel) out.push({ kind: 'text', role: 'obstacle-label', text: l.key, at: l.at, color: 'Red', sub: true });
-  out.push({ kind: 'text', role: 'obstacle-text', text: 'obstacle', at: [-2.3, 0.8], color: 'Black' });
-  // robot
-  out.push({ kind: 'polygon', role: 'robot-polygon', pts: v.robot, fill: 'LightBlue', edge: 'Blue' });
-  out.push({ kind: 'points', role: 'robot-locator-points', pts: st.pts.slice(0, st.m), color: 'Blue' });
-  out.push({ kind: 'points', role: 'robot-points', pts: v.robot, color: 'Black' });
-  out.push({ kind: 'points', role: 'robot-centroid', pts: [v.rc], color: 'Black' });
-  if (st.a === true) out.push({ kind: 'arrows', role: 'robot-arrows', arrows: v.robotArrows, color: 'Black' });
-  for (const l of v.robotlabel) out.push({ kind: 'text', role: 'robot-label', text: l.key, at: l.at, color: 'Blue', sub: true });
-  out.push({ kind: 'text', role: 'robot-text', text: 'robot', at: [2.3, 0.8], color: 'Black' });
-  // sorted normals
-  out.push({ kind: 'arrows', role: 'sorted-arrows', arrows: v.sortedArrows, color: 'Black' });
-  out.push({ kind: 'disk', role: 'sorted-disk', c: SORTED_CENTRE, r: 0.5, fill: 'White', edge: 'Thin' });
-  for (const l of v.sortedNormalRobot) out.push({ kind: 'text', role: 'sorted-label', text: l.key, at: l.at, color: 'Blue', sub: true });
-  for (const l of v.sortedNormalObstacle) out.push({ kind: 'text', role: 'sorted-label', text: l.key, at: l.at, color: 'Red', sub: true });
-  out.push({ kind: 'text', role: 'sorted-text', text: 'sorted normals', at: [-2.3, -3.2], color: 'Black' });
-  return out;
+/** Arrow[{a, b}] with the notched head: the shaft to the notch, then the head (shorter arrows get smaller heads) */
+function arrow([a, b], id) {
+  const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy);
+  if (L === 0) return Annotation([], id, { class: 'arrow' });
+  const len = Math.min(HEAD[0] * PX, L);
+  const { head, notch } = notchedArrowhead(b, [dx / L, dy / L], len, HEAD[1] * PX * (len / (HEAD[0] * PX)));
+  return Annotation([Line([a, notch]), head], id, { class: 'arrow' });
 }
+const arrows = (list, id) => [Black, ...list.map((a) => arrow(a, `arrow-${id}`))];
+const points = (pts, id) => Annotation(pts.map(Point), id);
+/** Text[Subscript[α, i], pos]: italic letter, subscript 0.35em down at 75 % (snapshot 1) */
+const SUB = [ScriptSizeMultipliers('75%'), ScriptBaselineShifts(['0.35em', '0.35em'])];
+const labels = (col, list, id) => list.map((l) => [col,
+  Annotation(Text(Style(Subscript(Style(l.key.slice(0, 1), Italic), l.key.slice(1)), ...SUB), l.at), `label-${id}`, { 'data-key': l.key })]);
+const text = (str, pos, id) => [Black, Annotation(Text(str, pos), `text-${id}`)];
+const lines = (col, segs, id) => [col, Annotation(segs.map((q) => Line(q)), id)];
+const frame = [EdgeForm(THIN), White, Annotation(Polygon(FRAME_SQUARE.map((p) => [...p])), 'frame')]; // {EdgeForm[Thin], White, Polygon@(7CirclePoints[4])}
+
+/** If[stableOrMove != "move around Minkowski", …]: the static view (the sum drawn only when it exists, D-MS-05) */
+const staticView = (v, { a, m, n, pts }) => [
+  v.sumOk && [[Opacity(0.5), LightGreen, Annotation(Polygon(v.shiftedMink), 'mink-polygon')],
+    lines(Blue, v.minkRobotlinelist, 'mink-robot-lines'), lines(Red, v.minkObstlinelist, 'mink-obstacle-lines'), [Black, points(v.shiftedMink, 'mink-points')]],
+  text('Minkowski sum', [2.3, -4.75], 'mink-text'),
+  v.sumOk && [a && arrows(v.minkowskiSidesNormalArrows, 'mink-arrows'),
+    labels(Blue, v.minkowskiRobotSidesLabels, 'mink-label'), labels(Red, v.minkowskiObstacleSidesLabels, 'mink-label')],
+  [[EdgeForm(Red), LightRed, Annotation(Polygon(v.obstacle), 'obstacle-polygon')], [Red, points(pts.slice(5, n + 5), 'obstacle-locator-points')],
+    [Black, points(v.obstacle, 'obstacle-points'), points([v.oc], 'obstacle-centroid')], a && arrows(v.obstacleArrows, 'obstacle-arrows'),
+    labels(Red, v.obstaclelabel, 'obstacle-label'), text('obstacle', [-2.3, 0.8], 'obstacle-text')],
+  [[EdgeForm(Blue), LightBlue, Annotation(Polygon(v.robot), 'robot-polygon')], [Blue, points(pts.slice(0, m), 'robot-locator-points')],
+    [Black, points(v.robot, 'robot-points'), points([v.rc], 'robot-centroid')], a && arrows(v.robotArrows, 'robot-arrows'),
+    labels(Blue, v.robotlabel, 'robot-label'), text('robot', [2.3, 0.8], 'robot-text')],
+  [arrows(v.sortedArrows, 'sorted-arrows'), [EdgeForm(THIN), White, Annotation(Disk(SORTED_CENTRE, 0.5), 'sorted-disk')],
+    labels(Blue, v.sortedNormalRobot, 'sorted-label'), labels(Red, v.sortedNormalObstacle, 'sorted-label'), text('sorted normals', [-2.3, -3.2], 'sorted-text')],
+];
 
 /** The move view's robot placement: robot vertices discretPolygon[[s]] - rc - oc + v, centroid discretPolygon[[s]] - oc. */
 export function robotAt(v, s) {
@@ -324,29 +329,21 @@ export function robotAt(v, s) {
   };
 }
 
-function moveScene(st, v) {
-  const out = [FRAME()];
-  const moc = neg2(v.oc);
-  if (v.sumOk) {
-    const sum = v.minkowskiPoints.map((p) => add2(moc, p));
-    out.push({ kind: 'polygon', role: 'mink-polygon', pts: sum, fill: 'LightGreen', fillOpacity: 0.5, edge: null });
-    out.push({ kind: 'points', role: 'mink-points', pts: sum, color: 'Black' });
-    const back = (l) => [add2(neg2(OFFSET), l[0]), add2(neg2(OFFSET), l[1])];
-    out.push({ kind: 'lines', role: 'mink-robot-lines', segs: v.minkRobotlinelist.map(back), color: 'Blue' });
-    out.push({ kind: 'lines', role: 'mink-obstacle-lines', segs: v.minkObstlinelist.map(back), color: 'Red' });
-  }
-  out.push({ kind: 'text', role: 'mink-text', text: 'Minkowski sum', at: [0, 1.1], color: 'Black' });
-  const obst = v.obstacle.map((p) => add2(moc, p));
-  out.push({ kind: 'polygon', role: 'obstacle-polygon', pts: obst, fill: 'LightRed', edge: 'Red' });
-  out.push({ kind: 'points', role: 'obstacle-points', pts: obst, color: 'Black' });
-  out.push({ kind: 'text', role: 'obstacle-text', text: 'obstacle', at: [0, 0], color: 'Black' });
-  const r = v.sumOk ? robotAt(v, st.s) : null;
-  if (r) {
+/** the move view: the sum and the obstacle around the origin, the robot at discretPolygon[[s]] */
+const moveView = (v, { s }) => {
+  const moc = neg2(v.oc), sum = v.minkowskiPoints.map((p) => add2(moc, p)), obst = v.obstacle.map((p) => add2(moc, p));
+  const back = (l) => [add2(neg2(OFFSET), l[0]), add2(neg2(OFFSET), l[1])];
+  const r = v.sumOk ? robotAt(v, s) : null;
+  return [
+    v.sumOk && [[Opacity(0.5), LightGreen, Annotation(Polygon(sum), 'mink-polygon')], [Black, points(sum, 'mink-points')],
+      lines(Blue, v.minkRobotlinelist.map(back), 'mink-robot-lines'), lines(Red, v.minkObstlinelist.map(back), 'mink-obstacle-lines')],
+    text('Minkowski sum', [0, 1.1], 'mink-text'),
+    [EdgeForm(Red), LightRed, Annotation(Polygon(obst), 'obstacle-polygon')], [Black, points(obst, 'obstacle-points')], text('obstacle', [0, 0], 'obstacle-text'),
     // K-MS-10: {EdgeForm[Blue], Opacity[0.5], LightBlue, Polygon} — the port draws the edge opaque
-    out.push({ kind: 'polygon', role: 'robot-polygon', pts: r.vertices, fill: 'LightBlue', fillOpacity: 0.5, edge: 'Blue' });
-    out.push({ kind: 'points', role: 'robot-points', pts: r.vertices, color: 'Black' });
-    out.push({ kind: 'points', role: 'robot-centroid', pts: [r.centroid], color: 'Red' });
-    out.push({ kind: 'text', role: 'robot-text', text: 'robot', at: add2(r.centroid, [0.2, 0.2]), color: 'Black' });
-  }
-  return out;
-}
+    r && [[EdgeForm(Blue), Opacity(0.5), LightBlue, Annotation(Polygon(r.vertices), 'robot-polygon')], [Black, points(r.vertices, 'robot-points')],
+      [Red, points([r.centroid], 'robot-centroid')], text('robot', add2(r.centroid, [0.2, 0.2]), 'robot-text')],
+  ];
+};
+
+/** The Graphics list of one evaluation (state after the evaluation, view): the frame, then the static or the move view. */
+export const picture = (st, v) => [POINT, frame, st.stableOrMove !== MOVE_VIEW ? staticView(v, st) : moveView(v, st)];

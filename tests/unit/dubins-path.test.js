@@ -6,10 +6,17 @@
 // original, demos/car-paths/carpaths.js) or from the design's independent Python transcription (TESTPLAN T-DP-01…25).
 import { describe, it, expect } from 'vitest';
 import {
-  angPt2Pt, distPt2Pt, arcLen, sortWords, movingCar, evaluate, initialState, round01, labelNumber, WORD_COLOURS,
+  angPt2Pt, distPt2Pt, arcLen, sortWords, movingCar, evaluate, initialState, round01, labelNumber, WORD_COLOURS, picture,
 } from '../../demos/dubins-path/dubins.js';
+import fs from 'node:fs';
 import { drawCar } from '../../demos/common/car-icon.js';
-import { drawCar as drawCarCP, dLSL, dLSR, dRSR, dRSL, dLRL, dRLR, changeOfBasisR, pathLength } from '../../demos/car-paths/carpaths.js';
+import { annotation } from '../../shared/graphics.js';
+import { carRecords, pieceRecord } from '../support/car-records.js';
+
+// word pieces and cars are shared/graphics.js data since v0.1.21: read back into the records of v0.1.15–v0.1.20
+const records = (d) => d && { ...d, pieces: d.pieces.map(pieceRecord) };
+const CALLER = [0.1, 0.2, 0.3]; // a colour no part of the car uses (the body's 'inherit')
+import { dLSL, dLSR, dRSR, dRSL, dLRL, dRLR, changeOfBasisR, pathLength } from '../../demos/car-paths/carpaths.js';
 
 const PI = Math.PI;
 const near = (a, b, tol = 1e-12) => expect(Math.abs(a - b), `${a} vs ${b}`).toBeLessThanOrEqual(tol);
@@ -99,7 +106,7 @@ describe('dubins-path words', () => {
         if (!Number.isFinite(len)) { expect(d).toBe(null); continue; }
         const letters = d.word.split('');
         let pos = [0, 0], head = 0, total = 0;
-        d.pieces.forEach((p, i) => {
+        records(d).pieces.forEach((p, i) => {
           nearVec(at(p, false), pos, 1e-9);
           if (p.kind === 'arc') {
             const dir = letters[i] === 'L' ? 1 : -1;
@@ -146,7 +153,7 @@ describe('dubins-path words', () => {
     expect(view.word).toBe('LRL');
     near(view.shortestPath[0], 22.705170776241488);
     expect(view.label).toBe('22.71 path length, 3.35 distance');
-    expect(view.shortestPath[1].pieces[1].kind).toBe('arc');
+    expect(records(view.shortestPath[1]).pieces[1].kind).toBe('arc');
     expect(view.car.segment).toBe(2);
     nearVec(view.car.xyP, [2.155321000664522, -5.6462461938107324]);
     near(view.car.angP, -9.380128950962089);
@@ -266,10 +273,9 @@ describe('dubins-path Manipulate body', () => {
     expect(label(16.802600329558373, Math.hypot(13, 8))).toBe('16.8 path length, 15.26 distance');
     expect(round01(0.125)).toBe(0.12); // half to even
   });
-  it('drawCar of this Demonstration equals the car-paths car except headlights without edges', () => {
-    const mine = drawCar([1, 2], 0.3, 3, 0.2, { lights: true, beam: 4, headlightEdge: null });
-    const theirs = drawCarCP([1, 2], 0.3, 3, 0.2);
-    expect(mine.wheelAngles).toEqual(theirs.wheelAngles);
+  it('drawCar of this Demonstration differs from the default car (car-paths\', tests/unit/car-icon.test.js) only in headlights without edges', () => {
+    const mine = carRecords(drawCar([1, 2], 0.3, 3, 0.2, { lights: true, beam: 4, headlightEdge: null }), CALLER);
+    const theirs = carRecords(drawCar([1, 2], 0.3, 3, 0.2), CALLER);
     expect(mine.prims.length).toBe(theirs.prims.length);
     mine.prims.forEach((p, i) => {
       const q = theirs.prims[i];
@@ -278,6 +284,29 @@ describe('dubins-path Manipulate body', () => {
       expect(p.opacity).toBe(q.opacity);
       if (p.role === 'headlight') { expect(p.edge).toBe(null); expect(q.edge.thin).toBe(true); } else expect(p.edge).toEqual(q.edge);
     });
+  });
+  it('picture: the words and the three cars hold exactly the numbers of v0.1.20 (fixture dubins-path-drawing.pre-graphics.json)', () => {
+    const PRE = JSON.parse(fs.readFileSync('tests/unit/fixtures/dubins-path-drawing.pre-graphics.json', 'utf8'));
+    expect(PRE.rows.length).toBeGreaterThanOrEqual(3);
+    for (const row of PRE.rows) {
+      const { state, view } = evaluate({ ...initialState(), ...row.partial });
+      const graphics = picture(state, view);
+      const words = view.words.map(([len, d]) => [len, records(d)]);
+      expect(JSON.parse(JSON.stringify(words)), JSON.stringify(row.partial)).toEqual(row.words);
+      expect(JSON.parse(JSON.stringify([view.shortestPath[0], records(view.shortestPath[1])]))).toEqual(row.shortestPath);
+      // the drawn candidates and the shortest path are those pieces, after the word's colour
+      for (const [len, d] of view.words) {
+        const drawn = annotation(graphics, `candidate-${d?.word}`);
+        if (!Number.isFinite(len)) { expect(drawn).toBe(null); continue; }
+        expect(drawn.g.slice(1)).toEqual(d.pieces);
+        expect(drawn.attrs['data-word']).toBe(d.word);
+      }
+      expect(annotation(graphics, 'shortest-path').g.slice(1)).toEqual(view.shortestPath[1].pieces);
+      for (const id of ['start-car', 'goal-car', 'moving-car']) {
+        const c = annotation(graphics, id);
+        expect(JSON.parse(JSON.stringify(carRecords(c.g, c.style.color, id))), id).toEqual({ prims: row.cars[id].prims });
+      }
+    }
   });
   it('initial state is the live state and the Input-cell values give the same state after one evaluation', () => {
     const s = initialState();

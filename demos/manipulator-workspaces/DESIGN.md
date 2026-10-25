@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.20 |
+| Code version: | 0.1.21 |
 | Document revision | 1 (2026-10-18) — first implementation |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Robot Manipulator Workspaces", contributed by Aaron T. Becker, Benedict Isichei, Muhammad Sultan and Maruthi S. Chemudupati, published 2017-12-13 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/RobotManipulatorWorkspaces/>. Readable source: [`docs/original-source/manipulator-workspaces.txt`](../../docs/original-source/manipulator-workspaces.txt); snapshots: `docs/original-snapshots/manipulator-workspaces-1.png` … `-8.png` (the notebook's snapshot cells 9 and 10 are empty); golden data: `tests/golden/manipulator-workspaces.original-states.json` (written with `tools/extract_state.py --snapshots` from the raw notebook, COMMON-DECISIONS §1: `states[0]` = the live output-cell state, `snapshots[1…8]` = the snapshot cells' Settings — each with its robot, ranges and the original's `workspace3D`, raw notebook lines 8885, 11436, 13864, 15630, 17367, 19228, 21886, 24150 — and `specs` = the initial settings) |
-| Port files | app: `model.js` (the 14 DH tables in the popup's order, the live state and the initial settings, `selectType`, `pmOf`, the 9 workspace surfaces, the "Speed" sampling `sampleSpeedSurface` (11 × 11 grid, mesh lines, boundary), `workspace3D` and `showFirstOptions` as Graphics3D data, one evaluation of the body with the recompute test, the framing helpers; pure), `main.js` (joint slider grid, three IntervalSliders, the popup menu, one three.js viewer: the robot through `addPrims`, the workspace as smooth-shaded translucent meshes with 1 px mesh and boundary lines; automation hook), `index.html`; common (CC BY-NC-SA, owner dh-parameters, used unchanged): `demos/common/dh-chain.js` (`joints`, `makeO3coords`, `computeAd`, `computeTd(Ad, {chop: false})`, `jointTransform` with its table-constant rule for the tables' exact angles, N-MW-07), `demos/common/robot-draw.js` (`drawZArrow`, `drawCoordAxes`, `GROUND`, `drawJoint` variant `'rs'`, `drawWristCenter`), `demos/common/g3d.js` (Graphics3D data, `EdgeForm`, `cuboidCorners`), `demos/common/g3d-three.js` (`addPrims`, `disposeGroup`, `fitViewer`); shared (MIT): `shared/ui-interval.js` (`addIntervalSlider`, owner four-bar-linkage, used unchanged with `look: 'mma'`), `shared/ui.js` (joint sliders with `labeled: false`, `plus: false`, `steps: 'mma'`), `shared/ui-extra.js` (`addPopup`), `shared/mma.js` (`mUnequal`), `shared/mma-colors.js`, `shared/mma-lighting.js`, `shared/three-helpers.js` |
+| Port files | app: `model.js` (the 14 DH tables in the popup's order, the live state and the initial settings, `selectType`, `pmOf`, the 9 workspace surfaces, the "Speed" sampling `sampleSpeedSurface` (11 × 11 grid, mesh lines, boundary), `workspace3D` and `showFirstOptions` as Graphics3D data, one evaluation of the body with the recompute test, the framing helpers; pure), `main.js` (the Manipulate on `shared/manipulate.js`: the joint slider grid as a custom control, three IntervalSliders, the popup menu, the picture as Graphics3D data drawn by `shared/graphics3d-view.js` `View3D`; automation hook; v0.1.21), `model.js` `drawnGraphic` (the robot and the workspace as the page draws them: smooth-shaded translucent GraphicsComplex meshes with 1 px mesh and boundary lines), `index.html`; common (CC BY-NC-SA, owner dh-parameters, used unchanged): `demos/common/dh-chain.js` (`joints`, `makeO3coords`, `computeAd`, `computeTd(Ad, {chop: false})`, `jointTransform` with its table-constant rule for the tables' exact angles, N-MW-07), `demos/common/robot-draw.js` (`drawZArrow`, `drawCoordAxes`, `GROUND`, `drawJoint` variant `'rs'`, `drawWristCenter`), `shared/graphics3d.js` (Graphics3D data, `EdgeForm`, `cuboidCorners`), `shared/graphics3d-three.js` (`addPrims`, `disposeGroup`, `fitViewer`); shared (MIT): `shared/ui-interval.js` (`addIntervalSlider`, owner four-bar-linkage, used unchanged with `look: 'mma'`), `shared/ui.js` (joint sliders with `labeled: false`, `plus: false`, `steps: 'mma'`), `shared/ui-extra.js` (`addPopup`), `shared/mma.js` (`mUnequal`), `shared/mma-colors.js`, `shared/mma-lighting.js`, `shared/three-helpers.js` |
 | Role in the project | further demonstration (batch B) |
 
 ## 1. Purpose and background
@@ -114,12 +114,12 @@ The IntervalSlider (`shared/ui-interval.js`) has the test ids `islider-<name>-lo
   (as implemented: `jointTransform`'s table-constant rule, which gives the same exact values, N-MW-07);
   `computeTd(Ad, {chop: true, fma: true})` (Q-MW-09, v0.1.17). `drawZArrow`, `drawCoordAxes`, `GROUND`, `drawJoint` (variant `'rs'`, the
   text of this original, identical to robot-singularities', N-MW-02) and `drawWristCenter` come from
-  `demos/common/robot-draw.js`; the Graphics3D data model from `demos/common/g3d.js`; the primitive renderer
-  (`addPrims`, `disposeGroup(groups)`, `fitViewer(viewer, vp)`) from `demos/common/g3d-three.js`. robot-singularities
+  `demos/common/robot-draw.js`; the Graphics3D data model from `shared/graphics3d.js`; the primitive renderer
+  (`addPrims`, `disposeGroup(groups)`, `fitViewer(viewer, vp)`) from `shared/graphics3d-three.js`. robot-singularities
   keeps re-export shims at its old paths, its full unit/golden/e2e suite gates the move (dh-parameters' design §6.5).
   robot-singularities keeps its `TYPES`, `TYPE_NAMES`, Jacobians, `wrapParams`, `sliderSpec`, `phaseOpt`.
 - **ParametricPlot3D "Speed" sampling in the app (D-MW-10).** The draft asked dh-parameters for `ParametricPlot3D`
-  options in `demos/common/g3d.js` (`Mesh -> 1`, `MeshStyle`, `BoundaryStyle`, `PerformanceGoal -> "Speed"`); the
+  options in `shared/graphics3d.js` (`Mesh -> 1`, `MeshStyle`, `BoundaryStyle`, `PerformanceGoal -> "Speed"`); the
   DH-family move added none of them (DH-FAMILY-API note), so the sampling lives in this app's `model.js`: the pure
   `sampleSpeedSurface(f)` returns the 11 × 11 grid (parameters `SPEED_PARAMS` = k/9 and 1/2), the 100 quads, the two
   mesh polylines (a = 1/2, b = 1/2) and the closed 41-point boundary, so that the renderer and the tests use the same
@@ -139,16 +139,21 @@ The IntervalSlider (`shared/ui-interval.js`) has the test ids `islider-<name>-lo
   original keeps `workspace3D`. Every value change of a range thumb during a drag is one evaluation (N-MW-08).
 - **State model** (Manipulate variables): `Type` (index 1…14 standing for the DH table), `TypeOld`, `params[3]`,
   `r1, r2, r3`, `r1old, r2old, r3old`; `dof = 3` is a constant.
-- **`main.js`**: Controls in the original's order with `ControlPlacement -> Left` (joint grid built with
-  `shared/ui.js` `Controls.slider({labeled: false, plus: false, steps: 'mma', min: 0, max: 1, step: 0.01})` — no value
-  field, no ⊕ panel, values 0 + k·0.01 as Mathematica's discrete slider; `delimiter()`, three `addIntervalSlider`
-  (`shared/ui-interval.js`), `delimiter()`, `addPopup`), one `createViewer` (shared/three-helpers) with `outputColorSpace = LinearSRGBColorSpace` and the lights of
-  `shared/mma-lighting.js`, framing as robot-singularities' workspace (`fitViewer`, zoom 1.35, D-MW-04). The
-  workspace meshes are rebuilt only when `computed`: each surface one indexed mesh of its 11 × 11 grid with smooth
-  vertex normals (the saved graphic carries VertexNormals), `MeshLambertMaterial` LightBlue, opacity 0.5, both faces,
-  no depth writes, and the boundary and mesh polylines as 1 px lines (D-MW-05); robot and ground through
-  `addPrims` on every evaluation; the viewing direction is kept (D-MW-07). The joint grid is rebuilt (and the joints
-  reset) only when the robot changes.
+- **`main.js`** (v0.1.21) is one `Manipulate({…})` call of `shared/manipulate.js`: controls in the original's order
+  with `ControlPlacement -> Left` — the joint grid as a `Control` (built with `shared/ui.js`
+  `Controls.slider({labeled: false, plus: false, steps: 'mma', min: 0, max: 1, step: 0.01})` — no value field, no ⊕
+  panel, values 0 + k·0.01 as Mathematica's discrete slider; rebuilt in `after` when the robot changes), `Delimiter`,
+  three IntervalSlider specs (`Method -> "Push"`, `MinIntervalSize -> 0.1`, `look: 'mma'`; `Moved` → values set by a
+  reset or setState are machine reals), `Delimiter`, the popup (`PopupMenu`; `Assign` = `selectType`, which resets
+  the joints, Q-MW-01); `initial` = the live state, `initialSettings` = the elbow arm (K-MW-04); `merge` = the hook's
+  setState rule. The body is `evaluate` with its workspace cache; the picture is `model.js` `drawnGraphic(view)`:
+  `Graphics3D[{Group3D[robot], Group3D[workspace, key]}]` — the workspace part (each surface a `GraphicsComplex` of
+  its 11 × 11 grid, drawn as one indexed mesh with smooth vertex normals — the saved graphic carries VertexNormals —
+  LightBlue, opacity 0.5, both faces, no depth writes, and the boundary and mesh polylines as 1 px lines, D-MW-05) is
+  redrawn only when the workspace changes. `View3D` (`shared/graphics3d-view.js`) draws it with
+  `outputColorSpace = LinearSRGBColorSpace` and the lights of `shared/mma-lighting.js`, framing as
+  robot-singularities' workspace (SphericalRegion fit, zoom 1.35, D-MW-04), refitted only when the bounds change, the
+  viewing direction kept (D-MW-07); `resetView`: Initial settings also restores the view.
 - **`shared/ui-interval.js`** (MIT, generic; owned by four-bar-linkage, COMMON-DECISIONS §6; used unchanged with `labeled: false` and `look: 'mma'`): `addIntervalSlider(controls, {name,
   label, min, max, step, steps: 'mma', value: [lo, hi], minIntervalSize, method: 'Push' | 'Stop', labeled: false, onInput})`; DOM: a track, the highlighted interval, two thumb
   buttons (lower thumb below, upper thumb above the track as in the snapshots); pointer drag on a thumb snaps to
@@ -176,8 +181,8 @@ npm run bundle -- manipulator-workspaces
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/manipulator-workspaces/`) | 3 | `index.html`, `main.js`, `model.js` |
-| `shared/` | 12 | `exact-pi.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma-lighting.js`, `mma.js`, `requirements.js`, `style.css`, `three-helpers.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
-| `demos/common/` | 4 | `dh-chain.js`, `g3d-three.js`, `g3d.js`, `robot-draw.js` |
+| `shared/` | 19 | `exact-pi.js`, `graphics.js`, `graphics3d-three.js`, `graphics3d-view.js`, `graphics3d.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma-lighting.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-plot.js`, `three-helpers.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
+| `demos/common/` | 2 | `dh-chain.js`, `robot-draw.js` |
 | `vendor/three/` | 9 | `addons/controls/OrbitControls.js`, `addons/lines/Line2.js`, `addons/lines/LineGeometry.js`, `addons/lines/LineMaterial.js`, `addons/lines/LineSegments2.js`, `addons/lines/LineSegmentsGeometry.js`, `addons/renderers/CSS2DRenderer.js`, `three.core.js`, `three.module.js` |
 | added by the bundler | 8 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/manipulator-workspaces/DESIGN.md`, `vendor/three/LICENSE` |
 <!-- bundle-contents:end -->
@@ -223,7 +228,8 @@ Verified by e2e "bundle: manipulator-workspaces runs from its own folder" (A-MW-
 | N-MW-03 | note | Saved-state analysis (2026-10-12, independent Python): the saved planar workspace and the stored elbow workspace (initial settings) each have 1105 vertices, 9 surface groups (surface 1: 164 triangles + 34 quads, surfaces 2–9: 100 quads), 9 blue boundary lines of 41 points, and 2 GrayLevel[0.2] mesh groups (9 lines each: 19 points for surface 1, 11 for the others); stored PlotRange of the planar graphic {{−1.867, 1.489}, {0, 2.755}, {−1, 1}} (not used by the combined graphic). |
 | N-MW-05 | note | The stored Body plots over `{a$, 0, 1}, {b, 0, 1}`: the first iterator is the Module-local symbol `a$` that also holds the DH lengths `a$[i]`. Harmless: ParametricPlot3D localises its iterator, and `o3coords` was defined with `Set` (the DH values already substituted) before plotting. |
 | N-MW-06 | note | The 8 snapshot Settings each store the original's `workspace3D` (1105 vertices each): planar (1), spherical (2), SCARA (3), CNC (4), planar RPR (5), cylindrical (6), Stanford (7), Cartesian (8), all with params 0.5; with each snapshot's robot and ranges, 969 vertices (987 for the spherical arm, where surfaces share points) are the port's grid vertices to 1.9e-15 and all but 16 (8) lie within 1e-6 of it; the rest are the mid-cell points of D-MW-01 (`check_workspace.py`-style analysis, 2026-10-12). |
-| D-MW-10 | deviation | The draft's ParametricPlot3D extensions of `demos/common/g3d.js` (`Mesh -> 1`, `MeshStyle`, `BoundaryStyle`, `PerformanceGoal -> "Speed"`, `sampleSpeedSurface`) were not made by its owner (DH-FAMILY-API note): the sampling, the mesh and boundary lines and the Show rule of K-MW-02 (`showFirstOptions`; g3d's `Show` merges options of later graphics) are app code in `model.js`, and `main.js` draws the surfaces itself (one smooth-shaded indexed mesh per surface) instead of through `addPrims`' `parametricSurface` (61 × 61 samples and 15 mesh lines, robot-singularities' D-RS-04). Same pictures and data as the draft specified; a later move into `g3d.js` is a request to dh-parameters. |
+| D-MW-10 | deviation | The draft's ParametricPlot3D extensions of `shared/graphics3d.js` (`Mesh -> 1`, `MeshStyle`, `BoundaryStyle`, `PerformanceGoal -> "Speed"`, `sampleSpeedSurface`) were not made by its owner (DH-FAMILY-API note): the sampling, the mesh and boundary lines and the Show rule of K-MW-02 (`showFirstOptions`; g3d's `Show` merges options of later graphics) are app code in `model.js`, and the page draws the surfaces itself (one smooth-shaded indexed mesh per surface; since v0.1.21 as
+`GraphicsComplex` data of `shared/graphics3d.js`, `model.js` `drawnGraphic`) instead of through `addPrims`' `parametricSurface` (61 × 61 samples and 15 mesh lines, robot-singularities' D-RS-04). Same pictures and data as the draft specified; a later move into `g3d.js` is a request to dh-parameters. |
 | N-MW-07 | note | The tables' exact angles (Pi/2, −Pi/2, Pi, 0, −0) are stored as the doubles 0, ±π/2, π, which `demos/common/dh-chain.js` gives exact cos/sin through `jointTransform` (its table-constant rule, the path robot-singularities uses) instead of the draft's explicit exact-angle argument; both give exactly 0, ±1 for these angles (unit "the Cartesian workspace is flat (x = 0)" checks the exact zeros), and one code path is shared with robot-singularities. |
 | N-MW-08 | note | Every value change of a range thumb during a drag is one evaluation with a recompute (Mathematica also re-evaluates the body while a control is dragged); sampling the nine surfaces takes a few milliseconds, so the port does not defer it to the release of the thumb. |
 | N-MW-09 | note | The harness `%primitives` capture (H-MW-17) records heads and array dimensions only, no coordinates (HARNESS-WL §6.1), so it cannot decide K-MW-03; harness "H-MW-17" checks the order and counts of the robot's primitives instead. A `%g3d` capture in a later run would decide it. The coordinate-axis arrows' 3/2 jr is drawn as N[3/10] = 0.3 (`exactJr`, as dh-parameters' records show for the same drawZArrow; not recorded here). |
@@ -245,6 +251,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 3 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 4 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
 | 5 | v0.1.20 | 2026-10-21 | version number only (Manipulate layer extended, eleven more apps migrated to it); no change to this app |
+| 6 | v0.1.21 | 2026-10-23 | `main.js` rewritten on the shared Manipulate layer with a 3D picture (`shared/manipulate.js` + `shared/graphics3d-view.js` `View3D`; Graphics3D data model and renderer moved to MIT `shared/graphics3d.js` / `shared/graphics3d-three.js`, owner decision D1); no change to behaviour or picture (all unit, golden and browser tests passing; three.js scene graph, full-page pixels (SwiftShader) and Manipulate state identical to v0.1.20 at sample settings); the workspace surface is Graphics3D data (`GraphicsComplex`) |
 
 ## 10. Improvements to consider (not implemented)
 

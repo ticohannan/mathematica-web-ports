@@ -10,7 +10,9 @@
 // machine numbers (D-CL-01): coordinates are compared to 1e-12, decisions exactly.
 import { describe, it, expect } from 'vitest';
 import { loadStates, plain } from '../../tools/lib/wl-json.mjs';
-import { evaluate, initialSettings, fromSaved, Q, N, isExact } from '../../demos/camera-lasers/model.js';
+import { evaluate, initialSettings, fromSaved, Q, N, isExact, CAM_RANGE, IMSZ, STYLE } from '../../demos/camera-lasers/model.js';
+import { annotations, Cases } from '../../shared/graphics.js';
+import { plotUnitsPerPx } from '../../shared/graphics-extras.js';
 import { nearest32Index, DIAL_TABLE_32 } from '../../demos/common/dial-control.js';
 import { numberText } from '../../shared/mma-text.js';
 import { cosPi, sinPi } from '../../shared/exact-pi.js';
@@ -18,14 +20,37 @@ import { harnessCase, stepRecord, toJS, toJSNumeric } from '../support/harness-j
 
 const fixture = loadStates('tests/golden/camera-lasers.original-states.json');
 const snaps = fixture.snapshots.map((s) => fromSaved(plain(s)));
-const view = (k) => evaluate(snaps[k - 1]).view;
+const view = (k) => { const r = evaluate(snaps[k - 1]); return { ...r.view, graphics: r.graphics }; };
 const close = (a, b, tol = 1e-12) => {
   if (Array.isArray(b)) { expect(a.length).toBe(b.length); a.forEach((x, i) => close(x, b[i], tol)); return; }
   expect(Math.abs(a - b), `${a} vs ${b}`).toBeLessThanOrEqual(tol * Math.max(1, Math.abs(b)));
 };
 const pxU = (u) => 781.5 + u * 563;
 const pxV = (v) => 766 - v * 563;
-const dots = (v) => v.cam.filter((c) => c.kind === 'point');
+// the pictures are Graphics data (v.graphics = [[grid, top view], camera image]); parts are Annotations with their role
+const top = (v) => v.graphics[0][1], cam = (v) => v.graphics[1];
+const dots = (v) => annotations(cam(v)).filter((a) => /^dot-/.test(a.id)).map((a) => ({ size: a.style.pointSize, at: Cases(a.g, 'Point')[0].pts[0] }));
+/**
+ * The texts drawn: Text[Style[str, …], at] parts ({ kind: 'text', text, at }) and the reticule's tick labels
+ * ({ kind: 'label', value, at }): the label's value read from its text (an exact rational is written n/d or as an
+ * integer, a machine number with a decimal point: the tick values never are machine integers), its position from the
+ * drawn data (a plain label's Text position; a stacked fraction's bar height and the numerator's x, less the minus
+ * sign's shift f·0.3 px).
+ */
+function drawnTexts(v) {
+  const u = plotUnitsPerPx(CAM_RANGE, IMSZ, 0), f = STYLE.textFontPx * 0.85;
+  const out = [];
+  for (const a of [...annotations(top(v)), ...annotations(cam(v))]) {
+    if (a.id === 'tick-label') {
+      const t = a.attrs['data-text'].replace('−', '-'), [n, d] = t.split('/');
+      const value = d ? Q(Number(n), Number(d)) : /^-?\d+$/.test(t) ? Q(Number(t)) : Number(t);
+      const texts = Cases(a.g, 'Text'), bar = Cases(a.g, 'Line')[0];
+      const at = d ? [texts[t.startsWith('-') ? 1 : 0].pos[0] - (t.startsWith('-') ? f * 0.3 * u : 0), bar.pts[0][1]] : texts[0].pos;
+      out.push({ kind: 'label', value, at });
+    } else for (const x of Cases(a.g, 'Text')) out.push({ kind: 'text', text: x.expr.expr, at: x.pos });
+  }
+  return out;
+}
 const faceUs = (v) => [...new Set(v.faces.flat().map((q) => q[0]))].sort((a, b) => a - b);
 
 describe('camera-lasers golden: saved states of the original', () => {
@@ -78,7 +103,7 @@ describe('camera-lasers golden: saved states of the original', () => {
   it('camera-lasers: snapshot 3 (s 0.65) reticule labels in halves and two visible faces', () => {
     const v = view(3);
     expect(v.sc).toEqual(Q(1, 2));
-    const labels = v.cam.filter((c) => c.role === 'tick-label').map((c) => ({ text: numberText(c.value), u: c.at[0], exact: isExact(c.value) }));
+    const labels = drawnTexts(v).filter((c) => c.kind === 'label').map((c) => ({ text: numberText(c.value), u: c.at[0], exact: isExact(c.value) }));
     const right = labels.filter((l) => l.u > 0).sort((a, b) => b.u - a.u);
     expect(right.map((l) => l.text)).toEqual(['0.4', '1/2', '0.6', '0.75', '1', '3/2', '5/2', '5']);
     expect(right.map((l) => l.exact)).toEqual([false, true, false, false, true, true, true, true]);
@@ -89,7 +114,7 @@ describe('camera-lasers golden: saved states of the original', () => {
     close([v.InterPt3D1[0], v.InterPt3D2[0]], [-0.0455, 0.0652], 1e-3);
     expect(v.faces.length).toBe(2);
     close(faceUs(v), [-0.0822, 0.0604, 0.1345], 1e-3);
-    expect(v.top.some((t) => t.role === 'theta-label')).toBe(true);
+    expect(annotations(top(v)).some((a) => a.id === 'theta-label')).toBe(true);
     expect(Math.abs(pxU(-0.0455) - 757)).toBeLessThan(2);
     expect(Math.abs(pxU(0.0652) - 818)).toBeLessThan(2);
   });
@@ -104,7 +129,7 @@ describe('camera-lasers golden: saved states of the original', () => {
     close(faceUs(v), [-0.2342, 0.0267, 0.0981], 1e-3);
     expect(Math.abs(pxU(-0.11076) - 719)).toBeLessThan(2);
     // the lower beam runs to x = 10000 (past the right edge of the top view) and its reflection back along the axis
-    expect(v.top.find((t) => t.role === 'beam-2').pts[1]).toEqual([10000, -1]);
+    expect(Cases(annotations(top(v)).find((a) => a.id === 'beam-2').g, 'Line')[0].pts[1]).toEqual([10000, -1]);
   });
 
   it('camera-lasers: snapshots 3 and 4 have off-grid dial values (made with an earlier dial)', () => {
@@ -147,7 +172,7 @@ function replay(scenario) {
     for (const [k, v] of Object.entries(step.set ?? {})) state[portName(k)] = typeof v === 'string' && v.startsWith('wl:') ? wlValue(v) : toJS(v);
     const r = evaluate(state);
     state = r.state;
-    out.push({ state, view: r.view });
+    out.push({ state, view: { ...r.view, graphics: r.graphics } });
   }
   return out;
 }
@@ -168,8 +193,7 @@ function numericDiff(rec, act, where) {
  * same exactness, and the port must draw no other text.
  */
 function textsMatch(recTexts, view) {
-  const port = [...view.top, ...view.cam].filter((c) => c.kind === 'text' || c.role === 'tick-label')
-    .map((c) => ({ c, used: false }));
+  const port = drawnTexts(view).map((c) => ({ c, used: false }));
   const posOk = (a, b) => a.length === b.length && a.every((x, i) => Math.abs(x - b[i]) <= 1e-12 * Math.max(1, Math.abs(b[i])));
   for (const t of recTexts) {
     const input = String(t.input);
@@ -182,7 +206,7 @@ function textsMatch(recTexts, view) {
     } else if ((m = input.match(/^(-?\d+)\/(\d+)$|^(-?\d+)$|^(-?\d*\.\d*(?:\*\^-?\d+)?)$/))) {
       const exact = m[1] !== undefined || m[3] !== undefined;
       const val = m[1] !== undefined ? Number(m[1]) / Number(m[2]) : Number(String(m[3] ?? m[4]).replace('*^', 'e'));
-      match = (c) => c.role === 'tick-label' && isExact(c.value) === exact && Math.abs(N(c.value) - val) <= 1e-12 * Math.max(1, Math.abs(val));
+      match = (c) => c.kind === 'label' && isExact(c.value) === exact && Math.abs(N(c.value) - val) <= 1e-12 * Math.max(1, Math.abs(val));
     } else return `text ${input}: unknown form`;
     const hit = port.find((x) => !x.used && match(x.c) && posOk(x.c.at, pos));
     if (!hit) return `text ${input} at ${JSON.stringify(pos)} not drawn (with that exactness, at that position)`;

@@ -16,6 +16,12 @@
     .ctl-row .ctl-check { flex-direction: row-reverse; justify-content: flex-end; }
     .ctl-row .ctl-label sub { font-size: 0.75em; }
     .workspace-3d .requirements-notice { margin: 4px; }
+    /* the stage is exactly as large as the outer picture; the 3D inset lies under the SVG (left/width: main.js), the SVG
+       lets pointer events through except on its press area and the locators */
+    .stage { position: relative; max-width: 750px; }
+    .stage > svg.scene { position: relative; z-index: 1; pointer-events: none; }
+    .stage .locator { pointer-events: all; }
+    .workspace-3d { position: absolute; top: 50%; transform: translateY(-50%); z-index: 0; }
   </style>
 </head>
 <body>
@@ -30,6 +36,7 @@
       <div class="controls" id="controls"></div>
       <div class="graphic wide" id="graphic" data-testid="graphic">
         <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser.</div></noscript>
+        <div class="stage" id="stage"><div class="workspace-3d" id="workspace-3d" data-testid="workspace-3d"></div></div>
       </div>
     </section>
 

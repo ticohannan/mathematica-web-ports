@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.20 |
+| Code version: | 0.1.21 |
 | Document revision | 6 (2026-10-18) — `demos/common/prm-core.js` generalised to n dimensions (by prm-3d); no change to this app |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Probabilistic Roadmap Method", contributed by Aaron T. Becker and Yitong Lu, published January 13, 2020 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ProbabilisticRoadmapMethod/>. Readable source: [`docs/original-source/prm.txt`](../../docs/original-source/prm.txt); snapshots: `docs/original-snapshots/prm-*.png`; saved state: `tests/golden/prm.original-state.json` |
-| Port files | `model.js` (obstacles, the Manipulate body as one pure evaluation, the data of the picture), `main.js` (the Manipulate on `shared/manipulate.js`: controls, locators, Graphics data; v0.1.20), `index.html`; shared with "PRM for Robot Arm" and "PRM in 3D" (generalised to n dimensions in v0.1.16): [`demos/common/prm-core.js`](../common/prm-core.js) (`toroidDist`, `angtest`, `ptInPoly`, `ptInPolys`, `pathOKT`, `myAstar`, `toroidLine(s)`, `toroidPt`, `connectPoints` core, the query and progress code, the `loc` icon) |
+| Port files | `model.js` (obstacles, the Manipulate body as one pure evaluation, the data of the picture and the picture as `shared/graphics.js` data), `main.js` (the Manipulate on `shared/manipulate.js`: controls, locators; v0.1.21), `index.html`; shared with "PRM for Robot Arm" and "PRM in 3D" (generalised to n dimensions in v0.1.16): [`demos/common/prm-core.js`](../common/prm-core.js) (`toroidDist`, `angtest`, `ptInPoly`, `ptInPolys`, `pathOKT`, `myAstar`, `toroidLine(s)`, `toroidPt`, `connectPoints` core, the query and progress code, the `loc` icon) |
 | Role in the project | further demonstration (extra proof of concept alongside the motion-planning port); developed in a separate, unpublished repository and added to this site in v0.1.12 |
 
 ## 1. Purpose and background
@@ -117,13 +117,15 @@ matches any text. Checked by the browser test "every control on … is specified
   `planQuery` and `progressOnPath`. Indexes stored by the original (adjacency lists, paths) stay 1-based, so the
   state compares directly with the saved state.
 - `model.js` `evaluate(state, rng)` performs exactly one evaluation of the Manipulate body and returns the new state
-  (the Manipulate variables) and a `view` with everything the Graphics draws (line pieces with colours, points,
-  label, icon colours, whether "progress" is enabled). No DOM; unit-tested in Node.
+  (the Manipulate variables), a `view` with everything the Graphics draws (line pieces with colours, points,
+  label, icon colours, whether "progress" is enabled; the hook `view()` reports it) and (v0.1.21, owner decision D2)
+  `graphics` = `picture(view, state)`: the Graphics list in the original's order as `shared/graphics.js` data (the axes
+  as a `cachedGraphics` part drawn once, the `loc[col]` icons as `demos/common/arm-view.js` `configGlyph`; `RANGE` and
+  `IMAGE` give the picture's PlotRange and ImageSize). No DOM; unit-tested in Node.
 - `main.js` (v0.1.20) is one `Manipulate({…})` call of `shared/manipulate.js`: the two locators, the two `Button`s,
   the radius and progress sliders (progress with `Enabled` as a function of the state; both keep the port's own steps
   and number fields, `steps: undefined`) and the checkbox as Mathematica control specs, `random: true`, `body` =
-  `evaluate`, and `draw` returning the Graphics list in the original's order (`shared/graphics.js`; the axes as a
-  `cachedGraphics` part drawn once, the `loc[col]` icons as `demos/common/arm-view.js` `configGlyph`). The layer keeps
+  `evaluate` (its result carries the picture). The layer keeps
   the Manipulate variables and evaluates the body after every control change (one evaluation per animation frame while
   dragging). Thickness and PointSize fractions refer to the total width of the picture, as in Mathematica.
 - Random numbers come from `shared/random.js` (`createRng`; `replayRng` replays the original's numbers in the golden
@@ -214,6 +216,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 8 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 9 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
 | 10 | v0.1.20 | 2026-10-21 | `main.js` rewritten on the shared Manipulate layer (`shared/manipulate.js`, `shared/graphics.js`): control specs in Mathematica's form, the picture as Graphics data; no change to behaviour or picture (all unit, golden and browser tests unchanged and passing; screenshots and Manipulate state identical to v0.1.19 at sample settings) |
+| 11 | v0.1.21 | 2026-10-23 | the model builds the picture as `shared/graphics.js` Graphics data (owner decision D2) and the body returns {state, view, graphics}; `main.js` shortened; the old drawing output frozen in `tests/unit/fixtures/prm-drawing.pre-graphics.json` and tests that read the old format now read the same numbers through `annotations()`/`Cases()`; no change to behaviour or picture (screenshots and Manipulate state identical to v0.1.20 at sample settings) |
 
 ## 10. Improvements to consider (not implemented)
 

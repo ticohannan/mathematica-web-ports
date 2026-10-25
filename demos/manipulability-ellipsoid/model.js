@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // demos/manipulability-ellipsoid/model.js — "Manipulability Ellipsoid of a Robot Arm": the velocity Jacobian
 // JvRRRanthro, the joint points, the θ / θprev / p logic of the Manipulate body, the SVD and μ, and the picture
-// (ellipsoid block and robot) as Graphics3D data (demos/common/g3d.js). Pure: no DOM, no three.js.
+// (ellipsoid block and robot) as Graphics3D data (shared/graphics3d.js). Pure: no DOM, no three.js.
 //
 //   Body (stored Initialization identical to the Input cell here, N-ME-05):
 //     If[Theta1prev != Theta1, p1 = {Cos[Theta1], Sin[Theta1]}; Theta1prev = Theta1];   (i = 1, 2, 3)
@@ -28,7 +28,7 @@ import { manipEllip, svd3, matrixRank } from '../common/svd3.js';
 import {
   Graphics3D, GeometricTransformation, affine, flatten, Cylinder, Point, Line, PointSize, Arrowheads, EdgeForm, Thick,
   Red, Blue, Green, Gray,
-} from '../common/g3d.js';
+} from '../../shared/graphics3d.js';
 
 export const DEN = 32; // the dial table step π/32
 const PI = Math.PI;

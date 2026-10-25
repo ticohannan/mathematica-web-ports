@@ -5,8 +5,10 @@
 // values are derived by hand or from independent formulas (closed-form areas, 1-D midpoint integrals of the Jacobian
 // determinant r1 r2 sin(θ2 + b)), never from the port.
 import { describe, it, expect } from 'vitest';
+import { Red, Blue } from '../../shared/graphics.js';
+import { preGraphics, sameDrawing, graphicsJSON } from '../support/pre-graphics.js';
 import {
-  normP, ballBoundary, sheetCuts, sheets, mapPhase, mapWorkspace, polygonArea, evaluate, initialState, INITIAL,
+  normP, ballBoundary, sheetCuts, sheets, mapPhase, mapWorkspace, polygonArea, evaluate, initialState, INITIAL, picture, PLOT_RANGE,
 } from '../../demos/distance-norms/model.js';
 
 const ulps = (a, b) => (a === b ? 0 : Math.abs(a - b) / (Number.EPSILON * Math.max(Math.abs(a), Math.abs(b))));
@@ -238,5 +240,35 @@ describe('distance-norms model: the arm (Prolog)', () => {
     const a = evaluate(INITIAL);
     const b = evaluate({ ...initialState(), pEnd: [0.5, 0.5] });
     expect(b).toEqual(a);
+  });
+});
+
+// ---- v0.1.21 (owner decision D2): model.js returns the picture as shared/graphics.js data (picture). The drawing output
+// of the page before that change is frozen in tests/unit/fixtures/distance-norms-drawing.pre-graphics.json (f04c973).
+describe('distance-norms: Graphics data = the drawing before v0.1.21', () => {
+  const fx = preGraphics('distance-norms');
+  const replay = (steps) => {
+    let s = initialState();
+    for (const st of steps) s = { ...s, ...st }; // the hook setState (the body assigns no variable)
+    return { s, r: evaluate(s) };
+  };
+  // PlotRangeClipping before: the Annotation carried a clip-path attribute (its clipPath made by an `after` hook); now
+  // Annotation[Clip[list, PlotRange, id], id] draws the same element
+  const unclip = (g) => g.map((x) => (x.head === 'Annotation' && x.g.head === 'Clip'
+    ? { ...x, g: x.g.g, attrs: { ...x.attrs, 'clip-path': `url(#${x.g.id})` } } : x));
+  it.each(fx.states.map((s) => [s.name, s]))('%s: the same Graphics data, number for number', (name, s) => {
+    const { s: state, r } = replay(s.steps);
+    expect(graphicsJSON(state)).toEqual(s.state);
+    const g = picture(r);
+    expect(g.filter((x) => x.g.head === 'Clip').map((x) => [x.id, x.g.id, x.g.range])).toEqual([
+      ['region', 'distance-norms-plot-range', PLOT_RANGE], ['region-outline', 'distance-norms-plot-range', PLOT_RANGE]]);
+    const { replaced } = sameDrawing(unclip(g), s.graphics[0], name);
+    // the Raw parts before: the θ labels (<tspan>s with an 8.5 px index 4 px down), now Text[Style[Subscript[…], …]]
+    const labels = [r.arm.theta1Label.visible && 'theta1-label', r.arm.theta2Label.visible && 'theta2-label'].filter(Boolean);
+    expect(replaced.map((x) => x[1].id)).toEqual(labels);
+    for (const x of replaced) {
+      expect(x[0]).toEqual(x[1].id === 'theta1-label' ? Red : Blue);
+      expect(x[1].g.pos).toEqual(r.arm[x[1].id === 'theta1-label' ? 'theta1Label' : 'theta2Label'].at);
+    }
   });
 });

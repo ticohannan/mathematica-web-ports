@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.20 |
+| Code version: | 0.1.21 |
 | Document revision | 1 (2026-10-18) — first implementation |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Chart for a Torus", contributed by Aaron T. Becker and Haoran Zhao, published 2016-05-02 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ChartForATorus/>. Readable source: [`docs/original-source/torus-chart.txt`](../../docs/original-source/torus-chart.txt); snapshots: `docs/original-snapshots/torus-chart-1.png` … `-4.png` (files 5 and 6 of the extraction are 96 × 100 placeholder icons); golden data: `tests/golden/torus-chart.original-states.json` (COMMON-DECISIONS §1: `states[0]` = the live state, `snapshots[1…4]` = the snapshot cells' Settings, raw notebook lines 2311, 6086, 9212, 12067, `specs` = the initial settings; λ read from the raw notebook by `tools/extract_state.py --snapshots`, N-TC-01) |
-| Port files | app: `model.js` (TorusToPlane, the dial angles, the plot label, one evaluation of the body, the style constants; pure), `surface.js` (sampling of the manifold: grid, front-face orientation and normals, boundary curves, the 15 z contours of the mesh; pure), `main.js` (controls, the three.js picture with its own two-sided light shader and back-to-front triangle order, the test hook), `index.html`; common (CC BY-NC-SA, owner two-link-kinematics, COMMON-DECISIONS §3): `demos/common/dial-control.js` (`makeDialControl` with `setter: 'normalize'`, `arc: 'arrowArcCircle'`, `imageSize: 160`, `labels: 'stacked'`; no app-level dial) and through it `demos/common/arrow-arcs.js` (`arrowArc`); shared (MIT): `shared/three-helpers.js` (square viewer, fat lines, CSS2D labels, ink), `shared/ui.js` (λ slider, `mmaSliderText`), `shared/mma.js` (tolerant comparisons), `shared/mma-exact.js` (`arcTan`), `shared/mma-colors.js`; through dial-control.js: `shared/mma-extra.js` (`normalizeCR`), `shared/mma-text.js` (`piFraction`), `shared/exact-pi.js`, `shared/svg-plot.js` |
+| Port files | app: `model.js` (TorusToPlane, the dial angles, the plot label, one evaluation of the body, the style constants; pure), `surface.js` (sampling of the manifold: grid, front-face orientation and normals, boundary curves, the 15 z contours of the mesh; pure), `view3d.js` (the three.js picture as a renderer of the Manipulate layer, `TorusView`: its own two-sided light shader and back-to-front triangle order, box, ticks, plot label), `main.js` (the Manipulate on `shared/manipulate.js`: the λ slider, the two dials as `Control(makeDialControl, …)`, the body `evaluate`, the test hook; v0.1.21), `index.html`; common (CC BY-NC-SA, owner two-link-kinematics, COMMON-DECISIONS §3): `demos/common/dial-control.js` (`makeDialControl` with `setter: 'normalize'`, `arc: 'arrowArcCircle'`, `imageSize: 160`, `labels: 'stacked'`; no app-level dial) and through it `demos/common/arrow-arcs.js` (`arrowArc`); shared (MIT): `shared/manipulate.js` (controls, state, Initial settings, hook), `shared/three-helpers.js` (square viewer, fat lines, CSS2D labels, ink), `shared/ui.js` (λ slider, `mmaSliderText`), `shared/mma.js` (tolerant comparisons), `shared/mma-exact.js` (`arcTan`), `shared/mma-colors.js`; through dial-control.js: `shared/mma-extra.js` (`normalizeCR`), `shared/mma-text.js` (`piFraction`), `shared/exact-pi.js`, `shared/svg-plot.js` |
 | Role in the project | further demonstration (batch B) |
 
 ## 1. Purpose and background
@@ -131,10 +131,12 @@ matches any text. Checked by the browser test "every control on … is specified
   and the mesh: `meshLevels` = 15 equally spaced levels strictly between the lowest and highest z, and for each level
   every root v* of z(v) = level (a 1440-interval scan of v, then bisection) gives the contour polyline v = v* over the
   grid's u values (N-TC-06: z depends on v only, so the contour is exact); the renderer and the tests use the same data.
-- **`main.js`**: `Controls.slider` (λ, label "Torus → Plane", step 0 = continuous, so `steps: 'mma'` does not apply; ⊕ panel;
-  the `format` hook shows Mathematica's text of the value with `mmaSliderText`: the saved machine real as "2.", the exact
-  initial setting as "0", dragged values as machine reals, D-TC-06), two `makeDialControl`s with labels θ and ϕ
-  (ControlPlacement Left), one square `createViewer` (shared/three-helpers, 350 px, ViewPoint {1.3, −2.4, 2}, PlotRange of
+- **`main.js`** (one `Manipulate({…})` call of `shared/manipulate.js` since v0.1.21): the λ slider (label "Torus → Plane",
+  step 0 = continuous, so `steps: 'mma'` does not apply; ⊕ panel; the `format` hook shows Mathematica's text of the value
+  with `mmaSliderText`: the saved machine real as "2.", the exact initial setting as "0", dragged values as machine reals,
+  D-TC-06; `Assign`/`Moved` keep that flag), two `Control(makeDialControl, …)` with labels θ and ϕ (ControlPlacement
+  Left); the page opens with the saved state and Initial settings restore the stored specifications (`initial`) and the
+  default view. **`view3d.js`** (`TorusView`, the picture's renderer): one square `createViewer` (shared/three-helpers, 350 px, ViewPoint {1.3, −2.4, 2}, PlotRange of
   F-TC-12, which is a cube) with `outputColorSpace = LinearSRGBColorSpace` (colour values are blended as displayed, as
   D-RS-02). The camera's view angle is set so that the box's bounding sphere fills the picture, × 1/0.93 (`ZOOM`, fitted
   to snapshot 1, D-TC-07). The surface is ONE BufferGeometry drawn two-sided with a small shader of this app
@@ -172,8 +174,8 @@ npm run bundle -- torus-chart
 <!-- bundle-contents:begin (generated by `npm run bundle -- --update-docs`; do not edit by hand) -->
 | Area | Files | Files loaded by the page |
 |---|---|---|
-| the app (`demos/torus-chart/`) | 4 | `index.html`, `main.js`, `model.js`, `surface.js` |
-| `shared/` | 11 | `exact-pi.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma-text.js`, `mma.js`, `requirements.js`, `style.css`, `svg-plot.js`, `three-helpers.js`, `ui.js` |
+| the app (`demos/torus-chart/`) | 5 | `index.html`, `main.js`, `model.js`, `surface.js`, `view3d.js` |
+| `shared/` | 16 | `exact-pi.js`, `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma-text.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-plot.js`, `three-helpers.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
 | `demos/common/` | 3 | `arrow-arcs.js`, `dial-control.js`, `prm-core.js` |
 | `vendor/three/` | 9 | `addons/controls/OrbitControls.js`, `addons/lines/Line2.js`, `addons/lines/LineGeometry.js`, `addons/lines/LineMaterial.js`, `addons/lines/LineSegments2.js`, `addons/lines/LineSegmentsGeometry.js`, `addons/renderers/CSS2DRenderer.js`, `three.core.js`, `three.module.js` |
 | added by the bundler | 8 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/torus-chart/DESIGN.md`, `vendor/three/LICENSE` |
@@ -240,6 +242,7 @@ Open proposals (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
 | 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 5 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
 | 6 | v0.1.20 | 2026-10-21 | version number only (Manipulate layer extended, eleven more apps migrated to it); no change to this app |
+| 7 | v0.1.21 | 2026-10-23 | `main.js` rewritten on the shared Manipulate layer (`shared/manipulate.js`: controls, state, reset, hook) with the app's own three.js renderer object for its picture; generic parts moved to MIT shared modules (owner decision D1) (drawing code moved unchanged into `view3d.js`); no change to behaviour or picture (all unit, golden and browser tests passing; three.js scene graph, full-page pixels (SwiftShader) and Manipulate state identical to v0.1.20 at sample settings) |
 
 ## 10. Improvements to consider (not implemented)
 

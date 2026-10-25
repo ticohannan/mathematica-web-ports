@@ -10,8 +10,10 @@ import {
   sLEFT, sSTRAIGHT, sRIGHT, gFORWARD, gBACKWARD, cart2Polar, angfrom1to2, modPi, mod2Pi, changeOfBasisR,
   createPathElement, reverseSteering, reverseGear, timeflip, reflect, pathLength, getOptimalPath, getOptimalDubinsPath,
   getAllPaths, getAllDubinsPaths, path1, path5, path7, getPos, drawPath, drawCar, wheelAngle, initialState, evaluate,
-  swapStartGoal, round01, LOCS0,
+  swapStartGoal, round01, LOCS0, picture,
 } from '../../demos/car-paths/carpaths.js';
+import { annotations, annotation, Orange } from '../../shared/graphics.js';
+import { carRecords } from '../support/car-records.js';
 
 const PI = Math.PI;
 const fixture = JSON.parse(fs.readFileSync('tests/unit/fixtures/car-paths-python-reference.json', 'utf8'));
@@ -179,45 +181,80 @@ describe('car-paths getPos and drawing data', () => {
     expect(th).toBe(-PI / 2);
     expect(alpha).toBe(-3);
   });
+  // drawPath and drawCar return shared/graphics.js Graphics data (v0.1.21): the numbers are read through annotations()
   it('drawPath: arcs with centres, angles and construction circles, lines for straight elements', () => {
-    const [arc, line] = drawPath([[PI / 2, -1, 1], [1, 0, 1]], [0, 0, 0], 2, true);
-    expect(arc.kind).toBe('arc');
-    closeVec(arc.center, [0, 2], 15);
-    expect([arc.r, arc.angS, arc.angE]).toEqual([2, -PI / 2, 0]);
-    expect(arc.construction.r).toBe(2);
-    expect(line.kind).toBe('line');
-    closeVec(line.from, [2, 2], 14);
-    closeVec(line.to, [2, 4], 14);
-    expect(drawPath([[PI / 2, -1, 1]], [0, 0, 0], 2, false)[0].construction).toBe(null);
+    const g = drawPath(Orange, [[PI / 2, -1, 1], [1, 0, 1]], [0, 0, 0], 2, true);
+    expect(g[0]).toBe(Orange); // {color, Table[…]}
+    const part = (id) => annotation(g, id).g;
+    const arc = part('path-piece-1'), line = part('path-piece-2');
+    expect(arc.head).toBe('Circle');
+    closeVec(arc.c, [0, 2], 15);
+    expect([arc.r, ...arc.angles]).toEqual([2, -PI / 2, 0]);
+    expect(part('construction-circle-1')).toMatchObject({ head: 'Circle', r: 2, angles: null });
+    expect(part('construction-center-1').pts).toEqual([arc.c]);
+    expect(line.head).toBe('Line');
+    closeVec(line.pts[0], [2, 2], 14);
+    closeVec(line.pts[1], [2, 4], 14);
+    expect(annotations(drawPath(Orange, [[PI / 2, -1, 1]], [0, 0, 0], 2, false)).map((a) => a.id)).toEqual(['path-piece-1']);
   });
   it('drawPath: a forward right arc has angE < angS (drawn between the two angles, K-CP-01)', () => {
-    const [arc] = drawPath([[0.5, 1, 1]], [0, 0, 0], 1, true);
-    expect(arc.angS).toBe(PI / 2);
-    expect(arc.angE).toBe(PI / 2 - 0.5);
-    closeVec(arc.center, [0, -1], 15);
+    const arc = annotation(drawPath(Orange, [[0.5, 1, 1]], [0, 0, 0], 1, true), 'path-piece-1').g;
+    expect(arc.angles[0]).toBe(PI / 2);
+    expect(arc.angles[1]).toBe(PI / 2 - 0.5);
+    closeVec(arc.c, [0, -1], 15);
+  });
+  it('picture: the Graphics data of drawPath and the three cars hold exactly the numbers of v0.1.20 (fixture car-paths-drawing.pre-graphics.json)', () => {
+    const PRE = JSON.parse(fs.readFileSync('tests/unit/fixtures/car-paths-drawing.pre-graphics.json', 'utf8'));
+    expect(PRE.rows.length).toBeGreaterThanOrEqual(3);
+    for (const row of PRE.rows) {
+      const { state, view } = evaluate({ ...initialState(), ...row.partial });
+      const graphics = picture(state, view);
+      const [thickness, [colour, entries]] = graphics[0]; // {Thickness[0.005], drawPath[Orange, optPath, start, minRadius, True]}
+      expect([thickness.value, colour]).toEqual([0.005, Orange]);
+      const records = entries.map((e, i) => {
+        if (e === null) return null;
+        const piece = annotation(e, `path-piece-${i + 1}`).g, circle = annotation(e, `construction-circle-${i + 1}`)?.g;
+        if (piece.head === 'Line') return { kind: 'line', from: piece.pts[0], to: piece.pts[1] };
+        expect(annotation(e, `construction-center-${i + 1}`).g.pts).toEqual([circle.c]);
+        return { kind: 'arc', center: piece.c, r: piece.r, angS: piece.angles[0], angE: piece.angles[1], construction: { center: circle.c, r: circle.r } };
+      });
+      expect(JSON.parse(JSON.stringify(records)), JSON.stringify(row.partial)).toEqual(row.path);
+      for (const id of ['start-car', 'goal-car', 'moving-car']) {
+        const car = annotation(graphics, id);
+        expect(JSON.parse(JSON.stringify(carRecords(car.g, car.style.color, id))), id).toEqual({ prims: row.cars[id].prims });
+      }
+    }
   });
   it('drawCar: body rectangle of the car centred at the rear axle', () => {
-    const body = drawCar([0, 0], 0, 0, 0.2).prims.find((p) => p.role === 'body');
+    const body = annotation(drawCar([0, 0], 0, 0, 0.2), 'body').g;
     closeVec(body.pts.flat(), [-0.3, -0.5, 1.7, -0.5, 1.7, 0.5, -0.3, 0.5], 14);
     // rotated by pi/2 about the rear axle and moved to (1, 2): (x, y) -> (1 - y, 2 + x)
-    const body2 = drawCar([1, 2], PI / 2, 0, 0.2).prims.find((p) => p.role === 'body');
+    const body2 = annotation(drawCar([1, 2], PI / 2, 0, 0.2), 'body').g;
     closeVec(body2.pts.flat(), [1.5, 1.7, 1.5, 3.7, 0.5, 3.7, 0.5, 1.7], 14);
   });
   it('drawCar: front wheels turn by ArcTan[Alpha - .375, 1.4] and ArcTan[Alpha + .375, 1.4] (Mathematica argument order)', () => {
-    expect(drawCar([0, 0], 0, 0, 0.6).wheelAngles).toEqual([0, 0]);
-    closeVec(drawCar([0, 0], 0, 3, 0.6).wheelAngles, [Math.atan(1.4 / 2.625), Math.atan(1.4 / 3.375)], 15);
-    closeVec(drawCar([0, 0], 0, -3, 0.6).wheelAngles, [PI - Math.atan(1.4 / 3.375), PI - Math.atan(1.4 / 2.625)], 15);
+    // the angle of each front tyre's first edge (its unturned direction is the x axis; Theta = 0)
+    const turned = (alpha) => ['tyre-front-left', 'tyre-front-right'].map((id) => {
+      const [p, q] = annotation(drawCar([0, 0], 0, alpha, 0.6), id).g.pts;
+      return Math.atan2(q[1] - p[1], q[0] - p[0]);
+    });
+    expect([wheelAngle(0, 'left'), wheelAngle(0, 'right')]).toEqual([0, 0]);
+    expect(turned(0)).toEqual([0, 0]);
+    closeVec([wheelAngle(3, 'left'), wheelAngle(3, 'right')], [Math.atan(1.4 / 2.625), Math.atan(1.4 / 3.375)], 15);
+    closeVec(turned(3), [Math.atan(1.4 / 2.625), Math.atan(1.4 / 3.375)], 14);
+    closeVec([wheelAngle(-3, 'left'), wheelAngle(-3, 'right')], [PI - Math.atan(1.4 / 3.375), PI - Math.atan(1.4 / 2.625)], 15);
+    closeVec(turned(-3).map((a) => (a < 0 ? a + 2 * PI : a)), [PI - Math.atan(1.4 / 3.375), PI - Math.atan(1.4 / 2.625)], 14);
     expect(wheelAngle(3, 'left')).toBeGreaterThan(wheelAngle(3, 'right')); // inner wheel turns more
   });
   it('drawCar: headlights, axles, four tyres and the arrow, with the opacities of the original', () => {
-    const { prims } = drawCar([0, 0], 0, 0, 0.6);
-    const roles = prims.map((p) => p.role);
+    const parts = annotations(drawCar([0, 0], 0, 0, 0.6));
+    const roles = parts.map((p) => p.id);
     expect(roles.filter((r) => r === 'headlight').length).toBe(2);
     expect(roles.filter((r) => r === 'axle').length).toBe(2);
     expect(roles.filter((r) => r.startsWith('tyre')).length).toBe(4);
-    expect(prims.find((p) => p.role === 'body').opacity).toBe(0.6);
-    expect(prims.find((p) => p.role === 'headlight').opacity).toBeCloseTo(0.48, 15); // Opacity[0.8 opac]
-    const arrow = prims.find((p) => p.role === 'arrow');
+    expect(parts.find((p) => p.id === 'body').style.opacity).toBe(0.6);
+    expect(parts.find((p) => p.id === 'headlight').style.opacity).toBeCloseTo(0.48, 15); // Opacity[0.8 opac]
+    const arrow = parts.find((p) => p.id === 'arrow').g;
     closeVec(arrow.pts.flat(), [0.7, 0, 1.7, 0], 15);
   });
 });

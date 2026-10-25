@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.20 |
+| Code version: | 0.1.21 |
 | Document revision | 1 (2026-10-17) — first implementation |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Shortest Path for the Dubins Car", contributed by Aaron T. Becker and Shiva Shahrokhi, published 2017-12-14 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ShortestPathForTheDubinsCar/>. Readable source: [`docs/original-source/dubins-path.txt`](../../docs/original-source/dubins-path.txt); snapshots: `docs/original-snapshots/dubins-path-1.png` … `dubins-path-4.png` (pictures 5 and 6 of the extraction are the Wolfram icon, not snapshots); golden fixture (COMMON-DECISIONS §1): `tests/golden/dubins-path.original-states.json` with `states[0]` = the live output-cell state, `snapshots[1…4]` = the `"Settings"` of the four snapshot cells (raw definition notebook lines 3511, 4416, 5299, 6178) and `specs` = the initial settings (output cell `"Variables"`, line 2047, and `"Specifications"`, line 2235); exact values kept as `{"wl": …}` |
-| Port files | `dubins.js` (the original's functions `angPt2Pt`, `distPt2Pt`, `arcLen`, `drawLSL` … `drawRLR` with their drawings as data, the `Sort` selection, the moving-car module and one evaluation of the Manipulate body; pure), `main.js` (the Manipulate on `shared/manipulate.js`: controls, locators, Graphics data; v0.1.19), `index.html`; new shared module owned by this app: `demos/common/car-icon.js` (CC BY-NC-SA 3.0; header credits "Shortest Path for Forward and Reverse Motion of a Car", this Demonstration and "Isochrons for a Dubins Car"; `drawCar` with `{lights, beam, headlightEdge}`, `wheelAngle`, the SVG car renderer `drawCarSvg`; car-paths uses it since v0.1.20; §6) |
+| Port files | `dubins.js` (the original's functions `angPt2Pt`, `distPt2Pt`, `arcLen`, `drawLSL` … `drawRLR` with their drawings as data, the `Sort` selection, the moving-car module, one evaluation of the Manipulate body and `picture`, its Graphics list as `shared/graphics.js` data (v0.1.21); pure), `main.js` (the Manipulate on `shared/manipulate.js`: controls, locators, Graphics options; v0.1.19), `index.html`; new shared module owned by this app: `demos/common/car-icon.js` (CC BY-NC-SA 3.0; header credits "Shortest Path for Forward and Reverse Motion of a Car", this Demonstration and "Isochrons for a Dubins Car"; `drawCar` with `{lights, beam, headlightEdge, id, arrowSize}` returning Graphics data (v0.1.21; before, records drawn by `drawCarSvg`), `wheelAngle`; car-paths uses it since v0.1.20; §6) |
 | Role in the project | further demonstration (batch A) |
 
 ## 1. Purpose and background
@@ -71,7 +71,7 @@ regions of reference [4] (mentioned in Details only), the unused `drawCarOld`, t
 |----|---------|--------|-------|-------------|
 | F-DP-13 | Graphics frame: `PlotRange->{{-15,15},{-10,10}}`, `ImageSize->600`, `Background->Lighter[Gray,.92]` (RGB 0.96), no plot-range padding (measured, D-DP-08) | same picture as the original | v0.1.15 | e2e "dubins-path loads without errors and draws both cars, the turning circles, the candidate words and the label"; M-DP-02 |
 | F-DP-14 | Drawing order of the original's `Graphics` list: `{Green, drawCar[{0,0},0,0,0.2]}` (start), `{Red, drawCar[goalXY,Theta,0,0.2]}` (goal), the heading glyph, `{Thin,Gray,Dashed, Circle[csL,r], Circle[csR,r], Circle[ceL,r], Circle[ceR,r]}`, `{Thin, dLSL[[2]], dLSR[[2]], dRSR[[2]], dRSL[[2]], dLRL[[2]], dRLR[[2]]}` (all existing words in their colours), the label, `{Thickness[0.005], shortestPath[[2]]}`, `{Blue, drawCar[xyP,angP,Alpha,0.8]}`; the Manipulate's goal locator glyph on top. Arcs `Circle[c, r, {a1, a2}]` are drawn between the two angles (as K-CP-01) | the picture of the Demonstration | v0.1.15 | e2e "dubins-path loads without errors and draws both cars, the turning circles, the candidate words and the label"; golden "dubins-path: snapshot settings 2 to 4 give the labels and path words of the pictures"; golden "dubins-path: snapshots 2 to 4 show the thick path in the colour of the computed word"; M-DP-02 |
-| F-DP-15 | `drawCar[xy,Theta,Alpha,opac]`: the car-paths car (body 2 × 1 around the rear axle, axles and tyres in Darker[Gray], front tyres turned by `ArcTan[Alpha∓.375,1.4]`, arrow with `Arrowheads[.02]`) except that the yellow headlights have `EdgeForm[None]` | the car icon of the original | v0.1.15 | unit "drawCar of this Demonstration equals the car-paths car except headlights without edges"; M-DP-02 |
+| F-DP-15 | `drawCar[xy,Theta,Alpha,opac]`: the car-paths car (body 2 × 1 around the rear axle, axles and tyres in Darker[Gray], front tyres turned by `ArcTan[Alpha∓.375,1.4]`, arrow with `Arrowheads[.02]`) except that the yellow headlights have `EdgeForm[None]` | the car icon of the original | v0.1.15 | unit "drawCar of this Demonstration differs from the default car (car-paths"; M-DP-02 |
 | F-DP-16 | Label `{Black, Style[Text[StringForm["`` path length, `` distance", Round[N[shortestPath[[1]]],0.01], N[Round[Sqrt[goalXY1^2+goalXY2^2],0.01]]], {0,8}], FontSize->14]}`: text centred at (0, 8) inside the plot; "distance" is the planar distance of the goal from the start (Q-DP-08) | the numbers of the Demonstration | v0.1.15 | unit "label: Round to 0.01 and a trailing point for whole numbers"; e2e "dubins-path label reads 20.76 path length, 2.83 distance at the start"; golden "dubins-path: snapshot 1 reads 20.76 path length and 2.83 distance with the pink LSL path" |
 | F-DP-17 | Heading glyph `Locator[goalThetaloc, Graphics[{Red, {AbsoluteThickness[1], Antialiasing->False, LineBox[4 reticle arms from ±2 to ±10], Antialiasing->True, CircleBox[{-0.5,0.5},5]}, {AbsoluteThickness[3], Opacity[0.3], CircleBox[{-0.5,0.5},3]}}, ImageSize->17, PlotRange->{{-8,8},{-8,8}}]]` (not rotated; all four arms, unlike car-paths' vertical-only glyph) | shows where the heading locator is | v0.1.15 | e2e "dubins-path loads without errors and draws both cars, the turning circles, the candidate words and the label"; golden "dubins-path: snapshot 1 reads 20.76 path length and 2.83 distance with the pink LSL path"; M-DP-02 |
 | F-DP-18 | Title, caption and details text (with the four references) of the original | explains the Demonstration | v0.1.15 | M-DP-01 |
@@ -122,9 +122,10 @@ Non-interactive test ids of the graphic (not part of the inventory check): `plot
 
 - `dubins.js` (pure, no DOM) holds the original's functions under their names — `angPt2Pt`, `distPt2Pt`, `arcLen`,
   `drawLSL`, `drawLSR`, `drawRSR`, `drawRSL`, `drawLRL`, `drawRLR` — in the original's order of operations. Each `draw…`
-  returns `[length, drawing]` with `drawing = {colour, pieces: [{kind:'arc', c, r, a1, a2} | {kind:'line', from, to}]}`
-  (`{}` for a word that does not exist, length `Infinity`), so that the moving-car module can index it as the original
-  does (`drawing[[2,3,1]]` = first arc's start angle, `drawing[[3]]` = middle piece, `Head[…] == Circle`).
+  returns `[length, drawing]` with `drawing = {colour, word, pieces: [Circle[c, r, {a1, a2}] | Line[{from, to}], …]}`, the
+  pieces as `shared/graphics.js` data (v0.1.21; before, `{kind:'arc', c, r, a1, a2}` / `{kind:'line', from, to}` records;
+  `null` for a word that does not exist, length `Infinity`), so that the moving-car module can index it as the original
+  does (`drawing[[2,3,1]]` = first arc's start angle `angles[0]`, `drawing[[3]]` = middle piece, `Head[…] == Circle`).
 - `sortWords(cands)` reproduces `Sort[…][[1]]` on `{length, drawing}` pairs: lengths compared numerically, `Infinity` last;
   on equal lengths the drawings are compared in canonical order, which here means the colour triples lexicographically
   (Pink {1, .5, .5}, Blue {0, 0, 1}, Darker[Yellow] {2/3, 2/3, 0}, Orange {1, .5, 0}, Brown {.6, .4, .2},
@@ -143,19 +144,24 @@ Non-interactive test ids of the graphic (not part of the inventory check): `plot
   for `distPt2Pt` and the label distance (not `Math.hypot`, not dnrm2), `Math.acos`, `Math.cos`, `Math.sin` (K-DP-08).
   `a/b` is evaluated as `a*(1/b)` where the original divides machine numbers, with the grouping of the stored definitions (e.g. `2 (minRadius/dLR)`,
   `dLL/(4 minRadius)`, `distTrav/Abs[minRadius ang1]`, `ang2 ((distTrav - Abs[minRadius ang1])/Abs[minRadius ang2])`). The output cell's stored Initialization and Body were checked against the Input cells: same definitions and specs except the initial values (F-DP-12) and the extras of Q-DP-07.
-- `main.js` (v0.1.19) is one `Manipulate({…})` call of `shared/manipulate.js`: the two sliders and the locators
-  `goalXY`, `goalThetaloc` as Mathematica control specs (the layer draws them with `shared/svg-plot.js` `addLocators`,
-  `pickAnywhere: true`, `locatorGlyph` for the visible goal locator), `body: evaluate`, and `draw` returning the
-  Graphics list in the original's order (`shared/graphics.js`: `Background -> Lighter[Gray, .92]`, the heading glyph as
-  an `Inset` of a 17 px Graphics, circles, candidate words, label); the cars are still drawn by
-  `demos/common/car-icon.js` (`drawCar`, `drawCarSvg`) through the layer's `Raw` migration aid. `shared/mma-colors.js`
-  (`NAMED`, `darker`), `shared/requirements.js`.
+- `dubins.js` `picture(state, view)` (v0.1.21) is the Manipulate's Graphics list as `shared/graphics.js` data in the
+  original's order (F-DP-14): the three cars `{Green, drawCar[…]}` (`demos/common/car-icon.js`, `headlightEdge: null`,
+  `Arrowheads[.02]` as `arrowSize` = 0.02 × the 600 px picture's width), the heading glyph as an `Inset` of a 17 px
+  Graphics, the dashed circles, the candidate words and the shortest path (`{colour, pieces…}` annotated
+  `candidate-<word>` / `shortest-path` with `data-word`), the label. Tests read its numbers with `annotations()`.
+- `main.js` (v0.1.19; 77 → 42 lines in v0.1.21) is one `Manipulate({…})` call of `shared/manipulate.js`: the two
+  sliders and the locators `goalXY`, `goalThetaloc` as Mathematica control specs (the layer draws them with
+  `shared/svg-plot.js` `addLocators`, `pickAnywhere: true`, `locatorGlyph` for the visible goal locator), the Graphics
+  options (`Background -> Lighter[Gray, .92]`), and a body returning `{state, view, graphics}` from `evaluate` and
+  `picture`. No `Raw` part is left (before v0.1.21 the cars went through `drawCarSvg` as `Raw`). `shared/requirements.js`.
   The goal locator is drawn by the locator layer at `goalXY`; the heading locator is invisible (`appearance` → null) and
   the red glyph (F-DP-17) is drawn in the graphic at the reset `goalThetaloc`, in the original's drawing order.
 - Reuse from car-paths. Shareable (identical code): `drawCar` except the headlight edge (F-DP-15), `wheelAngle`, the
   geometry helpers `rot`/`rectPts`, and `drawCarSvg` of car-paths' `main.js`. They move to
   `demos/common/car-icon.js` (owned by this app, CC BY-NC-SA 3.0 with credits to the three car Demonstrations;
-  `drawCar(xy, Theta, Alpha, opac, {lights = true, beam = 4, headlightEdge = 'thin'})`, data, plus the SVG renderer).
+  `drawCar(xy, Theta, Alpha, opac, {lights = true, beam = 4, headlightEdge = 'thin', id, arrowSize})`; since v0.1.21 it
+  returns `shared/graphics.js` data — the body in the caller's colour, every part `Annotation[…, role]`, the arrow as
+  shaft and filled head when `arrowSize` is given — and `drawCarSvg` / `demos/common/car-graphics.js` are gone).
   This app calls it with `headlightEdge: null`, dubins-isochrons with `{lights, beam: 8, headlightEdge: null}`.
   car-paths uses it since v0.1.20 (owner request to fold repeated code; its unit tests "drawCar: …" pass unchanged
   and its pictures are pixel-identical); `carpaths.js` re-exports `drawCar` and `wheelAngle` from it.
@@ -180,7 +186,7 @@ npm run bundle -- dubins-path
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/dubins-path/`) | 3 | `dubins.js`, `index.html`, `main.js` |
-| `shared/` | 13 | `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-plot.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
+| `shared/` | 15 | `graphics-extras.js`, `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-frame.js`, `svg-plot.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
 | `demos/common/` | 1 | `car-icon.js` |
 | added by the bundler | 7 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/dubins-path/DESIGN.md` |
 <!-- bundle-contents:end -->
@@ -247,6 +253,7 @@ Template: see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md).
 | 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 5 | v0.1.19 | 2026-10-21 | main.js rewritten on the new shared Manipulate layer (`shared/manipulate.js`, `shared/graphics.js`): the controls are written as Manipulate control specs and the picture as Graphics data; no change to behaviour or picture (all unit, golden and browser tests unchanged and passing; screenshots and Manipulate state identical to v0.1.18 at sample settings) |
 | 6 | v0.1.20 | 2026-10-21 | bundle table only (the Manipulate layer now also loads `shared/ui-extra.js`, `ui-interval.js`, `random.js`); no change to this app; §6: car-paths now uses `demos/common/car-icon.js` |
+| 7 | v0.1.21 | 2026-10-23 | the model builds the picture as `shared/graphics.js` Graphics data (owner decision D2) and the body returns {state, view, graphics}; `main.js` shortened; path pieces are `Circle`/`Line` data (hook `view().shortestPath.pieces` in that form); the car icon of `demos/common/car-icon.js` is Graphics data (no `Raw`); the old drawing output frozen in `tests/unit/fixtures/dubins-path-drawing.pre-graphics.json` and tests that read the old format now read the same numbers through `annotations()`/`Cases()`; no change to behaviour or picture (screenshots and Manipulate state identical to v0.1.20 at sample settings) |
 
 ## 10. Improvements to consider (not implemented)
 

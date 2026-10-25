@@ -3,18 +3,24 @@
 // SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // demos/camera-lasers/model.js — pure port of "Measuring Distance and Orientation Using Camera and Lasers"
 // (Initialization code and one evaluation of the Manipulate body). No DOM. Function names and the order of
-// operations follow the original (docs/original-source/camera-lasers.txt). Both pictures are returned as lists of
-// primitives (data) in the original's drawing order; main.js draws them.
+// operations follow the original (docs/original-source/camera-lasers.txt). Both pictures are returned as
+// shared/graphics.js data in the original's drawing order (the Manipulate layer draws them).
 //
 // Numbers: the original computes exactly in its opening state and symbolically after dial moves; the port computes
 // with machine numbers (D-CL-01). Exactness that the display needs is carried by hand: the reticule scale sc and the
 // tick values are exact rationals {num, den} where the original's are exact (F-CL-18).
 import { mLess, mGreater, mLessEq, mGreaterEq, roundHalfEven } from '../../shared/mma.js';
 import { arcTan } from '../../shared/mma-exact.js';
-import { rational } from '../../shared/mma-text.js';
+import { rational, numberParts } from '../../shared/mma-text.js';
 import { NAMED } from '../../shared/mma-colors.js';
 import { Gamma, lineIntersectionPoint, segmentIntersectionQ } from '../common/segments.js';
 import { arrowArc } from '../common/arrow-arcs.js';
+import { locIcon } from '../common/arm-view.js';
+import {
+  Annotation, Polygon, Line, Point, Text, Style, RGBColor, EdgeForm, Opacity, AbsoluteThickness, AbsoluteDashing,
+  AbsolutePointSize, PointSize, CapForm, FontSize, FontFamily, Italic, Gray, Black, cachedGraphics,
+} from '../../shared/graphics.js';
+import { arrowheadPolygon, plotUnitsPerPx } from '../../shared/graphics-extras.js';
 
 /** The original's names of the shared segment geometry (demos/common/segments.js). */
 export const γ = Gamma;
@@ -39,8 +45,8 @@ const MINOR = [0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.
 /**
  * Clips a polyline to the box [[x0, x1], [y0, y1]] (Liang–Barsky per segment, D-CL-08). Returns the visible runs as
  * {pts, offset}: `offset` is the polyline length before the run's first point, so a dashed run keeps its dash phase
- * (stroke-dashoffset). Used by main.js only for drawing: the model's primitive lists keep the original's points
- * (e.g. a missing laser's beam to x = 10000, Q-CL-04).
+ * (stroke-dashoffset). Used only for drawing the dashed reflections: the beams keep the original's points (e.g. a
+ * missing laser's beam to x = 10000, Q-CL-04).
  */
 export function clipPolyline(pts, [[x0, x1], [y0, y1]]) {
   const runs = [];
@@ -152,13 +158,60 @@ export function fromSaved(saved) {
   return { p: saved.p.slice(), pFixed: saved.pFixed.slice(), p1: saved.p1.slice(), s: saved.s, lambda: saved['λ'] ?? saved.lambda };
 }
 
-const prim = (kind, o) => ({ kind, ...o });
+// ------------------------------------------------------------------------------------------------ the pictures
+// Both pictures as shared/graphics.js data, in the original's order; every part an Annotation with its role as id.
+const rgb = (c) => RGBColor(...c);
+const DASH = [4, 3];
+const CLIP_MARGIN_PX = 20; // dashed lines are clipped to the plot range plus 20 px on every side (D-CL-08)
+const SERIF = '"Times New Roman", serif', SANS = 'Arial, Helvetica, sans-serif';
+const picture = (range) => {
+  const u = plotUnitsPerPx(range, IMSZ, 0), m = CLIP_MARGIN_PX * u, [[x0, x1], [y0, y1]] = range;
+  return { u, box: [[x0 - m, x1 + m], [y0 - m, y1 + m]] };
+};
+const TOP = picture(PLOT_RANGE), CAM = picture(CAM_RANGE);
 
+/** A filled shape (FaceForm colour, Opacity, EdgeForm) with its role. */
+const filled = (shape, role, fill, { opacity, edge } = {}) => [rgb(fill), opacity != null && Opacity(opacity), edge && EdgeForm(rgb(edge)), Annotation(shape, role)];
+/** Rectangle[{x0, y0}, {x1, y1}] as its polygon: drawn as before (round line joins of the edge). */
+const rectPolygon = ([a, b], [c, d]) => Polygon([[Math.min(a, c), Math.min(b, d)], [Math.max(a, c), Math.min(b, d)], [Math.max(a, c), Math.max(b, d)], [Math.min(a, c), Math.max(b, d)]]);
+const line = (pts, role, stroke, thicknessPx = 1) => [rgb(stroke), AbsoluteThickness(thicknessPx), Annotation(Line(pts), role)];
 /**
- * One evaluation of the Manipulate body. Returns {state (a new object), view}; view = {sc, theta, objectPts (6 points:
- * the closing point appended twice, Q-CL-01), InterPt1, InterPt2, InterPt3D1, InterPt3D2, faces, gridCounts, top
- * (primitives of the top view), cam (primitives of the camera image)}.
+ * Dashed[Line[{a, b}]]: a missing laser's dashed reflection reaches x = 10000 (Q-CL-04): only the part in the window is
+ * drawn, with the dash phase of the whole line (stroke-dashoffset); the two-point lines give at most one run.
  */
+function dashedLine(pts, role, stroke, { u, box } = TOP) {
+  const period = DASH.reduce((a, b) => a + b, 0) * u;
+  return [rgb(stroke), AbsoluteThickness(1), AbsoluteDashing(DASH), CapForm('Butt'),
+    clipPolyline(pts, box).map((r) => Annotation(Line(r.pts), role, r.offset > 0 ? { 'stroke-dashoffset': String(r.offset % period) } : {}))];
+}
+/** Arrow[pts] with Arrowheads[head] (fraction of the image width); the head along `direction` or the last segment. */
+function arrow(pts, role, { tip = pts[pts.length - 1], direction, head = STYLE.arrowheads } = {}, { u } = TOP) {
+  let dir = direction;
+  if (!dir) { const a = pts[pts.length - 2], dx = tip[0] - a[0], dy = tip[1] - a[1], l = Math.hypot(dx, dy); dir = [dx / l, dy / l]; }
+  return [rgb(NAMED.Black), AbsoluteThickness(1), Annotation([Line(pts), arrowheadPolygon(tip, dir, head * u * IMSZ)], role)];
+}
+/** Text[Style[text, Medium]]: the Greek letters and s in italic serif (as the snapshots show them), titles sans-serif. */
+const text = (str, at, role, { italic = false, fontPx = STYLE.mediumFontPx } = {}) => [rgb(NAMED.Black),
+  Annotation(Text(Style(str, ...(italic ? [Italic] : []), FontSize(fontPx), FontFamily(italic ? SERIF : SANS)), at), role)];
+/** Text[i, pos] of the reticule: exact fractions stacked (numerator, bar, denominator), others plain, minus in front. */
+function tickLabel(value, at, { u } = CAM) {
+  const fontPx = STYLE.textFontPx, color = NAMED.Black;
+  const parts = numberParts(value);
+  const id = ['tick-label', { class: 'tick-label', 'data-text': parts.text }];
+  if (!parts.den) return Annotation([rgb(color), FontSize(fontPx), Text(parts.text, at)], ...id);
+  const f = fontPx * 0.85;
+  const w = Math.max(parts.num.length, parts.den.length) * f * 0.6 * u;
+  const cx = at[0] + (parts.sign ? f * 0.3 * u : 0);
+  return Annotation([rgb(color), FontSize(f), parts.sign && Text(parts.sign, [cx - w / 2 - f * 0.45 * u, at[1]]),
+    Text(parts.num, [cx, at[1] + f * 0.6 * u]), AbsoluteThickness(0.75), Line([[cx - w / 2, at[1]], [cx + w / 2, at[1]]]),
+    Text(parts.den, [cx, at[1] - f * 0.6 * u])], ...id);
+}
+// GridLines -> {Table[i, {i, -1, 15}], Table[i, {i, -4, 4}]}, GridLinesStyle -> Directive[Thin, Dashed, Gray] (behind)
+const range = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
+const gridLines = [Gray, AbsoluteThickness(0.5), AbsoluteDashing(DASH), CapForm('Butt'),
+  ...range(-1, 15).map((x) => Line([[x, -4], [x, 4]])), ...range(-4, 4).map((y) => Line([[-1, y], [15, y]]))];
+const grid = cachedGraphics(); // drawn once
+
 export function evaluate(stateIn) {
   const st = { p: stateIn.p.slice(), pFixed: stateIn.pFixed.slice(), p1: stateIn.p1.slice(), s: stateIn.s, lambda: stateIn.lambda };
   const { s, lambda: lam } = st;
@@ -175,70 +228,71 @@ export function evaluate(stateIn) {
 
   // ---- top view, in the original's order
   const top = [];
-  top.push(prim('polygon', { pts: [[0, 0], [10000 * lam, 10000 * -cw], [10000 * lam, 10000 * cw]], fill: NAMED.Blue, opacity: 0.2, role: 'field-of-view' }));
-  top.push(prim('polygon', { pts: objectPts.slice(), fill: BROWN, edge: NAMED.Black, role: 'object' }));
+  top.push(filled(Polygon([[0, 0], [10000 * lam, 10000 * -cw], [10000 * lam, 10000 * cw]]), 'field-of-view', NAMED.Blue, { opacity: 0.2 }));
+  top.push(filled(Polygon(objectPts.slice()), 'object', BROWN, { edge: NAMED.Black }));
   const aa = arrowArc({ center: p, r: 1, start: Math.PI / 2, end: Math.PI / 2 + theta });
-  top.push(prim('arc', { pts: aa.arc, stroke: NAMED.Black, role: 'orientation-arc' }));
-  top.push(prim('arrow', { pts: [aa.tail, aa.tip], tip: aa.tip, direction: aa.direction, stroke: NAMED.Black, head: STYLE.arrowheads, role: 'orientation-arrow' }));
-  top.push(prim('line', { pts: [[p[0], p[1] + 1], p.slice(), [p[0] + 1.6 * -Math.sin(theta), p[1] + 1.6 * Math.cos(theta)]], stroke: NAMED.Black, role: 'orientation-lines' }));
+  top.push(line(aa.arc, 'orientation-arc', NAMED.Black));
+  top.push(arrow([aa.tail, aa.tip], 'orientation-arrow', { tip: aa.tip, direction: aa.direction }));
+  top.push(line([[p[0], p[1] + 1], p.slice(), [p[0] + 1.6 * -Math.sin(theta), p[1] + 1.6 * Math.cos(theta)]], 'orientation-lines', NAMED.Black));
   if (mGreaterEq(Math.abs(theta), Math.PI / 16)) {
-    top.push(prim('text', { text: 'θ', at: [p[0] + 1.5 * -Math.sin(theta / 2), p[1] + 1.5 * Math.cos(theta / 2)], fontPx: STYLE.mediumFontPx, italic: true, color: NAMED.Black, role: 'theta-label' }));
+    top.push(text('θ', [p[0] + 1.5 * -Math.sin(theta / 2), p[1] + 1.5 * Math.cos(theta / 2)], 'theta-label', { italic: true }));
   }
-  top.push(prim('line', { pts: [[0, 0], [500, 0]], stroke: NAMED.Black, role: 'optical-axis' }));
-  top.push(prim('rect', { from: [-1.5 * lam, -cw], to: [0, cw], fill: DARKER_GRAY, role: 'camera' }));
+  top.push(line([[0, 0], [500, 0]], 'optical-axis', NAMED.Black));
+  top.push(filled(rectPolygon([-1.5 * lam, -cw], [0, cw]), 'camera', DARKER_GRAY));
   for (const [L, role] of [[L1, 'laser-1'], [L2, 'laser-2']]) {
-    top.push(prim('rect', { from: [L[0] - 1 / 2, L[1] - 1 / 8], to: [L[0] + 0, L[1] + 1 / 8], fill: ORANGE, edge: NAMED.Black, role }));
+    top.push(filled(rectPolygon([L[0] - 1 / 2, L[1] - 1 / 8], [L[0] + 0, L[1] + 1 / 8]), role, ORANGE, { edge: NAMED.Black }));
   }
-  top.push(prim('line', { pts: [L1, InterPt1], stroke: NAMED.Red, role: 'beam-1' }));
-  top.push(prim('line', { pts: [L2, InterPt2], stroke: NAMED.Red, role: 'beam-2' }));
-  top.push(prim('line', { pts: [InterPt1, [0, 0]], stroke: NAMED.Red, dashed: true, role: 'reflection-1' }));
-  top.push(prim('line', { pts: [InterPt2, [0, 0]], stroke: NAMED.Red, dashed: true, role: 'reflection-2' }));
-  top.push(prim('line', { pts: [[lam, -cw], [lam, cw]], stroke: NAMED.Blue, thicknessPx: STYLE.thickPx, role: 'image-plane' }));
-  top.push(prim('line', { pts: [[-lam, -cw], [-lam, cw]], stroke: NAMED.Blue, thicknessPx: STYLE.thickPx, role: 'image-plane-back' }));
-  top.push(prim('point', { at: [0, 0], sizePx: STYLE.largePointPx, color: NAMED.Blue, role: 'pinhole' }));
-  top.push(prim('text', { text: 'top view', at: [7, 3.5], fontPx: STYLE.mediumFontPx, color: NAMED.Black, role: 'title' }));
-  top.push(prim('arrow', { pts: [[lam + 1 / 2, 2 * cw], [lam, 2 * cw]], stroke: NAMED.Black, head: STYLE.arrowheads, role: 'lambda-arrow-1' }));
-  top.push(prim('arrow', { pts: [[-1 / 2, 2 * cw], [0, 2 * cw]], stroke: NAMED.Black, head: STYLE.arrowheads, role: 'lambda-arrow-2' }));
-  top.push(prim('text', { text: 'λ', at: [lam / 2, 2 * cw], fontPx: STYLE.textFontPx, italic: true, color: NAMED.Black, role: 'lambda-label' }));
-  top.push(prim('line', { pts: [[lam, 0], [lam, 2.2 * cw]], stroke: NAMED.Blue, thicknessPx: STYLE.thinPx, role: 'lambda-guide-1' }));
-  top.push(prim('line', { pts: [[0, 0], [0, 2.2 * cw]], stroke: NAMED.Blue, thicknessPx: STYLE.thinPx, role: 'lambda-guide-2' }));
-  top.push(prim('polygon', { pts: [[0, 0], [-lam, -cw], [-lam, cw]], fill: NAMED.Blue, opacity: 0.2, role: 'inner-cone' }));
-  top.push(prim('arrow', { pts: [[-1 / 4, 1 / 2], [-1 / 4, 0]], stroke: NAMED.Black, head: STYLE.arrowheads, role: 's-arrow-1' }));
-  top.push(prim('arrow', { pts: [[-1 / 4, -s - 1 / 2], [-1 / 4, -s]], stroke: NAMED.Black, head: STYLE.arrowheads, role: 's-arrow-2' }));
-  top.push(prim('text', { text: 's', at: [-1 / 4, -s / 2], fontPx: STYLE.textFontPx, italic: true, color: NAMED.Black, role: 's-label' }));
-  top.push(prim('loc', { at: p.slice(), color: NAMED.Black, role: 'locator-icon' }));
+  top.push(line([L1, InterPt1], 'beam-1', NAMED.Red));
+  top.push(line([L2, InterPt2], 'beam-2', NAMED.Red));
+  top.push(dashedLine([InterPt1, [0, 0]], 'reflection-1', NAMED.Red));
+  top.push(dashedLine([InterPt2, [0, 0]], 'reflection-2', NAMED.Red));
+  top.push(line([[lam, -cw], [lam, cw]], 'image-plane', NAMED.Blue, STYLE.thickPx));
+  top.push(line([[-lam, -cw], [-lam, cw]], 'image-plane-back', NAMED.Blue, STYLE.thickPx));
+  top.push([rgb(NAMED.Blue), AbsolutePointSize(STYLE.largePointPx), Annotation(Point([0, 0]), 'pinhole')]);
+  top.push(text('top view', [7, 3.5], 'title'));
+  top.push(arrow([[lam + 1 / 2, 2 * cw], [lam, 2 * cw]], 'lambda-arrow-1'));
+  top.push(arrow([[-1 / 2, 2 * cw], [0, 2 * cw]], 'lambda-arrow-2'));
+  top.push(text('λ', [lam / 2, 2 * cw], 'lambda-label', { italic: true, fontPx: STYLE.textFontPx }));
+  top.push(line([[lam, 0], [lam, 2.2 * cw]], 'lambda-guide-1', NAMED.Blue, STYLE.thinPx));
+  top.push(line([[0, 0], [0, 2.2 * cw]], 'lambda-guide-2', NAMED.Blue, STYLE.thinPx));
+  top.push(filled(Polygon([[0, 0], [-lam, -cw], [-lam, cw]]), 'inner-cone', NAMED.Blue, { opacity: 0.2 }));
+  top.push(arrow([[-1 / 4, 1 / 2], [-1 / 4, 0]], 's-arrow-1'));
+  top.push(arrow([[-1 / 4, -s - 1 / 2], [-1 / 4, -s]], 's-arrow-2'));
+  top.push(text('s', [-1 / 4, -s / 2], 's-label', { italic: true, fontPx: STYLE.textFontPx }));
+  top.push(Annotation(locIcon(Black, p.slice()), 'locator-icon')); // loc[Black]
 
   // ---- camera image
   const R = roundHalfEven(20 * lam), M = roundHalfEven(3 * (1 / lam));
   const cam = [];
-  for (let i = 1; i <= R; i++) cam.push(prim('line', { pts: [Convert3DtoCam(lam, [-50, -1, i]), Convert3DtoCam(lam, [50, -1, i])], stroke: NAMED.Gray, thicknessPx: STYLE.thinPx, role: 'ground-row' }));
-  for (let i = -M; i <= M; i++) cam.push(prim('line', { pts: [Convert3DtoCam(lam, [i, -1, 0]), Convert3DtoCam(lam, [i, -1, R + 1])], stroke: NAMED.Gray, thicknessPx: STYLE.thinPx, role: 'ground-ray' }));
-  cam.push(prim('rect', { from: [-cw, Convert3DtoCam(lam, [-50, -1, R + 1])[1]], to: [cw, 0], fill: NAMED.LightGray, role: 'horizon-band' }));
-  cam.push(prim('rect', { from: [-cw, -cw], to: [cw, 0], fill: NAMED.Blue, opacity: 0.2, role: 'ground' }));
+  for (let i = 1; i <= R; i++) cam.push(line([Convert3DtoCam(lam, [-50, -1, i]), Convert3DtoCam(lam, [50, -1, i])], 'ground-row', NAMED.Gray, STYLE.thinPx));
+  for (let i = -M; i <= M; i++) cam.push(line([Convert3DtoCam(lam, [i, -1, 0]), Convert3DtoCam(lam, [i, -1, R + 1])], 'ground-ray', NAMED.Gray, STYLE.thinPx));
+  cam.push(filled(rectPolygon([-cw, Convert3DtoCam(lam, [-50, -1, R + 1])[1]], [cw, 0]), 'horizon-band', NAMED.LightGray));
+  cam.push(filled(rectPolygon([-cw, -cw], [cw, 0]), 'ground', NAMED.Blue, { opacity: 0.2 }));
   const objectPts2 = objectPts.concat([objectPts[0]]);
   const faces = visibleFaces(lam, objectPts2);
-  for (const f of faces) cam.push(prim('polygon', { pts: f, fill: BROWN, edge: NAMED.Black, role: 'face' }));
+  for (const f of faces) cam.push(filled(Polygon(f), 'face', BROWN, { edge: NAMED.Black }));
   for (const [ip, ip3, role] of [[InterPt1, InterPt3D1, 'dot-1'], [InterPt2, InterPt3D2, 'dot-2']]) {
     const size = lam * (0.2 * (1 / ip[0]));
-    if (Number.isFinite(size) && ip3.every(Number.isFinite)) cam.push(prim('point', { at: ip3, size, color: NAMED.Red, role }));
+    if (Number.isFinite(size) && ip3.every(Number.isFinite)) cam.push([rgb(NAMED.Red), PointSize(size), Annotation(Point(ip3), role)]);
   }
-  cam.push(prim('line', { pts: [[-cw, 0], [cw, 0]], stroke: NAMED.Black, thicknessPx: STYLE.thinPx, role: 'reticule' }));
+  cam.push(line([[-cw, 0], [cw, 0]], 'reticule', NAMED.Black, STYLE.thinPx));
   for (const i of majorTicks(sc)) {
     const u = s * over(lam, i), un = -s * over(lam, i);
-    cam.push(prim('line', { pts: [[u, -0.025], [u, 0.05]], stroke: NAMED.Black, thicknessPx: STYLE.thinPx, role: 'major-tick' }));
-    cam.push(prim('label', { value: i, at: [u, -0.05], fontPx: STYLE.textFontPx, color: NAMED.Black, role: 'tick-label' }));
-    cam.push(prim('line', { pts: [[un, -0.025], [un, 0.05]], stroke: NAMED.Black, thicknessPx: STYLE.thinPx, role: 'major-tick' }));
-    cam.push(prim('label', { value: negate(i), at: [un, -0.05], fontPx: STYLE.textFontPx, color: NAMED.Black, role: 'tick-label' }));
+    cam.push(line([[u, -0.025], [u, 0.05]], 'major-tick', NAMED.Black, STYLE.thinPx));
+    cam.push(tickLabel(i, [u, -0.05]));
+    cam.push(line([[un, -0.025], [un, 0.05]], 'major-tick', NAMED.Black, STYLE.thinPx));
+    cam.push(tickLabel(negate(i), [un, -0.05]));
   }
   for (const i of minorTicks(sc)) {
     const u = s * over(lam, i), un = -s * over(lam, i);
-    cam.push(prim('line', { pts: [[u, -0.025], [u, 0]], stroke: NAMED.Black, thicknessPx: STYLE.thinPx, role: 'minor-tick' }));
-    cam.push(prim('line', { pts: [[un, -0.025], [un, 0]], stroke: NAMED.Black, thicknessPx: STYLE.thinPx, role: 'minor-tick' }));
+    cam.push(line([[u, -0.025], [u, 0]], 'minor-tick', NAMED.Black, STYLE.thinPx));
+    cam.push(line([[un, -0.025], [un, 0]], 'minor-tick', NAMED.Black, STYLE.thinPx));
   }
-  cam.push(prim('text', { text: 'camera image', at: [0, 0.4 * cw], fontPx: STYLE.mediumFontPx, color: NAMED.Black, role: 'title' }));
+  cam.push(text('camera image', [0, 0.4 * cw], 'title'));
 
   return {
     state: st,
-    view: { sc, theta, objectPts: objectPts2, InterPt1, InterPt2, InterPt3D1, InterPt3D2, faces, gridCounts: [R, 2 * M + 1], top, cam },
+    view: { sc, theta, objectPts: objectPts2, InterPt1, InterPt2, InterPt3D1, InterPt3D2, faces, gridCounts: [R, 2 * M + 1] },
+    graphics: [[grid([], () => gridLines), top], cam],
   };
 }

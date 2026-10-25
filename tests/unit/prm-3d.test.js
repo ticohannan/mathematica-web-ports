@@ -12,7 +12,7 @@ import {
   OBS_RAD, WIDTHA, DELTA, TWO_PI, isCollided, linDist, myAstar,
 } from '../../demos/prm-3d/model.js';
 import { field, cObstacle, volumeFor, GRID } from '../../demos/prm-3d/cspace3d.js';
-import { flatten, apply4 } from '../../demos/common/g3d.js';
+import { flatten, apply4 } from '../../shared/graphics3d.js';
 import { mLess, mGreater } from '../../shared/mma.js';
 import { replayRng, mulberry32 } from '../../shared/random.js';
 

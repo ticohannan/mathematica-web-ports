@@ -17,7 +17,7 @@ import {
   initialState, evaluate, stateFromSettings, fitCamera, groundWidthFraction, DH_ZOOM, angleOf,
 } from '../../demos/dh-parameters/model.js';
 import { drawGripper } from '../../demos/common/robot-draw.js';
-import { flatten } from '../../demos/common/g3d.js';
+import { flatten } from '../../shared/graphics3d.js';
 import { piFraction } from '../../shared/mma-text.js';
 import { mmaSliderText } from '../../shared/ui.js';
 

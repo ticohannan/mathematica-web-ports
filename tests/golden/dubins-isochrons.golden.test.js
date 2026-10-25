@@ -14,6 +14,7 @@ import {
 import { loadStates, plain } from '../../tools/lib/wl-json.mjs';
 import { harnessCase, captureOf, toJS, toJSNumeric } from '../support/harness-json.js';
 import { readPng } from '../support/png.js';
+import { Cases } from '../../shared/graphics.js';
 
 const fx = loadStates('tests/golden/dubins-isochrons.original-states.json');
 const ulp = (x) => { const b = new Float64Array([Math.abs(x)]); const i = new BigInt64Array(b.buffer); i[0] += 1n; return b[0] - Math.abs(x); };
@@ -384,9 +385,9 @@ function compare(name, rec, at) {
   }
   if (name === 'pathGraphics') {
     const circles = findHeads(rec, 'Circle').map((c) => toJSNumeric(c.args)); // Circle[{r, 0}, r, {Pi, …}]: the symbol Pi
-    const mine = at.view.pathGraphics.pieces.filter((p) => p.kind === 'arc');
+    const mine = Cases(at.view.pathGraphics.pieces, 'Circle'); // the port's pieces are Graphics data (v0.1.21)
     expect(circles.length).toBe(mine.length);
-    circles.forEach(([c, r, [a1, a2]], i) => { [...c, r, a1, a2].forEach((x, j) => expect(Math.abs([...mine[i].c, mine[i].r, mine[i].a1, mine[i].a2][j] - x)).toBeLessThanOrEqual(tol(x))); });
+    circles.forEach(([c, r, [a1, a2]], i) => { [...c, r, a1, a2].forEach((x, j) => expect(Math.abs([...mine[i].c, mine[i].r, ...mine[i].angles][j] - x)).toBeLessThanOrEqual(tol(x))); });
   }
 }
 const SCENARIOS = [

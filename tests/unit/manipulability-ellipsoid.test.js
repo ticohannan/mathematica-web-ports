@@ -14,7 +14,7 @@ import { cosPi, sinPi, cosSinPi } from '../../shared/exact-pi.js';
 import { det } from '../../shared/mma-exact.js';
 import { engineeringForm } from '../../shared/mma-extra.js';
 import { svd3 } from '../../demos/common/svd3.js';
-import { flatten, apply4 } from '../../demos/common/g3d.js';
+import { flatten, apply4 } from '../../shared/graphics3d.js';
 import { DIAL_TABLE_32, nearest32Index, dialPointer, dialGraphics } from '../../demos/common/dial-control.js';
 import { myJacob } from '../../demos/robot-singularities/robots.js';
 import { createRng } from '../../shared/random.js';

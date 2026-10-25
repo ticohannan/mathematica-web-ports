@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.20 |
+| Code version: | 0.1.21 |
 | Document revision | 5 (2026-10-17) — §11 Errors in the original (R-C); checklist items as operator procedures (R-B) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Euler Angles: Precession, Nutation, and Spin", contributed by Kevin Hernandez, based on a program by Sándor Kabai (CC BY-NC-SA 3.0). Readable source: [`docs/original-source/euler-angles.txt`](../../docs/original-source/euler-angles.txt) |
-| Port files | `model.js` (orientations, bookmarks, geometry constants; pure), `main.js` (three.js scene and controls), `index.html` |
+| Port files | `model.js` (orientations, bookmarks, geometry constants; pure), `main.js` (the Manipulate on `shared/manipulate.js`: the three sliders, the bookmarks, the gyroscope as a three.js scene that is the picture's renderer; v0.1.21), `index.html` (with the start-up notice, A-EA-08) |
 | Role in the project | practice port (the assignment evaluates only the motion-planning app) |
 
 ## 1. Purpose and background
@@ -76,6 +76,7 @@ units, physics (torque, real precession dynamics), saving views.
 | A-EA-05 | Credit footer: original title, authors, licence, adaptation notice, links | required by the CC BY-NC-SA 3.0 licence | v0.1.1 | e2e "attribution on" |
 | A-EA-06 | Recovers by itself after the browser restores a lost WebGL context (GPU reset, driver update, sleep): redraws the same view on the white background | without it the scene vanished and came back on black only after the next interaction | v0.1.11 | e2e "redraws by itself after the WebGL context is lost and restored" |
 | A-EA-07 | Standalone bundle: `npm run bundle -- euler-angles` writes this app alone, with exactly the files it loads, a root page, README and licence texts, to `dist/euler-angles/` (§6.1) | owner rule R-A: anyone can take this one app and host it elsewhere | v0.1.15 | e2e "bundle: euler-angles runs from its own folder"; unit "bundle contents listed in DESIGN.md match the collector" |
+| A-EA-08 | Start-up notice (DEC-22): `shared/requirements.js` with `data-needs-webgl2` (watchdog: the page counts as started when `window.__demo.ready` is set) and a `<noscript>` notice in the picture; a clear message when the browser lacks JavaScript modules or WebGL 2 or the page does not start | a clear message instead of an empty or dead page; the last apps without it (owner decision 2026-10-23, DEC-37) | v0.1.21 | e2e "start-up notice when"; e2e "WebGL 2 notice on" |
 
 ## 5. UI inventory
 
@@ -100,11 +101,22 @@ its design document".
 
 - `model.js` holds the angle specification, the bookmarks, the orientation formulas and all
   geometry constants of the original's Initialization; it has no DOM or WebGL code and is unit-tested.
-- `main.js` builds a three.js scene graph whose nesting mirrors the gyroscope: fixed → middle ring
-  (rotated by a1 about z) → inner ring (a2 about y) → rotor (a3 about z). Changing an angle only sets
-  the three group rotations and renders.
-- Mathematica's view (`ViewPoint`, `ViewAngle`, z vertical) is emulated by `shared/three-helpers.js`;
-  labels are HTML overlays; lighting approximates Mathematica's default.
+- `main.js` (v0.1.21) is one `Manipulate({…})` call of `shared/manipulate.js`: the three sliders as Mathematica
+  control specs (`{{a1, 0, "precession angle"}, 0, 360, 1}` …, with the port's own number fields, `steps: undefined`),
+  `setState` restricted to the three angles (`merge`), and the picture `{id: 'graphic', renderer}`. The renderer
+  (`Gyroscope`) builds, once and before the controls (as before, so the canvas has the same size), a three.js scene
+  graph whose nesting mirrors the gyroscope: fixed → middle ring (rotated by a1 about z) → inner ring (a2 about y) →
+  rotor (a3 about z); its `draw({a1, a2, a3})` only sets the three group rotations and renders. The bookmark menu and
+  "Animate bookmarks" (panel tool bar) call the layer's `setState`; "Initial settings" is the layer's reset (plus
+  clearing the menu). Not `View3D`: it has no `ViewAngle`, adds a content group and refits the camera, which would
+  change the scene (gap reported).
+- Mathematica's view (`ViewPoint`, `ViewAngle`, z vertical) is emulated by `shared/three-helpers.js` `createViewer`;
+  labels are HTML overlays. Lighting (since v0.1.21, owner decision 2026-10-23, DEC-36, D-EA-05): as View3D's
+  `Lighting -> Automatic` — Mathematica's documented default lights from `shared/mma-lighting.js`, attached to the
+  camera, on the displayed colour values (`outputColorSpace = LinearSRGBColorSpace`), as in dh-parameters (D-DH-02).
+- Start-up notice (since v0.1.21, owner decision 2026-10-23, DEC-37, A-EA-08): `index.html` loads
+  `shared/requirements.js` with `data-needs-webgl2` before the module and has the `<noscript>` notice in `#graphic`,
+  as the other apps; the layer's hook (`window.__demo.ready`) tells the watchdog that the page started.
 
 ### 6.1 Building and deploying this app alone
 
@@ -121,7 +133,7 @@ Owner rule R-A: this one app can be taken out of the repository and hosted anywh
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/euler-angles/`) | 3 | `index.html`, `main.js`, `model.js` |
-| `shared/` | 6 | `linalg.js`, `mma-exact.js`, `mma-extra.js`, `style.css`, `three-helpers.js`, `ui.js` |
+| `shared/` | 15 | `graphics.js`, `linalg.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma-lighting.js`, `random.js`, `requirements.js`, `style.css`, `svg-plot.js`, `three-helpers.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
 | `vendor/three/` | 9 | `addons/controls/OrbitControls.js`, `addons/lines/Line2.js`, `addons/lines/LineGeometry.js`, `addons/lines/LineMaterial.js`, `addons/lines/LineSegments2.js`, `addons/lines/LineSegmentsGeometry.js`, `addons/renderers/CSS2DRenderer.js`, `three.core.js`, `three.module.js` |
 | added by the bundler | 8 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/euler-angles/DESIGN.md`, `vendor/three/LICENSE` |
 <!-- bundle-contents:end -->
@@ -132,7 +144,7 @@ Owner rule R-A: this one app can be taken out of the repository and hosted anywh
   copied files, and `vendor/three/LICENSE` (three.js).
 - Requirements: any static web server (`npx serve`, `python -m http.server`, GitHub Pages); not `file://` (browsers
   block ES modules there); a browser with ES modules and import maps (Firefox ≥ 108, Chrome/Edge ≥ 89, Safari ≥ 16.4);
-  WebGL 2 (three.js draws the whole picture; this app has no start-up notice yet). No server-side code.
+  WebGL 2 (three.js draws the whole picture; without it the start-up notice explains why, A-EA-08). No server-side code.
 - Checked by e2e "bundle: euler-angles runs from its own folder" (`tests/e2e/bundle.spec.js`): the bundle folder alone is
   served, its root page must open the app, the app must start (`window.__demo.ready`) without page errors, every request
   must stay inside the folder and succeed, and every script and stylesheet of the bundle must be loaded.
@@ -141,12 +153,13 @@ Owner rule R-A: this one app can be taken out of the repository and hosted anywh
 
 | ID | Kind | Description |
 |----|------|-------------|
-| D-EA-01 | deviation | Lighting approximates Mathematica's default coloured lights; torus/rotor tessellation is smoother. |
+| D-EA-01 | deviation | Torus/rotor tessellation is smoother. (Until v0.1.20 also: lighting approximated Mathematica's default coloured lights; since v0.1.21 D-EA-05.) |
 | D-EA-02 | deviation | Bookmark animation (9 s per cycle) and slider animation (6 s per sweep) speeds are guesses; Mathematica's defaults may differ. |
 | D-EA-03 | deviation | Labels are HTML overlays: always on top, never hidden behind geometry. |
 | D-EA-04 | deviation | The 3D picture is as wide as its column, at most 520 px (original `ImageSize -> 400`). |
+| D-EA-05 | deviation (owner decision 2026-10-23, DEC-36) | Colours and lighting as the other 3D ports (D-DH-02, D-RS-02): the renderer writes the displayed colour values directly (`outputColorSpace = LinearSRGBColorSpace`, no linear→sRGB encoding) and the lights are Mathematica's documented default lights of `shared/mma-lighting.js` (what `shared/graphics3d-view.js` View3D does for `Lighting -> Automatic`), instead of `shared/three-helpers.js`'s older approximation with sRGB output (K-EA-02). An intentional visible change of v0.1.21: the rings, axles and rotor are shaded with the coloured lights (darker, more saturated), and the unlit axis lines show their colour values unencoded (darker); everything else in the scene is unchanged (3D parity tool: the scene graph differs only in the lights under the camera and the output colour space; state identical). |
 | K-EA-01 | known issue | While "Animate bookmarks" runs, "Initial settings" and slider moves are overwritten by the next animation frame (the animation is not stopped). Found by design review, v0.1.6. What the original does in the same situation (⊕ menu → Initial Settings during the bookmark animation) is to be checked (M-EA-08); the port is to behave like the original. A possible improvement is I-EA-01. |
-| K-EA-02 | known issue (lead) | Lighting lead (found with K-RS-10 of the robot-singularities app, whose `shared/mma-lighting.js` reproduces Mathematica's documented default `Lighting`, confirmed in Mathematica 15.0.1): `shared/three-helpers.js` places the default lights with the colours of directional lights 1 and 3 swapped, the 4th light RGBColor[0, 0.18, 0.5] instead of RGBColor[0, 0, 0.18] and the green light at z = 2 instead of 3. Not changed (it is part of D-EA-01); to be compared with the original's snapshots before any change, which would go through §8. |
+| K-EA-02 | known issue (lead) | Lighting lead (found with K-RS-10 of the robot-singularities app, whose `shared/mma-lighting.js` reproduces Mathematica's documented default `Lighting`, confirmed in Mathematica 15.0.1): `shared/three-helpers.js` places the default lights with the colours of directional lights 1 and 3 swapped, the 4th light RGBColor[0, 0.18, 0.5] instead of RGBColor[0, 0, 0.18] and the green light at z = 2 instead of 3. Not changed (it is part of D-EA-01); to be compared with the original's snapshots before any change, which would go through §8. Resolved in v0.1.21: the page now uses `shared/mma-lighting.js` (owner decision 2026-10-23, DEC-36, D-EA-05). |
 | N-EA-01 | note | `s1 = a1/1°` in the extracted source is `(a1/1)°` = a1 degrees in radians (box grouping), not a bug. |
 | N-EA-02 | note | Sliders go 0 … 360; the original has no negative angles. |
 
@@ -180,6 +193,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 8 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 9 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
 | 10 | v0.1.20 | 2026-10-21 | version number only (Manipulate layer extended, eleven more apps migrated to it); no change to this app |
+| 11 | v0.1.21 | 2026-10-23 | `main.js` on the shared Manipulate layer; **owner decision 2026-10-23 (DEC-36):** the newer lighting (Mathematica's documented default lights of `shared/mma-lighting.js`, linear output colour space) replaces createViewer's older approximation — a visible, intentional change (D-EA-05; scene graph otherwise identical); **DEC-37:** the DEC-22 start-up notice (`shared/requirements.js` with WebGL 2 check, `<noscript>`) added (A-EA-08) |
 
 ## 10. Improvements to consider (not implemented)
 

@@ -4,6 +4,7 @@
 // tests/e2e/dubins-isochrons.spec.js — browser tests of the isochron page (real mouse and keyboard; window.__demo only
 // reads values, except to show the snapshot states for the review screenshots).
 import { test, expect } from '@playwright/test';
+import { pieceRecord } from '../support/car-records.js';
 import { openDemo, reviewShot } from './helpers.js';
 
 const URL = '/demos/dubins-isochrons/';
@@ -24,7 +25,7 @@ async function clickSlider(page, name, v, min, max) {
 }
 function distToPath(p, pg) {
   let best = Infinity;
-  for (const q of pg.pieces) {
+  for (const q of pg.pieces.map(pieceRecord)) { // Circle / Line data since v0.1.21
     if (q.kind === 'line') {
       const [a, b] = [q.from, q.to], dx = b[0] - a[0], dy = b[1] - a[1];
       const t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy || 1)));

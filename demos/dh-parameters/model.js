@@ -7,7 +7,7 @@
 // Names and order of operations follow the original (docs/original-source/dh-parameters.txt).
 import { dhTransform, mul4, mul4Fma } from '../common/dh-chain.js';
 import { drawJoint, drawGripper, GROUND } from '../common/robot-draw.js';
-import { Graphics3D, GeometricTransformation, flatten, primitiveBounds } from '../common/g3d.js';
+import { Graphics3D, GeometricTransformation, flatten, primitiveBounds } from '../../shared/graphics3d.js';
 
 const π = Math.PI;
 /** θ and α are exact multiples of π/32: the integer n stands for nπ/32 (sliders {-π, π, π/32}) */
@@ -96,7 +96,7 @@ export const origin = (T) => [T[0][3], T[1][3], T[2][3]];
 /** Mathematica's default ViewPoint */
 export const VIEWPOINT = [1.3, -2.4, 2];
 /**
- * Zoom of the SphericalRegion fit (demos/common/g3d-three.js fitViewer: the bounding sphere × 1.04 fills the image,
+ * Zoom of the SphericalRegion fit (shared/graphics3d-three.js fitViewer: the bounding sphere × 1.04 fills the image,
  * zoom > 1 draws larger), fitted to the ground-disc widths of all five snapshots (347.5, 370.5, 349.5, 402.5,
  * 345.5 of 425 pt): every snapshot within 3 % (D-DH-01, T-DH-22). Calibrating on snapshot 1 alone (zoom 1.37) would
  * leave snapshot 4 (the flat planar arm) 5.1 % too small: Mathematica's rule differs from this fit (K-DH-03).

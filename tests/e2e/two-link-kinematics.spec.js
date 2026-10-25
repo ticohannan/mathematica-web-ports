@@ -6,12 +6,17 @@
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
 import { openDemo, reviewShot } from './helpers.js';
+import { annotation, Cases } from '../../shared/graphics.js';
 
 const URL = '/demos/two-link-kinematics/';
 const toClient = (page, p) => page.evaluate((q) => window.__demo.worldToClient(q), p);
 const ctlToClient = (page, name, p) => page.evaluate(([n, q]) => window.__demo.controlToClient(n, q), [name, p]);
 const getState = (page) => page.evaluate(() => window.__demo.getState());
 const getLocals = (page) => page.evaluate(() => window.__demo.locals());
+/** the picture as last drawn (shared/graphics.js data; parts are Annotations with their role) */
+const picture = (page) => page.evaluate(() => window.__demo.graphics(0));
+/** the tip of an arc arrow (myArrowArc): its head polygon's first point */
+const arcTip = (g, role) => Cases(annotation(g, role).g, 'Polygon')[0].pts[0];
 async function dragClient(page, a, b, steps = 8) {
   await page.mouse.move(a.x, a.y);
   await page.mouse.down();
@@ -118,14 +123,14 @@ test.describe('two-link kinematics', () => {
 
   test('the joint velocity pad keeps its locator inside the unit disk', async ({ page }) => {
     await openDemo(page, URL);
-    const before = await page.evaluate(() => window.__demo.scene().find((d) => d.role === 'jointVel1').data);
+    const before = arcTip(await picture(page), 'jointVel1');
     const a = await ctlToClient(page, 'jointVel', [0.4, 0.2]);
     const b = await ctlToClient(page, 'jointVel', [1.6, 1.4]);
     await dragClient(page, a, b);
     const s = await getState(page);
     near(Math.hypot(...s.jointVel), 1, 1e-9);
-    const after = await page.evaluate(() => window.__demo.scene().find((d) => d.role === 'jointVel1').data);
-    expect(after.tip).not.toEqual(before.tip);
+    const after = arcTip(await picture(page), 'jointVel1');
+    expect(after).not.toEqual(before);
   });
 
   test('moving the r1 slider changes the link lengths and the white inner disk', async ({ page }) => {
@@ -136,14 +141,14 @@ test.describe('two-link kinematics', () => {
     const s = await getState(page);
     expect(s.r1).toBeGreaterThan(1.2);
     expect(s.r1).toBeLessThan(1.8);
-    const hole = await page.evaluate(() => window.__demo.scene().find((d) => d.role === 'hole'));
+    const hole = annotation(await picture(page), 'hole').g;
     near(hole.r, Math.abs(s.r1 - (2 - s.r1)), 1e-12);
     await expect(page.getByTestId('hole')).toHaveCount(1);
     expect(s.p1).toEqual([1, 0]); // angles unchanged (FK)
     expect(s.p2).toEqual([1, 0]);
     expect(s.pEnd).toEqual([2, 0]);
-    const link1 = await page.evaluate(() => window.__demo.scene().find((d) => d.role === 'link1').rect);
-    near(link1[1][0], s.r1 + 1 / 8, 1e-12);
+    const link1 = Cases(annotation(await picture(page), 'link1').g, 'Rectangle')[0]; // Rotate[Rectangle[{x0, y0}, {x1, y1}, …], …]
+    near(link1.b[0], s.r1 + 1 / 8, 1e-12);
     await expect(page.getByTestId('value-r1')).toHaveValue(/^1\.\d+$/);
   });
 

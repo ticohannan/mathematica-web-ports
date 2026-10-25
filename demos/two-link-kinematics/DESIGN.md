@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.20 |
+| Code version: | 0.1.21 |
 | Document revision | 2 (2026-10-18) — `matrixRank` imported from `demos/common/svd3.js` (DH-family move) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Forward and Inverse Kinematics for Two-Link Arm", contributed by Aaron T. Becker and Lillian Lin, published 2016-06-20 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ForwardAndInverseKinematicsForTwoLinkArm/>. Readable source: [`docs/original-source/two-link-kinematics.txt`](../../docs/original-source/two-link-kinematics.txt); saved states: `tests/golden/two-link-kinematics.original-states.json` (`states[0]` = the output cell's saved state, `snapshots[1…4]` = the four snapshot cells' `Settings`, raw notebook lines 3580, 5050, 6589, 8110; `specs` = the initial settings (stored `"Variables"`); exact values kept as `{"wl": …}` next to their double); snapshots: `docs/original-snapshots/two-link-kinematics-1…4.png` (the notebook's snapshot cells 5 and 6 are the Wolfram icon placeholder, N-TK-06) |
-| Port files | `model.js` (initial values, one evaluation of the Manipulate body including the Jacobian, `Theta2inv`/`Theta1inv`, `svd2`, the pseudoinverse and the `loc` icon data; pure), `velocity-pad.js` (the original's `make2VelControl`; browser-only), `main.js` (the Manipulate on `shared/manipulate.js`: controls, locators, the Graphics data, test hook; v0.1.20), `index.html`; common modules owned by this app (COMMON-DECISIONS §3, all CC BY-NC-SA 3.0): `demos/common/two-link.js` (arm geometry; users TK, DN, robot-motion-obstacles, bfs-motion-planning), `demos/common/arrow-arcs.js` (arc arrows; TK, DN, RM, BFS, torus chart, four-bar, manipulability ellipsoid, camera-lasers), `demos/common/dial-control.js` (every `makeDialControl` variant; TK, DN, torus chart, manipulability ellipsoid, camera-lasers); shared module owned by this app (MIT, COMMON-DECISIONS §6): `shared/mma-text.js` (`piFraction` and the text of exact numbers; users: dial-control.js, camera-lasers, torus chart, manipulability ellipsoid, dh-parameters, arm-configurations) |
+| Port files | `model.js` (initial values, one evaluation of the Manipulate body including the Jacobian, `Theta2inv`/`Theta1inv`, `svd2`, the pseudoinverse and the Graphics list (`scene`, with the `loc` icons) as `shared/graphics.js` data; pure), `velocity-pad.js` (the original's `make2VelControl`; browser-only), `main.js` (the Manipulate on `shared/manipulate.js`: controls, locators, test hook; v0.1.21), `index.html`; common modules owned by this app (COMMON-DECISIONS §3, all CC BY-NC-SA 3.0): `demos/common/two-link.js` (arm geometry; users TK, DN, robot-motion-obstacles, bfs-motion-planning), `demos/common/arrow-arcs.js` (arc arrows; TK, DN, RM, BFS, torus chart, four-bar, manipulability ellipsoid, camera-lasers), `demos/common/dial-control.js` (every `makeDialControl` variant; TK, DN, torus chart, manipulability ellipsoid, camera-lasers); shared module owned by this app (MIT, COMMON-DECISIONS §6): `shared/mma-text.js` (`piFraction` and the text of exact numbers; users: dial-control.js, camera-lasers, torus chart, manipulability ellipsoid, dh-parameters, arm-configurations) |
 | Role in the project | further demonstration (batch A) |
 
 ## 1. Purpose and background
@@ -127,17 +127,21 @@ gets `check-IsElbowUp` because that is the testid `shared/ui-extra.js` `addCheck
   `svd2`, `pseudoInverse2`, `loc` (Jacobian, IK and SVD stay in this app, COMMON-DECISIONS §3), `evaluate(state)` = exactly one
   evaluation of the Manipulate body (F-TK-09…F-TK-15) returning `{state, locals}` with the Module locals the harness
   records (`Theta1`, `Theta2`, `r2`, `J`, `U`, `Sigma`, `V`, `q`, `vNorm`, which branches ran), and `scene(state,
-  locals)` = everything the Graphics list draws, as data (disks, ellipse, arrows, stadiums, points, B-spline polylines
-  with arrowhead tips and directions, texts with rotation, icons) in the original's order.
+  locals)` = the Graphics list as `shared/graphics.js` data in the original's order (v0.1.21, owner decision D2; before,
+  a list of 19 kinds of part that `main.js` translated): disks (the hole-on-edge rule of D-TK-04 included), the
+  ellipse as `Rotate[Disk[pEnd, {Σ11, Σ22}], …]`, arrows (`arrowheadPolygon` of `shared/graphics-extras.js`), the
+  stadiums as rotated rounded `Rectangle`s, points, the B-spline arcs with their heads (`arcArrowGraphics`; `data-kind`
+  'Point' | 'Arrow' | …), texts (rotated "Robot Arm"), the `loc` icons (`loc(col, c, role)`); every part an
+  `Annotation` with its role as id.
 - `demos/two-link-kinematics/velocity-pad.js` (browser-only): `make2VelControl(controls, {name, value, onInput})`, a
   140 pt `createPlot` with one locator (`addLocators`, `pickAnywhere: true`), setter clamp of F-TK-05 (`padSetter`,
   exported pure for the unit test).
 - `demos/two-link-kinematics/main.js` (v0.1.20): one `Manipulate({…})` call of `shared/manipulate.js` with the
   Manipulate variables (`r1, pEnd, pEndp, pVel, pVelp, p1, p2, IsElbowUp, IsElbowUpp, jointVel`) as control specs in
   the original's order (the dials and the pad as `Control(makeDialControl, …)` and `Control(make2VelControl)`, the
-  check box `{True, False}`); the body is `evaluate` (keeping the previous state where the original would compute
-  with Indeterminate, D-TK-07) and `draw` turns `scene` into Graphics data (disks, ellipse, arrows, stadiums, points,
-  `arcArrowGraphics` arcs of the new `demos/common/arrow-graphics.js`, the `loc` icons). The layer evaluates after every control change
+  check box `{True, False}`); the body is `evaluate` and `scene` (keeping the previous state and picture where the
+  original would compute with Indeterminate, D-TK-07), returning `{ state, view: { locals }, graphics }`; the browser
+  tests read the picture through the layer's hook `graphics(0)` (the former hook `scene()` was removed in v0.1.21). The layer evaluates after every control change
   (slider input, dial or pad move, check box, locator move, key press) and writes the new state back into every
   control (dials, pad and check box follow the body's assignments).
 - `index.html` as in the other 2D ports (crumbs, title, `#controls` left of `#graphic`, caption, details, credits,
@@ -264,14 +268,14 @@ npm run bundle -- two-link-kinematics
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/two-link-kinematics/`) | 4 | `index.html`, `main.js`, `model.js`, `velocity-pad.js` |
-| `shared/` | 15 | `exact-pi.js`, `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma-text.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-plot.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
-| `demos/common/` | 7 | `arrow-arcs.js`, `arrow-graphics.js`, `dial-control.js`, `g3d.js`, `prm-core.js`, `svd3.js`, `two-link.js` |
+| `shared/` | 19 | `exact-pi.js`, `graphics-extras.js`, `graphics.js`, `graphics3d.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma-text.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svd3.js`, `svg-frame.js`, `svg-plot.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
+| `demos/common/` | 5 | `arrow-arcs.js`, `dial-control.js`, `prm-core.js`, `svd3.js`, `two-link.js` |
 | added by the bundler | 7 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/two-link-kinematics/DESIGN.md` |
 <!-- bundle-contents:end -->
 
 Licences: `LICENSES/CC-BY-NC-SA-3.0.txt` (this app and every `demos/…` module: derived from Wolfram Demonstration code); `LICENSES/MIT.txt` (the `shared/…` modules).
 
-Requirements: a current browser with ES modules (Firefox, Chromium, WebKit); no WebGL. Since the DH-family move (v0.1.16) the bundle contains `demos/common/svd3.js` and its import `demos/common/g3d.js` (CC BY-NC-SA 3.0) instead of robot-singularities' files.
+Requirements: a current browser with ES modules (Firefox, Chromium, WebKit); no WebGL. Since the DH-family move (v0.1.16) the bundle contains `demos/common/svd3.js` and its import `shared/graphics3d.js` (CC BY-NC-SA 3.0) instead of robot-singularities' files.
 
 Verified by e2e "bundle: two-link-kinematics runs from its own folder" (A-TK-07): the test runs the bundle command, serves `dist/two-link-kinematics/` alone with a static file server (no access to the rest of the repository), opens the root `index.html`, follows it to the app and checks: no console error, no failed request, every request stays inside the folder, the controls of §5 are present and the first picture is drawn (the SVG graphic is not empty); it also compares the folder's file list with the generated list in its `README.md`.
 
@@ -337,6 +341,7 @@ Template: see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md).
 | 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 5 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
 | 6 | v0.1.20 | 2026-10-21 | `main.js` rewritten on the shared Manipulate layer (`shared/manipulate.js`, `shared/graphics.js`): control specs in Mathematica's form, the picture as Graphics data; no change to behaviour or picture (all unit, golden and browser tests unchanged and passing; screenshots and Manipulate state identical to v0.1.19 at sample settings) |
+| 7 | v0.1.21 | 2026-10-23 | the model builds the picture as `shared/graphics.js` Graphics data (owner decision D2) and the body returns {state, view, graphics}; `main.js` shortened; hook `scene()` replaced by the layer's `graphics(0)` (browser tests moved, same checks); the old drawing output frozen in `tests/unit/fixtures/two-link-kinematics-drawing.pre-graphics.json` and tests that read the old format now read the same numbers through `annotations()`/`Cases()`; no change to behaviour or picture (screenshots and Manipulate state identical to v0.1.20 at sample settings) |
 
 ## 10. Improvements to consider (not implemented)
 

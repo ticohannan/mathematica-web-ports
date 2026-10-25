@@ -12,6 +12,7 @@ import * as F from '../../demos/four-bar-linkage/fourbar.js';
 import { bsplinePoint } from '../../demos/common/arrow-arcs.js';
 import { mmaGrid } from '../../shared/ui.js';
 import { mulberry32 } from '../../shared/random.js';
+import { preGraphics, sameDrawing } from '../support/pre-graphics.js';
 
 F.useRecordedSamples(JSON.parse(fs.readFileSync('demos/four-bar-linkage/recorded-samples.json', 'utf8')));
 const { Phipos, Phineg, lenlengthsOf, mod2pi } = F;
@@ -210,5 +211,27 @@ describe('four-bar-linkage model', () => {
     expect(g.valueAt(27)).toBe(1.35);
     expect(g.valueAt(10)).toBe(0.5);
     expect(g.valueAt(15)).toBe(0.75);
+  });
+});
+
+// ---- v0.1.21 (owner decision D2): fourbar.js returns both pictures as shared/graphics.js data. The drawing output of
+// the page before that change is frozen in tests/unit/fixtures/four-bar-linkage-drawing.pre-graphics.json (f04c973).
+describe('four-bar-linkage: Graphics data = the drawing before v0.1.21', () => {
+  const fx = preGraphics('four-bar-linkage');
+  const replay = (steps) => {
+    let r = F.evaluate(F.initialSettings());
+    for (const st of steps) r = F.evaluate({ ...r.state, ...st }); // the hook setState
+    return r;
+  };
+  it.each(fx.states.map((s) => [s.name, s]))('%s: the same Graphics data, number for number', (name, s) => {
+    const r = replay(s.steps);
+    expect(JSON.parse(JSON.stringify({ ...r.state, plot: undefined, pvalsCount: r.state.pvals.length }))).toEqual(s.state); // the hook's getState
+    const cs = sameDrawing(r.graphics[0], s.graphics[0], `${name} cspace`).replaced;
+    const lk = sameDrawing(r.graphics[1], s.graphics[1], `${name} linkage`).replaced;
+    // the Raw parts before: the clip group (now Clip), the Epilog message (Text[Column[…]]) and the <tspan> texts
+    expect(cs.map((x) => x.head ?? x[1].id)).toEqual(['Clip', ...(r.state.plot.text ? ['cspace-message'] : [])]);
+    expect(cs[0].id).toBe('fb-clip');
+    if (r.state.plot.text) expect(cs[1][1].g.expr.items).toEqual(r.state.plot.text.split('\n'));
+    expect(lk.map((x) => x[1]?.id ?? x.id)).toEqual(['text-L4', 'text-theta', 'text-L1', 'text-phi', 'text-L3', 'text-L2']);
   });
 });

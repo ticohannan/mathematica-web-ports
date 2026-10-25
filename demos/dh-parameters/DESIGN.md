@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.20 |
+| Code version: | 0.1.21 |
 | Document revision | 1 (2026-10-18) — first implementation |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Denavit-Hartenberg Parameters for a Three-Link Robot", contributed by Aaron T. Becker and Mary Burbage, published 2016-06-16 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/DenavitHartenbergParametersForAThreeLinkRobot/>. Readable source: [`docs/original-source/dh-parameters.txt`](../../docs/original-source/dh-parameters.txt); snapshots: `docs/original-snapshots/dh-parameters-1.png` … `-5.png`; saved state: `tests/golden/dh-parameters.original-states.json` (written with `tools/extract_state.py --snapshots` from the raw notebook: live state, initial settings and the five snapshot `Settings`) |
-| Port files | app: `model.js` (T1, T2, T3, the Graphics3D content in the original's order, one evaluation of the body, the plot-range box and the framing helpers; pure), `main.js` (13 labelled sliders with ⊕ panels, 3 setter bars, 3 delimiters, the three.js viewer, automation hook), `index.html`; common (CC BY-NC-SA; this app owns the DH-family move from robot-singularities, §6.5): `demos/common/dh-chain.js` (`dhTransform` — machine path by default, exact-angle path by an explicit argument), `demos/common/robot-draw.js` (`drawZArrow`, `drawCoordAxes`, `GROUND`, `drawJoint` variant `'dh'`, `drawGripper` shared with "Common Robot Arm Configurations"), `demos/common/g3d.js`, `demos/common/g3d-three.js` (and `demos/common/svd3.js`, moved but not used here); shared (MIT): `shared/exact-pi.js` (integer-angle trig, through `dh-chain.js`), `shared/mma-text.js` (`piFraction`, `parsePiFraction`), `shared/ui.js` (`Controls.slider` with `steps:'mma'` and `format`/`parse` hooks, `setterBar`, `delimiter`, `mmaSliderText`), `shared/mma-lighting.js`, `shared/three-helpers.js`, `shared/mma.js`, `shared/mma-colors.js` |
+| Port files | app: `model.js` (T1, T2, T3, the Graphics3D content in the original's order, one evaluation of the body, the plot-range box and the framing helpers; pure), `main.js` (the Manipulate on `shared/manipulate.js`: 13 labelled sliders with ⊕ panels, 3 setter bars, 3 delimiters, the 3D picture as `View3D` of `shared/graphics3d-view.js`, hook extras; v0.1.21), `index.html`; common (CC BY-NC-SA; this app owns the DH-family move from robot-singularities, §6.5): `demos/common/dh-chain.js` (`dhTransform` — machine path by default, exact-angle path by an explicit argument), `demos/common/robot-draw.js` (`drawZArrow`, `drawCoordAxes`, `GROUND`, `drawJoint` variant `'dh'`, `drawGripper` shared with "Common Robot Arm Configurations"), `shared/graphics3d.js`, `shared/graphics3d-three.js` (and `demos/common/svd3.js`, moved but not used here); shared (MIT): `shared/exact-pi.js` (integer-angle trig, through `dh-chain.js`), `shared/mma-text.js` (`piFraction`, `parsePiFraction`), `shared/ui.js` (`Controls.slider` with `steps:'mma'` and `format`/`parse` hooks, `setterBar`, `delimiter`, `mmaSliderText`), `shared/mma-lighting.js`, `shared/three-helpers.js`, `shared/mma.js`, `shared/mma-colors.js` |
 | Role in the project | further demonstration (batch B) |
 
 ## 1. Purpose and background
@@ -122,14 +122,18 @@ Slider names: `theta1`–`theta3`, `d1`–`d3`, `r1`–`r3`, `alpha1`–`alpha3`
   −1.2246467991473532e-16 there.
 - `demos/common/robot-draw.js`: `drawZArrow`, `drawCoordAxes`, `GROUND`, `drawJoint(j, d, r, θ, {variant: 'rs'|'dh'|'ac'})`
   (this Demonstration is `'dh'`, §6.2), `drawWristCenter`, `drawGripper(g, r)`.
-- `main.js`: controls with `shared/ui.js` (`Controls.setterBar`, `Controls.slider`, `Controls.delimiter`); θ and α sliders
-  run on the integer n = −32 … 32 (`steps:'mma'`, step 1, value nπ/32, exact; `format` = `piFraction` of `shared/mma-text.js`,
-  `parse` accepts "5π/32", "5 Pi/32" (`parsePiFraction`) or a number in radians, snapped to the nearest π/32, D-DH-07); d, r and g use
-  `steps:'mma'` (value min + k·step, 0 … 1 by 0.01) whose default text (`mmaSliderText`) prints "1" for the exact default
-  and "1.", "0.81" for a moved value; the `format` hook also records that flag in the state (`exact`); one `createViewer`
-  (square 425) with `addMathematicaLighting` and `LinearSRGBColorSpace`; `fitViewer(viewer, {box, zoom: DH_ZOOM})`,
-  `addPrims` and `disposeGroup` from `demos/common/g3d-three.js`; the automation hook `window.__demo` (`getState`,
-  `setState`, `transforms`, `primitives(part)`, `view`, `inkFraction`, `camera`, `cameraPosition`, `evaluations`).
+- `main.js` (v0.1.21): one `Manipulate({…})` call of `shared/manipulate.js`. The controls are Mathematica control specs
+  on variable paths of the model's state (`'j.0'`, `'theta.0'`, …, so `getState()` keeps its shape): three setter bars,
+  θ and α sliders on the integer n = −32 … 32 (`steps:'mma'`, step 1, value nπ/32, exact; `format` = `piFraction` of
+  `shared/mma-text.js`, `parse` accepts "5π/32", "5 Pi/32" (`parsePiFraction`) or a number in radians, snapped to the
+  nearest π/32, D-DH-07), d, r and g sliders (0 … 1 by 0.01) whose text (`mmaSliderText`) prints "1" for the exact default
+  and "1.", "0.81" for a moved value — the control options `Assign` (also records that flag in `exact`) and `Moved`
+  (shows it after reset/setState) —, `Delimiter`s; `resetStops` (Initial settings stops the ⊕ animations); `merge`
+  (setState semantics of the hook). The body returns `{ view, graphics: view.graphic }`; the picture is
+  `{ id: 'view', renderer: View3D({ImageSize: 425, ViewPoint, zoom: DH_ZOOM, thickPx: 3, …}) }` of
+  `shared/graphics3d-view.js` (one viewer kept across evaluations, `addMathematicaLighting` and `LinearSRGBColorSpace`,
+  refit with `fitViewer` only when the bounds change; it draws with `addPrims` of `shared/graphics3d-three.js`). Hook
+  extras: `transforms`, `primitives(part)`, `view`, `inkFraction`, `camera`, `cameraPosition`, `evaluations`.
 - `model.js` also exports `fitCamera` and `groundWidthFraction` (pure copies of fitViewer's arithmetic and the projected
   ground-disc width, for the framing test T-DH-22) and `stateFromSettings` (a snapshot's `Settings` as a port state).
 
@@ -152,7 +156,7 @@ Slider names: `theta1`–`theta3`, `d1`–`d3`, `r1`–`r3`, `alpha1`–`alpha3`
 
 Of the other users of the common modules, only "Robot Manipulator Workspaces" uses RS's `drawJoint` and
 `drawWristCenter` (variant `'rs'`); "Common Robot Arm Configurations" has its own variant `'ac'` and shares `drawGripper`
-with this app; "Manipulability Ellipsoid of a Robot Arm" uses g3d.js, svd3.js and g3d-three.js only.
+with this app; "Manipulability Ellipsoid of a Robot Arm" uses g3d.js, svd3.js and g3d-three.js only. (Since v0.1.21 `g3d.js` and `g3d-three.js` are the MIT modules `shared/graphics3d.js` and `shared/graphics3d-three.js`, the generic SVD is `shared/svd3.js`, and the page draws through `shared/graphics3d-view.js` `View3D`; this table records the v0.1.16 move.)
 
 ### 6.3 State model and evaluation order
 
@@ -207,8 +211,8 @@ npm run bundle -- dh-parameters
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/dh-parameters/`) | 3 | `index.html`, `main.js`, `model.js` |
-| `shared/` | 11 | `exact-pi.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma-lighting.js`, `mma-text.js`, `mma.js`, `requirements.js`, `style.css`, `three-helpers.js`, `ui.js` |
-| `demos/common/` | 4 | `dh-chain.js`, `g3d-three.js`, `g3d.js`, `robot-draw.js` |
+| `shared/` | 20 | `exact-pi.js`, `graphics.js`, `graphics3d-three.js`, `graphics3d-view.js`, `graphics3d.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma-lighting.js`, `mma-text.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-plot.js`, `three-helpers.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
+| `demos/common/` | 2 | `dh-chain.js`, `robot-draw.js` |
 | `vendor/three/` | 9 | `addons/controls/OrbitControls.js`, `addons/lines/Line2.js`, `addons/lines/LineGeometry.js`, `addons/lines/LineMaterial.js`, `addons/lines/LineSegments2.js`, `addons/lines/LineSegmentsGeometry.js`, `addons/renderers/CSS2DRenderer.js`, `three.core.js`, `three.module.js` |
 | added by the bundler | 8 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/dh-parameters/DESIGN.md`, `vendor/three/LICENSE` |
 <!-- bundle-contents:end -->
@@ -228,7 +232,7 @@ Verified by e2e "bundle: dh-parameters runs from its own folder" (A-DH-06): the 
 | Q-DH-03 | quirk kept | The link cuboid is drawn also for r = 0: `Cuboid[{-ar,-ar,d-ar},{0,ar,d+ar}]` is a small box of 0.05 × 0.1 × 0.1 at the joint (snapshot 3). |
 | Q-DH-04 | quirk kept | The gripper turns to "point along d" exactly when r3 = 0 (`If[r != 0, …]`), e.g. snapshots 2, 3 and 5 (r3 = 0.). |
 | Q-DH-05 | quirk kept | Slider labels show exact defaults as "1", "0" and moved values as machine numbers "1.", "0.", "0.81"; θ and α are always exact fractions of π (snapshots 1–5). |
-| D-DH-01 | deviation | Framing: automatic plot range = bounds of all primitives (as RS `primitiveBounds`), camera fitted to the bounding sphere (`fitViewer` of `demos/common/g3d-three.js`) with one zoom factor `DH_ZOOM` = 1.4 and refitted whenever the bounds change, so the picture "breathes" as in the original (ground disc 347.5 pt in snapshot 1, 402.5 pt in snapshot 4). **Decided while implementing:** the draft calibrated the zoom on snapshot 1 alone; that leaves snapshot 4 (the flat planar arm) 5.1 % too small, outside the 4 % tolerance, because the snapshots breathe more than this fit (ratio 1.158 between snapshots 4 and 1 against 1.10). The zoom is therefore fitted to all five snapshots (smallest largest error): 355.2, 370.3, 356.6, 390.6, 354.1 pt, i.e. +2.2 %, 0.0 %, +2.0 %, −3.0 %, +2.5 % (T-DH-22). Mathematica's exact rule is unknown (K-DH-03). |
+| D-DH-01 | deviation | Framing: automatic plot range = bounds of all primitives (as RS `primitiveBounds`), camera fitted to the bounding sphere (`fitViewer` of `shared/graphics3d-three.js`) with one zoom factor `DH_ZOOM` = 1.4 and refitted whenever the bounds change, so the picture "breathes" as in the original (ground disc 347.5 pt in snapshot 1, 402.5 pt in snapshot 4). **Decided while implementing:** the draft calibrated the zoom on snapshot 1 alone; that leaves snapshot 4 (the flat planar arm) 5.1 % too small, outside the 4 % tolerance, because the snapshots breathe more than this fit (ratio 1.158 between snapshots 4 and 1 against 1.10). The zoom is therefore fitted to all five snapshots (smallest largest error): 355.2, 370.3, 356.6, 390.6, 354.1 pt, i.e. +2.2 %, 0.0 %, +2.0 %, −3.0 %, +2.5 % (T-DH-22). Mathematica's exact rule is unknown (K-DH-03). |
 | D-DH-02 | deviation | Colours and lighting as D-RS-02 (`shared/mma-lighting.js`, `LinearSRGBColorSpace`). |
 | D-DH-03 | deviation | Sizes and edges as D-RS-03 (`Thick` = 3 px; default dark edges of cuboids and cylinder rims as 1 px black lines with the face's opacity). The frame arrows are Lines in the original too, so they need no arrowhead approximation. |
 | D-DH-04 | deviation | Slider look of `shared/ui.js`; the value field shows "5π/32" inline instead of a stacked fraction; ⊕ panel as in the other ports (D-CP-04). |
@@ -249,7 +253,7 @@ Verified by e2e "bundle: dh-parameters runs from its own folder" (A-DH-06): the 
 | N-DH-03 | note | The source sets no `ControlPlacement`; the snapshots show the controls at the left of the graphic, which the port follows. |
 | N-DH-04 | note | The body's Module locals `jr = 1/10, ar = 1/40` are unused (DrawJoint and DrawGripper use their own 1/5, 1/20). |
 | N-DH-05 | note | The stored Initialization (SaveDefinitions) also holds stale definitions `DrawGripper[]`, `DrawGripper[0.49]`, `DrawGripper[1]`, `DrawGripper[1.]`, `DrawGripper[g_]` and assignments to `FE`g$$…` from the author's session; none matches the two-argument call. |
-| N-DH-06 | note | `Cuboid[p, q]` takes any two opposite corners (the gripper fingers list the larger coordinate first); the port keeps the corners as written in the data and normalises them where they are drawn (`cuboidCorners` of `demos/common/g3d.js`, used by `g3d-three.js`; `primitiveBounds` is order-independent). |
+| N-DH-06 | note | `Cuboid[p, q]` takes any two opposite corners (the gripper fingers list the larger coordinate first); the port keeps the corners as written in the data and normalises them where they are drawn (`cuboidCorners` of `shared/graphics3d.js`, used by `g3d-three.js`; `primitiveBounds` is order-independent). |
 | N-DH-08 | note | Robot-singularities' code moved to `demos/common/` with this app (§6.5): its regression test T-DH-48 compares hashes of robot-singularities' Td, o3coords, Jacobians, SVDs, ellipsoids and both flattened graphics for its 16 robots with values recorded before the move (`tests/unit/fixtures/robot-singularities.pre-move.json`). Cuboid corner normalisation (N-DH-06) was placed in the renderer (`cuboidCorners`), not in `Cuboid`, because robot-singularities' data for an out-of-range prismatic value (reversed corners, reachable only through the automation hook) must stay bit-identical. |
 | N-DH-07 | note | The saved state equals the source defaults (raw notebook: `\[Theta]1$$ = Rational[5, 32] Pi`, …), so opening and Initial Settings coincide. |
 
@@ -270,6 +274,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 5 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
 | 6 | v0.1.20 | 2026-10-21 | version number only (Manipulate layer extended, eleven more apps migrated to it); no change to this app |
+| 7 | v0.1.21 | 2026-10-23 | `main.js` rewritten on the shared Manipulate layer with a 3D picture (`shared/manipulate.js` + `shared/graphics3d-view.js` `View3D`; Graphics3D data model and renderer moved to MIT `shared/graphics3d.js` / `shared/graphics3d-three.js`, owner decision D1); no change to behaviour or picture (all unit, golden and browser tests passing; three.js scene graph, full-page pixels (SwiftShader) and Manipulate state identical to v0.1.20 at sample settings) |
 
 ## 10. Improvements to consider (not implemented)
 

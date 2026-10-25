@@ -4,7 +4,7 @@
 // demos/prm-3d/model.js — pure port of "Probabilistic Roadmap Method in 3D" (Initialization code + one evaluation of
 // the Manipulate body). No DOM, no three.js. Names, constants and order of operations follow the original
 // (docs/original-source/prm-3d.txt); the functions the three PRM Demonstrations share are in demos/common/prm-core.js
-// (generalised to n dimensions for this app). The two pictures are returned as Graphics3D DATA (demos/common/g3d.js).
+// (generalised to n dimensions for this app). The two pictures are returned as Graphics3D DATA (shared/graphics3d.js).
 import { mLess, mGreater, mUnequal, euclid, roundTo } from '../../shared/mma.js';
 import { NAMED, lighter, darker } from '../../shared/mma-colors.js';
 import {
@@ -14,7 +14,7 @@ import {
 import {
   Cylinder, Cuboid, Sphere, Point, Line, Opacity, EdgeForm, PointSize, RGBColor, GeometricTransformation, affine,
   rotationMatrix, Graphics3D,
-} from '../common/g3d.js';
+} from '../../shared/graphics3d.js';
 
 export { TWO_PI, toroidDist, wrapto0to2pi, toroidLine, toroidLines };
 

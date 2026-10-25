@@ -5,28 +5,15 @@
 // Graphics (path, start, goal and moving cars, locator glyphs) with its PlotLabel, on shared/manipulate.js (browser only).
 import { Manipulate, Locator, Button, Row, None, hookCopy } from '../../shared/manipulate.js';
 import {
-  Annotation, Line, Circle, Point, Disk, Translate, Raw, Style, Subscript, Italic, Thickness, AbsoluteThickness, PointSize,
-  Opacity, EdgeForm, FaceForm, CapForm, GrayLevel, Darker, cssColor, White, Green, Red, Blue, Gray, Orange,
+  Annotation, Line, Disk, Translate, Raw, Style, Subscript, Italic, Opacity, EdgeForm, FaceForm, CapForm, GrayLevel, Darker,
+  cssColor, White, Green, Red,
 } from '../../shared/graphics.js';
 import { svgNode } from '../../shared/svg-plot.js';
 import { el } from '../../shared/ui.js';
 import { mmaNumberString } from '../../shared/mma-extra.js';
-import { carGraphics } from '../common/car-graphics.js';
-import { initialState, evaluate, swapStartGoal, drawPath, drawCar, PLOT_RANGE, LOCATOR_RANGE, TYPES, LOCS0 } from './carpaths.js';
+import { initialState, evaluate, picture, swapStartGoal, PLOT_RANGE, LOCATOR_RANGE, TYPES, LOCS0 } from './carpaths.js';
 
-// Thin = AbsoluteThickness[0.25] (0.25 pt = 0.25 px at the original's ImageSize); the shared 'Thin' is 0.5 px, which
-// drew the construction circles much darker than snapshot 1 (darkest pixel 181 vs 220 of 255, D-CP-03).
-const THIN = AbsoluteThickness(0.25);
-const ARROW = 0.02 * (PLOT_RANGE[0][1] - PLOT_RANGE[0][0]) * 1.04; // Arrowheads[.02]: fraction of the graphic's width
 const DESCR = { 1: 'start position', 2: 'start orientation', 3: 'goal position', 4: 'goal orientation' };
-const car = (c, args, id) => carGraphics(drawCar(...args), c, { testid: id, thin: THIN, arrowSize: ARROW });
-
-/** drawPath[Orange, optPath, start, minRadius, True]: Circle[center, minRadius, {angS, angE}] or Line[{posOld, pos}] */
-const path = (pieces) => pieces.map((p, i) => p && [
-  p.construction && [Gray, PointSize(0.01), Annotation(Point(p.construction.center), `construction-center-${i + 1}`),
-    THIN, Annotation(Circle(p.construction.center, p.construction.r), `construction-circle-${i + 1}`)], // {…, Thin, Gray, Circle[center, minRadius]}
-  Orange, Annotation(p.kind === 'arc' ? Circle(p.center, p.r, [p.angS, p.angE]) : Line([p.from, p.to]), `path-piece-${i + 1}`),
-]);
 /** Locator[p] as a primitive: the default glyph (shared/svg-plot.js locatorGlyph as data: ring and cross hairs, 17 px). */
 const R = (17 / 2.4) * ((30 * 1.04) / 620); // ring radius in world units (world units per px: the padded range / 620)
 const HAIRS = [[-1.6, -0.45], [0.45, 1.6]].flatMap(([a, b]) => [[[a * R, 0], [b * R, 0]], [[0, a * R], [0, b * R]]]);
@@ -53,16 +40,15 @@ let labelEl = null;
 const m = Manipulate({
   name: 'car-paths',
   initial: initialState,
-  body: evaluate, // the body's input corrections (progress, minRadius) are written back into the controls
-  draw: ({ start, goal, sTheta, gTheta, ppos, pTheta, palpha }, s) => [
-    [Thickness(0.005), path(drawPath(s.optPath, start, s.minRadius, true))],
-    car(Green, [[start[0], start[1]], sTheta, 0, 0.2], 'start-car'),
-    car(Red, [[goal[0], goal[1]], gTheta, 0, 0.2], 'goal-car'),
-    car(Blue, [ppos, pTheta, palpha, 0.6], 'moving-car'),
-    // Locator[locsOld[[1]]], Locator[locsOld[[2]], Rotate[colorLocatorOrient[Darker[Green]], sTheta]], … (glyphs only)
-    Annotation(locator(s.locsOld[0]), 'glyph-1'), Annotation(orientGlyph(Darker(Green), sTheta, s.locsOld[1]), 'glyph-2'),
-    Annotation(locator(s.locsOld[2]), 'glyph-3'), Annotation(orientGlyph(Red, gTheta, s.locsOld[3]), 'glyph-4'),
-  ],
+  // the body's input corrections (progress, minRadius) are written back into the controls; the path and the three cars
+  // are Graphics data from carpaths.js picture, followed by Locator[locsOld[[1]]],
+  // Locator[locsOld[[2]], Rotate[colorLocatorOrient[Darker[Green]], sTheta]], … (glyphs only)
+  body: (st) => {
+    const { state: s, view } = evaluate(st);
+    return { state: s, view, graphics: [picture(s, view),
+      Annotation(locator(s.locsOld[0]), 'glyph-1'), Annotation(orientGlyph(Darker(Green), view.sTheta, s.locsOld[1]), 'glyph-2'),
+      Annotation(locator(s.locsOld[2]), 'glyph-3'), Annotation(orientGlyph(Red, view.gTheta, s.locsOld[3]), 'glyph-4')] };
+  },
   // Graphics[…, PlotRange -> {{-15, 15}, {-10, 10}}, ImageSize -> {620, Automatic}, PlotLabel -> …]
   graphics: { PlotRange: PLOT_RANGE, ImageSize: 620, label: 'Plane with the start car (green), the goal car (red), the shortest path (orange) and the moving car (blue)' },
   controls: [ // ControlPlacement -> Top (the Manipulate default); the sliders keep the port's own steps (steps: undefined)

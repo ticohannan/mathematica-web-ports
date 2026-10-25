@@ -6,6 +6,7 @@
 // tools/extract_state.py --snapshots), what the snapshot pictures show (docs/original-snapshots/minkowski-sum-k.png),
 // and the Mathematica harness records (tests/golden/minkowski-sum.harness.json; until the owner's run exists those
 // tests skip with the reason "no harness data (owner run pending)").
+import { annotation, Cases } from '../../shared/graphics.js';
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import { evaluate, initialSettings, robotAt, MOVE_VIEW, PLOT_RANGE } from '../../demos/minkowski-sum/minkowski.js';
@@ -126,9 +127,9 @@ describe('minkowski-sum golden: what the snapshot pictures show', () => {
     const M5 = five.view.minkowskiPoints.map((p) => [p[0] - five.view.oc[0], p[1] - five.view.oc[1]]);
     expect(M5.length).toBe(6);
     expect(onSegment(c5, M5[1], M5[2])).toBe(true); // on the second edge
-    for (const { view } of [three, five]) {
-      expect(view.scene.find((x) => x.role === 'mink-text').at).toEqual([0, 1.1]);
-      expect(view.scene.find((x) => x.role === 'frame').pts.map((p) => Math.abs(p[0]))).toEqual(Array(4).fill(PLOT_RANGE[0][1]));
+    for (const { graphics } of [three, five]) { // the picture as Graphics data (parts are Annotations)
+      expect(Cases(annotation(graphics, 'text-mink-text').g, 'Text')[0].pos).toEqual([0, 1.1]);
+      expect(annotation(graphics, 'frame').g.pts.map((p) => Math.abs(p[0]))).toEqual(Array(4).fill(PLOT_RANGE[0][1]));
     }
   });
 });

@@ -6,10 +6,13 @@
 // (Initialization code + the Manipulate body's computations). No DOM.
 // Function names, constants and order of operations follow the original (docs/original-source/car-paths.txt);
 // modπ / mod2π are spelled modPi / mod2Pi. Paths are lists of path elements [param, steer, gear] (machine reals,
-// as after the original's N[path]).
+// as after the original's N[path]). drawPath, drawCar and picture (the Manipulate's Graphics list without its Locators)
+// return shared/graphics.js Graphics data (v0.1.21).
 import { mEqual, mLess, mGreater, mLessEq, mGreaterEq, mod, roundTo, total } from '../../shared/mma.js';
 import { arcTan, norm as normExact } from '../../shared/mma-exact.js';
 import { minimalBy } from '../../shared/mma-extra.js';
+import { Annotation, Line, Circle, Point, PointSize, Thickness, Thin, Gray, Green, Red, Blue, Orange } from '../../shared/graphics.js';
+import { drawCar } from '../common/car-icon.js';
 
 // ---- constants ----------------------------------------------------------------
 export const sLEFT = -1, sSTRAIGHT = 0, sRIGHT = 1; // Constants for turning
@@ -62,23 +65,29 @@ export function getPos(path, pose, minRadius = 1, progress = 0) {
   return [pos, Theta, Alpha];
 }
 
-// ---- drawCar: geometry of the car icon as data --------------------------------------
+// ---- drawCar: the car icon as Graphics data -----------------------------------------
 // drawCar[xy, Theta, Alpha, opac] and its wheel angles: the shared car icon of the three car Demonstrations
 // (demos/common/car-icon.js; its default options are this Demonstration's car; v0.1.20, before: a copy here).
 export { drawCar, wheelAngle } from '../common/car-icon.js';
 
-// ---- drawPath: geometry of the path as data -------------------------------------
+// ---- drawPath: the path as Graphics data ----------------------------------------
 /**
- * drawPath[color, path, pose, minRadius:1, showConstruction:False]: the path's pieces in drawing order.
- * Returns a list, one entry per path element:
- *   { kind: 'arc', center, r, angS, angE, construction: {center, r} | null }   (Circle[center, minRadius, {angS, angE}])
- *   { kind: 'line', from, to }                                                  (Line[{posOld, pos}])
+ * drawPath[color, path, pose, minRadius:1, showConstruction:False] = {color, Table[…, {e, path}]} as Graphics data, one
+ * entry per path element (k = 1, 2, …):
+ *   {If[showConstruction, {Gray, PointSize[0.01], Point[center], Thin, Gray, Circle[center, minRadius]}, Null],
+ *    Circle[center, minRadius, {angS, angE}]}                      (turns; the parts annotated construction-center-k,
+ *                                                                    construction-circle-k, path-piece-k)
+ *   {Line[{posOld, pos}]}                                           (straight; path-piece-k)
+ *   null                                                            (If[…] without a matching branch gives Null)
+ * Thin = AbsoluteThickness[0.25] (0.25 pt = 0.25 px at the original's ImageSize; D-CP-03).
  */
-export function drawPath(path, pose, minRadius = 1, showConstruction = false) {
+export function drawPath(color, path, pose, minRadius = 1, showConstruction = false) {
   let gear, steer, param, posOld, angS, angE, center;
   let pos = [pose[0], pose[1]];
   let Theta = pose[2];
   const out = [];
+  const arc = (k, c, a1, a2) => [showConstruction && [Gray, PointSize(0.01), Annotation(Point(c), `construction-center-${k}`),
+    Thin, Gray, Annotation(Circle(c, minRadius), `construction-circle-${k}`)], Annotation(Circle(c, minRadius, [a1, a2]), `path-piece-${k}`)];
   for (const e of path) {
     param = e[0]; steer = e[1]; gear = e[2]; posOld = pos;
     if (mEqual(steer, -1)) { // Left
@@ -86,22 +95,22 @@ export function drawPath(path, pose, minRadius = 1, showConstruction = false) {
       angS = Theta - PI / 2; angE = angS + gear * param;
       pos = [pos[0] + minRadius * (Math.cos(angE) - Math.cos(angS)), pos[1] + minRadius * (Math.sin(angE) - Math.sin(angS))];
       Theta = Theta + gear * param;
-      out.push({ kind: 'arc', center, r: minRadius, angS, angE, construction: showConstruction ? { center, r: minRadius } : null });
+      out.push(arc(out.length + 1, center, angS, angE));
     } else if (mEqual(steer, 1)) { // Right
       center = [pos[0] + minRadius * Math.cos(Theta - PI / 2), pos[1] + minRadius * Math.sin(Theta - PI / 2)];
       angS = Theta + PI / 2; angE = angS - gear * param;
       pos = [pos[0] + minRadius * (Math.cos(angE) - Math.cos(angS)), pos[1] + minRadius * (Math.sin(angE) - Math.sin(angS))];
       Theta = Theta - gear * param;
-      out.push({ kind: 'arc', center, r: minRadius, angS, angE, construction: showConstruction ? { center, r: minRadius } : null });
+      out.push(arc(out.length + 1, center, angS, angE));
     } else if (mEqual(steer, 0)) { // Straight
       const k = gear * minRadius * param;
       pos = [posOld[0] + k * Math.cos(Theta), posOld[1] + k * Math.sin(Theta)];
-      out.push({ kind: 'line', from: posOld, to: pos });
+      out.push([Annotation(Line([posOld, pos]), `path-piece-${out.length + 1}`)]);
     } else {
       out.push(null); // If[...] without a matching branch gives Null
     }
   }
-  return out;
+  return [color, out];
 }
 
 // ---- coordinates and angles ----------------------------------------------------
@@ -577,9 +586,23 @@ const numericQ = (v) => typeof v === 'number' && Number.isFinite(v);
 /** Round[x, 0.01] as displayed by the original's plot label. */
 export const round01 = (x) => roundTo(x, 0.01);
 
+/** Arrowheads[.02] in world units: 0.02 × the picture's full width (PlotRange width with the default padding 2 % each side). */
+const ARROW = 0.02 * (PLOT_RANGE[0][1] - PLOT_RANGE[0][0]) * 1.04;
+/**
+ * The Manipulate's Graphics list without the four Locators (drawn by the page), for state s and view v:
+ * {Thickness[0.005], drawPath[Orange, optPath, start, minRadius, True]}, {Green, drawCar[…, sTheta, 0, 0.2]},
+ * {Red, drawCar[…, gTheta, 0, 0.2]}, {Blue, drawCar[ppos, pTheta, palpha, 0.6]}.
+ */
+export const picture = (s, { start, goal, sTheta, gTheta, ppos, pTheta, palpha }) => [
+  [Thickness(0.005), drawPath(Orange, s.optPath, start, s.minRadius, true)],
+  [Green, drawCar([start[0], start[1]], sTheta, 0, 0.2, { id: 'start-car', arrowSize: ARROW })],
+  [Red, drawCar([goal[0], goal[1]], gTheta, 0, 0.2, { id: 'goal-car', arrowSize: ARROW })],
+  [Blue, drawCar(ppos, pTheta, palpha, 0.6, { id: 'moving-car', arrowSize: ARROW })],
+];
+
 /**
  * One evaluation of the Manipulate body, as Mathematica runs it after any control changed.
- * Takes the state (with `locs` possibly moved by the user) and returns { state, view }.
+ * Takes the state (with `locs` possibly moved by the user) and returns { state, view } (the picture: picture).
  */
 export function evaluate(stateIn) {
   const st = { ...stateIn, locs: copyLocs(stateIn.locs), locsOld: copyLocs(stateIn.locsOld), optPath: stateIn.optPath.map((e) => [...e]) };
@@ -648,8 +671,6 @@ export function evaluate(stateIn) {
   // ORIGINAL QUIRK (Q-CP-01): "distance" is the norm of the {x, y, θ} difference (heading difference included).
   const pathLengthValue = round01(pathLength(st.optPath) * st.minRadius);
   const distanceValue = round01(normExact([goal[0] - start[0], goal[1] - start[1], goal[2] - start[2]]));
-  return {
-    state: st,
-    view: { start, goal, sTheta, gTheta, ppos, pTheta, palpha, paths, recomputed, pathLengthValue, distanceValue },
-  };
+  const view = { start, goal, sTheta, gTheta, ppos, pTheta, palpha, paths, recomputed, pathLengthValue, distanceValue };
+  return { state: st, view };
 }

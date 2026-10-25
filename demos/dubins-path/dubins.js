@@ -6,17 +6,24 @@
 // (docs/original-source/dubins-path.txt): angPt2Pt, distPt2Pt, arcLen, drawLSL, drawLSR, drawRSR, drawRSL, drawLRL,
 // drawRLR; the Sort selection; the moving-car Module. Greek names spelled out (θ → Theta, α → Alpha, β → Beta, γ → Gamma).
 //
-// A word is [length, drawing]; drawing = { colour, word, pieces } with pieces
-//   { kind: 'arc', c, r, a1, a2 }   Circle[c, r, {a1, a2}]
-//   { kind: 'line', from, to }      Line[{from, to}]
+// A word is [length, drawing]; drawing = { colour, word, pieces } with pieces shared/graphics.js data
+//   Circle[c, r, {a1, a2}]   { head: 'Circle', c, r, angles: [a1, a2] }
+//   Line[{from, to}]         { head: 'Line', pts: [from, to] }
 // pieces[0..2] are the original's drawing[[2]] … drawing[[4]]; a word that does not exist is [Infinity, null]
-// (the original's {∞, {}}).
+// (the original's {∞, {}}). picture(state, view) is the Manipulate's Graphics list as data (v0.1.21).
 // Numerics (DESIGN §6): tolerant comparisons of reals (shared/mma.js), comparisons with exact 0 plain, Chop 1e-10,
 // a bit-exact ArcTan[x, y] (shared/mma-exact.js), Sqrt of the sum of squares, a/b of machine numbers as a·(1/b) with
 // the grouping of the stored definitions.
 import { mUnequal, mGreater, mLess, mLessEq, chop, roundTo } from '../../shared/mma.js';
 import { arcTan } from '../../shared/mma-exact.js';
 import { mmaNumberString } from '../../shared/mma-extra.js';
+import {
+  Annotation, Inset, Graphics, Line, Circle, Text, AbsoluteThickness, AbsoluteDashing, CapForm, Thickness, FontSize, Opacity,
+  RGBColor, Black, Gray, Red, Green, Blue,
+} from '../../shared/graphics.js';
+import { plotUnitsPerPx } from '../../shared/graphics-extras.js';
+import { NAMED, darker } from '../../shared/mma-colors.js';
+import { drawCar } from '../common/car-icon.js';
 
 const PI = Math.PI;
 const TWO_PI = 2 * PI;
@@ -56,7 +63,7 @@ export const WORD_COLOURS = {
   Pink: [1, 0.5, 0.5], Blue: [0, 0, 1], DarkerYellow: [2 / 3, 2 / 3, 0], Orange: [1, 0.5, 0],
   Brown: [0.6, 0.4, 0.2], DarkerGreen: [0, 2 / 3, 0],
 };
-const arc = (c, r, arcL) => ({ kind: 'arc', c, r, a1: arcL[1], a2: arcL[2] });
+const arc = (c, r, arcL) => Circle(c, r, [arcL[1], arcL[2]]);
 
 /** drawLSL[csL, ceL, Theta, minRadius]: outer tangent of the two left circles (Pink). */
 export function drawLSL(csL, ceL, Theta, minRadius) {
@@ -66,7 +73,7 @@ export function drawLSL(csL, ceL, Theta, minRadius) {
   const arc2 = arcLen(AlphaL2L - PI / 2, Theta - PI / 2, 1);
   const dLSL = dLL + minRadius * (arc1[0] + arc2[0]);
   return [dLSL, { colour: 'Pink', word: 'LSL', pieces: [
-    arc(csL, minRadius, arc1), { kind: 'line', from: add(oLSL, csL), to: add(oLSL, ceL) }, arc(ceL, minRadius, arc2)] }];
+    arc(csL, minRadius, arc1), Line([add(oLSL, csL), add(oLSL, ceL)]), arc(ceL, minRadius, arc2)] }];
 }
 
 /** drawLSR[csL, ceR, Theta, minRadius]: inner tangent, only If[dLR > 2 minRadius, …] (Blue). */
@@ -79,7 +86,7 @@ export function drawLSR(csL, ceR, Theta, minRadius) {
     const arc1 = arcLen(-PI / 2, AlphaL2R - GammaLSR, 1);
     const arc2 = arcLen(PI + AlphaL2R - GammaLSR, Theta + PI / 2, -1);
     drawing = { colour: 'Blue', word: 'LSR', pieces: [
-      arc(csL, minRadius, arc1), { kind: 'line', from: add(oLSR, csL), to: sub(ceR, oLSR) }, arc(ceR, minRadius, arc2)] };
+      arc(csL, minRadius, arc1), Line([add(oLSR, csL), sub(ceR, oLSR)]), arc(ceR, minRadius, arc2)] };
     dLSR = distPt2Pt(add(oLSR, csL), sub(ceR, oLSR)) + minRadius * (arc1[0] + arc2[0]);
   }
   return [dLSR, drawing];
@@ -93,7 +100,7 @@ export function drawRSR(csR, ceR, Theta, minRadius) {
   const arc2 = arcLen(AlphaR2R + PI / 2, Theta + PI / 2, -1);
   const dRSR = dRR + minRadius * (arc1[0] + arc2[0]);
   return [dRSR, { colour: 'DarkerYellow', word: 'RSR', pieces: [
-    arc(csR, minRadius, arc1), { kind: 'line', from: add(oRSR, csR), to: add(oRSR, ceR) }, arc(ceR, minRadius, arc2)] }];
+    arc(csR, minRadius, arc1), Line([add(oRSR, csR), add(oRSR, ceR)]), arc(ceR, minRadius, arc2)] }];
 }
 
 /** drawRSL[csR, ceL, Theta, minRadius]: inner tangent, only If[dRL > 2 minRadius, …] (Orange). */
@@ -106,7 +113,7 @@ export function drawRSL(csR, ceL, Theta, minRadius) {
     const arc1 = arcLen(PI / 2, AlphaR2L + GammaRSL, -1);
     const arc2 = arcLen(-PI + AlphaR2L + GammaRSL, Theta - PI / 2, 1);
     drawing = { colour: 'Orange', word: 'RSL', pieces: [
-      arc(csR, minRadius, arc1), { kind: 'line', from: add(oRSL, csR), to: sub(ceL, oRSL) }, arc(ceL, minRadius, arc2)] };
+      arc(csR, minRadius, arc1), Line([add(oRSL, csR), sub(ceL, oRSL)]), arc(ceL, minRadius, arc2)] };
     dRSL = distPt2Pt(add(oRSL, csR), sub(ceL, oRSL)) + minRadius * (arc1[0] + arc2[0]);
   }
   return [dRSL, drawing];
@@ -172,38 +179,39 @@ export function movingCar(shortestPath, progress, minRadius) {
   const L = shortestPath[0];
   const distTrav = progress * L;
   const [p1, p2, p3] = shortestPath[1].pieces; // drawing[[2]], drawing[[3]], drawing[[4]]
-  const ang1 = p1.a2 - p1.a1;
-  const ang3 = p3.a2 - p3.a1;
+  const ang1 = p1.angles[1] - p1.angles[0];
+  const ang3 = p3.angles[1] - p3.angles[0];
   let angP, xyP, Alpha, ang2 = null, segment;
   if (mLessEq(distTrav, Math.abs(minRadius * ang1))) {
     // ORIGINAL QUIRK (Q-DP-02): Sign[ang1 + 10^-6] — a right first arc of (almost) zero length turns the car by +π/2.
     const m1 = Math.abs(minRadius * ang1);
-    angP = p1.a1 + ang1 * (m1 === 0 ? 0 : distTrav * (1 / m1));
+    angP = p1.angles[0] + ang1 * (m1 === 0 ? 0 : distTrav * (1 / m1));
     xyP = add(p1.c, times(minRadius, [Math.cos(angP), Math.sin(angP)]));
     Alpha = sign(ang1) * minRadius;
     angP += sign(ang1 + 1e-6) * (PI / 2);
     segment = 1;
   } else if (mLessEq(distTrav, L - Math.abs(minRadius * ang3))) {
     segment = 2;
-    // If[Head[drawing[[3]]] == Circle, …]; If[Head[drawing[[3]]] == Line, …] (N-DP-04: a plain kind test)
-    if (p2.kind === 'arc') {
-      ang2 = p2.a2 - p2.a1;
+    // If[Head[drawing[[3]]] == Circle, …]; If[Head[drawing[[3]]] == Line, …] (N-DP-04)
+    if (p2.head === 'Circle') {
+      ang2 = p2.angles[1] - p2.angles[0];
       // K-DP-10: no guard against a zero-length middle arc (as the original)
-      angP = p2.a1 + ang2 * ((distTrav - Math.abs(minRadius * ang1)) * (1 / Math.abs(minRadius * ang2)));
+      angP = p2.angles[0] + ang2 * ((distTrav - Math.abs(minRadius * ang1)) * (1 / Math.abs(minRadius * ang2)));
       xyP = add(p2.c, times(minRadius, [Math.cos(angP), Math.sin(angP)]));
       angP += sign(ang2) * (PI / 2);
       Alpha = sign(ang2) * minRadius;
     }
-    if (p2.kind === 'line') {
+    if (p2.head === 'Line') {
+      const [from, to] = p2.pts;
       Alpha = 0;
-      angP = arcTan(p2.to[0] - p2.from[0], p2.to[1] - p2.from[1]);
-      const k = (distTrav - Math.abs(minRadius * ang1)) * (1 / distPt2Pt(p2.to, p2.from));
-      xyP = add(p2.from, times(k, sub(p2.to, p2.from)));
+      angP = arcTan(to[0] - from[0], to[1] - from[1]);
+      const k = (distTrav - Math.abs(minRadius * ang1)) * (1 / distPt2Pt(to, from));
+      xyP = add(from, times(k, sub(to, from)));
     }
   } else { // in 3rd segment
     segment = 3;
     const m3 = Math.abs(minRadius * ang3);
-    angP = p3.a1 + ang3 * ((distTrav - (L - m3)) * (1 / m3));
+    angP = p3.angles[0] + ang3 * ((distTrav - (L - m3)) * (1 / m3));
     xyP = add(p3.c, times(minRadius, [Math.cos(angP), Math.sin(angP)]));
     angP += sign(ang3) * (PI / 2);
     Alpha = sign(ang3) * minRadius;
@@ -222,8 +230,7 @@ export const PLOT_RANGE = [[-15, 15], [-10, 10]];
 export const GOAL_RANGE = [[-13, -8], [13, 8]]; // {{goalXY, {2, 2}}, {-13, -8}, {13, 8}, Locator}
 /** ORIGINAL QUIRK (Q-DP-07): the Module's placeholder value of shortestPath, always overwritten before use. */
 export const SHORTEST_PATH_PLACEHOLDER = [20, { colour: 'Pink', word: null, pieces: [
-  { kind: 'arc', c: [0, 3], r: 3, a1: -3, a2: -1.3 }, { kind: 'line', from: [0.7, 0.1], to: [4, 1] },
-  { kind: 'arc', c: [2, 2], r: 3, a1: -1.3, a2: (5 * PI) / 4 }] }];
+  Circle([0, 3], 3, [-3, -1.3]), Line([[0.7, 0.1], [4, 1]]), Circle([2, 2], 3, [-1.3, (5 * PI) / 4])] }];
 
 /**
  * The live state = the initial settings (output cell "Variables"/"Specifications", F-DP-12), as machine numbers
@@ -245,9 +252,40 @@ const EXACT_OPENING = initialState();
 export const isExactOpening = (st) => st.goalXY[0] === 2 && st.goalXY[1] === 2 && st.Theta === EXACT_OPENING.Theta
   && st.goalThetaloc[0] === EXACT_OPENING.goalThetaloc[0] && st.goalThetaloc[1] === EXACT_OPENING.goalThetaloc[1];
 
+// ---- the Graphics of the Manipulate body, as data (shared/graphics.js; drawn by the page's shared/manipulate.js) ----
+const COLOUR = { ...WORD_COLOURS, DarkerYellow: darker(NAMED.Yellow), DarkerGreen: darker(NAMED.Green) };
+const THIN = AbsoluteThickness(0.25); // Thin = AbsoluteThickness[0.25] (D-DP-03)
+const DASHED = AbsoluteDashing([4, 4]); // Dashed, measured on snapshot 1: dashes and gaps of about 4 px (D-DP-03)
+// headlights with EdgeForm[None] (F-DP-15); Arrowheads[.02] of the 600 px wide picture without padding (D-DP-08)
+const CAR = { lights: true, beam: 4, headlightEdge: null, arrowSize: 0.02 * plotUnitsPerPx(PLOT_RANGE, 600, 0) * 600 };
+
+/** One word's drawing {colour, Circle[…], Line[…], Circle[…]}, annotated (the word as data-word). */
+const word = (d, id) => Annotation([RGBColor(...COLOUR[d.colour]), ...d.pieces], id, { 'data-word': d.word });
+
+/** Locator[goalThetaloc, Graphics[{Red, four reticle arms, CircleBox[{-0.5, 0.5}, 5], {AbsoluteThickness[3], Opacity[0.3], CircleBox[…, 3]}}, ImageSize -> 17, PlotRange -> {{-8, 8}, {-8, 8}}]] */
+const headingGlyph = (p) => Inset(Graphics([Red, AbsoluteThickness(1),
+  Line([[[0, -8], [0, -2]], [[0, 2], [0, 8]], [[-8, 0], [-2, 0]], [[2, 0], [8, 0]]]), // LineBox arms clipped to ±8
+  Circle([-0.5, 0.5], 5), [AbsoluteThickness(3), Opacity(0.3), Circle([-0.5, 0.5], 3)],
+], { PlotRange: [[-8, 8], [-8, 8]], ImageSize: 17 }), p);
+
+/** The Manipulate's Graphics list (F-DP-14) for state s and view v. */
+export const picture = (s, v) => [
+  [Green, drawCar([0, 0], 0, 0, 0.2, { ...CAR, id: 'start-car' })], // {Green, drawCar[{0,0},0,0,0.2]}
+  [Red, drawCar(s.goalXY, s.Theta, 0, 0.2, { ...CAR, id: 'goal-car' })], // {Red, drawCar[goalXY,Theta,0,0.2]}
+  Annotation(headingGlyph(s.goalThetaloc), 'heading-glyph'),
+  // {Thin, Gray, Dashed, Circle[csL, r], Circle[csR, r], Circle[ceL, r], Circle[ceR, r]}
+  [THIN, Gray, DASHED, CapForm('Butt'), ...['csL', 'csR', 'ceL', 'ceR'].map((n) => Annotation(Circle(v[n], s.minRadius), `turning-circle-${n}`))],
+  // {Thin, dLSL[[2]], …, dRLR[[2]]} (a word that does not exist draws nothing)
+  [THIN, ...v.words.map(([len, d]) => Number.isFinite(len) && d && word(d, `candidate-${d.word}`))],
+  // {Black, Style[Text[StringForm["`` path length, `` distance", …], {0, 8}], FontSize -> 14]}
+  [Black, FontSize(14), Annotation(Text(v.label, [0, 8]), 'plot-label')],
+  [Thickness(0.005), word(v.shortestPath[1], 'shortest-path')], // {Thickness[0.005], shortestPath[[2]]}
+  [Blue, drawCar(v.car.xyP, v.car.angP, v.car.Alpha, 0.8, { ...CAR, id: 'moving-car' })], // {Blue, drawCar[xyP, angP, Alpha, 0.8]}
+];
+
 /**
  * One evaluation of the Manipulate body, as Mathematica runs it after any control changed.
- * Takes the state (goalXY / goalThetaloc possibly moved by the user) and returns { state, view }.
+ * Takes the state (goalXY / goalThetaloc possibly moved by the user) and returns { state, view } (the picture: picture).
  */
 export function evaluate(stateIn) {
   const st = { ...stateIn, goalXY: [...stateIn.goalXY], goalXYold: [...stateIn.goalXYold], goalThetaloc: [...stateIn.goalThetaloc] };
@@ -286,14 +324,12 @@ export function evaluate(stateIn) {
   const distance = round01(Math.sqrt(st.goalXY[0] * st.goalXY[0] + st.goalXY[1] * st.goalXY[1]));
   const label = `${labelNumber(pathLength)} path length, ${labelNumber(distance)} distance`;
   const car = movingCar(shortestPath, st.progress, r);
-  return {
-    state: st,
-    view: {
-      dTheta, csL, csR, ceL, ceR, words, shortestPath, word: shortestPath[1].word,
-      lengths: { LSL: dLSL[0], LSR: dLSR[0], RSR: dRSR[0], RSL: dRSL[0], LRL: dLRL[0], RLR: dRLR[0] },
-      pathLength, distance, label, car,
-    },
+  const view = {
+    dTheta, csL, csR, ceL, ceR, words, shortestPath, word: shortestPath[1].word,
+    lengths: { LSL: dLSL[0], LSR: dLSR[0], RSR: dRSR[0], RSL: dRSL[0], LRL: dLRL[0], RLR: dRLR[0] },
+    pathLength, distance, label, car,
   };
+  return { state: st, view };
 }
 
 /** True when two states agree on every Manipulate variable bit for bit (used by tests and the page). */

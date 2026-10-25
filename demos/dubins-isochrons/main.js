@@ -2,27 +2,19 @@
 // SPDX-FileCopyrightText: Original Wolfram Demonstration by Aaron T. Becker and Shiva Shahrokhi
 // SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // demos/dubins-isochrons/main.js — the Manipulate: plot parameters r, t, set and the car controls path, τ, p (on the
-// left), and Show[{plotReach, Graphics[epiGraphics]}] as Graphics data, on shared/manipulate.js (browser only).
+// left), and Show[{plotReach, Graphics[epiGraphics]}] as Graphics data (epiGraphics from isochrons.js), on
+// shared/manipulate.js (browser only).
 import { Manipulate, Delimiter, None } from '../../shared/manipulate.js';
-import {
-  Annotation, Polygon, Line, Circle, Raw, Style, Row, Italic, Opacity, AbsoluteThickness, AbsoluteDashing, CapForm, Thick,
-  RGBColor, Gray, Blue, Orange, Red, Green, cachedGraphics,
-} from '../../shared/graphics.js';
+import { Annotation, Polygon, Line, Raw, Style, Row, Italic, Opacity, AbsoluteThickness, RGBColor, Gray, cachedGraphics } from '../../shared/graphics.js';
 import { svgNode } from '../../shared/svg-plot.js';
-import { NAMED, css } from '../../shared/mma-colors.js';
-import { drawCar, drawCarSvg } from '../common/car-icon.js';
-import { pxSize, axesGraphics } from '../common/plot-extras.js';
-import { initialState, evaluate, SHOW_RANGE, SETS, PATHS, PLOT_ORDER, PLOT_COLOURS } from './isochrons.js';
+import { css } from '../../shared/mma-colors.js';
+import { pxSize, axesGraphics } from '../../shared/graphics-extras.js';
+import { initialState, evaluate, epiGraphics, SHOW_RANGE, SETS, PATHS, PLOT_ORDER, PLOT_COLOURS } from './isochrons.js';
 
-const PATH_COLOUR = { Blue, Orange, Red, Green };
 const COL = Object.fromEntries(PLOT_ORDER.map((w) => [w, RGBColor(...PLOT_COLOURS[w])]));
-const DASHED = AbsoluteDashing([4, 4]); // Dashed: about 4 px dashes and gaps at ImageSize 440 (D-DI-04)
 const axes = cachedGraphics(), plotPart = cachedGraphics(); // the axes once; plotReach only when it changes
 const fmt = (x) => (Math.round(x * 1e4) / 1e4).toString();
 const pathD = (polys) => polys.map((q) => `M${q.map((p) => `${fmt(p[0])},${fmt(p[1])}`).join('L')}Z`).join('');
-
-/** drawCar[xy, θ, α, opac, .5, lights] in a colour (demos/common/car-icon.js, not yet written as Graphics data) */
-const car = (c, xy, theta, alpha, opac, lights, id) => Raw((plot, g) => drawCarSvg(plot, g, drawCar(xy, theta, alpha, opac, { lights, beam: 8, headlightEdge: null }), { colour: c, testid: id }));
 
 /** plotReach: ParametricPlot of the four isochrons with the Prolog's grey polygons, or the four "≤" regions */
 const plotReach = (pr) => (pr.set === '=' ? [
@@ -41,23 +33,16 @@ const plotReach = (pr) => (pr.set === '=' ? [
 const m = Manipulate({
   name: 'dubins-isochrons',
   initial: initialState, // the live state = the initial settings, with plotReach computed (F-DI-14, D-DI-10)
-  body: evaluate,
   // Show[{plotReach, Graphics[epiGraphics]}, AspectRatio -> Automatic, ImageSize -> {440}, AxesOrigin -> {0, 0},
-  //   PlotRange -> {{-15, 15}, {-16, 16}}]; axes with automatic ticks in front of the plot (F-DI-15)
-  draw: (v, s) => [
-    plotPart([s.plotReach], () => plotReach(s.plotReach)),
-    axes([], () => axesGraphics({
+  //   PlotRange -> {{-15, 15}, {-16, 16}}]; axes with automatic ticks in front of the plot (F-DI-15); epiGraphics as
+  //   data from isochrons.js
+  body: (st) => {
+    const { state, view } = evaluate(st);
+    return { state, view, graphics: [plotPart([state.plotReach], () => plotReach(state.plotReach)), axes([], () => axesGraphics({
       range: [[-16.5, 16.5], [-17.6, 17.6]], unitsPerPx: pxSize(SHOW_RANGE, 440, 0.05), fontPx: 11, thicknessPx: 1,
       color: [0.6, 0.6, 0.6], labelColor: [0.2, 0.2, 0.2],
-    })),
-    // epiGraphics = {{Dashed, Gray, Circle[{r, 0}, r], Circle[{-r, 0}, r]}, {Thick, pathGraphics},
-    //   Red, drawCar[{0, 0}, π/2, 0, .5, .5, False], Green, drawCar[cxy, cθ, cα, .8, .5, True]}
-    [DASHED, Gray, CapForm('Butt'), Annotation(Circle([s.r, 0], s.r), 'turning-circle-right'), Annotation(Circle([-s.r, 0], s.r), 'turning-circle-left')],
-    [Thick, PATH_COLOUR[v.pathGraphics.colour], Annotation(v.pathGraphics.pieces.map((p) => (p.kind === 'arc' ? Circle(p.c, p.r, [p.a1, p.a2]) : Line([p.from, p.to]))),
-      'path-graphics', { 'data-path': v.pathGraphics.path })],
-    car(NAMED.Red, [0, 0], Math.PI / 2, 0, 0.5, false, 'start-car'),
-    car(NAMED.Green, v.cxy, v.cTheta, v.cAlpha, 0.8, true, 'moving-car'),
-  ],
+    })), epiGraphics(state.r, view)] };
+  },
   graphics: { PlotRange: SHOW_RANGE, ImageSize: 440, PlotRangePadding: 0.05, label: 'Isochrons (or reachable regions) of a Dubins car with the path and the car at time p t / 100' },
   controls: [ // ControlPlacement -> Left
     'plot parameters', // Style["plot parameters", 12]

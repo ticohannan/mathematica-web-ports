@@ -13,11 +13,9 @@ import {
 import { singularspace3D, singularphasespace3D } from '../../demos/robot-singularities/singular-sets.js';
 import { svd3, matrixRank, manipEllip } from '../../demos/robot-singularities/svd3.js';
 import {
-  flatten, Show, Graphics3D, Red, Thick, Opacity, Sphere, Line, Rotate, infinitePlanePolygon, sampleSurface,
+  flatten, Graphics3D, Red, Thick, Opacity, Sphere, Line, infinitePlanePolygon, sampleSurface,
   sampleCurve, sampleCircle, primitiveBounds,
 } from '../../demos/robot-singularities/g3d.js';
-import * as THREE from 'three';
-import { MMA_DEFAULT_LIGHTS, addMathematicaLighting, imageScaledDirection } from '../../shared/mma-lighting.js';
 import { initialState, evaluate, selectType, drawJoint, drawCoordAxes } from '../../demos/robot-singularities/model.js';
 
 const π = Math.PI;
@@ -155,23 +153,7 @@ describe('velocity Jacobians (transcribed)', () => {
   });
 });
 
-describe('Graphics3D data (g3d)', () => {
-  it('flatten applies directives in order and scopes them to lists', () => {
-    const p = flatten(Graphics3D([Red, Sphere([[0, 0, 0], [0, 0, 2]], 0.15), Thick, Opacity(0.4), Line([[0, 0, 0], [0, 0, 4]]), [Opacity(0.3), Sphere([0, 0, 2], 2)], Line([[1, 1, 1], [2, 2, 2]])]));
-    expect(p.map((x) => [x.type, x.opacity, x.thickness])).toEqual([['sphere', 1, 'Normal'], ['line', 0.4, 'Large'], ['sphere', 0.3, 'Large'], ['line', 0.4, 'Large']]);
-    expect(p.every((x) => x.color.join() === '1,0,0')).toBe(true);
-  });
-  it('Show keeps the styles of each graphic separate and takes options from the first', () => {
-    const g = Show(Graphics3D([Red, Opacity(0.5)], { PlotLabel: 'a' }), Graphics3D([Sphere([0, 0, 0], 1)], { PlotLabel: 'b', Axes: true }));
-    expect(g.options).toEqual({ PlotLabel: 'a', Axes: true });
-    const [s] = flatten(g);
-    expect(s.color).toBe(null);
-    expect(s.opacity).toBe(1);
-  });
-  it('Rotate turns about an axis through the origin (π/2 about y maps z to x)', () => {
-    const [l] = flatten(Rotate(Line([[0, 0, 0], [0, 0, 1]]), π / 2, [0, 1, 0]));
-    close3(l.points[1], [1, 0, 0], 15);
-  });
+describe('Graphics3D data (g3d) — generic cases in tests/unit/graphics3d.test.js', () => {
   it('infinitePlanePolygon clips the plane θ2 + θ3/2 = π/2 to the plot range box', () => {
     const box = [[-3.15, 3.15], [-3.15, 3.15], [-3.15, 3.15]];
     const poly = infinitePlanePolygon([[1, 0, π], [0, 1.5 * π, -2 * π], [0, π / 2, 0]], box);
@@ -179,11 +161,6 @@ describe('Graphics3D data (g3d)', () => {
     // hand: x = ±3.15, z = ±3.15, y = π/2 - z/2
     const want = [[3.15, π / 2 - 1.575, 3.15], [-3.15, π / 2 - 1.575, 3.15], [3.15, π / 2 + 1.575, -3.15], [-3.15, π / 2 + 1.575, -3.15]];
     for (const w of want) expect(poly.some((q) => norm(sub(q, w)) < 1e-9)).toBe(true);
-  });
-  it('infinitePlanePolygon of a plane lying on a face of the box is that face', () => {
-    const poly = infinitePlanePolygon([[1, 0, 0], [1, 1, 0], [0, 1, 0]], [[-3.15, 3.15], [-3.15, 3.15], [0, 1]]);
-    expect(poly).toHaveLength(4);
-    for (const q of poly) expect(q[2]).toBe(0);
   });
 });
 
@@ -292,7 +269,7 @@ describe('SVD and manipulability ellipsoid', () => {
     close3(d.U.map((r) => Math.abs(r[2])), [1, 0, 0], 14);
   });
   it('svd3 reconstructs A = U Σ Vᵀ with orthogonal U and V and descending singular values', () => {
-    const mats = [[[1, 2, 3], [4, 5, 6], [7, 8, 10]], [[0, 1, 0], [0, 0, 1], [1, 0, 0]], [[1, 1, 1], [1, 1, 1], [1, 1, 1]], [[0, 0, 0], [0, 0, 0], [0, 0, 0]], myJacob(16, 0.3, -1, 2)];
+    const mats = [myJacob(16, 0.3, -1, 2), myJacob(4, 0.7, -0.2, 1.3)]; // generic matrices: tests/unit/svd3.test.js
     for (const A of mats) {
       const d = svd3(A);
       const R = reconstruct(d);
@@ -307,20 +284,6 @@ describe('SVD and manipulability ellipsoid', () => {
     const AtA = [0, 1, 2].map((i) => [0, 1, 2].map((j) => A.reduce((s, r) => s + r[i] * r[j], 0)));
     expect(S.reduce((s, x) => s + x * x, 0)).toBeCloseTo(AtA[0][0] + AtA[1][1] + AtA[2][2], 12);
     expect(S[0] * S[1] * S[2]).toBeCloseTo(Math.abs(det(A)), 12);
-  });
-  it('matrixRank uses the relative tolerance 3 eps of the largest singular value', () => {
-    // REGRESSION PIN of the port's choice (K-RS-05): Mathematica's data only bound the tolerance between 1e-17 and 1e-13
-    const eps = 2 ** -52;
-    expect(matrixRank([1, 0.5, 2 * eps])).toBe(2);
-    expect(matrixRank([1, 0.5, 4 * eps])).toBe(3);
-    expect(matrixRank([1e-10, 0.5e-10, 1e-27])).toBe(2); // relative, not absolute
-    expect(matrixRank([1e-10, 0.5e-10, 1e-20])).toBe(3);
-    expect(matrixRank([0, 0, 0])).toBe(0);
-  });
-  it('svd3 orders repeated singular values by the dominant axis of their singular vectors', () => {
-    const d = svd3([[0, 0, 2], [2, 0, 0], [0, 2, 0]]); // columns 2 e_y, 2 e_z, 2 e_x
-    expect(d.S).toEqual([2, 2, 2]);
-    expect(d.U.map((r) => r.map(Math.abs))).toEqual([[1, 0, 0], [0, 1, 0], [0, 0, 1]]);
   });
   it('manipEllip halves the singular values, draws arrows and rings only for Σ_ii > 0.1 and the ellipsoid only at full rank', () => {
     const e0 = manipEllip([[0, 0, 0], [2, 0, 0], [0, 2, 1]], [2, 0, 2]);
@@ -434,29 +397,5 @@ describe('Manipulate body', () => {
     expect(a).toEqual([expect.objectContaining({ type: 'sphere', centers: [[0.5, -1, 2]], radius: 0.2, color: [0, 0, 1] })]);
     const b = extra(evaluate({ ...st, showManipulability: true }).view);
     expect(b[1]).toMatchObject({ type: 'sphere', radius: 0.5, opacity: 0.5, color: [0.87, 0.94, 1] });
-  });
-});
-
-describe('shared/mma-lighting.js', () => {
-  it('mma-lighting: the documented default lights of Lighting -> Automatic', () => {
-    // https://reference.wolfram.com/language/ref/Lighting.html
-    expect(MMA_DEFAULT_LIGHTS).toEqual([
-      { kind: 'Ambient', color: [0.4, 0.2, 0.2] },
-      { kind: 'Directional', color: [0, 0.18, 0.5], imageScaled: [2, 0, 2] },
-      { kind: 'Directional', color: [0.18, 0.5, 0.18], imageScaled: [2, 2, 3] },
-      { kind: 'Directional', color: [0.5, 0.18, 0], imageScaled: [0, 2, 2] },
-      { kind: 'Directional', color: [0, 0, 0.18], imageScaled: [0, 0, 2] },
-    ]);
-    expect(imageScaledDirection([0, 2, 2])).toEqual([-0.5, 1.5, 2]); // orange from the top left, toward the viewer
-  });
-  it('mma-lighting: replaces the lights of a camera with one ambient and four directional lights', () => {
-    const cam = new THREE.PerspectiveCamera();
-    cam.add(new THREE.AmbientLight(0xffffff, 1), new THREE.DirectionalLight(0xffffff, 1));
-    addMathematicaLighting(cam);
-    const lights = cam.children.filter((o) => o.isLight);
-    expect(lights.map((l) => l.type)).toEqual(['AmbientLight', 'DirectionalLight', 'DirectionalLight', 'DirectionalLight', 'DirectionalLight']);
-    expect(lights[4].color.toArray()).toEqual([0, 0, 0.18]);
-    expect(lights[2].position.toArray()).toEqual([1.5, 1.5, 3]);
-    expect(lights[1].intensity).toBeCloseTo(Math.PI, 14);
   });
 });

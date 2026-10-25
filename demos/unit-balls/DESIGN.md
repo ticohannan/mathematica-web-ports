@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.20 |
+| Code version: | 0.1.21 |
 | Document revision | 5 (2026-10-17) — §11 Errors in the original (R-C); checklist items as operator procedures (R-B) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Unit Balls for Different p-Norms in 2D and 3D", contributed by Aaron T. Becker and Ravi Patel, published December 29, 2020 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/UnitBallsForDifferentPNormsIn2DAnd3D/>. Readable source: [`docs/original-source/unit-balls.txt`](../../docs/original-source/unit-balls.txt) (the flattened `(…)^1/p` is `(…)^(1/p)` in the notebook); saved state: `tests/golden/unit-balls.original-state.json`; snapshots: `docs/original-snapshots/unit-balls-1…7.png` |
-| Port files | `norms.js` (the original's functions, p values and their display, plot ranges, surface and mesh-line generators; pure), `plot3d.js` (three.js drawing: box, axes, labels, lighting), `main.js` (controls, evaluation, test hook), `index.html` |
+| Port files | `norms.js` (the original's functions, p values and their display, plot ranges, surface and mesh-line generators; pure), `plot3d.js` (the picture of one evaluation: the fitted `LIGHTING`, `COLORS`, `FRAMING`, the two plots, the plane z = 1, axes, ticks, labels and plot label of this app, drawn with `shared/plot3d.js`; the renderer `UnitBallsView`), `main.js` (the Manipulate on `shared/manipulate.js`: the dimension setter, the formula line and the two p controls as `Control` factories, the body `scene(state)`, the test hook; v0.1.21), `index.html`; shared (MIT): `shared/plot3d.js` (the generic Plot3D frame: viewer, BoxRatios group, lit-surface shader, line segments, box edges, tick segments, anchored labels, framing; v0.1.21), `shared/manipulate.js`, `shared/three-helpers.js`, `shared/ui.js` |
 | Role in the project | further demonstration (extra proof of concept alongside the motion-planning port); developed in a separate, unpublished repository and added to this site in v0.1.12; WebGL 2 page (DEC-22) |
 
 ## 1. Purpose and background
@@ -110,13 +110,18 @@ matches any text. Checked by the browser test "every control on … is specified
   `sliderPosition`; the plot ranges (`plotRange2D` = table `PLOT_RANGE_2D_Z_MEASURED`, else `plotRangeZ2DRule`;
   `PADDING`); the generators `heightField`, `unitBallSurface`, `meshLines`; `scene(state)` = everything one
   evaluation of the Manipulate body draws, as data.
-- **Drawing** (`plot3d.js`): `shared/three-helpers.js` `createViewer` with the scaled box [−0.5, 0.5]³ (centre 0,
-  longest side 1), so the camera sits at the ViewPoint exactly as in Mathematica; each plot is placed in a group
-  scaled from data coordinates to the box with its BoxRatios. Surfaces use a small shader (`LIGHTING`, `COLORS`),
-  lines use `LineSegments2` (1 px), labels are CSS2D elements anchored at box points with offsets in pt.
-  The renderer writes colours without sRGB conversion, because Mathematica combines colours on their sRGB values.
-- **Controls** (`main.js`): `shared/ui.js` setter bars and slider; the slider's value label is a text field of the
-  page (p may be a fraction or ∞). Every control change re-evaluates the body (slider drags at most once per frame),
+- **Drawing** (`plot3d.js` `drawUnitBalls`, renderer `UnitBallsView`; the generic parts in `shared/plot3d.js`, MIT since
+  v0.1.21): `createPlot3D` makes a `shared/three-helpers.js` viewer with the scaled box [−0.5, 0.5]³ (centre 0, longest
+  side 1), so the camera sits at the ViewPoint exactly as in Mathematica; each plot is placed in a group scaled from data
+  coordinates to the box with its BoxRatios (`scaledBoxGroup`). Surfaces use the one-light shader `litSurfaceMaterial`
+  with this app's fitted `LIGHTING` and `COLORS`, lines use `LineSegments2` (1 px; `boxEdgeSegments`, `tickSegments`
+  with this app's tick values and lengths), labels are CSS2D elements anchored at box points (`anchored`) with offsets in
+  pt; `frame` applies this app's `FRAMING`. The renderer writes colours without sRGB conversion, because Mathematica
+  combines colours on their sRGB values.
+- **Controls** (`main.js`, one `Manipulate({…})` call of `shared/manipulate.js` since v0.1.21): the dimension setter bar
+  and the rest of the Column (formula line, "discrete p" setter bar, "continuous p" slider) as `Control` factories over
+  `shared/ui.js` setter bars and slider, both p controls showing the one variable p; the slider's value label is a text
+  field of the page (p may be a fraction or ∞); the formula follows the dimension in `after`. Every control change re-evaluates the body (slider drags at most once per frame),
   as Manipulate does, and the new graphic starts from the default view.
 - **Measured from the snapshots** (no Mathematica available; the snapshots are 900 px wide for the 648.5 pt wide
   Manipulate, 1.388 px/pt, the 400 pt image at x 315 … 870, y 49.5 … 604.5):
@@ -165,7 +170,7 @@ Owner rule R-A: this one app can be taken out of the repository and hosted anywh
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/unit-balls/`) | 4 | `index.html`, `main.js`, `norms.js`, `plot3d.js` |
-| `shared/` | 7 | `mma-exact.js`, `mma-extra.js`, `mma.js`, `requirements.js`, `style.css`, `three-helpers.js`, `ui.js` |
+| `shared/` | 15 | `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `plot3d.js`, `random.js`, `requirements.js`, `style.css`, `svg-plot.js`, `three-helpers.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
 | `vendor/three/` | 9 | `addons/controls/OrbitControls.js`, `addons/lines/Line2.js`, `addons/lines/LineGeometry.js`, `addons/lines/LineMaterial.js`, `addons/lines/LineSegments2.js`, `addons/lines/LineSegmentsGeometry.js`, `addons/renderers/CSS2DRenderer.js`, `three.core.js`, `three.module.js` |
 | added by the bundler | 8 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/unit-balls/DESIGN.md`, `vendor/three/LICENSE` |
 <!-- bundle-contents:end -->
@@ -234,6 +239,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 8 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 9 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
 | 10 | v0.1.20 | 2026-10-21 | version number only (Manipulate layer extended, eleven more apps migrated to it); no change to this app |
+| 11 | v0.1.21 | 2026-10-23 | `main.js` rewritten on the shared Manipulate layer (`shared/manipulate.js`: controls, state, reset, hook) with the app's own three.js renderer object for its picture; generic parts moved to MIT shared modules (owner decision D1): Plot3D box, ticks and lighting shader → `shared/plot3d.js`; the fitted constants stay in `plot3d.js`; no change to behaviour or picture (all unit, golden and browser tests passing; three.js scene graph, full-page pixels (SwiftShader) and Manipulate state identical to v0.1.20 at sample settings) |
 
 ## 10. Improvements to consider (not implemented)
 

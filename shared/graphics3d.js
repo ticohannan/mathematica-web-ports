@@ -1,21 +1,29 @@
 // SPDX-FileCopyrightText: 2026 Tico Hannan
-// SPDX-FileCopyrightText: Original Wolfram Demonstrations "Robot Singularities in Three-Link Manipulators" by Aaron T. Becker and Yitong Lu and "Denavit-Hartenberg Parameters for a Three-Link Robot" by Aaron T. Becker and Mary Burbage
-// SPDX-License-Identifier: CC-BY-NC-SA-3.0
-// demos/common/g3d.js — a tiny, pure model of Mathematica's Graphics3D language, so that the originals'
-// hand-written graphics (singular sets, robot joints, manipulability ellipsoid, DH frames and grippers) can be
-// written as DATA close to the source: directives (Red, Thick, Opacity[...]) apply to the primitives after them
-// within the same list; nested lists scope directives; Show combines graphics (each keeps its own styles,
-// options of the first graphic win); ParametricPlot3D curves/surfaces are kept as functions + ranges.
-// `flatten` resolves a graphic into a list of styled primitives. No DOM, no three.js.
-// Moved unchanged from demos/robot-singularities/g3d.js (v0.1.16, DH-family move; robot-singularities keeps a
-// re-export shim there). Additions, none of which changes a graphic that does not use them:
+// SPDX-License-Identifier: MIT
+// shared/graphics3d.js — a small, pure model of Mathematica's Graphics3D language, so that 3D pictures can be
+// written as DATA close to Wolfram Language: directives (Red, Thick, Opacity[...]) apply to the primitives after them
+// within the same list; nested lists scope directives; Show combines graphics (each keeps its own styles, options of the
+// first graphic win); ParametricPlot3D curves/surfaces are kept as functions + ranges. `flatten` resolves a graphic into
+// a list of styled primitives (drawn in three.js by shared/graphics3d-three.js). No DOM, no three.js.
+// Generic (no code of a Demonstration): moved to shared/ under MIT in v0.1.21 (owner decision D1) from
+// demos/common/g3d.js (first written for robot-singularities, v0.1.16 DH-family move), unchanged except mul4Fma (moved
+// here from demos/common/dh-chain.js). Notes kept from there:
 //   - EdgeForm[] / EdgeForm[c]: directive `EdgeForm(c)` (EdgeForm() = no edges); a flattened primitive carries
 //     `edgeForm` only when one was given ('None' or an RGB list), so existing outputs keep their exact shape;
 //   - Cuboid[p, q] with its corners in any order (Mathematica draws the box between two opposite corners):
-//     `cuboidCorners(prim)` gives the componentwise min / max box; the flattened data keep the corners as written
-//     (dh-parameters N-DH-06); primitiveBounds was already order-independent; g3d-three.js draws the normalised box.
-//   rotationMatrix stays on Math.cos/Math.sin (robot-singularities' drawCoordAxes rotates by π/2 through it).
-import { NAMED, darker } from '../../shared/mma-colors.js';
+//     `cuboidCorners(prim)` gives the componentwise min / max box; the flattened data keep the corners as written;
+//     primitiveBounds is order-independent; graphics3d-three.js draws the normalised box.
+//   rotationMatrix stays on Math.cos/Math.sin (a rotation by π/2 through it is not exact, as in Mathematica with machine angles).
+// Added in v0.1.21 for the 3D pictures of shared/graphics3d-view.js (additive; existing outputs unchanged):
+//   - GraphicsComplex[pts, prims]: primitives that index a point list (1-based, as Mathematica); a Polygon of several
+//     index lists flattens to ONE {type: 'mesh', points, polygons (0-based)} (an indexed surface, smooth-shaded);
+//   - Group3D(content, { key }): a part of the picture drawn as its own group (no Mathematica counterpart; flatten and
+//     primitiveBounds see through it); with a `key`, the renderer reuses the part's last drawing while the key is the
+//     same (===) — the 3D counterpart of shared/graphics.js cachedGraphics; groupsOf(graphics) lists the parts;
+//   - pure helpers of the renderer: clipPlaneData (explicit PlotRange → six clipping planes), boxRatioTransform
+//     (BoxRatios), niceTicks (Ticks -> Automatic), frameData (Boxed / Axes / Ticks / AxesLabel geometry), imageWidth.
+import { NAMED, darker } from './mma-colors.js';
+import { fma } from './mma-exact.js';
 
 // ---- directives -------------------------------------------------------------------------------------
 const color = (c) => ({ directive: 'color', value: c });
@@ -63,12 +71,29 @@ export const Point = (p) => ({ prim: 'point', points: isPoint(p) ? [p] : p });
 export const Arrow = (points) => ({ prim: 'arrow', points });
 /** Ellipsoid[c, Σ] with Σ a (diagonal) positive semi-definite matrix: {x : (x-c).Σ^-1.(x-c) <= 1} */
 export const Ellipsoid = (center, Sigma) => ({ prim: 'ellipsoid', center, Sigma });
-/** a sampled closed circle in the xy plane (stands for splineCircle[{0,0,0}, 1, {0, 2π}], an exact circle) */
+/**
+ * GraphicsComplex[{p1, p2, …}, prims]: inside, Polygon and Line take 1-based indices into the points instead of
+ * coordinates (Polygon[{i, j, k, …}] or Polygon[{{…}, {…}, …}] several polygons; Line[{i, j, …}]).
+ */
+export const GraphicsComplex = (points, content) => ({ prim: 'graphicsComplex', points, content });
+/**
+ * Group3D(content, { key }): a part drawn as its own group (a THREE.Group of the picture), see the file header. Only
+ * top-level parts of a Graphics3D become groups (shared/graphics3d-view.js); directives outside do not reach inside.
+ */
+export const Group3D = (content, { key } = {}) => ({ prim: 'group', content, key });
+/** a sampled closed circle in the xy plane (an exact unit circle, sampled when drawn) */
 export const UnitCircle = () => ({ prim: 'circle' });
 
 // ---- transforms ---------------------------------------------------------------------------------------
 const I4 = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]];
 export const mul4 = (A, B) => A.map((row) => [0, 1, 2, 3].map((j) => row[0] * B[0][j] + row[1] * B[1][j] + row[2] * B[2][j] + row[3] * B[3][j]));
+/**
+ * 4x4 machine-matrix product as Mathematica 15.0.1 computes Dot of two machine (packed) TransformationFunction
+ * matrices: every entry is the fused multiply-add chain fma(a3, b3, fma(a2, b2, fma(a1, b1, a0*b0))) (the dgemm
+ * kernel). Evidence: a Mathematica 15.0.1 harness run (this project's arm-configurations port, H-AC-11) reproduced
+ * bit for bit, where the plain left-to-right sum (mul4) differs in the last bit of 3 entries. `+ 0` turns -0 into 0.
+ */
+export const mul4Fma = (A, B) => A.map((row) => [0, 1, 2, 3].map((j) => fma(row[3], B[3][j], fma(row[2], B[2][j], fma(row[1], B[1][j], row[0] * B[0][j]))) + 0));
 /** 4x4 from {m (3x3), v} (GeometricTransformation[g, {m, v}]) */
 export const affine = (m, v = [0, 0, 0]) => [[...m[0], v[0]], [...m[1], v[1]], [...m[2], v[2]], [0, 0, 0, 1]];
 /** RotationMatrix[θ, w] (right-handed, w normalised) */
@@ -146,6 +171,8 @@ export function flatten(g, style = DEFAULT_STYLE, M = I4, out = []) {
   }
   if (g.transform) return flatten(g.content, style, mul4(M, g.transform), out);
   if (!g.prim) return out; // Null (an If[...] without else)
+  if (g.prim === 'group') return flatten(g.content, style, M, out);
+  if (g.prim === 'graphicsComplex') return flattenComplex(g, style, M, out);
   const s = { color: style.color, opacity: style.opacity, thickness: style.thickness, pointSize: style.pointSize, arrowheads: style.arrowheads };
   if (style.edgeForm != null) s.edgeForm = style.edgeForm;
   const ident = M === I4;
@@ -166,6 +193,136 @@ export function flatten(g, style = DEFAULT_STYLE, M = I4, out = []) {
     default: throw new Error(`unknown primitive ${g.prim}`);
   }
   return out;
+}
+
+/** GraphicsComplex: indices resolved; a Polygon of several index lists becomes one 'mesh' primitive */
+function flattenComplex(gc, style, M, out) {
+  const at = (i) => gc.points[i - 1];
+  const walk = (c, st) => {
+    if (c == null) return;
+    if (Array.isArray(c)) { for (const e of c) { if (e && e.directive) st = applyDirective(st, e); else walk(e, st); } return; }
+    if (c.prim === 'polygon' && Array.isArray(c.points[0])) {
+      const s = { color: st.color, opacity: st.opacity, thickness: st.thickness, pointSize: st.pointSize, arrowheads: st.arrowheads };
+      if (st.edgeForm != null) s.edgeForm = st.edgeForm;
+      out.push({ type: 'mesh', points: gc.points.map((p) => (M === I4 ? p.slice() : apply4(M, p))), polygons: c.points.map((l) => l.map((i) => i - 1)), ...s });
+    } else if (c.prim === 'polygon' || c.prim === 'line' || c.prim === 'point' || c.prim === 'arrow') flatten({ ...c, points: c.points.map(at) }, st, M, out);
+    else flatten(c, st, M, out);
+  };
+  walk(gc.content, style);
+  return out;
+}
+
+/** The parts of a graphic for the renderer: [{content, key}] — each top-level Group3D one part, runs of other content one part each. */
+export function groupsOf(g) {
+  const list = g && g.head === 'Graphics3D' ? g.content : Array.isArray(g) ? g : [g];
+  const parts = [];
+  let run = null;
+  for (const e of list) {
+    if (e && e.prim === 'group') { parts.push({ content: e.content, key: e.key }); run = null; } else {
+      if (!run) { run = { content: [], key: undefined }; parts.push(run); }
+      run.content.push(e);
+    }
+  }
+  return parts;
+}
+
+// ---- frame, clipping, BoxRatios (pure; shared/graphics3d-view.js draws them) ------------------------------------
+/**
+ * The six clipping planes that keep the inside of box {{x0, x1}, {y0, y1}, {z0, z1}} (explicit PlotRange), as
+ * [normal, constant] (three.js Plane: normal·p + constant >= 0 is kept), widened by `padding`; order 'min-first'
+ * ({1,0,0} x >= x0, then {-1,0,0} x <= x1, per axis) or 'max-first' (the upper plane of each axis first).
+ */
+export function clipPlaneData(box, { padding = 0, order = 'min-first' } = {}) {
+  return box.flatMap(([a, b], i) => {
+    const n = [0, 0, 0]; n[i] = 1;
+    const m = [0, 0, 0]; m[i] = -1;
+    const lo = [n, padding ? -a + padding : -a], hi = [m, padding ? b + padding : b];
+    return order === 'max-first' ? [hi, lo] : [lo, hi];
+  });
+}
+
+/**
+ * BoxRatios -> {rx, ry, rz}: the plot range box drawn as a box of these ratios, longest side 1, centred at the origin.
+ * Returns {scale, position} (data → drawn: q = scale·p + position) and worldBox (the drawn box).
+ */
+export function boxRatioTransform(box, ratios) {
+  const top = Math.max(...ratios);
+  const side = ratios.map((r) => r / top);
+  return {
+    scale: box.map(([a, b], k) => side[k] / (b - a)),
+    position: box.map(([a, b], k) => (-(a + b) / 2 / (b - a)) * side[k]),
+    worldBox: side.map((s) => [-s / 2, s / 2]),
+  };
+}
+
+/**
+ * Ticks -> Automatic for the range [a, b] (pure): major step = the largest of {1, 2, 5}·10^n not above (b - a)/2,
+ * minor step = major/4 (mantissa 2) or major/5; values k·step (k/(1/step) for steps below 1, so 0.3 is 3/10). Returns
+ * [[v, label, length]] in increasing order: every minor position inside [a, b], majors labelled ("2", "0.5": as many
+ * decimals as the major step) with length 0.035, minors unlabelled with 0.018 (fractions of the box side).
+ */
+export function niceTicks([a, b], { major: majorLen = 0.035, minor: minorLen = 0.018 } = {}) {
+  const half = (b - a) / 2;
+  let e = Math.floor(Math.log10(half)), step = null, mant = 1;
+  for (let k = 0; k < 3 && step === null; k++, e--) {
+    for (const m of [5, 2, 1]) { const s = m * 10 ** e; if (s <= half) { step = s; mant = m; break; } }
+  }
+  const minor = step / (mant === 2 ? 4 : 5);
+  const val = (k, s) => (s < 1 ? k / Math.round(1 / s) : k * s);
+  const decimals = Math.max(0, -Math.floor(Math.log10(step) + 1e-9));
+  const isMajor = (v) => { const q = v / step; return Math.abs(q - Math.round(q)) < 1e-9; };
+  const out = [];
+  for (let k = Math.ceil(a / minor - 1e-9) + 0; val(k, minor) <= b + 1e-12; k++) {
+    const v = val(k, minor);
+    out.push(isMajor(v) ? [v, v.toFixed(decimals), majorLen] : [v, '', minorLen]);
+  }
+  return out;
+}
+
+/**
+ * Geometry of the box frame and axes (Boxed, Axes, Ticks, AxesLabel) in drawn coordinates (pure). box: the data plot
+ * range; worldBox: the drawn box (box itself, or the BoxRatios box); AxesEdge {{y, z}, {x, z}, {x, y}} sides (±1) of
+ * the edge each axis is drawn on (default the edges Mathematica uses for its default ViewPoint {1.3, -2.4, 2});
+ * ticks[k]: [[v, label, length]] (length × the box side S = the longest side of worldBox); tickLabelOffset and
+ * axisLabelOffset × S outwards. Returns {edges: [[p, q]] (12, x edges then y then z), axes: [{ticks: [[p, q]],
+ * tickLabels: [{text, pos}], label: {pos}}]} — ticks outside the range are left out.
+ */
+export function frameData({ box, worldBox = box, AxesEdge = [[-1, -1], [-1, 1], [-1, -1]], ticks, tickLabelOffset = 0.06, axisLabelOffset = 0.14 }) {
+  const S = Math.max(...worldBox.map(([a, b]) => b - a));
+  const [cx, cy, cz] = worldBox;
+  const edges = [];
+  for (const y of cy) for (const z of cz) edges.push([[cx[0], y, z], [cx[1], y, z]]);
+  for (const x of cx) for (const z of cz) edges.push([[x, cy[0], z], [x, cy[1], z]]);
+  for (const x of cx) for (const y of cy) edges.push([[x, y, cz[0]], [x, y, cz[1]]]);
+  const side = (k, s) => (s < 0 ? worldBox[k][0] : worldBox[k][1]);
+  const scaled = worldBox !== box;
+  const axes = [0, 1, 2].map((k) => {
+    const others = [0, 1, 2].filter((i) => i !== k);
+    const out = [0, 0, 0];
+    others.forEach((i, j) => { out[i] = AxesEdge[k][j]; });
+    const at = (t) => { const p = [0, 0, 0]; p[k] = t; others.forEach((i, j) => { p[i] = side(i, AxesEdge[k][j]); }); return p; };
+    const [a, b] = box[k], [lo, hi] = worldBox[k];
+    const s = (v) => (scaled ? lo + ((v - a) / (b - a)) * (hi - lo) : v);
+    const o = out.map((v) => v / Math.hypot(...out));
+    const list = ticks[k] ?? [];
+    const inside = list.filter(([v]) => v >= a && v <= b);
+    return {
+      ticks: inside.map(([v, , len]) => { const p = at(s(v)); return [p, p.map((x, i) => x + o[i] * len * S)]; }),
+      tickLabels: inside.filter(([, l]) => l !== '' && l != null).map(([v, l]) => ({ text: l, pos: at(s(v)).map((x, i) => x + o[i] * tickLabelOffset * S) })),
+      label: { pos: at((lo + hi) / 2).map((x, i) => x + o[i] * axisLabelOffset * S) },
+    };
+  });
+  return { edges, axes };
+}
+
+/**
+ * Width in world units that an image shows at the centre of the box (PointSize reference): 2 |viewPoint| L
+ * tan(viewAngle/2) w/h with L the longest side of the box and ImageSize {w, h} (or a number: square).
+ */
+export function imageWidth(box, { viewPoint, viewAngle, imageSize }) {
+  const longest = Math.max(...box.map(([a, b]) => b - a));
+  const ratio = Array.isArray(imageSize) ? imageSize[0] / imageSize[1] : 1;
+  return 2 * Math.hypot(...viewPoint) * longest * Math.tan(viewAngle / 2) * ratio;
 }
 
 // ---- sampling (pure; the renderer and the tests use the same samples) ------------------------------------
@@ -199,7 +356,7 @@ export function sampleSurface(p, nu = SURFACE_POINTS, nv = SURFACE_POINTS) {
   return grid;
 }
 
-/** Points of a circle primitive (splineCircle[{0,0,0}, 1, {0, 2π}] is an exact unit circle; matrix applied). */
+/** Points of a circle primitive (an exact unit circle; matrix applied). */
 export function sampleCircle(p, n = 129) {
   const pts = [];
   for (let i = 0; i < n; i++) {
@@ -263,7 +420,7 @@ export function primitiveBounds(prims) {
         const r = a.map((x) => p.radius * Math.sqrt(Math.max(0, 1 - (x / n) ** 2)));
         add(p.p1, r); add(p.p2, r); break;
       }
-      case 'line': case 'polygon': case 'point': case 'arrow': case 'infinitePlane': for (const q of p.points) add(q); break;
+      case 'line': case 'polygon': case 'point': case 'arrow': case 'infinitePlane': case 'mesh': for (const q of p.points) add(q); break;
       case 'cuboid': for (let k = 0; k < 8; k++) {
         const q = [k & 1 ? p.max[0] : p.min[0], k & 2 ? p.max[1] : p.min[1], k & 4 ? p.max[2] : p.min[2]];
         add(p.matrix ? apply4(p.matrix, q) : q);

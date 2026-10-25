@@ -22,7 +22,7 @@
 //   * ControlActive (when spec.ControlActive is true, i.e. the body uses ControlActive[]): `controlActive` is true while
 //     a slider or locator is dragged with the mouse; on release the body is evaluated once more with false;
 //   * the "Initial settings" button (an element with id `reset`, if the page has one);
-//   * the test hook window.__demo (getState, setState, view, moveLocator, worldToClient, controlActive, ready; setRng
+//   * the test hook window.__demo (getState, setState, view, graphics, moveLocator, worldToClient, controlActive, ready; setRng
 //     with `random`) that the browser tests and the Mathematica comparison use.
 //
 // Control specs (Manipulate's own forms; JS arrays for Mathematica lists):
@@ -52,10 +52,11 @@
 // format, parse, animSeconds); a locator's picture: k puts it on picture k (several pictures, below). Labels may be
 // strings or Style/Subscript/Superscript/Row expressions.
 //
-// The body: body(state, { controlActive, rng }) returns either a Graphics[…] or { state, view } (a model in the ports'
-// style: the new Manipulate variables and the values to draw). In the second form pass draw(view, state) → Graphics
-// list (or, with several pictures, a list of Graphics lists, one per picture); the Graphics options then come from
-// spec.graphics (an options object, or a list of them with { id } = the container element of each picture). The
+// The body: body(state, { controlActive, rng }) returns a Graphics[…], or { state, view, graphics } (a model in the
+// ports' style: the new Manipulate variables, the values the hook reports and the picture — a graphics list, or with
+// several pictures a list of them), or { state, view } with draw(view, state) → graphics list(s). Without `graphics`
+// the Graphics options come from spec.graphics (an options object, or a list of them with { id } = the container
+// element of each picture). The
 // picture's options (PlotRange, ImageSize, Background) are read once, at the first evaluation. Pure models stay testable
 // in Node: only this file and the renderer touch the DOM.
 //
@@ -177,25 +178,46 @@ export function pageRng() {
 
 const clampTo = ([x, y], lo, hi) => (lo ? [Math.min(Math.max(x, lo[0]), hi[0]), Math.min(Math.max(y, lo[1]), hi[1])] : [x, y]);
 const passThrough = (opts) => Object.fromEntries(Object.entries(opts).filter(([k]) => /^[a-z]/.test(k) && k !== 'picture'));
+/** a variable name with dots is a path into the state: 'theta.0' is state.theta[0] (keeps a model's state shape) */
+const pathOf = (name) => name.split('.').map((k) => (/^\d+$/.test(k) ? Number(k) : k));
+export const getVar = (state, name) => (name.includes('.') ? pathOf(name).reduce((o, k) => o?.[k], state) : state[name]);
+export function setVar(state, name, v) {
+  if (!name.includes('.')) { state[name] = v; return; }
+  const ks = pathOf(name), last = ks.pop();
+  ks.reduce((o, k, i) => (o[k] ??= typeof (ks[i + 1] ?? last) === 'number' ? [] : {}), state)[last] = v;
+}
+const hasVar = (state, name) => (name.includes('.') ? getVar(state, name) !== undefined : name in state);
 const sameValue = (a, b) => a === b || (typeof a === 'object' && typeof b === 'object' && JSON.stringify(a) === JSON.stringify(b));
 const bound = (b, state) => (typeof b === 'function' ? b(state) : b);
 
 /**
  * Manipulate(spec) — see the file header. spec:
  *   name                      the app's name (window.__demo.name)
- *   body(state, {controlActive, rng}) → Graphics | { state, view }
- *   draw(view, state) → graphics list (several pictures: a list of graphics lists)   (with the { state, view } form)
+ *   body(state, {controlActive, rng}) → Graphics | { state, view, graphics } | { state, view }
+ *   draw(view, state) → graphics list (several pictures: a list of graphics lists)   (only for the { state, view } form)
  *   graphics: { PlotRange, ImageSize, PlotRangePadding, Background, label, id, testid, svgClass, maxWidth } or a list
  *             of them (several pictures); svgClass/maxWidth replace svg-plot's class and width cap
  *   ControlActive: true       the body reads ControlActive[] (track mouse drags, re-evaluate on release)
  *   controls: [control specs]
  *   initial() → state         optional: the initial Manipulate variables (default: the controls' init values)
+ *   initialSettings() → state optional: what "Initial settings" restores when it differs from the opening state (a
+ *                             notebook saved in another state than its Initial Settings; default initial)
  *   locators: { pickAnywhere, keyStep, describe(name), appearance(name, plot) }   options of the locator pane
  *   random, settle(state), throttle: 'frame', after(ctx)   front-end behaviour (file header)
  *   hook: { view(view, state), copy, …extra }   what window.__demo.view() returns (copied by `copy`, default JSON with
  *             "Infinity"), plus extra hook functions (ctx) => fn
  *   elements: { controls, graphic, reset }  element ids (default 'controls', 'graphic', 'reset')
- * Returns ctx: { state, view, plot, plots, rng, controls, run(), set(name, value), setState(partial, how), moveLocator,
+ *   merge(state, partial) → state   how setState combines a partial state (default { ...state, ...partial })
+ *   resetStops: true          Initial settings and setState also stop running slider animations
+ * A picture option { renderer } draws that picture with an object { draw(graphics, { element, state, view, k }) }
+ * instead of SVG — shared/graphics3d-view.js View3D for Graphics3D — so that 2D pages never load three.js.
+ * Initial settings also calls reset() of every renderer that has one (e.g. View3D's resetView option); prepare() of every
+ * renderer runs before the controls are made (View3D: throws without WebGL 2 unless webgl2Fallback, as createViewer did).
+ * Control options: a variable name with dots is a path into the state ('theta.0'); Assign(state, value) replaces the
+ * default assignment; Moved(state) says whether a slider shows its value as moved after a reset or setState (for an
+ * IntervalSlider: true sets both ends as machine reals, "2." instead of "2"); a lower-case `parent` element also
+ * places controls whose factory has no parent option (sliders, setter bars) there.
+ * Returns ctx: { state, view, graphics(k), plot, plots, rng, controls, run(), set(name, value), setState(partial, how), moveLocator,
  *   rasterSize(id), controlActive }.
  */
 export function Manipulate(spec) {
@@ -206,7 +228,7 @@ export function Manipulate(spec) {
   const vars = all.filter((c) => c.name);
   const initial = () => {
     const s = spec.initial ? spec.initial() : {};
-    for (const c of vars) if (!(c.name in s)) s[c.name] = structuredClone(c.init);
+    for (const c of vars) if (!hasVar(s, c.name)) setVar(s, c.name, structuredClone(c.init));
     return s;
   };
   let state = initial();
@@ -221,6 +243,7 @@ export function Manipulate(spec) {
   const ensurePlots = (optionsList) => {
     if (plots.length) return;
     optionsList.forEach((options, k) => {
+      if (g0[k]?.renderer) { plots.push(null); layers.push(null); return; } // drawn by its renderer (e.g. Graphics3D)
       if (!options?.PlotRange) throw new Error('Manipulate: give the Graphics a PlotRange (in the Graphics options or in spec.graphics)');
       const el = document.getElementById(options.id ?? g0[k]?.id ?? (k === 0 ? ids.graphic : `${ids.graphic}${k + 1}`));
       const plot = createPlot(el, {
@@ -238,24 +261,29 @@ export function Manipulate(spec) {
       layers.push(plot.layer('graphics'));
     });
   };
-  if (g0.every((g) => g.PlotRange)) ensurePlots(g0);
+  if (g0.every((g) => g.PlotRange || g.renderer)) ensurePlots(g0);
 
   // ---- evaluation
   let locatorPanes = null;
   let pending = 0, queued = 0;
+  let pictures = []; // the graphics drawn by the last evaluation (one per picture)
   function run() {
     if (pending) { cancelAnimationFrame(pending); pending = 0; }
     if (queued) { cancelAnimationFrame(queued); queued = 0; }
     const r = spec.body(state, { controlActive, rng });
-    let pictures;
-    if (r && r.head === 'Graphics') { pictures = [r]; view = r; } else {
+    let d;
+    if (r && r.head === 'Graphics') { d = several ? [r] : r; view = r; } else {
       if (r && r.state) state = r.state;
       view = r && 'view' in r ? r.view : r;
-      const d = spec.draw(view, state);
-      pictures = several ? d : [d];
+      d = r && 'graphics' in r ? r.graphics : spec.draw(view, state);
     }
+    pictures = several ? d : [d];
     ensurePlots(pictures.map((p, k) => (p?.head === 'Graphics' ? { ...p.options, id: g0[k]?.id } : g0[k])));
-    pictures.forEach((p, k) => { layers[k].replaceChildren(); render(plots[k], layers[k], p); });
+    pictures.forEach((p, k) => {
+      const r = g0[k]?.renderer;
+      if (r) { r.draw(p, { element: document.getElementById(g0[k].id ?? (k === 0 ? ids.graphic : `${ids.graphic}${k + 1}`)), state, view, k }); return; }
+      layers[k].replaceChildren(); render(plots[k], layers[k], p);
+    });
     if (!locatorPanes) makeLocators();
     locatorPanes?.forEach((l) => l.redraw());
     updateControls();
@@ -273,7 +301,10 @@ export function Manipulate(spec) {
   const apis = new Map();
   const dynamic = []; // controls whose Enabled or range depend on the state
   const shown = new Map(); // the value each control shows (what it was set to or what the user entered)
-  const setVar = (name, v) => { state[name] = v; shown.set(name, v); requestRun(); };
+  const byName = new Map(); // control descriptions by variable name
+  // Assign(state, value): a control's own assignment (e.g. also record that a slider was moved); default: the variable
+  const assign = (name, v) => { const c = byName.get(name); if (c?.opts?.Assign) c.opts.Assign(state, v); else setVar(state, name, v); shown.set(name, v); requestRun(); };
+  const val = (name) => getVar(state, name);
   const tracksActive = !!spec.ControlActive;
   const markActive = (node) => { if (tracksActive) node?.addEventListener('pointerdown', () => { controlActive = true; }); };
   const setWidth = (api, px) => {
@@ -284,7 +315,8 @@ export function Manipulate(spec) {
     const label = c.label == null ? '' : textOf(c.label, { sep: ' ' });
     const extra = passThrough(c.opts ?? {});
     const enabled = typeof c.opts?.Enabled === 'function' ? c.opts.Enabled(state) : c.opts?.Enabled !== false;
-    const onInput = (v) => setVar(c.name, v);
+    if (c.name) byName.set(c.name, c);
+    const onInput = (v) => assign(c.name, v);
     let api = null;
     switch (c.kind) {
       case 'delimiter': controls.delimiter(); return;
@@ -307,27 +339,28 @@ export function Manipulate(spec) {
       }
       case 'slider':
         api = controls.slider({
-          name: c.name, label, min: bound(c.min, state), max: bound(c.max, state), step: c.step, value: state[c.name],
+          name: c.name, label, min: bound(c.min, state), max: bound(c.max, state), step: c.step, value: val(c.name),
           steps: 'mma', labeled: c.opts.Appearance === 'Labeled', enabled, plus: !c.plain, onInput, ...extra,
         });
         setWidth(api, c.opts.ImageSize);
         markActive(api.row.querySelector('input[type=range]'));
         break;
       case 'vslider':
-        api = addVerticalSlider(controls, { name: c.name, label, min: bound(c.min, state), max: bound(c.max, state), step: c.step, value: state[c.name], onInput, parent, ...extra });
+        api = addVerticalSlider(controls, { name: c.name, label, min: bound(c.min, state), max: bound(c.max, state), step: c.step, value: val(c.name), onInput, parent, ...extra });
         markActive(api.row.querySelector('input[type=range]'));
         break;
       case 'interval':
         api = addIntervalSlider(controls, {
-          name: c.name, label, min: bound(c.min, state), max: bound(c.max, state), step: c.step, value: state[c.name],
+          name: c.name, label, min: bound(c.min, state), max: bound(c.max, state), step: c.step, value: val(c.name),
           method: c.opts.Method ?? 'Free', minIntervalSize: c.opts.MinIntervalSize ?? 0, labeled: c.opts.Appearance === 'Labeled',
           enabled, onInput, parent, ...extra,
         });
         markActive(api.row);
+        if (c.opts.Moved) { const set0 = api.set; api.set = (v, how) => set0(v, how && how.moved ? { exact: [false, false] } : undefined); }
         break;
       case 'setter':
         api = controls.setterBar({
-          name: c.name, label, options: c.values.map((o) => ({ value: o.value, label: textOf(o.label) })), value: state[c.name],
+          name: c.name, label, options: c.values.map((o) => ({ value: o.value, label: textOf(o.label) })), value: val(c.name),
           onChange: onInput, ...extra,
         });
         c.values.forEach((o, i) => { // typeset value labels (e.g. RRT with a superscript star)
@@ -336,24 +369,25 @@ export function Manipulate(spec) {
         if (!enabled) api.row.querySelectorAll('button').forEach((b) => { b.disabled = true; });
         break;
       case 'popup':
-        api = addPopup(controls, { name: c.name, label, options: c.values.map((o) => ({ value: o.value, label: textOf(o.label) })), value: state[c.name], onChange: onInput, parent, ...extra });
+        api = addPopup(controls, { name: c.name, label, options: c.values.map((o) => ({ value: o.value, label: textOf(o.label) })), value: val(c.name), onChange: onInput, parent, ...extra });
         break;
       case 'checkbox':
-        api = addCheckbox(controls, { name: c.name, label, value: state[c.name], onChange: onInput, parent, ...extra });
+        api = addCheckbox(controls, { name: c.name, label, value: val(c.name), onChange: onInput, parent, ...extra });
         if (!enabled) api.setEnabled(false);
         break;
       case 'slider2D':
-        api = controls.slider2D({ name: c.name, label, min: c.min, max: c.max, value: state[c.name], enabled, onInput, ...extra });
+        api = controls.slider2D({ name: c.name, label, min: c.min, max: c.max, value: val(c.name), enabled, onInput, ...extra });
         markActive(api.row.querySelector('svg'));
         break;
       case 'custom':
-        api = c.factory(controls, { name: c.name, label, value: state[c.name], onInput, onChange: onInput, parent, ...c.options });
+        api = c.factory(controls, { name: c.name, label, value: val(c.name), onInput, onChange: onInput, parent, ...c.options });
         if (api.row) markActive(api.row);
         break;
       default: return; // locator, hidden: no control here
     }
+    if (extra.parent && api.row && api.row.parentNode !== extra.parent) extra.parent.append(api.row);
     apis.set(c.name, api);
-    shown.set(c.name, state[c.name]);
+    shown.set(c.name, val(c.name));
     const html = htmlOf(c.label);
     const lab = api.row?.querySelector('.ctl-label, :scope > span');
     if (lab && html !== label) lab.innerHTML = html; // typeset label (italic, subscripts)
@@ -362,6 +396,9 @@ export function Manipulate(spec) {
       dynamic.push(c);
     }
   };
+  // a renderer that cannot work here (e.g. no WebGL 2) stops the page before the controls, as the pages that made
+  // their viewer first did (the start-up notice of shared/requirements.js then stands alone)
+  for (const g of g0) g?.renderer?.prepare?.();
   for (const c of parsed) makeControl(c, root, null);
 
   /** after an evaluation: the controls show the variables (a body may change them) and their dynamic Enabled/range */
@@ -386,21 +423,24 @@ export function Manipulate(spec) {
     }
     // write-back: a body that changed a variable; compared with what the control shows, not with its get(), which
     // may return a value snapped by the browser
-    for (const [n, api] of apis) if (!sameValue(shown.get(n), state[n])) { api.set(state[n]); shown.set(n, state[n]); }
+    for (const [n, api] of apis) if (!sameValue(shown.get(n), val(n))) { api.set(val(n)); shown.set(n, val(n)); }
   }
-  const syncControls = (how) => { for (const [n, api] of apis) { api.set(state[n], how); shown.set(n, state[n]); } };
+  // Moved(state): whether a slider shows its value as moved (machine number "1.") after a reset or setState
+  const howFor = (n, how) => { const m = byName.get(n)?.opts?.Moved; return m ? { ...how, moved: !!m(state) } : how; };
+  // resetStops: a reset or setState also stops running slider animations (the ports that did so by hand)
+  const syncControls = (how) => { for (const [n, api] of apis) { if (spec.resetStops) api.stop?.(); api.set(val(n), howFor(n, how)); shown.set(n, val(n)); } };
 
   // one locator per Locator control; a control whose value is a list of points gives one locator per point,
   // named name-1, name-2, … (Mathematica's {{pts, {p1, p2, …}}, …, Locator})
   const locs = all.filter((c) => c.kind === 'locator').flatMap((c) => (c.multi
-    ? state[c.name].map((_, i) => ({ ...c, name: `${c.name}-${i + 1}`, variable: c.name, index: i }))
+    ? val(c.name).map((_, i) => ({ ...c, name: `${c.name}-${i + 1}`, variable: c.name, index: i }))
     : [{ ...c, variable: c.name, index: null }]));
   const locOf = (n) => locs.find((l) => l.name === n);
-  const getLoc = (n) => { const c = locOf(n); return c.index === null ? state[c.variable] : state[c.variable][c.index]; };
+  const getLoc = (n) => { const c = locOf(n); return c.index === null ? val(c.variable) : val(c.variable)[c.index]; };
   const placeLocator = (n, p) => {
     const c = locOf(n);
     const q = clampTo(p, c.min, c.max);
-    if (c.index === null) state[c.variable] = q; else state[c.variable][c.index] = q;
+    if (c.index === null) setVar(state, c.variable, q); else val(c.variable)[c.index] = q;
   };
   const moveLocator = (n, p) => { placeLocator(n, p); run(); };
   // locators: { throttle: 'frame' }: the glyph moves at once, the body is evaluated on the next animation frame
@@ -445,8 +485,9 @@ export function Manipulate(spec) {
   };
   document.getElementById(ids.reset)?.addEventListener('click', () => {
     cancelPending();
-    state = initial();
+    state = spec.initialSettings ? spec.initialSettings() : initial();
     syncControls({ moved: false });
+    g0.forEach((g) => g?.renderer?.reset?.());
     run();
   });
 
@@ -454,6 +495,8 @@ export function Manipulate(spec) {
     get state() { return state; },
     set state(s) { state = s; },
     get view() { return view; },
+    /** the graphics drawn by the last evaluation: graphics(k) for picture k (default 0) */
+    graphics: (k = 0) => pictures[k],
     get plot() { return plots[0]; },
     plots,
     get rng() { return rng; },
@@ -463,7 +506,7 @@ export function Manipulate(spec) {
     /** replace Manipulate variables and evaluate once; how = { moved } is passed to the sliders */
     setState: (partial, how) => {
       cancelPending();
-      state = { ...state, ...partial };
+      state = spec.merge ? spec.merge(state, partial) : { ...state, ...partial };
       syncControls(how);
       run();
       return state;
@@ -474,7 +517,9 @@ export function Manipulate(spec) {
       return img ? [Number(img.getAttribute('data-width')), Number(img.getAttribute('data-height'))] : null;
     },
     run,
-    set: setVar,
+    set: assign,
+    /** the renderer of picture k (a picture given as { renderer }, e.g. shared/graphics3d-view.js View3D) */
+    renderer: (k = 0) => g0[k]?.renderer ?? null,
   };
 
   run(); // the first evaluation (it also makes the pictures and the locators when the body returns the Graphics)
@@ -499,9 +544,14 @@ export function Manipulate(spec) {
     /** replace any Manipulate variables (e.g. a snapshot's Settings) and evaluate once */
     setState: (partial) => copy(ctx.setState(read(partial))),
     view: () => copy(H.view ? H.view(view, state) : view),
+    /** the Graphics data of picture k as last drawn (Raw parts and functions are dropped by the copy) */
+    graphics: (k = 0) => hookCopy(pictures[k]), // always JSON (functions dropped), whatever hook.copy is
     /** move a locator to world point p as one front-end update (its range applies) */
-    moveLocator: (n, p) => { moveLocator(n, p); return copy(state); },
-    worldToClient: (p, k = 0) => plots[k].worldToClient(p),
+    // locator and SVG-coordinate functions only where there is an SVG picture (not on pages of renderer pictures only)
+    ...(plots.some(Boolean) ? {
+      moveLocator: (n, p) => { moveLocator(n, p); return copy(state); },
+      worldToClient: (p, k = 0) => plots[k].worldToClient(p),
+    } : {}),
     controlActive: () => controlActive,
     ...(spec.random ? {
       /** replace the random source: {seed: n} (generated) or {reals: […], integers: […]} (replayed draws) */

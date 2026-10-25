@@ -4,6 +4,7 @@
 // tests/e2e/dubins-path.spec.js — browser tests of the Dubins-car page (real mouse and keyboard; window.__demo only
 // reads values, except to show the snapshot states for the review screenshots).
 import { test, expect } from '@playwright/test';
+import { pieceRecord } from '../support/car-records.js';
 import { openDemo, reviewShot } from './helpers.js';
 
 const URL = '/demos/dubins-path/';
@@ -21,7 +22,7 @@ const labelNumbers = async (page) => (await page.getByTestId('plot-label').textC
 /** distance from p to a word drawing (arcs sampled densely) */
 function distToDrawing(p, drawing) {
   let best = Infinity;
-  for (const q of drawing.pieces) {
+  for (const q of drawing.pieces.map(pieceRecord)) { // Circle / Line data since v0.1.21
     if (q.kind === 'line') {
       const [a, b] = [q.from, q.to], dx = b[0] - a[0], dy = b[1] - a[1];
       const t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy || 1)));

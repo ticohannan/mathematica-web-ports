@@ -15,11 +15,16 @@ import {
 } from '../../demos/two-link-kinematics/model.js';
 import { matrixRank } from '../../demos/common/svd3.js';
 import { normalizeCR } from '../../shared/mma-extra.js';
+import { annotation, annotations, Cases } from '../../shared/graphics.js';
+import { elbowPosition } from '../../demos/common/two-link.js';
+import { myArrowArc } from '../../demos/common/arrow-arcs.js';
 
 const FIXTURE = 'tests/golden/two-link-kinematics.original-states.json';
 const fx = loadStates(FIXTURE);
 const live = plain(fx.live), specs = plain(fx.specs);
 const snap = (k) => plain(fx.snapshots[k - 1]);
+/** the tip of an Arrow part of the picture (Graphics data): its head polygon's first point */
+const arrowTip = (g, role) => Cases(annotation(g, role).g, 'Polygon')[0].pts[0];
 const ulps = (a, b) => (a === b ? 0 : Math.abs(a - b) / (Number.EPSILON * Math.max(Math.abs(a), Math.abs(b))));
 const withinUlps = (a, b, n, what) => expect(ulps(a, b), `${what}: ${a} vs ${b}`).toBeLessThanOrEqual(n);
 const sameStateWithin = (a, b, n) => {
@@ -52,14 +57,16 @@ describe('two-link-kinematics golden: saved state and snapshots', () => {
     // snapshot 1 picture: light-blue arrow pixels at x = 2 reach y = +2.228 and −2.228 (±0.015); no light-red pixels
     const r = evaluate(live);
     const sc = scene(r.state, r.locals);
-    expect(sc.some((d) => d.kind === 'ellipse')).toBe(false); // MatrixRank[Σ] = 1
-    const tips = ['sigma1-plus', 'sigma1-minus'].map((role) => sc.find((d) => d.role === role).to).sort((a, b) => b[1] - a[1]);
+    expect(annotation(sc, 'ellipse')).toBe(null); // MatrixRank[Σ] = 1
+    const tips = ['sigma1-plus', 'sigma1-minus'].map((role) => arrowTip(sc, role)).sort((a, b) => b[1] - a[1]);
     expect(tips[0][0]).toBe(2);
     expect(tips[1][0]).toBe(2);
     withinUlps(tips[0][1], 2.2360679774997896, 2, 'top tip');
     withinUlps(tips[1][1], -2.2360679774997896, 2, 'bottom tip');
     expect(Math.abs(tips[0][1] - 2.228)).toBeLessThan(0.015 + 0.01);
-    for (const role of ['sigma2-plus', 'sigma2-minus']) expect(sc.find((d) => d.role === role).to).toEqual([2, 0]); // length 0
+    // length 0: Arrow[{pEnd, pEnd}] draws nothing (K-TK-05), so the tip is pEnd = {2, 0}
+    for (const role of ['sigma2-plus', 'sigma2-minus']) expect(annotation(sc, role).g).toEqual([]);
+    expect(r.state.pEnd).toEqual([2, 0]);
   });
   it('two-link-kinematics: snapshot 2 Settings: the singular branch with the cap gives jointVel = v1', () => {
     const s = snap(2);
@@ -87,7 +94,7 @@ describe('two-link-kinematics golden: saved state and snapshots', () => {
     expect(r.state.pEnd).toEqual(s.pEnd); // the tip of p1, p2 is the saved pEnd exactly
     r.state.pVel.forEach((v, i) => withinUlps(v, s.pVel[i], 1, `pVel[${i}]`));
     sameStateWithin(r.state, s, 1);
-    const hole = scene(r.state, r.locals).find((d) => d.role === 'hole');
+    const hole = annotation(scene(r.state, r.locals), 'hole').g;
     withinUlps(hole.r, 1.18, 4, 'hole radius'); // abs(1.59 − 0.41); picture: 159 px = 1.19 ± 0.015 at 133.3 px/unit
     // recorded evidence of Q-TK-04 (inverse velocity just above the SVD tolerance in an earlier update)
     expect(Math.hypot(s.pVel[0] - s.pEnd[0], s.pVel[1] - s.pEnd[1])).toBeCloseTo(2.9287693743556824e-7, 20);
@@ -105,9 +112,10 @@ describe('two-link-kinematics golden: saved state and snapshots', () => {
     withinUlps(r.locals.S[0], 2, 1, 'Σ11');
     expect(r.locals.S[1]).toBe(0); // set to 0 by the SVD tolerance
     const sc = scene(r.state, r.locals);
-    const hole = sc.find((d) => d.role === 'hole');
+    const hole = annotation(sc, 'hole').g;
     expect(hole.r).toBe(2); // white disk of radius 2: no light-blue area
-    expect(sc.find((d) => d.role === 'robot-arm').rotate.about).toEqual([0, 0]); // "Robot Arm" on link 1 (r2 = 0 < 1)
+    // "Robot Arm" on link 1 (r2 = 0 < 1): Rotate[{…, Text[…]}, Theta1, {0, 0}]
+    expect(sc.find((x) => x.head === 'Rotate' && annotation(x, 'robot-arm')).about).toEqual([0, 0]);
   });
 });
 
@@ -234,7 +242,7 @@ describe('two-link-kinematics golden: Mathematica harness records', () => {
   it('two-link-kinematics: harness H-TK-16 (forward velocity from the pad)', plainCase('H-TK-16'));
   it('two-link-kinematics: harness H-TK-17 (zero joint velocities: Points instead of arc arrows)', plainCase('H-TK-17', (runs) => {
     const r = runs[0];
-    const kinds = scene(r.state, r.locals).filter((d) => d.kind === 'arc').map((d) => d.data.kind);
+    const kinds = annotations(scene(r.state, r.locals)).filter((a) => a.attrs['data-kind']).map((a) => a.attrs['data-kind']);
     expect(kinds).toEqual(['Point', 'Point', 'Point', 'Point']);
   }));
   it('two-link-kinematics: harness H-TK-18 (straight arm with r1 = 1.5: the SVD tolerance decides the branch)', plainCase('H-TK-18'));
@@ -243,8 +251,13 @@ describe('two-link-kinematics golden: Mathematica harness records', () => {
   it('two-link-kinematics: harness H-TK-21 (elbow toggle with the arm straight)', plainCase('H-TK-21'));
   it('two-link-kinematics: harness H-TK-22 (velocity arcs with 12 B-spline control points)', plainCase('H-TK-22', (runs) => {
     const r = runs[0];
-    const arcs = scene(r.state, r.locals).filter((d) => d.role === 'jointVel1' || d.role === 'jointVel2');
-    for (const a of arcs) expect(a.data.control).toHaveLength(12);
+    // myArrowArc's B-spline (12 control points) is drawn as its sampled curve: the drawn Line is that curve
+    const { Theta1, Theta2 } = r.locals, jv = r.state.jointVel, elbow = elbowPosition(r.state.r1, Theta1), phi = Theta1 + Theta2;
+    const arcs = [['jointVel1', myArrowArc([0, 0], 1 / 2, [Theta1 + 0, Theta1 + jv[0]])], ['jointVel2', myArrowArc(elbow, 2 / 3, [phi + 0, phi + jv[1]])]];
+    for (const [role, data] of arcs) {
+      expect(data.control).toHaveLength(12);
+      expect(Cases(annotation(scene(r.state, r.locals), role).g, 'Line')[0].pts).toEqual(data.curve);
+    }
   }));
   it('two-link-kinematics: harness H-TK-23 (SVD, PseudoInverse, MatrixRank, Dot order and Normalize)', (ctx) => {
     const h = harnessCase('two-link-kinematics', 'H-TK-23');

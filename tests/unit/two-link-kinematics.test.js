@@ -8,18 +8,22 @@
 // T-TK-87) are in tests/unit/two-link.test.js, arrow-arcs.test.js and dial-control.test.js.
 import { describe, it, expect } from 'vitest';
 import {
-  INITIAL, initialState, evaluate, scene, Theta2inv, Theta1inv, reArcTanD, theta2D, jacobian, svd2, pseudoInverse2,
+  INITIAL, initialState, cloneState, evaluate, scene, Theta2inv, Theta1inv, reArcTanD, theta2D, jacobian, svd2, pseudoInverse2,
   matMul, transpose, SVD_ZERO_TOL,
 } from '../../demos/two-link-kinematics/model.js';
 import { padSetter, padPointer } from '../../demos/two-link-kinematics/velocity-pad.js';
 import { matrixRank } from '../../demos/common/svd3.js';
 import { arcTan } from '../../shared/mma-exact.js';
+import { annotations, annotation, Cases } from '../../shared/graphics.js';
+import { preGraphics, sameDrawing } from '../support/pre-graphics.js';
 
 const ulps = (a, b) => (a === b ? 0 : Math.abs(a - b) / (Number.EPSILON * Math.max(Math.abs(a), Math.abs(b))));
 const near = (p, q, n = 2) => p.forEach((v, i) => expect(ulps(v, q[i]), `${v} vs ${q[i]}`).toBeLessThanOrEqual(n));
 const close = (p, q, tol = 1e-15) => p.forEach((v, i) => expect(Math.abs(v - q[i]), `${v} vs ${q[i]}`).toBeLessThanOrEqual(tol));
 const live = () => evaluate(initialState()).state; // the saved state (T-TK-31)
 const step = (s, partial) => evaluate({ ...s, ...partial });
+/** the tip of an Arrow part of the picture: its head polygon's first point (shared/graphics-extras.js arrowheadPolygon) */
+const arrowTip = (g, role) => Cases(annotation(g, role).g, 'Polygon')[0].pts[0];
 const ikAt11 = () => step(live(), { pEnd: [1, 1] }); // "state of T-TK-07"
 
 describe('two-link-kinematics: inverse kinematics', () => {
@@ -248,13 +252,16 @@ describe('two-link-kinematics: drawing data', () => {
   it('manipulability ellipse geometry: semi-axes Sigma11 and Sigma22 along U columns centred at pEnd', () => {
     const r = ikAt11();
     const sc = scene(r.state, r.locals);
-    const ell = sc.find((d) => d.role === 'ellipse');
-    expect(ell.center).toEqual([1, 1]);
-    near(ell.radii, [1.618033988749895, 0.6180339887498949]);
+    // Ellipsoid[{0, 0}, Σ²] under GeometricTransformation[…, {U, pEnd}]: Rotate[Disk[pEnd, {Σ11, Σ22}], angle of U's first column, pEnd]
+    const ell = annotation(sc, 'ellipse').g;
+    expect(ell.head).toBe('Rotate');
+    expect(ell.g.c).toEqual([1, 1]);
+    expect(ell.about).toEqual([1, 1]);
+    near(ell.g.r, [1.618033988749895, 0.6180339887498949]);
     // the eigenvector (1, −φ)/‖·‖ of J Jᵀ for (3 + √5)/2, up to its sign
-    const s = Math.sign(ell.axis[0]);
-    close(ell.axis.map((v) => s * v), [0.5257311121191336, -0.8506508083520399]);
-    const tips = ['sigma1-plus', 'sigma1-minus'].map((role) => sc.find((d) => d.role === role).to);
+    const axis = [Math.cos(ell.angle), Math.sin(ell.angle)], s = Math.sign(axis[0]);
+    close(axis.map((v) => s * v), [0.5257311121191336, -0.8506508083520399]);
+    const tips = ['sigma1-plus', 'sigma1-minus'].map((role) => arrowTip(sc, role));
     const want = [[1.8506508083520399, -0.3763819204711736], [0.14934919164796, 2.3763819204711734]];
     const sorted = tips.slice().sort((a, b) => b[0] - a[0]);
     close(sorted[0], want[0]);
@@ -262,13 +269,13 @@ describe('two-link-kinematics: drawing data', () => {
   });
   it('the drawing order follows the Graphics list; no ellipse at rank 1 and the hole only for r1 != 1', () => {
     const r = evaluate(initialState());
-    const roles = scene(r.state, r.locals).map((d) => d.role);
+    const roles = annotations(scene(r.state, r.locals)).map((a) => a.id);
     expect(roles).toEqual([
       'workspace', 'workspace-label', 'sigma1-plus', 'sigma1-minus', 'sigma2-plus', 'sigma2-minus', 'link1', 'base',
       'jointVel1', 'theta1-arc', 'link2', 'robot-arm', 'elbow', 'jointVel2', 'theta2-arc', 'loc-pVel', 'loc-pEnd', 'velocity',
     ]);
     const r2 = step(r.state, { r1: 1.5 });
-    const hole = scene(r2.state, r2.locals).find((d) => d.role === 'hole');
+    const hole = annotation(scene(r2.state, r2.locals), 'hole').g;
     expect(hole.r).toBe(1);
   });
   it('the initial settings are the stored Variables', () => {
@@ -280,5 +287,45 @@ describe('two-link-kinematics: drawing data', () => {
     const r = step(live(), { pEnd: [0, 0] });
     expect(r.indeterminate).toBe(true);
     expect(r.state).toEqual({ ...live(), pEnd: [0, 0] });
+  });
+});
+
+// ---- v0.1.21 (owner decision D2): scene() returns the Graphics list as shared/graphics.js data. The drawing output
+// before that change is frozen in tests/unit/fixtures/two-link-kinematics-drawing.pre-graphics.json (commit f04c973):
+// the Graphics data the page drew and the model's scene list (19 kinds of part) it drew them from.
+describe('two-link-kinematics: Graphics data = the drawing before v0.1.21', () => {
+  const fx = preGraphics('two-link-kinematics');
+  const replay = (steps) => {
+    let r = evaluate(initialState());
+    for (const st of steps) r = evaluate({ ...r.state, ...st }); // the hook setState (no Indeterminate case here)
+    return r;
+  };
+  it.each(fx.states.map((s) => [s.name, s]))('%s: the same Graphics data, number for number', (name, s) => {
+    const r = replay(s.steps);
+    expect(cloneState(r.state)).toEqual(s.state);
+    expect(sameDrawing(scene(r.state, r.locals), s.graphics[0], name).replaced).toEqual([]);
+  });
+  it.each(fx.states.map((s) => [s.name, s]))('%s: every part of the old scene list, read back through annotations()', (name, s) => {
+    const r = replay(s.steps);
+    const as = annotations(scene(r.state, r.locals));
+    expect(as.map((a) => a.id)).toEqual(s.model.map((d) => d.role));
+    as.forEach((a, i) => {
+      const d = s.model[i], one = (h) => Cases(a.g, h)[0];
+      switch (d.kind) {
+        case 'disk': expect([one('Disk').c, one('Disk').r]).toEqual([d.center, d.r]); break;
+        case 'text': expect(one('Text').pos).toEqual(d.at); expect(one('Text').expr.expr).toBe(d.text); break;
+        case 'ellipse': expect([a.g.g.c, a.g.g.r, a.g.angle]).toEqual([d.center, d.radii, Math.atan2(d.axis[1], d.axis[0])]); break;
+        case 'arrow': if (Cases(a.g, 'Polygon').length) expect(one('Polygon').pts[0]).toEqual(d.to); else expect(d.to).toEqual(d.from); break;
+        case 'stadium': expect([one('Rectangle').a, one('Rectangle').b, one('Rectangle').r, a.g.angle, a.g.about]).toEqual([...d.rect, d.radius, d.angle, d.about]); break;
+        case 'point': expect(one('Point').pts).toEqual([d.at]); break;
+        case 'arc': expect(a.attrs['data-kind']).toBe(d.data.kind);
+          if (d.data.kind === 'Point') expect(one('Point').pts).toEqual([d.data.at]);
+          else { expect(one('Line').pts).toEqual(d.data.kind === 'Arrow' ? d.data.curve : d.data.arc); expect(one('Polygon').pts[0]).toEqual(d.data.tip); }
+          break;
+        case 'loc': expect(Cases(a.g, 'Line').map((l) => l.pts)).toEqual(d.hairs);
+          expect(Cases(a.g, 'Disk').map((q) => [q.c, q.r])).toEqual([[d.circle.center, d.circle.r], [d.ring.center, d.ring.r]]); break;
+        default: throw new Error(d.kind);
+      }
+    });
   });
 });

@@ -8,10 +8,13 @@
 // (monotone chain, hull of differences, separating-axis test) — never by the code under test.
 import { describe, it, expect } from 'vitest';
 import {
-  evaluate, initialSettings, DEFAULT_PTS, convexHullGrahamScan, normalVector, vector, centroidOfPoly, areaOfPoly,
+  evaluate, initialSettings, openingState, DEFAULT_PTS, convexHullGrahamScan, normalVector, vector, centroidOfPoly, areaOfPoly,
   discretizeLineRev1, discretizePolyRev1, minkowskiWalk, robotAt, FRAME_HALF, MOVE_VIEW, X_LIMIT,
 } from '../../demos/minkowski-sum/minkowski.js';
 import { mulberry32 } from '../../shared/random.js';
+import { annotation, annotations, Cases } from '../../shared/graphics.js';
+import { NAMED } from '../../shared/mma-colors.js';
+import { preGraphics, sameDrawing } from '../support/pre-graphics.js';
 
 const run = (over = {}) => evaluate({ ...initialSettings(), ...over, pts: (over.pts ?? DEFAULT_PTS).map((p) => [...p]) });
 const withPts = (changes, over = {}) => {
@@ -240,7 +243,7 @@ describe('minkowski-sum model', () => {
     // D-MS-05: no sum drawn, dl kept
     const r = run({ m: 1 }).state;
     expect(r.dl).toBe(null);
-    expect(run({ m: 1 }).view.scene.some((x) => x.role === 'mink-polygon')).toBe(false);
+    expect(annotation(run({ m: 1 }).graphics, 'mink-polygon')).toBe(null);
   });
   it('Chop applies to the stored vertex, the running sum keeps values below 1e-10', () => {
     const out = minkowskiWalk([1, 0], [{ vec: [1 - 3e-11, 0], side: 'Alpha' }, { vec: [1, 0], side: 'Beta' }]);
@@ -311,13 +314,13 @@ describe('minkowski-sum model', () => {
     expect(b.s).toBe(300);
   });
   it('move view: s = 119 puts the robot centroid on the second Minkowski vertex', () => {
-    const { view } = run({ stableOrMove: MOVE_VIEW, s: 119 });
+    const { view, graphics } = run({ stableOrMove: MOVE_VIEW, s: 119 });
     const r = robotAt(view, 119);
     close(r.centroid, [1.100511512466, -1.644719599148], 1e-12);
     view.robot.forEach((q, i) => close(r.vertices[i], [r.centroid[0] + q[0] - view.rc[0], r.centroid[1] + q[1] - view.rc[1]], 1e-12));
-    const red = view.scene.find((x) => x.role === 'robot-centroid');
-    expect(red.color).toBe('Red');
-    expect(red.pts[0]).toEqual(r.centroid);
+    const red = annotation(graphics, 'robot-centroid');
+    expect(red.style.color).toEqual(NAMED.Red);
+    expect(Cases(red.g, 'Point')[0].pts[0]).toEqual(r.centroid);
   });
   it('move view: s = dl puts the robot centroid back on the first vertex', () => {
     const { view } = run({ stableOrMove: MOVE_VIEW, s: 1017 });
@@ -329,10 +332,13 @@ describe('minkowski-sum model', () => {
   // ---- plot range (F-MS-18) ----
   it('plot range: the square 7 CirclePoints[4] bounds the default picture, a spread-out robot and obstacle extend it', () => {
     expect(FRAME_HALF).toBe(4.949747468305832); // N[7/Sqrt[2]] in 15.0.1 (harness run 2, H-MS-25 %g)
-    const coords = (scene) => scene.flatMap((x) => (x.pts ?? []).concat((x.segs ?? []).flat(), (x.arrows ?? []).flat(), x.at ? [x.at] : [], x.c ? [[x.c[0] + x.r, x.c[1] + x.r], [x.c[0] - x.r, x.c[1] - x.r]] : []));
+    // every point of the picture (Graphics data): vertices, line and arrow points, text positions, the disk's box
+    const coords = (g) => [...Cases(g, (q) => q.pts).flatMap((q) => (Array.isArray(q.pts[0][0]) ? q.pts.flat() : q.pts)),
+      ...Cases(g, 'Text').map((q) => q.pos), ...Cases(g, 'Disk').flatMap((q) => [[q.c[0] + q.r, q.c[1] + q.r], [q.c[0] - q.r, q.c[1] - q.r]])];
     const spread = withPts({ 1: [1.34704, 2.4], 2: [3.249, 1.489], 3: [3.249, 3.298], 6: [-1.34704, 2.4], 7: [-3.249, 1.489], 8: [-3.249, 3.298] }, { a: true, n: 3 });
-    for (const { view } of [run({ a: true }), spread, run({ stableOrMove: MOVE_VIEW, s: 500 })]) {
-      for (const [x, y] of coords(view.scene)) {
+    for (const { graphics } of [run({ a: true }), spread, run({ stableOrMove: MOVE_VIEW, s: 500 })]) {
+      expect(coords(graphics).length).toBeGreaterThan(30);
+      for (const [x, y] of coords(graphics)) {
         expect(Math.abs(x)).toBeLessThanOrEqual(FRAME_HALF);
         expect(Math.abs(y)).toBeLessThanOrEqual(FRAME_HALF);
       }
@@ -360,5 +366,58 @@ describe('minkowski-sum model', () => {
     expect(view.orderOfNormals.every((r) => r.angle !== -Math.PI)).toBe(true);
     expect(keys(view)).toEqual(['β1', 'β2', 'β3', 'α3', 'α1', 'β4', 'β5', 'α2']);
     expect(view.pos).toBe(5);
+  });
+});
+
+// ---- v0.1.21 (owner decision D2): the model returns the drawn picture (minkowski.js picture). Before, the model's
+// view.scene described the picture but was not what main.js drew; both are frozen in
+// tests/unit/fixtures/minkowski-sum-drawing.pre-graphics.json (commit f04c973): graphics = what the page drew, model =
+// the old view.scene.
+describe('minkowski-sum: Graphics data = the drawing before v0.1.21', () => {
+  const fx = preGraphics('minkowski-sum');
+  const replay = (steps) => {
+    let r = evaluate(openingState());
+    for (const st of steps) r = evaluate({ ...r.state, ...st }); // the hook setState
+    return r;
+  };
+  it.each(fx.states.map((s) => [s.name, s]))('%s: the same Graphics data, number for number', (name, s) => {
+    const r = replay(s.steps);
+    expect(r.state).toEqual(s.state);
+    const { replaced } = sameDrawing(r.graphics, s.graphics[0], name);
+    // the Raw parts before: the subscript labels (<tspan>s), now Text[Style[Subscript[Style[α, Italic], i], …]]
+    for (const x of replaced) {
+      expect(x[1].head).toBe('Annotation');
+      expect(x[1].attrs['data-key']).toMatch(/^[αβ]\d$/);
+      const t = x[1].g.expr;
+      expect([t.expr.a.expr, t.expr.b, t.ds.map((d) => d.value)]).toEqual([x[1].attrs['data-key'][0], x[1].attrs['data-key'].slice(1), ['75%', ['0.35em', '0.35em']]]);
+    }
+  });
+  it.each(fx.states.map((s) => [s.name, s]))('%s: the numbers of the old view.scene are the drawn ones', (name, s) => {
+    const r = replay(s.steps);
+    const as = annotations(r.graphics);
+    const drawn = (id) => as.filter((a) => a.id === id);
+    const colour = (n) => NAMED[n];
+    for (const role of [...new Set(s.model.map((x) => x.role))]) {
+      const items = s.model.filter((x) => x.role === role);
+      const kind = items[0].kind;
+      if (kind === 'text' && items[0].sub) { // subscript labels: one Text each, colour and key
+        const ds = drawn(`label-${role}`);
+        expect(ds.map((a) => [a.attrs['data-key'], Cases(a.g, 'Text')[0].pos, a.style.color]), role).toEqual(items.map((x) => [x.text, x.at, colour(x.color)]));
+      } else if (kind === 'text') {
+        const [a] = drawn(`text-${role}`);
+        expect([Cases(a.g, 'Text')[0].expr, Cases(a.g, 'Text')[0].pos, a.style.color], role).toEqual([items[0].text, items[0].at, colour(items[0].color)]);
+      } else if (kind === 'arrows') { // Line[{a, notch}] and the head with its tip at b
+        const ds = drawn(`arrow-${role}`);
+        expect(ds.map((a) => (a.g.length ? [Cases(a.g, 'Line')[0].pts[0], Cases(a.g, 'Polygon')[0].pts[0]] : null)), role).toEqual(items[0].arrows.map(([a, b]) => (a[0] === b[0] && a[1] === b[1] ? null : [a, b])));
+      } else {
+        const [a] = drawn(role);
+        expect(items.length, role).toBe(1);
+        const x = items[0];
+        if (kind === 'polygon') expect([Cases(a.g, 'Polygon')[0].pts, a.style.color, a.style.opacity], role).toEqual([x.pts, colour(x.fill), x.fillOpacity]);
+        if (kind === 'lines') expect([Cases(a.g, 'Line').map((q) => q.pts), a.style.color], role).toEqual([x.segs, colour(x.color)]);
+        if (kind === 'points') expect([Cases(a.g, 'Point').map((q) => q.pts[0]), a.style.color], role).toEqual([x.pts, colour(x.color)]);
+        if (kind === 'disk') expect([a.g.c, a.g.r, a.style.color], role).toEqual([x.c, x.r, colour(x.fill)]);
+      }
+    }
   });
 });

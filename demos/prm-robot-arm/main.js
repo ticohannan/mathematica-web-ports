@@ -1,32 +1,25 @@
 // SPDX-FileCopyrightText: 2026 Tico Hannan
 // SPDX-FileCopyrightText: Original Wolfram Demonstration by Aaron T. Becker and Yitong Lu
 // SPDX-License-Identifier: CC-BY-NC-SA-3.0
-// demos/prm-robot-arm/main.js — page: controls, the outer Graphics (SVG) with the phase-space inset and the
-// three.js workspace inset, locator dragging (browser only).
-import { Controls, el } from '../../shared/ui.js';
-import { addButton, addCheckbox, addVerticalSlider, addRow } from '../../shared/ui-extra.js';
-import { createPlot, addLocators, svgNode } from '../../shared/svg-plot.js';
-import { NAMED, darker, lighter, css } from '../../shared/mma-colors.js';
+// demos/prm-robot-arm/main.js — the Manipulate: obstacle pads and heights, view angle, show obstacles, add vertices,
+// restart, progress, radius, the two configuration locators; picture 1 the outer Graphics (phase-space inset, texts,
+// locator icons; SVG), picture 2 the 3D workspace inset (three.js, workspace3d.js), on shared/manipulate.js (browser only).
+// On the shared Manipulate layer since v0.1.21 (behaviour unchanged: tests and 3D parity of scene graph and pixels).
+import { Manipulate, Locator, Button, None, Row, Slider, VerticalSlider } from '../../shared/manipulate.js';
+import {
+  Annotation, Polygon, Line, Point, Text, Translate, Circle, Clip, Raw, Style, Subscript, render, cachedGraphics,
+  AbsoluteThickness, AbsoluteDashing, AbsolutePointSize, Thickness, PointSize, CapForm, Opacity, FontSize, Italic,
+  ScriptSizeMultipliers, ScriptBaselineShifts, RGBColor, Lighter, Darker, Black, Red, Blue, Green, Magenta, Orange, Brown,
+} from '../../shared/graphics.js';
+import { svgNode } from '../../shared/svg-plot.js';
+import { NAMED, css } from '../../shared/mma-colors.js';
 import { mmaNumberString } from '../../shared/mma-extra.js';
-import { createRng, replayRng } from '../../shared/random.js';
 import { LOC_ICON, TWO_PI } from '../common/prm-core.js';
-import { initialState, evaluate, clampLoc, xMin, yMin, xMax, toOuter, regionPolygons } from './model.js';
+import { initialState, evaluate, xMin, yMin, xMax, yMax, toOuter, regionPolygons } from './model.js';
 import { createWorkspace } from './workspace3d.js';
-
-// ---- random source (A-PA-07): unseeded like the original; ?seed=N for reproducible runs ----------------------
-const seedParam = new URLSearchParams(location.search).get('seed');
-let rng = createRng({ seed: seedParam !== null && /^\d+$/.test(seedParam) ? Number(seedParam) : null });
-
-let state = initialState();
-let view = null;
-let controlActive = false; // Mathematica's ControlActive: a slider, pad or locator is being dragged
 
 // ---- the outer Graphics[{Inset[3D], Inset[phase space], Text..., Locator...}, PlotRange -> {{-2.2,7.1},{-2.4,2.4}},
 //      ImageSize -> {600, 320}] -------------------------------------------------------------------------------------
-const graphic = document.getElementById('graphic');
-// a positioned stage exactly as large as the picture: the 3D inset is placed on it in percentages
-const stage = el('div', { class: 'stage', style: 'position:relative;max-width:750px' });
-graphic.append(stage);
 // createPlot's default 2 % PlotRangePadding is kept for this outer picture: in prm-robot-arm-1.png the phase
 // frame (3.8 units) is 231.8 of the 600 image px = 61.0 px per unit; with the padding the {600, 320} image gives
 // 61.7, without it 64.5. The phase-space inset itself has PlotRangePadding -> None: its frame and ticks span
@@ -35,90 +28,70 @@ const OUTER = { range: [[-2.2, 7.1], [-2.4, 2.4]], pad: 0.02, imagePx: 600 };
 const OUTER_W = (OUTER.range[0][1] - OUTER.range[0][0]) * (1 + 2 * OUTER.pad); // image width in outer units
 const OUTER_X0 = OUTER.range[0][0] - OUTER.pad * (OUTER.range[0][1] - OUTER.range[0][0]); // left image edge
 const OUTER_Y = OUTER.pad * (OUTER.range[1][1] - OUTER.range[1][0]); // vertical padding
+const upx = OUTER_W / OUTER.imagePx; // outer units per nominal px (svg-plot's arithmetic)
 // Inset[Graphics3D[..., ImageSize -> 280], {0, 0}]: centred on outer {0, 0}, 280 of the 600 px image width (square)
 const INSET_FRAC = 280 / OUTER.imagePx;
 const INSET_HALF = (INSET_FRAC * OUTER_W) / 2; // half side of the 3D inset in outer units
-const plot = createPlot(stage, {
-  plotRange: OUTER.range, imageSize: OUTER.imagePx, padding: OUTER.pad,
-  label: 'Left: robot workspace in 3D. Right: robot phase space (joint angles θ1, θ2) with samples, roadmap and path',
-});
-// The SVG lies ON TOP of the 3D canvas (texts are drawn over the workspace inset, as in the original) but lets
-// pointer events through, except on the phase-space panel and the locators.
-plot.svg.style.position = 'relative';
-plot.svg.style.zIndex = '1';
-plot.svg.style.pointerEvents = 'none';
-const upx = plot.unitsPerPx; // outer units per nominal px
 
-// Phase-space Inset: RegionPlot coordinates (θ1, θ2) in [0, 2π]², its {0,0} at {xMin, yMin}, width xMax - xMin
-const K = (xMax - xMin) / TWO_PI; // outer units per radian
-const defs = svgNode('defs');
-const clip = svgNode('clipPath', { id: 'phase-clip' });
-clip.append(svgNode('rect', { x: 0, y: 0, width: TWO_PI, height: TWO_PI }));
-defs.append(clip);
-plot.svg.prepend(defs);
-const phaseOuter = plot.layer('phase');
-const phase = svgNode('g', { transform: `translate(${xMin},${yMin}) scale(${K})`, 'data-testid': 'phase-space' });
-phaseOuter.append(phase);
-const hit = svgNode('rect', { x: 0, y: 0, width: TWO_PI, height: TWO_PI, fill: 'transparent', style: 'pointer-events:all' });
+// The 3D inset is a canvas under the SVG (texts are drawn over the workspace, as in the original), placed on the stage
+// in percentages from the same constants as the press-area hole below. The SVG lets pointer events through except on
+// the press area and the locators (index.html).
+const box3d = document.getElementById('workspace-3d');
+Object.assign(box3d.style, { left: `${((0 - OUTER_X0) / OUTER_W - INSET_FRAC / 2) * 100}%`, width: `${INSET_FRAC * 100}%` });
+const workspace = createWorkspace(box3d); // made before the controls, as before the migration (same canvas size)
+
 // The Manipulate's Locator controls make the whole outer Graphics a LocatorPane: a press anywhere moves the nearest
-// locator there (shared/svg-plot.js pickAnywhere, A-/F-PA-09). The press area is the whole picture EXCEPT the 3D inset,
-// which keeps the mouse for rotating the view (whether the original's LocatorPane also takes presses on the 3D
-// inset is not known: K-PA-05).
-{
-  const [ax0, ax1] = [OUTER_X0, OUTER_X0 + OUTER_W];
-  const [ay0, ay1] = [OUTER.range[1][0] - OUTER_Y, OUTER.range[1][1] + OUTER_Y];
-  const h = INSET_HALF; // the same square as the 3D canvas below
-  const pressArea = svgNode('path', {
-    d: `M${ax0},${ay0}H${ax1}V${ay1}H${ax0}Z M${-h},${-h}H${h}V${h}H${-h}Z`, fill: 'transparent', 'fill-rule': 'evenodd',
-    style: 'pointer-events:fill', 'data-layer': 'press-area',
-  });
-  plot.world.prepend(pressArea);
-}
-const phaseClipped = svgNode('g', { 'clip-path': 'url(#phase-clip)' });
-const P = {
-  region: svgNode('g', { 'data-layer': 'region' }), path: svgNode('g'), pts: svgNode('g'), edges: svgNode('g'), robot: svgNode('g'),
-};
-phaseClipped.append(P.region, P.path, P.pts, P.edges, P.robot);
-const frame = svgNode('g', { 'data-layer': 'frame' });
-phase.append(hit, phaseClipped, frame);
-const T = { text: plot.layer('text'), glyphs: plot.layer('glyphs') };
+// locator there (pickAnywhere, A-/F-PA-09). The press area is the whole picture EXCEPT the 3D inset, which keeps the
+// mouse for rotating the view (whether the original's LocatorPane also takes presses on the 3D inset is not known:
+// K-PA-05): the image rectangle and, with opposite orientation, the inset square (a hole under the nonzero rule).
+const [ax0, ax1, ay0, ay1, h] = [OUTER_X0, OUTER_X0 + OUTER_W, OUTER.range[1][0] - OUTER_Y, OUTER.range[1][1] + OUTER_Y, INSET_HALF];
+const PRESS_AREA = [[ax0, ay0], [ax1, ay0], [ax1, ay1], [ax0, ay1], [ax0, ay0], [-h, -h], [-h, h], [h, h], [h, -h], [-h, -h]];
 
-const ipx = upx / K; // radians per nominal px (inside the inset)
+// ---- the phase-space Inset: RegionPlot coordinates (θ1, θ2) in [0, 2π]², its {0,0} at {xMin, yMin}, width xMax - xMin
 const W = TWO_PI; // the inset graphic's width in its own units: Thickness / PointSize fractions refer to it
-const COLOR = {
-  Magenta: NAMED.Magenta, Orange: NAMED.Orange, Green: NAMED.Green, Brown: NAMED.Brown, LighterBrown: lighter(NAMED.Brown),
-};
-const GREEN_DARK = darker(NAMED.Green);
-const MEDIUM_PX = 4.5; // PointSize[Medium] inside the inset (D-PA-04)
-const DEFAULT_POINT = 0.008; // default 2D point size, fraction of the width
-const BOUNDARY = [[0.368417, 0.506779, 0.709798], [0.880722, 0.611041, 0.142051]]; // RegionPlot BoundaryStyle Automatic
+const K = (xMax - xMin) / W; // outer units per radian
+const ipx = upx / K; // radians per nominal px (inside the inset)
+/**
+ * Inset[Graphics[list, PlotRange -> {{0, 2π}, {0, 2π}}, PlotRangePadding -> None], {xMin, yMin}, {0, 0}, xMax - xMin]:
+ * the list drawn by shared/graphics.js in phase coordinates; Thickness and PointSize are fractions of 2π, absolute sizes
+ * px of the page. ESCAPE HATCH (Raw): graphics.js's Inset draws only Line and Circle so far (gap reported, v0.1.21).
+ */
+const strokeIn = (t) => (t == null ? ipx : typeof t === 'number' ? t * W : t.abs * ipx);
+const phasePlot = (plot) => ({
+  ...plot, unitsPerPx: ipx, plotRange: [[0, W], [0, W]], strokeWidth: strokeIn,
+  line: (g, pts, st) => g.appendChild(svgNode('polyline', {
+    points: pts.map((p) => `${p[0]},${p[1]}`).join(' '), fill: 'none', stroke: css(st.stroke), 'stroke-opacity': st.opacity,
+    'stroke-width': strokeIn(st.thickness), 'stroke-dasharray': st.dash?.map((d) => d * ipx).join(' '), 'stroke-linecap': st.cap ?? 'round',
+  })),
+  point: (g, [cx, cy], size, color) => g.appendChild(svgNode('circle', { cx, cy, r: (typeof size === 'number' ? size * W : size.abs * ipx) / 2, fill: css(color) })),
+});
+const phaseInset = (list) => Raw((plot, g) => {
+  const grp = plot.group(g, { transform: `translate(${xMin},${yMin}) scale(${K})`, 'data-testid': 'phase-space' });
+  render(phasePlot(plot), grp, list);
+  return grp;
+});
 
-const seg = (g, [a, b], color, widthRad, extra = {}) => g.append(svgNode('line', {
-  x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: css(color), 'stroke-width': widthRad, 'stroke-linecap': 'butt', ...extra,
-}));
-const dot = (g, [x, y], diamRad, color, testid) => g.append(svgNode('circle', { cx: x, cy: y, r: diamRad / 2, fill: css(color), 'data-testid': testid }));
+const COLOR = { Magenta, Orange, Green, Brown, LighterBrown: Lighter(Brown) };
+const MEDIUM = AbsolutePointSize(4.5); // PointSize[Medium] inside the inset (D-PA-04)
+/** toroidLines pieces: Line[…] in each piece's colour. */
+const pieces = (list, id) => list.map((p) => [COLOR[p.color], Annotation(Line(p.line), id)]);
 
-function drawFrame() {
-  // FrameStyle -> {{Red, Directive[Red, Dashed]}, {Blue, Directive[Blue, Dashed]}}: left, right, bottom, top
-  const w = 0.75 * ipx;
-  const dash = `${4 * ipx} ${2.7 * ipx}`;
-  seg(frame, [[0, 0], [0, W]], NAMED.Red, w, { 'data-testid': 'frame-left' });
-  seg(frame, [[W, 0], [W, W]], NAMED.Red, w, { 'stroke-dasharray': dash, 'data-testid': 'frame-right' });
-  seg(frame, [[0, 0], [W, 0]], NAMED.Blue, w, { 'data-testid': 'frame-bottom' });
-  seg(frame, [[0, W], [W, W]], NAMED.Blue, w, { 'stroke-dasharray': dash, 'data-testid': 'frame-top' });
-  for (let k = 1; k <= 31; k++) {
-    const t = k * 0.2;
-    if (t >= W) break;
-    const len = (k % 5 === 0 ? 3 : 1.8) * ipx;
-    seg(frame, [[t, 0], [t, len]], NAMED.Blue, w);
-    seg(frame, [[t, W], [t, W - len]], NAMED.Blue, w);
-    seg(frame, [[0, t], [len, t]], NAMED.Red, w);
-    seg(frame, [[W, t], [W - len, t]], NAMED.Red, w);
+/** FrameStyle -> {{Red, Directive[Red, Dashed]}, {Blue, Directive[Blue, Dashed]}}: left, right, bottom, top; ticks every
+ * 0.2 rad (longer every 1) inward on all four sides. Static: drawn once (cachedGraphics). */
+const frame = cachedGraphics();
+function frameGraphics() {
+  const dashed = AbsoluteDashing([4, 2.7]);
+  const ticks = [];
+  for (let k = 1; k <= 31 && k * 0.2 < W; k++) {
+    const t = k * 0.2, len = (k % 5 === 0 ? 3 : 1.8) * ipx;
+    ticks.push(Blue, Line([[t, 0], [t, len]]), Line([[t, W], [t, W - len]]), Red, Line([[0, t], [len, t]]), Line([[W, t], [W - len, t]]));
   }
+  return [AbsoluteThickness(0.75), CapForm('Butt'),
+    Red, Annotation(Line([[0, 0], [0, W]]), 'frame-left'), [dashed, Annotation(Line([[W, 0], [W, W]]), 'frame-right')],
+    Blue, Annotation(Line([[0, 0], [W, 0]]), 'frame-bottom'), [dashed, Annotation(Line([[0, W], [W, W]]), 'frame-top')], ticks];
 }
-drawFrame();
 
-// ---- the RegionPlot of the C-obstacles (cached by obstacle positions and quality) ---------------------------------
+// ---- the RegionPlot of the C-obstacles (path data cached by obstacle positions and quality) --------------------------
 const regionCache = new Map();
 const f4 = (v) => Math.round(v * 1e4) / 1e4;
 function regionPaths(desc) {
@@ -136,179 +109,107 @@ function regionPaths(desc) {
   }
   return regionCache.get(key);
 }
-let regionKey = null;
-function drawRegion() {
-  const desc = state.freeConfigSpace;
-  const key = JSON.stringify(desc);
-  if (key === regionKey) return; // unchanged (the original keeps freeConfigSpace too)
-  regionKey = key;
-  P.region.replaceChildren();
-  if (!desc || !desc.pObs3) return; // RegionPlot[False, ...]: frame only
+const BOUNDARY = [[0.368417, 0.506779, 0.709798], [0.880722, 0.611041, 0.142051]]; // RegionPlot BoundaryStyle Automatic
+/**
+ * RegionPlot[…] of the two C-obstacles (RegionPlot[False, …] = nothing): one SVG path per region, filled, with a hairline
+ * stroke in the fill colour that hides the seams between grid cells, and its boundary. ESCAPE HATCH (Raw): a Polygon
+ * list would be one element per grid cell, with visible seams (no FilledCurve / single-path polygon in graphics.js).
+ */
+const region = (desc) => Raw((plot, g) => {
+  const grp = plot.group(g, { 'data-layer': 'region' });
+  if (!desc || !desc.pObs3) return grp;
   const fills = [NAMED.LightBlue, NAMED.LightOrange];
   regionPaths(desc).forEach(({ fill, edge }, i) => {
-    // one path per region; a hairline stroke in the fill colour hides the seams between grid cells
-    P.region.append(svgNode('path', { d: fill, fill: css(fills[i]), stroke: css(fills[i]), 'stroke-width': 0.6 * ipx, 'data-testid': `c-obstacle-${i === 0 ? 'blue' : 'orange'}` }));
-    P.region.append(svgNode('path', { d: edge, fill: 'none', stroke: css(BOUNDARY[i]), 'stroke-width': 1.2 * ipx, 'stroke-linecap': 'round' }));
+    grp.append(svgNode('path', { d: fill, fill: css(fills[i]), stroke: css(fills[i]), 'stroke-width': 0.6 * ipx, 'data-testid': `c-obstacle-${i === 0 ? 'blue' : 'orange'}` }));
+    grp.append(svgNode('path', { d: edge, fill: 'none', stroke: css(BOUNDARY[i]), 'stroke-width': 1.2 * ipx, 'stroke-linecap': 'round' }));
   });
-}
+  return grp;
+});
 
-/** loc[col]: the original's locator icon (LOC_ICON data), in outer units. */
-function locIcon(color) {
+/** loc[col] at p: the original's 17 px locator icon (LOC_ICON data) in outer units; test id icon-<name>, data-color. */
+function locIcon(name, p, bad) {
   const u = upx * LOC_ICON.pxPerUnit;
-  const g = svgNode('g', { class: 'loc-icon' });
-  for (const [[a, b], [c, d]] of LOC_ICON.lines) g.append(svgNode('line', { x1: a * u, y1: b * u, x2: c * u, y2: d * u, stroke: css(color), 'stroke-width': upx }));
-  for (const { c, r, thicknessPx, opacity } of LOC_ICON.circles) {
-    g.append(svgNode('circle', { cx: c[0] * u, cy: c[1] * u, r: r * u, fill: 'none', stroke: css(color), 'stroke-opacity': opacity, 'stroke-width': thicknessPx * upx }));
-  }
-  return g;
+  return Annotation(Translate([bad ? Red : Darker(Green), AbsoluteThickness(1), CapForm('Butt'),
+    Line(LOC_ICON.lines.map(([[a, b], [c, d]]) => [[a * u, b * u], [c * u, d * u]])),
+    LOC_ICON.circles.map(({ c, r, thicknessPx, opacity }) => [AbsoluteThickness(thicknessPx), Opacity(opacity), Circle([c[0] * u, c[1] * u], r * u)]),
+  ], p), `icon-${name}`, { class: 'loc-icon', 'data-color': bad ? 'red' : 'green' });
 }
+/** Text[Style[Subscript[θ, k], Italic, 13]] (the subscript 9 px, 3 px down, as measured). */
+const thetaLabel = (k, pos) => Annotation(Text(Style(Subscript('θ', k), Italic, FontSize(13), ScriptSizeMultipliers({ abs: 9 }),
+  ScriptBaselineShifts([{ abs: 3 }, 0])), pos), `text-theta${k}`);
 
-function drawPieces(g, pieces, widthRad, testid) {
-  for (const p of pieces) seg(g, p.line, COLOR[p.color], widthRad, { 'data-testid': testid });
-}
-
-// ---- 3D workspace inset (three.js; WebGL 2) --------------------------------------------------------------------------
-const box3d = el('div', { class: 'workspace-3d', 'data-testid': 'workspace-3d' });
-// placed from the same constants as the press-area hole (OUTER, INSET_FRAC)
-const fx = (0 - OUTER_X0) / OUTER_W; // fraction of the image width at outer x = 0
-Object.assign(box3d.style, { position: 'absolute', left: `${(fx - INSET_FRAC / 2) * 100}%`, width: `${INSET_FRAC * 100}%`, top: '50%', transform: 'translateY(-50%)', zIndex: '0' });
-stage.append(box3d);
-const workspace = createWorkspace(box3d);
-
-function draw() {
-  for (const g of Object.values(P)) if (g !== P.region) g.replaceChildren();
-  for (const g of Object.values(T)) g.replaceChildren();
-  drawRegion();
-  const thick = 0.02 * W;
-  const thin = 1 * ipx;
-  if (view.direct) drawPieces(P.path, view.direct, thick, 'direct-line');
-  drawPieces(P.path, view.connectors, view.thickConnectors ? thick : thin, 'connector');
-  drawPieces(P.path, view.pathEdges, thick, 'path-edge');
-  if (view.endPoints) for (const q of [view.qs, view.qf]) dot(P.path, q, DEFAULT_POINT * W, NAMED.Black);
-  // Darker[Green], PointSize[Medium], Point[goodPts], Red, Point[badPts]
-  for (const p of state.goodPts) dot(P.pts, p, MEDIUM_PX * ipx, GREEN_DARK, 'good-point');
-  for (const p of state.badPts) dot(P.pts, p, MEDIUM_PX * ipx, NAMED.Red, 'bad-point');
-  // toroidLines[edgesNN, Lighter[Brown], Brown] — drawn AFTER the points in this Demonstration
-  drawPieces(P.edges, view.edges, thin, 'roadmap-edge');
-  // {Blue, PointSize[0.04], Point[robotq]}
-  dot(P.robot, view.robotq, 0.04 * W, NAMED.Blue, 'robot-progress');
-  // texts of the outer Graphics
-  plot.text(T.text, 'robot workspace', [0, 2.25], { fontPx: 12, testid: 'text-workspace' });
-  plot.text(T.text, 'robot phase space', [4.8, 2.25], { fontPx: 12, testid: 'text-phase' });
-  const label = view.label === 'No path possible' ? view.label : `${view.label.prefix}${mmaNumberString(view.label.value)}`;
-  plot.text(T.text, label, [4.8, 2], { fontPx: 12, italic: true, testid: 'path-label' });
-  thetaLabel('1', [4.8, -2.2]);
-  thetaLabel('2', [2.8, 0]);
-  // Locator[pConfig, If[inCollision, loc[Red], loc[Darker[Green]]]], Locator[pConfigf, ...]
-  for (const [name, p, bad] of [['start', state.pConfig, view.inCollision], ['goal', state.pConfigf, view.inCollisionf]]) {
-    const g = locIcon(bad ? NAMED.Red : GREEN_DARK);
-    g.setAttribute('transform', `translate(${p[0]},${p[1]})`);
-    g.setAttribute('data-testid', `icon-${name}`);
-    g.setAttribute('data-color', bad ? 'red' : 'green');
-    T.glyphs.append(g);
-  }
-  locators.redraw();
-  workspace.update({ qs: view.qs, qf: view.qf, robotq: view.robotq, inCollision: view.inCollision, pObs3: view.pObs3, viewAng: state.viewAng });
-}
-
-function thetaLabel(sub, pos) {
-  const t = plot.text(T.text, '', pos, { fontPx: 13, italic: true, testid: `text-theta${sub}` });
-  t.append(document.createTextNode('θ'));
-  const s = svgNode('tspan', { 'font-size': 9 * upx, dy: 3 * upx });
-  s.textContent = sub;
-  t.append(s);
-}
-
-function run() {
-  const r = evaluate(state, rng, { controlActive });
-  state = r.state;
-  view = r.view;
-  draw();
-}
-
-// ---- locators {{pConfig, {5,0}}, {xMin-.1, yMin-.1}, {xMax+.1, yMax+.1}, Locator, Appearance -> None}, pConfigf -----
-const KEY = { start: 'pConfig', goal: 'pConfigf' };
-const locators = addLocators(plot, {
-  names: ['start', 'goal'],
-  get: (n) => state[KEY[n]],
-  appearance: () => null,
-  pickAnywhere: true, // Manipulate Locator controls = LocatorPane: a press goes to the nearest locator
-  keyStep: 0.05,
-  describe: (n) => `${n} configuration locator; arrow keys move it`,
-  onStart: () => { controlActive = true; },
-  onMove: (n, p) => { state[KEY[n]] = clampLoc(p); run(); },
-});
-for (const node of Object.values(locators.nodes)) node.style.pointerEvents = 'all';
-
-// ---- controls (ControlPlacement -> Top, Rows as in the original) ----------------------------------------------------
-const controls = new Controls(document.getElementById('controls'));
-const setLabelHtml = (api, html) => { const lab = api.row.querySelector('.ctl-label'); if (lab) lab.innerHTML = html; };
-const markActive = (node) => node.addEventListener('pointerdown', () => { controlActive = true; });
-
-/** Control[{..., ControlType -> Slider}]: a plain slider without value field and without the ⊕ panel. */
-function plainSlider(parent, { name, label, min, max, value, onInput }) {
-  const range = el('input', { type: 'range', min, max, step: 'any', value, 'data-testid': `slider-${name}`, 'aria-label': label });
-  range.addEventListener('input', () => onInput(Number(range.value)));
-  markActive(range);
-  const row = el('div', { class: 'ctl ctl-slider', 'data-testid': `ctl-${name}` }, el('label', { class: 'ctl-label' }, label), el('div', { class: 'ctl-line' }, range));
-  parent.append(row);
-  return { row, get: () => Number(range.value), set: (v) => { range.value = String(v); } };
-}
-
-const row1 = addRow(controls, { name: 'obstacles' });
-const blueXY = controls.slider2D({ name: 'blue-xy', label: 'blue_xy', min: [-1, -1], max: [1, 1], value: state.obstaxy, onInput: (v) => { state.obstaxy = v; run(); } });
-row1.append(blueXY.row); setLabelHtml(blueXY, 'blue<sub>xy</sub>'); markActive(blueXY.row.querySelector('svg'));
-const blueZ = addVerticalSlider(controls, { name: 'blue-z', label: 'blue_z', min: 0, max: 2, value: state.obstaz, parent: row1, onInput: (v) => { state.obstaz = v; run(); } });
-setLabelHtml(blueZ, 'blue<sub>z</sub>'); markActive(blueZ.row.querySelector('input'));
-const orangeXY = controls.slider2D({ name: 'orange-xy', label: 'orange_xy', min: [-1, -1], max: [1, 1], value: state.obstbxy, onInput: (v) => { state.obstbxy = v; run(); } });
-row1.append(orangeXY.row); setLabelHtml(orangeXY, 'orange<sub>xy</sub>'); markActive(orangeXY.row.querySelector('svg'));
-const orangeZ = addVerticalSlider(controls, { name: 'orange-z', label: 'orange_z', min: 0, max: 2, value: state.Obstbz, parent: row1, onInput: (v) => { state.Obstbz = v; run(); } });
-setLabelHtml(orangeZ, 'orange<sub>z</sub>'); markActive(orangeZ.row.querySelector('input'));
-for (const api of [blueZ, orangeZ]) api.row.querySelector('.ctl-vvalue').hidden = true; // VerticalSlider shows no value
-const viewCtl = plainSlider(row1, { name: 'view-angle', label: 'view angle', min: -Math.PI / 2, max: 1.5 * Math.PI, value: state.viewAng, onInput: (v) => { state.viewAng = v; run(); } });
-const obsCtl = addCheckbox(controls, { name: 'show-obstacles', label: 'show obstacles', value: state.showConfigObs, parent: row1, onChange: (v) => { state.showConfigObs = v; run(); } });
-
-const row2 = addRow(controls, { name: 'roadmap' });
-addButton(controls, { name: 'add-vertices', label: 'add 100 vertices', parent: row2, onClick: () => { state.addPoints = true; run(); } });
-addButton(controls, { name: 'restart', label: 'restart', parent: row2, onClick: () => { state.restart = true; run(); } });
-const progressCtl = plainSlider(row2, { name: 'progress', label: 'progress', min: 0, max: 1, value: state.progress, onInput: (v) => { state.progress = v; run(); } });
-progressCtl.row.querySelector('input').style.minWidth = '200px';
-const radiusCtl = controls.slider({ name: 'radius', label: 'radius', min: 0, max: 2, step: 0.01, value: state.r, onInput: (v) => { state.r = v; run(); } });
-radiusCtl.row.style.maxWidth = '460px';
-markActive(radiusCtl.row.querySelector('input[type=range]'));
-
-// ControlActive becomes False when the mouse is released: Mathematica evaluates the body once more
-window.addEventListener('pointerup', () => { if (controlActive) { controlActive = false; run(); } });
-window.addEventListener('pointercancel', () => { if (controlActive) { controlActive = false; run(); } });
-
-function syncControls() {
-  blueXY.set(state.obstaxy); blueZ.set(state.obstaz); orangeXY.set(state.obstbxy); orangeZ.set(state.Obstbz);
-  for (const api of [blueZ, orangeZ]) api.row.querySelector('.ctl-vvalue').hidden = true;
-  viewCtl.set(state.viewAng); obsCtl.set(state.showConfigObs); progressCtl.set(state.progress); radiusCtl.set(state.r);
-}
-
-document.getElementById('reset').addEventListener('click', () => {
-  state = initialState();
-  syncControls();
-  run();
-});
-
-run();
-
-// ---- test / automation hook (port addition A-PA-03) -------------------------------------------------------------
+const NAME = { pConfig: 'start', pConfigf: 'goal' };
+const I = initialState();
 const copy = (x) => JSON.parse(JSON.stringify(x));
-window.__demo = {
+
+const m = Manipulate({
   name: 'prm-robot-arm',
-  getState: () => copy(state),
-  view: () => copy(view),
-  setRng: (spec) => { rng = spec && (spec.reals || spec.integers) ? replayRng(spec) : createRng({ seed: spec?.seed ?? null }); },
-  loadState: (partial) => { state = { ...state, ...copy(partial) }; syncControls(); run(); return copy(state); },
-  moveLocator: (n, p) => { state[KEY[n]] = clampLoc(p); run(); return copy(state); },
-  worldToClient: (p) => plot.worldToClient(p),
-  phaseToClient: (q) => plot.worldToClient(toOuter(q)),
-  webgl: workspace.ok,
-  inkFraction: () => workspace.inkFraction(),
-  camera: () => workspace.cameraPosition(),
-  robotColor: () => workspace.robotColor(),
-  ready: true,
-};
+  initial: initialState,
+  random: true, // A-PA-07: unseeded like the original; ?seed=N for reproducible runs
+  ControlActive: true, // the RegionPlot uses fewer points while a control or locator is dragged (D-PA-01)
+  body: (s, { rng, controlActive }) => evaluate(s, rng, { controlActive }),
+  draw: (v, s) => [[
+    [Opacity(0), Annotation(Polygon(PRESS_AREA), 'press-area', { style: 'pointer-events:fill', 'data-layer': 'press-area' })],
+    phaseInset([
+      Clip([
+        region(s.freeConfigSpace),
+        [CapForm('Butt'), v.direct && [Thickness(0.02), pieces(v.direct, 'direct-line')],
+          [v.thickConnectors ? Thickness(0.02) : AbsoluteThickness(1), pieces(v.connectors, 'connector')],
+          [Thickness(0.02), pieces(v.pathEdges, 'path-edge')],
+          v.endPoints && [Black, Point(v.qs), Point(v.qf)]], // default PointSize 0.008 of the inset width
+        // Darker[Green], PointSize[Medium], Point[goodPts], Red, Point[badPts]
+        [Darker(Green), MEDIUM, s.goodPts.map((p) => Annotation(Point(p), 'good-point')), Red, s.badPts.map((p) => Annotation(Point(p), 'bad-point'))],
+        // toroidLines[edgesNN, Lighter[Brown], Brown] — drawn AFTER the points in this Demonstration
+        [CapForm('Butt'), AbsoluteThickness(1), pieces(v.edges, 'roadmap-edge')],
+        [Blue, PointSize(0.04), Annotation(Point(v.robotq), 'robot-progress')], // {Blue, PointSize[0.04], Point[robotq]}
+      ], [[0, W], [0, W]], 'phase-clip'),
+      frame([], frameGraphics),
+    ]),
+    [FontSize(12), Annotation(Text('robot workspace', [0, 2.25]), 'text-workspace'), Annotation(Text('robot phase space', [4.8, 2.25]), 'text-phase'),
+      Annotation(Text(Style(v.label === 'No path possible' ? v.label : `${v.label.prefix}${mmaNumberString(v.label.value)}`, Italic), [4.8, 2]), 'path-label')],
+    thetaLabel('1', [4.8, -2.2]), thetaLabel('2', [2.8, 0]),
+    // Locator[pConfig, If[inCollision, loc[Red], loc[Darker[Green]]]], Locator[pConfigf, …]
+    locIcon('start', s.pConfig, v.inCollision), locIcon('goal', s.pConfigf, v.inCollisionf),
+  ], { qs: v.qs, qf: v.qf, robotq: v.robotq, inCollision: v.inCollision, pObs3: v.pObs3, viewAng: s.viewAng }],
+  graphics: [
+    { id: 'stage', PlotRange: OUTER.range, ImageSize: OUTER.imagePx, PlotRangePadding: OUTER.pad, label: 'Left: robot workspace in 3D. Right: robot phase space (joint angles θ1, θ2) with samples, roadmap and path' },
+    { id: 'workspace-3d', renderer: workspace }, // Inset[Graphics3D[…], {0, 0}] (workspace3d.js)
+  ],
+  // ControlPlacement -> Top, Rows as in the original; `label` keeps the controls' accessible names, `name` their test ids
+  controls: [
+    Row([
+      [['obstaxy', I.obstaxy, Subscript('blue', 'xy')], [-1, -1], [1, 1], { name: 'blue-xy', label: 'blue_xy' }],
+      [['obstaz', I.obstaz, Subscript('blue', 'z')], 0, 2, { ControlType: VerticalSlider, name: 'blue-z', label: 'blue_z' }],
+      [['obstbxy', I.obstbxy, Subscript('orange', 'xy')], [-1, -1], [1, 1], { name: 'orange-xy', label: 'orange_xy' }],
+      [['Obstbz', I.Obstbz, Subscript('orange', 'z')], 0, 2, { ControlType: VerticalSlider, name: 'orange-z', label: 'orange_z' }],
+      [['viewAng', I.viewAng, 'view angle'], -Math.PI / 2, 1.5 * Math.PI, { ControlType: Slider, name: 'view-angle' }],
+      [['showConfigObs', false, 'show obstacles'], [false, true], { name: 'show-obstacles' }],
+    ], { name: 'obstacles' }),
+    Row([
+      Button('add 100 vertices', (s) => { s.addPoints = true; }, { name: 'add-vertices' }),
+      Button('restart', (s) => { s.restart = true; }),
+      [['progress', 0], 0, 1, { ControlType: Slider }],
+    ], { name: 'roadmap' }),
+    // PORT DEVIATION: the radius slider keeps the port's own steps and number field (steps: undefined)
+    [['r', I.r, 'radius'], 0, 2, 0.01, { Appearance: 'Labeled', name: 'radius', steps: undefined }],
+    // {{pConfig, {5,0}}, {xMin-.1, yMin-.1}, {xMax+.1, yMax+.1}, Locator, Appearance -> None}, pConfigf
+    [['pConfig', I.pConfig], [xMin - 0.1, yMin - 0.1], [xMax + 0.1, yMax + 0.1], Locator, { Appearance: None }],
+    [['pConfigf', I.pConfigf], [xMin - 0.1, yMin - 0.1], [xMax + 0.1, yMax + 0.1], Locator, { Appearance: None }],
+  ],
+  // the visible icons are the Locator[…] primitives above; the locators keep their test ids locator-start / locator-goal
+  locators: { testid: (n) => `locator-${NAME[n]}`, describe: (n) => `${NAME[n]} configuration locator; arrow keys move it` },
+  hook: { // port addition A-PA-03
+    copy,
+    loadState: (c) => (partial) => copy(c.setState(copy(partial))),
+    moveLocator: (c) => (n, p) => { c.moveLocator(n === 'start' ? 'pConfig' : 'pConfigf', p); return copy(c.state); },
+    phaseToClient: (c) => (q) => c.plot.worldToClient(toOuter(q)),
+    webgl: () => workspace.ok,
+    inkFraction: () => () => workspace.inkFraction(),
+    camera: () => () => workspace.cameraPosition(),
+    robotColor: () => () => workspace.robotColor(),
+  },
+});
+// VerticalSlider shows no value; the progress track as wide as in the original; the radius row not wider than its track
+for (const n of ['obstaz', 'Obstbz']) m.controls.get(n).row.querySelector('.ctl-vvalue').hidden = true;
+m.controls.get('progress').row.querySelector('input').style.minWidth = '200px';
+m.controls.get('r').row.style.maxWidth = '460px';

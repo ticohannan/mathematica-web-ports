@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.20 |
+| Code version: | 0.1.21 |
 | Document revision | 6 (2026-10-18) — DH-family move: the generic code lives in `demos/common/` (re-export shims here); no feature change |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Robot Singularities in Three-Link Manipulators", contributed by Aaron T. Becker and Yitong Lu, published January 11, 2021 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/RobotSingularitiesInThreeLinkManipulators/>. Readable source: [`docs/original-source/robot-singularities.txt`](../../docs/original-source/robot-singularities.txt); snapshots: `docs/original-snapshots/robot-singularities-*.png`; saved state: `tests/golden/robot-singularities.original-state.json` |
-| Port files | shared: `shared/mma-lighting.js` (Mathematica's documented default lighting, new with this port); app: `robots.js` (Type table, dhTransform, o3coords, Td, the transcribed Jacobians, joint-variable rules; pure), `singular-sets.js` (the 64 hand-written singularity graphics as data; pure), `svd3.js` (SVD, MatrixRank, manipulability ellipsoid; pure), `g3d.js` (a small model of Graphics3D directives, Show, ParametricPlot3D, InfinitePlane clipping, bounds; pure), `model.js` (drawJoint & co. and one evaluation of the Manipulate body; pure), `main.js` (controls, two three.js viewers), `index.html` |
+| Port files | shared: `shared/mma-lighting.js` (Mathematica's documented default lighting, new with this port); app: `robots.js` (Type table, dhTransform, o3coords, Td, the transcribed Jacobians, joint-variable rules; pure), `singular-sets.js` (the 64 hand-written singularity graphics as data; pure), `svd3.js` (SVD, MatrixRank, manipulability ellipsoid; pure), `g3d.js` (a small model of Graphics3D directives, Show, ParametricPlot3D, InfinitePlane clipping, bounds; pure), `model.js` (drawJoint & co. and one evaluation of the Manipulate body; pure), `main.js` (the Manipulate on `shared/manipulate.js`: controls, the two Graphics3D pictures drawn by `shared/graphics3d-view.js` `View3D`; v0.1.21), `index.html` |
 | Role in the project | further demonstration (extra proof of concept alongside the motion-planning port); developed in a separate, unpublished repository and added to this site in v0.1.12 |
 
 ## 1. Purpose and background
@@ -121,16 +121,23 @@ matches any text. Checked by the browser test "every control on … is specified
   `evaluate` (one evaluation of the body: wrap, recompute the singular sets only when needed, ellipsoid, Ad/Td,
   the two `Show`s). The draw functions of the Initialization code are data builders.
 - Since v0.1.16 (DH-family move) the generic parts live in `demos/common/` and are shared with the other DH-family ports:
-  `g3d.js` and `svd3.js` here are re-export shims of `demos/common/g3d.js` and `demos/common/svd3.js`; `robots.js`
+  `g3d.js` and `svd3.js` here are re-export shims of `shared/graphics3d.js` and `demos/common/svd3.js`; `robots.js`
   re-exports `DOF`, `joints`, `dhTransform`, `jointTransform`, `makeO3coords`, `computeAd`, `computeTd` from
   `demos/common/dh-chain.js`; `model.js` re-exports `drawZArrow`, `drawCoordAxes`, `drawJoint` (variant `'rs'`),
-  `drawWristCenter` from `demos/common/robot-draw.js`; `main.js` uses `addPrims`, `disposeGroup`, `fitViewer` of
-  `demos/common/g3d-three.js`.
-- `main.js`: two `createViewer`s (shared/three-helpers) side by side with their own orbit controls, each with
-  `outputColorSpace = LinearSRGBColorSpace` and the lights of `shared/mma-lighting.js`; the phase-space
-  contents live in a group scaled to the unit cube (BoxRatios {1,1,1}), clipped to the box with clipping planes;
-  box, ticks and labels are drawn separately. Singular sets are turned into three.js objects only when they are
-  recomputed (as the original recomputes them only then); the ground, robot, ellipsoid and phase-space balls are
+  `drawWristCenter` from `demos/common/robot-draw.js`; since v0.1.21 `main.js` draws through `View3D` of
+  `shared/graphics3d-view.js` (which uses `addPrims`, `disposeGroup`, `fitViewer` of `shared/graphics3d-three.js`,
+  formerly `shared/graphics3d-three.js`).
+- `main.js` (v0.1.21) is one `Manipulate({…})` call of `shared/manipulate.js` with two pictures: the popup
+  (`Assign` = `selectType`, Q-RS-02), the slider grid (own range inputs and value fields, `buildSliders`, rebuilt in
+  `after` when the robot changes) as a `Control`, the two check boxes and the setter placed in the options column
+  (`parent`); `merge` = the hook's setState rule. The body returns two Graphics3D, each drawn by a `View3D`
+  (`shared/graphics3d-view.js`; own viewer and orbit controls, `outputColorSpace = LinearSRGBColorSpace` and the
+  lights of `shared/mma-lighting.js`): the workspace (SphericalRegion fit, zoom 1.26, refitted when the bounds change
+  to 4 decimals) and the phase space with the stored options (`PlotRange`, `BoxRatios -> {1,1,1}`: the contents live in
+  a group scaled to the unit cube, clipped to the box with clipping planes; `Axes`, `AxesLabel`: box, ticks
+  (`niceTicks`) and labels drawn by `View3D`'s frame; `PlotLabel` written into the pane's label). Each singular set is a
+  `Group3D` part with a key (`iTypeOld|isJLinearVelOld`, phase also the PlotLabel): turned into three.js objects only
+  when it changes (as the original recomputes them only then); the ground, robot, ellipsoid and phase-space balls are
   rebuilt on every evaluation.
 
 ### 6.1 Building and deploying this app alone
@@ -148,8 +155,8 @@ Owner rule R-A: this one app can be taken out of the repository and hosted anywh
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/robot-singularities/`) | 7 | `g3d.js`, `index.html`, `main.js`, `model.js`, `robots.js`, `singular-sets.js`, `svd3.js` |
-| `shared/` | 11 | `exact-pi.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma-lighting.js`, `mma.js`, `requirements.js`, `style.css`, `three-helpers.js`, `ui-extra.js`, `ui.js` |
-| `demos/common/` | 5 | `dh-chain.js`, `g3d-three.js`, `g3d.js`, `robot-draw.js`, `svd3.js` |
+| `shared/` | 20 | `exact-pi.js`, `graphics.js`, `graphics3d-three.js`, `graphics3d-view.js`, `graphics3d.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma-lighting.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svd3.js`, `svg-plot.js`, `three-helpers.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
+| `demos/common/` | 3 | `dh-chain.js`, `robot-draw.js`, `svd3.js` |
 | `vendor/three/` | 9 | `addons/controls/OrbitControls.js`, `addons/lines/Line2.js`, `addons/lines/LineGeometry.js`, `addons/lines/LineMaterial.js`, `addons/lines/LineSegments2.js`, `addons/lines/LineSegmentsGeometry.js`, `addons/renderers/CSS2DRenderer.js`, `three.core.js`, `three.module.js` |
 | added by the bundler | 8 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/robot-singularities/DESIGN.md`, `vendor/three/LICENSE` |
 <!-- bundle-contents:end -->
@@ -227,6 +234,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 8 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 9 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
 | 10 | v0.1.20 | 2026-10-21 | version number only (Manipulate layer extended, eleven more apps migrated to it); no change to this app |
+| 11 | v0.1.21 | 2026-10-23 | `main.js` rewritten on the shared Manipulate layer with a 3D picture (`shared/manipulate.js` + `shared/graphics3d-view.js` `View3D`; Graphics3D data model and renderer moved to MIT `shared/graphics3d.js` / `shared/graphics3d-three.js`, owner decision D1); no change to behaviour or picture (all unit, golden and browser tests passing; three.js scene graph, full-page pixels (SwiftShader) and Manipulate state identical to v0.1.20 at sample settings); two 3D pictures, the box frame and the cached singular sets come from View3D (`Boxed`, `Axes`, `Ticks`, `AxesLabel`, `PlotLabel`, `Group3D`) |
 
 ## 10. Improvements to consider (not implemented)
 

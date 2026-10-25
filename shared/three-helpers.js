@@ -138,6 +138,13 @@ export function createViewer(container, opts) {
   return viewer;
 }
 
+/** Whether the browser offers WebGL 2. */
+export function webgl2Available() {
+  try { return !!document.createElement('canvas').getContext('webgl2'); } catch { return false; }
+}
+/** Throws when the browser has no WebGL 2 (what creating a viewer would do), so a page stops before its controls. */
+export function requireWebGL2() { if (!webgl2Available()) throw new Error('WebGL 2 is not available'); }
+
 /** Approximation of Mathematica's default Lighting -> Automatic (lights fixed to the camera). */
 function addMathematicaLighting(camera) {
   const amb = new THREE.AmbientLight(rgb([0.4, 0.2, 0.2]), Math.PI * 1.0);

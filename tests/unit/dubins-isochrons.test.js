@@ -7,10 +7,17 @@
 import { describe, it, expect } from 'vitest';
 import {
   mRS, mLS, mRL, mLR, carState, polySteps, tableValues, greyPolygons, isochronCurves, reachRegions, curveSteps,
-  initialState, inputCellState, evaluate, needsPlot, FORMULAS,
+  initialState, inputCellState, evaluate, needsPlot, FORMULAS, epiGraphics,
 } from '../../demos/dubins-isochrons/isochrons.js';
+import fs from 'node:fs';
 import { drawCar } from '../../demos/common/car-icon.js';
-import { drawCar as drawCarCP } from '../../demos/car-paths/carpaths.js';
+import { annotation } from '../../shared/graphics.js';
+import { carRecords, pieceRecord } from '../support/car-records.js';
+
+// path pieces and cars are shared/graphics.js data since v0.1.21: read back into the records of v0.1.15–v0.1.20
+const records = (pg) => ({ ...pg, pieces: pg.pieces.map(pieceRecord) });
+const CALLER = [0.1, 0.2, 0.3]; // a colour no part of the car uses (the body's 'inherit')
+const car = (...args) => carRecords(drawCar(...args), CALLER);
 
 const PI = Math.PI;
 const near = (a, b, tol = 1e-12) => expect(Math.abs(a - b), `${a} vs ${b}`).toBeLessThanOrEqual(tol);
@@ -124,7 +131,7 @@ describe('dubins-isochrons car', () => {
     nearVec(c.cxy, [-1.4326756290735476, -1.917848549326277]);
     near(c.cTheta, 6.570796326794897);
     expect(c.cAlpha).toBe(2);
-    const line = c.pathGraphics.pieces[1];
+    const line = records(c.pathGraphics).pieces[1];
     expect(line.from).toEqual(line.to); // zero length
   });
   it('p 0 puts the car at the origin heading up', () => {
@@ -133,37 +140,58 @@ describe('dubins-isochrons car', () => {
     expect(b.cxy.map((v) => v + 0)).toEqual([0, 0]); expect(b.cAlpha).toBe(0);
   });
   it('path graphics: arc centres and angles and the straight piece of each path', () => {
-    const rs = carState('RS', 2, 10, 0.5, 100).pathGraphics;
+    const rs = records(carState('RS', 2, 10, 0.5, 100).pathGraphics);
     expect(rs.colour).toBe('Blue');
     expect(rs.pieces[0]).toMatchObject({ kind: 'arc', c: [2, 0], r: 2 });
     near(rs.pieces[0].a1, PI); near(rs.pieces[0].a2, 2.891592653589793);
     nearVec(rs.pieces[1].from, [0.06217515657871053, 0.4948079185090459]);
     nearVec(rs.pieces[1].to, [2.4125127694966784, 9.699475924760172]);
-    const lr = carState('LR', 2, 10, 5.57, 100).pathGraphics;
+    const lr = records(carState('LR', 2, 10, 5.57, 100).pathGraphics);
     expect(lr.colour).toBe('Green');
     expect(lr.pieces.length).toBe(3); // the first arc twice (Q-DI-05)
     expect(lr.pieces[0]).toEqual(lr.pieces[1]);
     expect(lr.pieces[0]).toMatchObject({ c: [-2, 0], a1: 0 }); near(lr.pieces[0].a2, 2.785);
     nearVec(lr.pieces[2].c, [-5.748366835276777, 1.3963330792461932]);
     near(lr.pieces[2].a1, 5.926592653589793); near(lr.pieces[2].a2, 3.7115926535897934);
-    const rl = carState('RL', 2, 10, 4.2700000000000005, 100).pathGraphics;
+    const rl = records(carState('RL', 2, 10, 4.2700000000000005, 100).pathGraphics);
     expect(rl.colour).toBe('Red');
     near(rl.pieces[0].a1, PI); near(rl.pieces[0].a2, 1.0065926535897929);
     nearVec(rl.pieces[1].c, [4.1389723111431, 3.3800587941873355]);
     near(rl.pieces[1].a1, -2.135); near(rl.pieces[1].a2, 0.73);
   });
-  it('drawCar of this Demonstration: optional headlights 8 units long without edges', () => {
+  it('drawCar of this Demonstration differs from the default car only in optional headlights 8 units long without edges', () => {
     const opts = { lights: true, beam: 8, headlightEdge: null };
-    const on = drawCar([0, 0], 0, 0, 0.8, opts), off = drawCar([0, 0], 0, 0, 0.8, { ...opts, lights: false });
+    const on = car([0, 0], 0, 0, 0.8, opts), off = car([0, 0], 0, 0, 0.8, { ...opts, lights: false });
     const lights = on.prims.filter((p) => p.role === 'headlight');
     expect(lights.length).toBe(2);
     nearVec(lights[0].pts.flat(), [1.7, 0.35, 8.7, 0.05, 8.7, 0.55], 1e-14);
     nearVec(lights[1].pts.flat(), [1.7, -0.35, 8.7, -0.05, 8.7, -0.55], 1e-14);
     for (const l of lights) { expect(l.edge).toBe(null); near(l.opacity, 0.64, 1e-15); }
     expect(off.prims.some((p) => p.role === 'headlight')).toBe(false);
-    // every other primitive as car-paths' drawCar
-    const cp = drawCarCP([0, 0], 0, 0, 0.8).prims.filter((p) => p.role !== 'headlight');
+    // every other primitive as the default car (car-paths'; pinned in tests/unit/car-icon.test.js)
+    const cp = car([0, 0], 0, 0, 0.8).prims.filter((p) => p.role !== 'headlight');
     expect(off.prims).toEqual(cp);
+  });
+});
+
+describe('dubins-isochrons epiGraphics as data', () => {
+  it('the path pieces and the two cars hold exactly the numbers of v0.1.20 (fixture dubins-isochrons-drawing.pre-graphics.json)', () => {
+    const PRE = JSON.parse(fs.readFileSync('tests/unit/fixtures/dubins-isochrons-drawing.pre-graphics.json', 'utf8'));
+    expect(PRE.rows.length).toBeGreaterThanOrEqual(3);
+    for (const row of PRE.rows) {
+      const { state, view } = evaluate({ ...initialState(), ...row.partial });
+      const graphics = epiGraphics(state.r, view);
+      expect(JSON.parse(JSON.stringify(records(view.pathGraphics))), JSON.stringify(row.partial)).toEqual(row.pathGraphics);
+      // the drawn path is the same data, in the path's colour, Thick
+      const drawn = annotation(graphics, 'path-graphics');
+      expect(drawn.g).toBe(view.pathGraphics.pieces);
+      expect(drawn.attrs['data-path']).toBe(view.pathGraphics.path);
+      expect(drawn.style.thickness).toEqual({ abs: 2 });
+      for (const id of ['start-car', 'moving-car']) {
+        const c = annotation(graphics, id);
+        expect(JSON.parse(JSON.stringify(carRecords(c.g, c.style.color, id))), id).toEqual({ prims: row.cars[id].prims });
+      }
+    }
   });
 });
 

@@ -4,7 +4,8 @@
 // demos/prm-robot-arm/workspace3d.js — the "robot workspace" Inset: Graphics3D[{start & goal robots (translucent),
 // base, current robot, blue and orange spheres}, ViewPoint -> {2 Cos[viewAng], 2 Sin[viewAng], 1},
 // PlotRange -> {1.5{-1,1}, 1.5{-1,1}, {-0.1, 2.4}}, Lighting -> Automatic, ImageSize -> 280] in three.js.
-// Browser only. When WebGL 2 is not available, the inset shows a notice and the rest of the page keeps working
+// The returned object is the renderer of the Manipulate's second picture (main.js): draw(w) with
+// w = { qs, qf, robotq, inCollision, pObs3, viewAng } is called after every evaluation. Browser only. When WebGL 2 is not available, the inset shows a notice and the rest of the page keeps working
 // (owner's choice for this page: no data-needs-webgl2 page requirement).
 import { createViewer, THREE, cylinderBetween, inkFraction } from '../../shared/three-helpers.js';
 import { NAMED } from '../../shared/mma-colors.js';
@@ -39,7 +40,7 @@ export function createWorkspace(container) {
     box.innerHTML = '<strong>The 3D robot workspace needs WebGL 2.</strong> This browser does not offer WebGL 2 (it may be '
       + 'switched off or blocked for your graphics card). The phase-space plot on the right works without it.';
     container.append(box);
-    return { ok: false, update: () => {}, inkFraction: () => 0, cameraPosition: () => null, robotColor: () => null };
+    return { ok: false, draw: () => {}, update: () => {}, inkFraction: () => 0, cameraPosition: () => null, robotColor: () => null };
   }
 
   const viewer = createViewer(container, { box: BOX, viewPoint: viewPointOf(-Math.PI / 2), size: 280, maxSize: 4000 });
@@ -144,6 +145,7 @@ export function createWorkspace(container) {
 
   return {
     ok: true,
+    draw: (w) => update(w),
     update,
     inkFraction: () => inkFraction(viewer.renderer),
     cameraPosition: () => camera.position.toArray(),

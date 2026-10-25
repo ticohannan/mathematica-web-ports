@@ -9,7 +9,7 @@
 import { dhTransform, mul4, mul4Fma } from '../common/dh-chain.js';
 import { chop } from '../../shared/mma.js';
 import { drawJoint, drawGripper, GROUND, axisBottomZ } from '../common/robot-draw.js';
-import { Graphics3D, GeometricTransformation, Cuboid, Cylinder, Opacity, Gray, flatten } from '../common/g3d.js';
+import { Graphics3D, GeometricTransformation, Cuboid, Cylinder, Opacity, Gray, flatten } from '../../shared/graphics3d.js';
 import { trigPi } from '../../shared/exact-pi.js';
 import { piFraction, fractionText } from '../../shared/mma-text.js';
 import { mmaNumberString, nDigits } from '../../shared/mma-extra.js';

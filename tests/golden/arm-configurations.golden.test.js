@@ -19,7 +19,7 @@ import {
   machine, origin,
 } from '../../demos/arm-configurations/model.js';
 import { dhTableRows, cellText } from '../../demos/arm-configurations/robots.js';
-import { cuboidCorners } from '../../demos/common/g3d.js';
+import { cuboidCorners } from '../../shared/graphics3d.js';
 import { mmaSliderText } from '../../shared/ui.js';
 
 const fx = parseLexical(fs.readFileSync('tests/golden/arm-configurations.original-states.json', 'utf8'));

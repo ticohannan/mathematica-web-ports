@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.20 |
+| Code version: | 0.1.21 |
 | Document revision | 1 (2026-10-17) — first implementation |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Robot Motion with Obstacles", contributed by Aaron T. Becker and Haoran Zhao, published 2016-04-18 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/RobotMotionWithObstacles/>. Readable source: `docs/original-source/robot-motion-obstacles.txt`; snapshots: `docs/original-snapshots/robot-motion-obstacles-1.png` … `-4.png` (the extraction's pictures 5 and 6 are the Wolfram logo, N-RM-03); stored output cell (Body, Initialization, Specifications and the initial settings): raw definition notebook lines 1074–1340 (Body 1133, Specifications 1281, Initialization 1305); fixture `tests/golden/robot-motion-obstacles.original-states.json` (`states[0]` live state, raw line 1076; `snapshots[1…4]` the snapshot Settings, raw lines 2117, 2946, 3747, 4533; `specs` the initial settings) |
@@ -272,6 +272,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 5 | v0.1.19 | 2026-10-21 | main.js rewritten on the new shared Manipulate layer (`shared/manipulate.js`, `shared/graphics.js`): the controls are written as Manipulate control specs and the picture as Graphics data; no change to behaviour or picture (all unit, golden and browser tests unchanged and passing; screenshots and Manipulate state identical to v0.1.18 at sample settings); `demos/common/arm-view.js` now returns Graphics data (§6) |
 | 6 | v0.1.20 | 2026-10-21 | bundle table only (the Manipulate layer now also loads `shared/ui-extra.js`, `ui-interval.js`, `random.js`); no change to this app |
+| 7 | v0.1.21 | 2026-10-23 | version number; bundle table (shared modules renamed in v0.1.21: `shared/graphics-extras.js` etc.) |
 
 ## 10. Improvements to consider (not implemented)
 

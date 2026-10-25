@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.20 |
+| Code version: | 0.1.21 |
 | Document revision | 6 (2026-10-17) — polygon helpers moved to `demos/common/polygon-core.js`; §11 Errors in the original (R-C); checklist items as operator procedures (R-B) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Motion Planning for Robot Path around Obstacles" by Shreyas Poyrekar, Aaron T. Becker and Arifa Sultana (CC BY-NC-SA 3.0); author notebook made with Mathematica 10.2. Readable source: [`docs/original-source/motion-planning.txt`](../../docs/original-source/motion-planning.txt) |
-| Port files | `planner.js` (computation, pure), `main.js` (the Manipulate on `shared/manipulate.js`: controls, locators, Graphics data, readout, scene link; v0.1.20), `index.html` (page) |
+| Port files | `planner.js` (computation, pure), `main.js` (the Manipulate on `shared/manipulate.js`: controls, locators, Graphics data, readout, scene link; v0.1.20), `index.html` (page, with the start-up notice, A-MP-09) |
 
 ## 1. Purpose and background
 
@@ -115,6 +115,7 @@ Columns: **Why** = the reason the feature exists; **Since** = first code version
 | A-MP-06 | "All demos" link back to the landing page | site navigation | v0.1.0 | inventory; M-GEN-01 |
 | A-MP-07 | Credit footer: original title, authors, licence, adaptation notice, links to this document and LICENSE.md | required by the CC BY-NC-SA 3.0 licence | v0.1.1 | e2e "attribution on" |
 | A-MP-08 | Standalone bundle: `npm run bundle -- motion-planning` writes this app alone, with exactly the files it loads, a root page, README and licence texts, to `dist/motion-planning/` (§6.1) | owner rule R-A: anyone can take this one app and host it elsewhere | v0.1.15 | e2e "bundle: motion-planning runs from its own folder"; unit "bundle contents listed in DESIGN.md match the collector" |
+| A-MP-09 | Start-up notice (DEC-22): `shared/requirements.js` (without `data-needs-webgl2`: a 2D/SVG app; watchdog: the page counts as started when `window.__demo.ready` is set) and a `<noscript>` notice in the picture; a clear message when the browser lacks JavaScript modules or the page does not start | a clear message instead of an empty or dead page; the last apps without it (owner decision 2026-10-23, DEC-37) | v0.1.21 | e2e "start-up notice when" |
 
 ## 5. UI inventory
 
@@ -177,6 +178,10 @@ document" fails if the page has an element not listed here, or a row here matche
   from URL parameters (the first evaluation's `initial`; "Initial settings" restores the original's defaults), the
   "show numbers" readout (`after`) and the scene link; the hook adds `scene`, `setState` (clamps locators, restarts
   progress unless `s` is given), `locatorClientPoint`, `worldToClient` and `sceneLink` (A-MP-05).
+- **Start-up notice (since v0.1.21, owner decision 2026-10-23, DEC-37, A-MP-09).** `index.html` loads
+  `shared/requirements.js` (no `data-needs-webgl2`: SVG only) before the module and has the `<noscript>` notice in
+  `#graphic`, as the other 2D apps; the layer's hook (`window.__demo.ready`) tells the watchdog that the page started.
+  The page looks and behaves as before when it starts (pixel comparison with v0.1.20).
 - **Verification.** Golden tests compare with results stored in the original notebook; the
   comparison tool (`npm run compare:original`) runs the original code in Mathematica on many scenes;
   an independent reference planner checks paths for collisions and optimality.
@@ -201,7 +206,7 @@ Owner rule R-A: this one app can be taken out of the repository and hosted anywh
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/motion-planning/`) | 3 | `index.html`, `main.js`, `planner.js` |
-| `shared/` | 12 | `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `random.js`, `style.css`, `svg-plot.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
+| `shared/` | 13 | `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-plot.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
 | `demos/common/` | 1 | `polygon-core.js` |
 | added by the bundler | 7 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/motion-planning/DESIGN.md` |
 <!-- bundle-contents:end -->
@@ -273,6 +278,7 @@ No open proposal. Template for a request: copy a row (see [`docs/DESIGN_PROCESS.
 | 9 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 10 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
 | 11 | v0.1.20 | 2026-10-21 | `main.js` rewritten on the shared Manipulate layer (`shared/manipulate.js`, `shared/graphics.js`): control specs in Mathematica's form, the picture as Graphics data; no change to behaviour or picture (all unit, golden and browser tests unchanged and passing; screenshots and Manipulate state identical to v0.1.19 at sample settings) |
+| 12 | v0.1.21 | 2026-10-23 | **owner decision 2026-10-23 (DEC-37):** the DEC-22 start-up notice (`shared/requirements.js`, `<noscript>`) added (A-MP-09); otherwise unchanged (screenshots identical to v0.1.20) |
 
 ## 10. Improvements to consider (not implemented)
 

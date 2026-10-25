@@ -8,6 +8,7 @@ import fs from 'node:fs';
 import { evaluate, initialState, getOptimalPath, pathLength } from '../../demos/car-paths/carpaths.js';
 import { mmaNumberString } from '../../shared/mma-extra.js';
 import { changeOfBasisR, cart2Polar, modPi, angfrom1to2, path7, timeflip, drawPath } from '../../demos/car-paths/carpaths.js';
+import { Cases, Orange } from '../../shared/graphics.js';
 import { loadStates, plain, isIntegerLiteral } from '../../tools/lib/wl-json.mjs';
 
 const saved = JSON.parse(fs.readFileSync('tests/golden/car-paths.original-state.json', 'utf8')).state;
@@ -184,7 +185,9 @@ describe('car-paths golden: the four snapshot states', () => {
     // complement convention would draw 4.87 and 1.48 rad instead
     const st = snap(4);
     const L = st.locs;
-    const arcs = drawPath(st.optPath, [L[0][0], L[0][1], angfrom1to2(L[0], L[1])], st.minRadius).filter((e) => e.kind === 'arc');
+    // drawPath's Graphics data (v0.1.21): the arcs Circle[center, minRadius, {angS, angE}]
+    const arcs = Cases(drawPath(Orange, st.optPath, [L[0][0], L[0][1], angfrom1to2(L[0], L[1])], st.minRadius), 'Circle')
+      .map((c) => ({ angS: c.angles[0], angE: c.angles[1] }));
     expect(arcs).toHaveLength(2);
     arcs.forEach((a, i) => {
       const param = st.optPath[i === 0 ? 0 : 2][0];

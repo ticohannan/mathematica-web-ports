@@ -13,7 +13,7 @@ import {
 import { TYPES as RS_TYPES } from '../../demos/robot-singularities/robots.js';
 import { makeO3coords, computeAd, computeTd } from '../../demos/common/dh-chain.js';
 import { drawJoint } from '../../demos/common/robot-draw.js';
-import { flatten, cuboidCorners } from '../../demos/common/g3d.js';
+import { flatten, cuboidCorners } from '../../shared/graphics3d.js';
 import { mUnequal } from '../../shared/mma.js';
 
 const { cos, sin } = Math;

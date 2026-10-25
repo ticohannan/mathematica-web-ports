@@ -209,7 +209,7 @@ export function findHeads(v, heads, out = []) {
 // ---------------------------------------------------------------- graphics primitives (HW-45 %g3d against g3d.js)
 // g3dPrimitiveDifferences(recordedGraphicOrList, portContent) -> {counts, differences}: compares, in expression order,
 // Cuboid corners, Cylinder end points and radius, Line point lists (a recorded Line of several polylines counts as
-// that many) with a port content tree built with demos/common/g3d.js (untransformed, as the record holds them inside
+// that many) with a port content tree built with shared/graphics3d.js (untransformed, as the record holds them inside
 // GeometricTransformation/Rotate), by value bit for bit (exact recorded numbers by their double). Rotate angles and
 // directives are not compared. portPrimitives(content) lists the port's cuboid/cylinder/line primitives.
 const G3D_HEADS = ['Cuboid', 'Cylinder', 'Line'];

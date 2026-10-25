@@ -18,7 +18,7 @@ import {
   jointLabels, fitCamera, groundWidthFraction, MW_ZOOM, MESH_STYLE, BOUNDARY_STYLE, TYPE_NAMES, selectType,
 } from '../../demos/manipulator-workspaces/model.js';
 import { NAMED } from '../../shared/mma-colors.js';
-import { flatten, cuboidCorners } from '../../demos/common/g3d.js';
+import { flatten, cuboidCorners } from '../../shared/graphics3d.js';
 
 const fx = JSON.parse(fs.readFileSync('tests/golden/manipulator-workspaces.original-states.json', 'utf8'));
 const dist = (p, q) => Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);

@@ -2,7 +2,8 @@
 // SPDX-FileCopyrightText: Original Wolfram Demonstration by Aaron T. Becker and Benedict Isichei
 // SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // demos/distance-norms/model.js — "Distance Norms in Robot Workspace and Phase Space": one evaluation of the
-// Manipulate body as data (pure: no DOM, importable in Node). The original's body:
+// Manipulate body as data and its picture as shared/graphics.js data (pure: no DOM, importable in Node). The original's
+// body:
 //
 //   Module[{r2, Theta1, Theta2, w = 1/8, l = 1, arm},
 //     r2 = 2 - r1;
@@ -27,6 +28,13 @@
 import { arcTan, norm as dnrm2 } from '../../shared/mma-exact.js';
 import { armGeometry, tipPosition } from '../common/two-link.js';
 import { myArrowArc } from '../common/arrow-arcs.js';
+import {
+  Annotation, Rotate, Rectangle, Point, Line, Polygon, Text, Style, Subscript, Clip, RGBColor, EdgeForm, FaceForm, Opacity,
+  AbsolutePointSize, AbsoluteThickness, CapForm, FontSize, FontFamily, Italic, ScriptSizeMultipliers, ScriptBaselineShifts,
+  Black, Red, Blue, LightGray, None, cachedGraphics,
+} from '../../shared/graphics.js';
+import { frameLayout, framePrimitives } from '../../shared/svg-frame.js';
+import { arcArrowGraphics, plotUnitsPerPx } from '../../shared/graphics-extras.js';
 
 export const PLOT_RANGE = [[-2.5, 2.5], [-2.5, 2.5]];
 /** SetterBar values {"workspace", "phase space"} and {1, 2, 3, ∞}. */
@@ -274,3 +282,59 @@ export function evaluate(state) {
     region: { mode, sheets: sheetData, boundary, totalArea: sheetData.reduce((s, x) => s + x.area, 0), degenerate },
   };
 }
+
+// ------------------------------------------------------------------------------------------------ the picture
+// ParametricPlot[…, Prolog -> arm] as shared/graphics.js data: ParametricPlot defaults, ImageSize 360, frame exactly at
+// ±2.5 (no padding; IMAGE)
+/** The picture's PlotRange: the frame at ±2.5 with the margins of the tick labels. */
+export const LAYOUT_RANGE = frameLayout(PLOT_RANGE, { imageSize: IMAGE.imageSize, margins: IMAGE.margins }).plotRange;
+const U = plotUnitsPerPx(LAYOUT_RANGE, IMAGE.imageSize, 0);
+const FONT = '"Helvetica Neue", Helvetica, Arial, sans-serif';
+const POINT = AbsolutePointSize(2.4); // default Point size, measured in snapshot 1 (D-DN-07)
+const HEAD = 0.03 * U * IMAGE.imageSize; // the arcs' arrowheads: 0.03 of the image width, fitted to snapshot 1 (D-DN-07)
+const REGION = RGBColor(...REGION_STYLE.color); // PlotStyle -> Opacity[0.5] with ColorData[97][1]; BoundaryStyle the same
+const CLIP = 'distance-norms-plot-range'; // PlotRangeClipping: the region and its outline end at the frame
+
+/** Style[θᵢ, Medium] (12 pt): italic θ with a subscript index, the index 8.5 px high and 4 px down (as measured). */
+const thetaLabel = (index, at, color, id) => [color, Annotation(Text(Style(Subscript(Style('θ', Italic), index), FontSize(12), FontFamily(FONT),
+  ScriptSizeMultipliers({ abs: 8.5 }), ScriptBaselineShifts([{ abs: 4 }, { abs: 4 }])), at), id)];
+/** Rectangle[{x0, y0}, {x1, y1}, RoundingRadius -> w] rotated about the joint. */
+const stadium = (link, id) => Annotation(Rotate(Rectangle(...link.rect, { RoundingRadius: link.radius }), link.angle, link.about), id);
+/** Rotate[{…, Text["Robot Arm", pos]}, angle, about] (Black, 9 px). */
+const robotArm = (ra, link) => ra.link === link && Annotation(Rotate([Black, FontSize(9), FontFamily(FONT), Text('Robot Arm', ra.anchor)], ra.angle, ra.about), 'robot-arm-label');
+const arcArrow = (color, data, id) => [color, Annotation(arcArrowGraphics(data, { headLength: HEAD, pointSize: POINT }), id)];
+
+/** The arm (Prolog -> arm), in the original's list order. */
+const armGraphics = (a) => [LightGray, EdgeForm(Black),
+  stadium(a.link1, 'link-1'), robotArm(a.robotArm, 1), // Rotate[{Rectangle[…], If[r2 < 1, {Black, Text[…]}]}, Theta1, {0, 0}]
+  [Black, POINT, Annotation(Point(a.base), 'base-point')], // {Black, Point[{{0, 0}}], , Red, myArrowArc[…], If[…, Text[θ₁, …]]}
+  arcArrow(Red, a.arcs.theta1, 'theta1-arc'), a.theta1Label.visible && thetaLabel(1, a.theta1Label.at, Red, 'theta1-label'),
+  stadium(a.link2, 'link-2'), robotArm(a.robotArm, 2),
+  [Black, POINT, Annotation(Point(a.elbow), 'elbow-point')],
+  arcArrow(Blue, a.arcs.theta2, 'theta2-arc'), a.theta2Label.visible && thetaLabel(2, a.theta2Label.at, Blue, 'theta2-label'),
+];
+
+// Frame -> True, FrameTicks on four sides with labels on the left and bottom, Axes through the origin (gray): the
+// shared/svg-frame.js data, grouped as its drawFrame groups them (frame, axes, ticks, labels)
+const GROUP = { frame: 'frame', 'axis-x': 'axes', 'axis-y': 'axes', major: 'ticks', minor: 'ticks', 'label-x': 'labels', 'label-y': 'labels' };
+function frame() {
+  const { lines, texts } = framePrimitives({ unitsPerPx: U, ...FRAME });
+  const groups = {};
+  const add = (role, g) => (groups[GROUP[role]] ??= []).push(g);
+  lines.forEach((l) => add(l.role, Line(l.pts)));
+  texts.forEach((t) => add(t.role, Text(t.str, t.pos, { anchor: t.anchor })));
+  return [RGBColor(0.4, 0.4, 0.4), AbsoluteThickness(0.5), CapForm('Butt'), FontSize(FRAME.fontPx), Object.entries(groups).map(([k, list]) => Annotation(list, k))];
+}
+const frameCache = cachedGraphics(); // drawn once
+const layer = (list, name, id = name) => Annotation(list, id, { 'data-layer': name });
+const clipped = (list, name, id) => Annotation(Clip(list, PLOT_RANGE, CLIP), id, { 'data-layer': name });
+
+/** The picture of one evaluation (evaluate's result): the arm (Prolog), the frame, the shaded region and its outline. */
+export const picture = (r) => [
+  layer(armGraphics(r.arm), 'arm'), // Prolog -> arm
+  layer(frameCache([], frame), 'frame'),
+  // one translucent polygon per sheet (overlaps darker, D-DN-02), then the opaque outline
+  clipped(r.region.degenerate ? [] : [REGION, Opacity(REGION_STYLE.opacity), r.region.sheets.map((q, i) => Annotation(Polygon(q.world), `region-sheet-${i + 1}`))], 'region', 'region'),
+  clipped([FaceForm(None), EdgeForm(REGION), Annotation(Polygon(r.region.boundary), 'region-boundary')], 'outline', 'region-outline'),
+];
+

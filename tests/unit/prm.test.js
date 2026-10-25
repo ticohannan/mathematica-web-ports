@@ -4,6 +4,7 @@
 // tests/unit/prm.test.js — model of "Probabilistic Roadmap Method" (one evaluation of the Manipulate body).
 // Expected values are derived by hand from the original's code (R-16).
 import { describe, it, expect } from 'vitest';
+import { preGraphics, sameDrawing, graphicsJSON } from '../support/pre-graphics.js';
 import { initialState, evaluate, makePolys, pathOKT, clampLoc, TWO_PI, DELTA, LOC_MIN, LOC_MAX } from '../../demos/prm/model.js';
 import { createRng, replayRng } from '../../shared/random.js';
 
@@ -159,5 +160,22 @@ describe('prm: query, label and progress', () => {
     expect(r.view.totdist).toBeCloseTo(1.8, 12);
     expect(r.view.label.value).toBeCloseTo(1.8, 12);
     expect(r.view.progressPoint[0]).toBeCloseTo(1.8, 12);
+  });
+});
+
+// ---- v0.1.21 (owner decision D2): model.js returns the picture as shared/graphics.js data (picture). The drawing output
+// of the page before that change is frozen in tests/unit/fixtures/prm-drawing.pre-graphics.json (f04c973; ?seed=1).
+describe('prm: Graphics data = the drawing before v0.1.21', () => {
+  const fx = preGraphics('prm');
+  const replay = (steps) => {
+    const rng = createRng({ seed: 1 });
+    let r = evaluate(initialState(), rng);
+    for (const st of steps) r = evaluate({ ...r.state, ...JSON.parse(JSON.stringify(st)) }, rng); // the hook loadState
+    return r;
+  };
+  it.each(fx.states.map((s) => [s.name, s]))('%s: the same Graphics data, number for number', (name, s) => {
+    const r = replay(s.steps);
+    expect(graphicsJSON(r.state)).toEqual(s.state);
+    expect(sameDrawing(r.graphics, s.graphics[0], name).replaced).toEqual([]);
   });
 });

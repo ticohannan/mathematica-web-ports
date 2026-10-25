@@ -23,7 +23,7 @@ import { arcTan } from '../../shared/mma-exact.js';
 import { cosSinPi } from '../../shared/exact-pi.js';
 import { engineeringForm } from '../../shared/mma-extra.js';
 import { viewerCamera } from '../../shared/three-helpers.js';
-import { flatten } from '../../demos/common/g3d.js';
+import { flatten } from '../../shared/graphics3d.js';
 import { DIAL_TABLE_32, nearest32Index } from '../../demos/common/dial-control.js';
 
 const DIR = 'manipulability-ellipsoid';

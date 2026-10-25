@@ -25,6 +25,9 @@
 //                                name); the encoded picture is cached per image object, so an unchanged image is not
 //                                re-encoded on every redraw.
 //   Raw(draw)                  — a migration aid: an older SVG drawing helper used inside Graphics data.
+//   Clip(g, range, id)          — PlotRangeClipping for one part of a picture.
+//   Cases(g, head | pred), annotations(g), annotation(g, id) — read a picture's primitives (pure; for tests and models
+//                                that return their picture as Graphics data).
 //
 // Sizes follow svg-plot.js: Thickness[t] and PointSize[d] are fractions of the plot width; AbsoluteThickness,
 // AbsolutePointSize, AbsoluteDashing and font sizes are pixels at the picture's ImageSize.
@@ -86,6 +89,13 @@ export const Directive = (...ds) => directive('directive', ds);
 export const FontSize = (px) => directive('fontSize', px);
 export const FontFamily = (f) => directive('fontFamily', f);
 export const Italic = directive('fontSlant', 'italic');
+/**
+ * ScriptSizeMultipliers -> m and ScriptBaselineShifts -> {sub, sup} (Mathematica's Style options for Subscript /
+ * Superscript): a number is a fraction of the font size (defaults 0.72 and {0.28, 0.4}); { abs: px } a size or shift in
+ * pixels; a string ('75%', '0.3em') is written into the SVG as it is.
+ */
+export const ScriptSizeMultipliers = (m) => directive('scriptSize', m);
+export const ScriptBaselineShifts = ([sub, sup]) => directive('scriptShift', [sub, sup]);
 export const Bold = directive('fontWeight', 'bold');
 
 // ---- primitives ----------------------------------------------------------------------------------------------------
@@ -165,6 +175,13 @@ export const ImageRaster = (image, [[x0, y0], [x1, y1]]) => prim('ImageRaster', 
  * Lets a picture written as data reuse an older drawing helper until that helper is rewritten as data.
  */
 export const Raw = (fn) => prim('Raw', { fn });
+/**
+ * Clip[g, {{x0, x1}, {y0, y1}}, id] — PlotRangeClipping for a part of a picture: g drawn in a group clipped to the
+ * rectangle (an SVG clipPath with this id, made once per picture). No Wolfram Language head of this name (Mathematica
+ * clips the whole picture to its PlotRange); it lets one part end at the frame while others do not. The id names an
+ * SVG element of the page: give each picture's Clip its own id.
+ */
+export const Clip = (g, range, id) => prim('Clip', { g, range, id });
 /** Annotation[g, id, attrs]: data-testid and further attributes for the element drawn for g. */
 export const Annotation = (g, id, attrs = {}) => prim('Annotation', { g, id, attrs });
 
@@ -172,7 +189,7 @@ export const Annotation = (g, id, attrs = {}) => prim('Annotation', { g, id, att
 /** Style[expr, directives…] — Italic, Bold, a colour, FontSize[n], or an options object {FontSize, FontFamily}. */
 export function Style(expr, ...opts) {
   const ds = opts.flatMap((o) => (typeof o === 'number' ? [FontSize(o)] // Style[expr, 14]: a number is the font size
-    : o?.dir ? [o] : Object.entries(o).map(([k, v]) => ({ FontSize, FontFamily })[k]?.(v)).filter(Boolean)));
+    : o?.dir ? [o] : Object.entries(o).map(([k, v]) => ({ FontSize, FontFamily, ScriptSizeMultipliers, ScriptBaselineShifts })[k]?.(v)).filter(Boolean)));
   return Object.freeze({ head: 'Style', expr, ds });
 }
 /** Subscript[a, b]. */
@@ -184,6 +201,11 @@ export const Superscript = (a, b) => Object.freeze({ head: 'Superscript', a, b }
  * controls side by side (opts: { name } gives the group the test id row-<name>, { class } a CSS class).
  */
 export const Row = (items, opts = {}) => Object.freeze({ head: 'Row', items, opts });
+/**
+ * Column[{line1, line2, …}] as the text of a Text: several lines, centred as a block on the text position (each line
+ * 1.2 em below the last; the first moved up by 0.6 em per extra line).
+ */
+export const Column = (items) => Object.freeze({ head: 'Column', items });
 
 /** Plain text of a text expression (for labels and accessibility): Subscript['θ', 1] → "θ1". */
 export function textOf(e, { sep = '' } = {}) {
@@ -192,6 +214,7 @@ export function textOf(e, { sep = '' } = {}) {
   if (e.head === 'Style') return textOf(e.expr, { sep });
   if (e.head === 'Subscript' || e.head === 'Superscript') return textOf(e.a, { sep }) + sep + textOf(e.b, { sep });
   if (e.head === 'Row') return e.items.map((x) => textOf(x, { sep })).join('');
+  if (e.head === 'Column') return e.items.map((x) => textOf(x, { sep })).join('\n');
   return '';
 }
 
@@ -203,6 +226,7 @@ export function htmlOf(e) {
   if (e.head === 'Subscript') return `${htmlOf(e.a)}<sub>${htmlOf(e.b)}</sub>`;
   if (e.head === 'Superscript') return `${htmlOf(e.a)}<sup>${htmlOf(e.b)}</sup>`;
   if (e.head === 'Row') return e.items.map(htmlOf).join('');
+  if (e.head === 'Column') return e.items.map(htmlOf).join('<br>');
   if (e.head === 'Style') {
     let h = htmlOf(e.expr);
     for (const d of e.ds) {
@@ -258,6 +282,37 @@ export function walk(list, visit, style = DEFAULT_STYLE) {
     else throw new Error(`graphics: not a primitive or directive: ${JSON.stringify(item)}`);
   }
 }
+
+// ---- querying a picture (pure: tests and models read the drawn numbers from the Graphics data) -----------------------
+const INNER = { Annotation: (q) => q.g, Tooltip: (q) => q.g, Clip: (q) => q.g, Rotate: (q) => q.g, Translate: (q) => q.g, Cached: (q) => q.thunk() };
+/** visit(primitive, style) for every primitive, also inside Annotation, Tooltip, Rotate, Translate and cachedGraphics
+ * parts (coordinates as written, before Rotate/Translate — as Mathematica's Cases sees them). */
+function descend(graphics, visit, style = DEFAULT_STYLE) {
+  const list = graphics?.head === 'Graphics' ? graphics.list : graphics;
+  walk(Array.isArray(list) ? list : [list], (q, st) => {
+    visit(q, st);
+    const inner = INNER[q.head]?.(q);
+    if (inner != null) descend(inner, visit, st);
+  }, style);
+}
+/**
+ * Cases[g, pattern]: the primitives of a picture with this head ('Line', 'Disk', …) or for which pattern(prim, style)
+ * is true, in drawing order (searched inside Annotation, Tooltip, Rotate, Translate and cached parts).
+ */
+export function Cases(graphics, pattern) {
+  const test = typeof pattern === 'function' ? pattern : (q) => q.head === pattern;
+  const out = [];
+  descend(graphics, (q, st) => { if (test(q, st)) out.push(q); });
+  return out;
+}
+/** All Annotation[g, id, attrs] parts in drawing order: [{ id, g, attrs, style }] (style = the directives in effect). */
+export function annotations(graphics) {
+  const out = [];
+  descend(graphics, (q, st) => { if (q.head === 'Annotation') out.push({ id: q.id, g: q.g, attrs: q.attrs, style: st }); });
+  return out;
+}
+/** The first Annotation with this id: { id, g, attrs, style }, or null. */
+export const annotation = (graphics, id) => annotations(graphics).find((a) => a.id === id) ?? null;
 
 // ---- drawing (browser) ---------------------------------------------------------------------------------------------
 const deg = (a) => (a * 180) / Math.PI;
@@ -317,18 +372,26 @@ function textNode(plot, g, expr, pos, anchor, st, baseline) {
   let s = st;
   let e = expr;
   while (e && e.head === 'Style') { s = e.ds.reduce(applyDirective, s); e = e.expr; }
-  const scripted = e && ['Subscript', 'Superscript', 'Row'].includes(e.head);
+  const scripted = e && ['Subscript', 'Superscript', 'Row', 'Column'].includes(e.head);
   const t = plot.text(g, scripted ? '' : textOf(e), pos, {
     fontPx: s.fontSize, color: s.color, anchor, italic: s.fontSlant === 'italic', weight: s.fontWeight, family: s.fontFamily,
   });
   if (baseline) t.setAttribute('dominant-baseline', baseline);
-  if (scripted) appendPieces(plot, t, e, s.fontSize);
+  if (e?.head === 'Column') {
+    const n = e.items.length;
+    e.items.forEach((line, i) => {
+      const span = svgNode('tspan', { x: 0, dy: i === 0 ? `${-(n - 1) * 0.6}em` : '1.2em' });
+      t.append(span);
+      appendPieces(plot, span, line, s.fontSize, s);
+    });
+  } else if (scripted) appendPieces(plot, t, e, s.fontSize, s);
   return t;
 }
 
 // The pieces of Subscript / Superscript / Row as text and <tspan>s (a script is 72 % high, 28 % down or 40 % up).
 // Returns the baseline shift left behind (world units); a Row undoes it before its next piece.
-function appendPieces(plot, t, e, fontPx) {
+const scriptLength = (v, fontPx, u) => (typeof v === 'string' ? v : v?.abs !== undefined ? v.abs * u : fontPx * v * u);
+function appendPieces(plot, t, e, fontPx, st = DEFAULT_STYLE) {
   const u = plot.unitsPerPx;
   if (e && e.head === 'Row') {
     let shift = 0;
@@ -336,18 +399,22 @@ function appendPieces(plot, t, e, fontPx) {
       // undo a script's shift: dy on a tspan that holds the next piece (dy on an empty tspan is ignored by SVG)
       let into = t;
       if (shift) { into = svgNode('tspan', { dy: -shift }); t.append(into); }
-      const s2 = appendPieces(plot, into, x, fontPx);
+      const s2 = appendPieces(plot, into, x, fontPx, st);
       shift = s2;
     }
     return shift;
   }
   if (e && (e.head === 'Subscript' || e.head === 'Superscript')) {
-    appendPieces(plot, t, e.a, fontPx);
-    const dy = fontPx * (e.head === 'Subscript' ? 0.28 : -0.4) * u;
-    const span = svgNode('tspan', { 'font-size': fontPx * 0.72 * u, dy });
+    appendPieces(plot, t, e.a, fontPx, st);
+    const sub = e.head === 'Subscript';
+    const shift = st.scriptShift?.[sub ? 0 : 1];
+    const dy = shift === undefined ? fontPx * (sub ? 0.28 : -0.4) * u
+      : typeof shift === 'string' ? (sub ? shift : `-${shift}`) : (sub ? 1 : -1) * scriptLength(shift, fontPx, u);
+    const size = st.scriptSize === undefined ? fontPx * 0.72 * u : scriptLength(st.scriptSize, fontPx, u);
+    const span = svgNode('tspan', { 'font-size': size, dy });
     span.textContent = textOf(e.b);
     t.append(span);
-    return dy;
+    return typeof dy === 'number' ? dy : 0; // a relative (em) shift is not undone by a Row
   }
   if (e && e.head === 'Style') {
     const span = svgNode('tspan', { 'font-style': e.ds.some((d) => d.dir === 'fontSlant') ? 'italic' : undefined });
@@ -465,6 +532,21 @@ function draw(plot, g, p, st) {
     }
     case 'ImageRaster':
       return g.appendChild(rasterNode(p.image, p.box));
+    case 'Clip': {
+      const [[x0, x1], [y0, y1]] = p.range;
+      const rect = { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
+      const old = plot.svg.querySelector(`#${p.id} > rect`);
+      if (!old) {
+        const cp = svgNode('clipPath', { id: p.id, clipPathUnits: 'userSpaceOnUse' });
+        cp.append(svgNode('rect', rect));
+        let defs = plot.svg.querySelector('defs');
+        if (!defs) { defs = svgNode('defs'); plot.svg.prepend(defs); }
+        defs.append(cp);
+      } else for (const [k, v] of Object.entries(rect)) if (old.getAttribute(k) !== String(v)) old.setAttribute(k, v); // range changed
+      const grp = plot.group(g, { 'clip-path': `url(#${p.id})` });
+      walk(Array.isArray(p.g) ? p.g : [p.g], (q, s2) => draw(plot, grp, q, s2), st);
+      return grp;
+    }
     case 'Raw':
       return p.fn(plot, g);
     case 'Annotation': {
