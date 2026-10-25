@@ -63,9 +63,9 @@ export function decorationMargins(o) {
   if (!hasDecor(o)) return null;
   const fl = o.FrameLabel ? pair(o.FrameLabel) : [null, null];
   const m = { left: 0, right: 0, top: 0, bottom: 0 };
-  if (o.Frame) { m.left = 34 + (fl[1] != null ? 18 : 0); m.bottom = 18 + (fl[0] != null ? 18 : 0); m.right = 10; m.top = 8; }
+  if (o.Frame) { m.left = 34 + (fl[1] != null ? 26 : 0); m.bottom = 18 + (fl[0] != null ? 24 : 0); m.right = 10; m.top = 8; }
   else if (o.Axes && o.AxesLabel) { m.right = 26; m.top = 16; }
-  if (o.PlotLabel != null) m.top += 22;
+  if (o.PlotLabel != null) m.top += 26;
   return m.left || m.right || m.top || m.bottom ? m : null;
 }
 /**
@@ -92,15 +92,15 @@ export function plotDecorations(o, { range, plotRange = range, visible, unitsPer
       ...texts.map((t) => Text(t.str, t.pos, { anchor: t.anchor }))], 'frame'));
     const [bottom, left] = o.FrameLabel ? pair(o.FrameLabel) : [null, null];
     const [[x0, x1], [y0, y1]] = range;
-    if (bottom != null) above.push(Annotation([GrayLevel(0.2), FontSize(12), Text(bottom, [(x0 + x1) / 2, y0 - 30 * u])], 'frame-label-bottom'));
+    if (bottom != null) above.push(Annotation([GrayLevel(0.2), FontSize(12), Text(bottom, [(x0 + x1) / 2, y0 - 31 * u])], 'frame-label-bottom'));
     if (left != null) {
-      const at = [x0 - 40 * u, (y0 + y1) / 2];
+      const at = [x0 - 43 * u, (y0 + y1) / 2]; // room for the rotated text box in every engine (Firefox's is the widest)
       above.push(Annotation([GrayLevel(0.2), FontSize(12), Rotate(Text(left, at), Math.PI / 2, at)], 'frame-label-left'));
     }
   }
   if (o.PlotLabel != null) {
     const [[x0, x1]] = range, top = visible[1][1];
-    above.push(Annotation([Black, FontSize(13), Text(o.PlotLabel, [(x0 + x1) / 2, top - 11 * u])], 'plot-label'));
+    above.push(Annotation([Black, FontSize(13), Text(o.PlotLabel, [(x0 + x1) / 2, top - 15 * u])], 'plot-label'));
   }
   return { below, above };
 }

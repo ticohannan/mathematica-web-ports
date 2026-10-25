@@ -24,8 +24,12 @@ test('Axes, Ticks and AxesLabel; Frame, FrameLabel and PlotLabel are drawn outsi
   const g = await page.evaluate(() => window.__demo.graphics(1));
   expect(JSON.stringify(g)).toContain('0.25'); // a / 2
   // the frame's labels lie inside the picture (the layer made room for them)
-  const box = await svg2.boundingBox(), lab = await svg2.getByTestId('frame-label-left').boundingBox();
-  expect(lab.x).toBeGreaterThanOrEqual(box.x - 0.5);
+  const box = await svg2.boundingBox();
+  const left = await svg2.getByTestId('frame-label-left').boundingBox(), bottom = await svg2.getByTestId('frame-label-bottom').boundingBox();
+  const top = await svg2.getByTestId('plot-label').boundingBox();
+  expect(left.x).toBeGreaterThanOrEqual(box.x - 0.5);
+  expect(bottom.y + bottom.height).toBeLessThanOrEqual(box.y + box.height + 0.5);
+  expect(top.y).toBeGreaterThanOrEqual(box.y - 0.5);
   expect(problems).toEqual([]);
 });
 

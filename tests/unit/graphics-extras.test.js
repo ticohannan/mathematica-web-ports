@@ -35,12 +35,12 @@ describe('graphics-extras: plot decorations from Graphics options', () => {
   });
   it('Frame -> True: frame at the padded range, labels left and bottom, room for them; FrameLabel and PlotLabel', () => {
     expect(decorationMargins({ Frame: true })).toEqual({ left: 34, right: 10, top: 8, bottom: 18 });
-    expect(decorationMargins({ Frame: true, FrameLabel: ['t', 'x'], PlotLabel: 'P' })).toEqual({ left: 52, right: 10, top: 30, bottom: 36 });
+    expect(decorationMargins({ Frame: true, FrameLabel: ['t', 'x'], PlotLabel: 'P' })).toEqual({ left: 60, right: 10, top: 34, bottom: 42 });
     const d = plotDecorations({ Frame: true, FrameLabel: ['t', 'x'], PlotLabel: 'P' }, { range: R, visible: V, unitsPerPx: u });
     const frame = annotation(d.below, 'frame');
     expect(Cases(frame.g, 'Line')[0].pts).toEqual([[-2, -1], [2, -1], [2, 1], [-2, 1], [-2, -1]]);
     expect(annotations(d.above).map((a) => a.id)).toEqual(['frame-label-bottom', 'frame-label-left', 'plot-label']);
-    expect(Cases(annotation(d.above, 'plot-label').g, 'Text')[0].pos[1]).toBeCloseTo(1.2 - 0.11, 12); // inside the top margin
+    expect(Cases(annotation(d.above, 'plot-label').g, 'Text')[0].pos[1]).toBeCloseTo(1.2 - 0.15, 12); // inside the top margin
     expect(Cases(annotation(d.above, 'frame-label-left').g, 'Rotate')[0].angle).toBeCloseTo(Math.PI / 2, 15);
   });
 });
