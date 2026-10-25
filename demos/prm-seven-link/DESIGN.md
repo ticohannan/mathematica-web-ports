@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.21 |
+| Code version: | 0.1.22 |
 | Document revision | 6 (2026-10-17) — §11 Errors in the original (R-C); checklist items as operator procedures (R-B) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Probabilistic Roadmap Method with Seven-Link Articulated Robot", contributed by Aaron T. Becker and Yitong Lu, published April 29, 2020 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ProbabilisticRoadmapMethodWithSevenLinkArticulatedRobot/>. Readable source: [`docs/original-source/prm-seven-link.txt`](../../docs/original-source/prm-seven-link.txt); snapshots: `docs/original-snapshots/prm-seven-link-*.png` |
@@ -131,7 +131,7 @@ Owner rule R-A: this one app can be taken out of the repository and hosted anywh
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/prm-seven-link/`) | 3 | `index.html`, `main.js`, `model.js` |
-| `shared/` | 14 | `beep.js`, `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-plot.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
+| `shared/` | 16 | `beep.js`, `graphics-extras.js`, `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-frame.js`, `svg-plot.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
 | added by the bundler | 7 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/prm-seven-link/DESIGN.md` |
 <!-- bundle-contents:end -->
 
@@ -195,6 +195,7 @@ No open proposal (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)).
 | 10 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
 | 11 | v0.1.20 | 2026-10-21 | `main.js` rewritten on the shared Manipulate layer (`shared/manipulate.js`, `shared/graphics.js`): control specs in Mathematica's form, the picture as Graphics data; no change to behaviour or picture (all unit, golden and browser tests unchanged and passing; screenshots and Manipulate state identical to v0.1.19 at sample settings) |
 | 12 | v0.1.21 | 2026-10-23 | version number; bundle table (shared modules renamed in v0.1.21: `shared/graphics-extras.js` etc.) |
+| 13 | v0.1.22 | 2026-10-25 | version number; bundle table (`shared/manipulate.js` now also loads `shared/graphics-extras.js` and `shared/svg-frame.js` for the new Graphics options `Axes`/`Frame`/`PlotLabel`); no change to this app's code, behaviour or picture (pixel parity with v0.1.21) |
 
 ## 10. Improvements to consider (not implemented)
 

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.21 |
+| Code version: | 0.1.22 |
 | Document revision | 3 (2026-10-18) — harness run 2 evaluated (K-MS-01/02/03/04/07/08 resolved, P-MS-01 proposed, K-MS-11 new) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Minkowski Sum of Convex Robot and Obstacle", contributed by Shreyas Poyrekar, Arifa Sultana and Aaron T. Becker, published 2019-04-23 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/MinkowskiSumOfConvexRobotAndObstacle/>. Readable source: `docs/original-source/minkowski-sum.txt`; snapshots: `docs/original-snapshots/minkowski-sum-1.png` … `-5.png` (the extraction's pictures 6 and 7 are the Wolfram logo, not snapshots); golden data (`tests/golden/minkowski-sum.original-states.json`, COMMON-DECISIONS §1): the live state, the Settings of the five snapshot cells (raw notebook lines 4386, 5542, 6194, 7236, 7866) and the initial settings |
@@ -330,6 +330,7 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 | 5 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
 | 6 | v0.1.20 | 2026-10-21 | `main.js` rewritten on the shared Manipulate layer (`shared/manipulate.js`, `shared/graphics.js`): control specs in Mathematica's form, the picture as Graphics data; no change to behaviour or picture (all unit, golden and browser tests unchanged and passing; screenshots and Manipulate state identical to v0.1.19 at sample settings) |
 | 7 | v0.1.21 | 2026-10-23 | the model builds the picture as `shared/graphics.js` Graphics data (owner decision D2) and the body returns {state, view, graphics}; `main.js` shortened; the tested `view.scene` (not the drawn picture) replaced by the one builder `picture`, so test and picture cannot drift; the old drawing output frozen in `tests/unit/fixtures/minkowski-sum-drawing.pre-graphics.json` and tests that read the old format now read the same numbers through `annotations()`/`Cases()`; no change to behaviour or picture (screenshots and Manipulate state identical to v0.1.20 at sample settings) |
+| 8 | v0.1.22 | 2026-10-25 | version number; bundle table (`shared/manipulate.js` now also loads `shared/graphics-extras.js` and `shared/svg-frame.js` for the new Graphics options `Axes`/`Frame`/`PlotLabel`); no change to this app's code, behaviour or picture (pixel parity with v0.1.21) |
 
 ## 10. Improvements to consider (not implemented)
 

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.21 |
+| Code version: | 0.1.22 |
 | Document revision | 1 (2026-10-17) — first implementation |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Breadth-First Search Robot Motion Planning", contributed by Aaron T. Becker, Benedict Isichei and Praveen Reddy Padala, published 2017-12-12 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/BreadthFirstSearchRobotMotionPlanning/>. Readable source: `docs/original-source/bfs-motion-planning.txt`; snapshots: `docs/original-snapshots/bfs-motion-planning-1.png` … `-4.png` (the extraction's pictures 5 and 6 are the Wolfram logo); stored output cell (initial settings = stored `"Variables"`, Body, Specifications, Initialization): raw definition notebook lines 2373, 2749, 2949, 3336; fixture `tests/golden/bfs-motion-planning.original-states.json` (`states[0]` live state; `snapshots[1…4]` the snapshot Settings, raw lines 4456, 5720, 7383, 13618; `specs` the initial settings) |
@@ -180,7 +180,7 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/bfs-motion-planning/`) | 3 | `index.html`, `main.js`, `model.js` |
-| `shared/` | 14 | `exact-pi.js`, `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-plot.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
+| `shared/` | 16 | `exact-pi.js`, `graphics-extras.js`, `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-frame.js`, `svg-plot.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
 | `demos/common/` | 5 | `arm-grid.js`, `arm-view.js`, `arrow-arcs.js`, `prm-core.js`, `two-link.js` |
 | added by the bundler | 7 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/bfs-motion-planning/DESIGN.md` |
 <!-- bundle-contents:end -->
@@ -256,6 +256,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 5 | v0.1.19 | 2026-10-21 | main.js rewritten on the new shared Manipulate layer (`shared/manipulate.js`, `shared/graphics.js`): the controls are written as Manipulate control specs and the picture as Graphics data; no change to behaviour or picture (all unit, golden and browser tests unchanged and passing; screenshots and Manipulate state identical to v0.1.18 at sample settings); `demos/common/arm-view.js` now returns Graphics data (§6) |
 | 6 | v0.1.20 | 2026-10-21 | bundle table only (the Manipulate layer now also loads `shared/ui-extra.js`, `ui-interval.js`, `random.js`); no change to this app |
 | 7 | v0.1.21 | 2026-10-23 | version number; bundle table (shared modules renamed in v0.1.21: `shared/graphics-extras.js` etc.) |
+| 8 | v0.1.22 | 2026-10-25 | version number; bundle table (`shared/manipulate.js` now also loads `shared/graphics-extras.js` and `shared/svg-frame.js` for the new Graphics options `Axes`/`Frame`/`PlotLabel`); no change to this app's code, behaviour or picture (pixel parity with v0.1.21) |
 
 ## 10. Improvements to consider (not implemented)
 

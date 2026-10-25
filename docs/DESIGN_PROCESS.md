@@ -132,6 +132,9 @@ Header table (with `Code version:`), then: 1. Purpose and background · 2. Scope
 7. Deviations, quirks, known issues and notes · 8. Proposed changes · 9. Revision history · 10. Improvements to
 consider · **11. Errors in the original (conceptual and mathematical)** (last, rule 9).
 
+`npm run new-app` (`tools/new-app.mjs`, see [NEW_APP.md](NEW_APP.md)) writes a design document with all these sections
+and references that the tests accept, for a new app to fill in.
+
 ## Lifecycle of a feature request
 
 | Status | Meaning | Who |

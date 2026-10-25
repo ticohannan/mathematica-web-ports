@@ -79,7 +79,8 @@ describe.each(APPS)('design document of $dir', ({ dir, prefix, spec }) => {
   });
   it('every verification reference exists (test titles, checklist items)', () => {
     for (const [id, , , , verified] of featureRows) {
-      for (const ref of verified.split(';').map((r) => r.trim()).filter(Boolean)) {
+      // references separated by ';' — a quoted test title may itself contain ';' (it ends at '"' before ';' or the end)
+      for (const ref of verified.split(/;(?=(?:[^"]*"[^"]*")*[^"]*$)/).map((r) => r.trim()).filter(Boolean)) {
         const m = ref.match(/^(e2e|unit|golden|harness) "(.+)"$/);
         if (m && m[1] === 'harness') {
           // Mathematica-harness scenario H-XX-nn: a golden test titled `harness "H-XX-nn"` (HW-65) and the scenario in

@@ -72,6 +72,7 @@ npm run publish:tested                :: run everything, then tag + push to GitH
 node tools\explore-motion.mjs 300 1   :: randomized investigation of the motion planner
 npm run compare:original              :: motion planning: port vs the ORIGINAL code run in local Mathematica
 npm run test-run -- car-paths         :: fill-in file _internal\test-runs\<date>_car-paths.md for the manual checks of one app
+npm run new-app -- my-demo --title "…" --slug WolframSlug --authors "A; B" [--3d]   :: start a new port (see below)
 ```
 
 Human/manual tests: [docs/MANUAL_TEST_CHECKLIST.md](docs/MANUAL_TEST_CHECKLIST.md) and, for the seventeen apps
@@ -104,6 +105,18 @@ GitHub Pages for that branch, or put it in an nginx/Apache/Netlify folder — or
 `npx serve dist\prm-robot-arm` or `node tools\serve.mjs 8081 dist\prm-robot-arm` and open the address shown. As for the
 whole site, opening `index.html` from the file system does not work. `dist/` is git-ignored. The browser test
 `tests/e2e/bundle.spec.js` bundles every app and runs it from its own folder.
+
+## Starting a new port
+
+`npm run new-app -- my-demo --title "Title of the Demonstration" --slug WolframSlug --authors "A. Author; B. Author"`
+(add `--3d` for a three.js picture) writes a small working app — `demos/my-demo/` with `index.html`, `main.js` (one
+`Manipulate({…})` of `shared/manipulate.js`), `model.js` (the body: state in, picture as Graphics data out), its
+`DESIGN.md`, a unit test, a browser test and a manual checklist — and registers it on the landing page, in the test
+app list, LICENSE.md, this README and `docs/DESIGN_PROCESS.md`, so `npm test` and the browser tests pass at once.
+Replace the example with the Demonstration's code (list and vector functions with Mathematica's names are in
+`shared/wl.js`; Graphics options `Axes`, `Frame`, `PlotLabel` … are understood by the layer) and keep the design
+document in step. `npm run new-app -- --remove my-demo` undoes it. [docs/NEW_APP.md](docs/NEW_APP.md) is the
+short guide for Mathematica users (Manipulate, Graphics and list functions side by side).
 
 ## Repository layout
 

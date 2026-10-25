@@ -26,6 +26,7 @@
 //                                re-encoded on every redraw.
 //   Raw(draw)                  — a migration aid: an older SVG drawing helper used inside Graphics data.
 //   Clip(g, range, id)          — PlotRangeClipping for one part of a picture.
+//   ArrayPlot(m, {DataRange, ColorRules, ColorFunction}) — a matrix as coloured cells (an ImageRaster, made once per matrix).
 //   Cases(g, head | pred), annotations(g), annotation(g, id) — read a picture's primitives (pure; for tests and models
 //                                that return their picture as Graphics data).
 //
@@ -86,7 +87,7 @@ export const Transparent = FaceForm(None);
 /** Directive[d1, d2, …]. */
 export const Directive = (...ds) => directive('directive', ds);
 /** FontSize, FontFamily, FontWeight, FontSlant for Text (also usable as Style options). */
-export const FontSize = (px) => directive('fontSize', px);
+export const FontSize = (px) => directive('fontSize', typeof px === 'string' ? fontSizeOf(px) : px);
 export const FontFamily = (f) => directive('fontFamily', f);
 export const Italic = directive('fontSlant', 'italic');
 /**
@@ -182,13 +183,45 @@ export const Raw = (fn) => prim('Raw', { fn });
  * SVG element of the page: give each picture's Clip its own id.
  */
 export const Clip = (g, range, id) => prim('Clip', { g, range, id });
+/**
+ * ArrayPlot[m, opts] as data: a matrix of values drawn as cells, row 1 at the TOP (as Mathematica's ArrayPlot), over
+ * DataRange (default {{0, columns}, {0, rows}}). Colours: ColorRules [[value, colour], …] (exact matches first), then
+ * ColorFunction (v) → colour (RGBColor or [r, g, b] in 0…1); the default is Mathematica's 0 → white … 1 → black (and
+ * True → black, False → white). The image is made once per matrix object (keep the matrix while its values are the
+ * same — e.g. with wl.js cacheLast — and an evaluation does not re-encode it).
+ */
+const arrayImages = new WeakMap();
+export function ArrayPlot(m, { DataRange, ColorRules = [], ColorFunction } = {}) {
+  const rows = m.length, cols = rows ? m[0].length : 0;
+  let image = arrayImages.get(m);
+  if (!image) {
+    const rgbOf = (v) => {
+      const rule = ColorRules.find(([w]) => w === v);
+      const c = rule ? rule[1] : ColorFunction ? ColorFunction(v) : typeof v === 'boolean' ? (v ? NAMED.Black : NAMED.White) : [1 - v, 1 - v, 1 - v];
+      return c.rgb ?? c;
+    };
+    const data = new Uint8ClampedArray(rows * cols * 4);
+    m.forEach((row, i) => row.forEach((v, j) => {
+      const [r, g, b] = rgbOf(v), k = 4 * (i * cols + j);
+      data[k] = 255 * r; data[k + 1] = 255 * g; data[k + 2] = 255 * b; data[k + 3] = 255;
+    }));
+    image = { width: cols, height: rows, data };
+    arrayImages.set(m, image);
+  }
+  const [[x0, x1], [y0, y1]] = DataRange ?? [[0, cols], [0, rows]];
+  return ImageRaster(image, [[x0, y0], [x1, y1]]);
+}
 /** Annotation[g, id, attrs]: data-testid and further attributes for the element drawn for g. */
 export const Annotation = (g, id, attrs = {}) => prim('Annotation', { g, id, attrs });
 
 // ---- text expressions ----------------------------------------------------------------------------------------------
 /** Style[expr, directives…] — Italic, Bold, a colour, FontSize[n], or an options object {FontSize, FontFamily}. */
+/** Named font sizes (pixels at the picture's ImageSize): Medium = 12 as measured in the ports (distance-norms); Tiny, Small
+ * and Large are approximations of Mathematica's front-end sizes. */
+export const FONT_SIZES = Object.freeze({ Tiny: 7, Small: 9, Medium: 12, Large: 16 });
+const fontSizeOf = (v) => (typeof v === 'string' ? (Object.hasOwn(FONT_SIZES, v) ? FONT_SIZES[v] : 12) : v);
 export function Style(expr, ...opts) {
-  const ds = opts.flatMap((o) => (typeof o === 'number' ? [FontSize(o)] // Style[expr, 14]: a number is the font size
+  const ds = opts.flatMap((o) => (typeof o === 'number' || (typeof o === 'string' && Object.hasOwn(FONT_SIZES, o)) ? [FontSize(fontSizeOf(o))] // Style[expr, 14] or Style[expr, "Medium"]
     : o?.dir ? [o] : Object.entries(o).map(([k, v]) => ({ FontSize, FontFamily, ScriptSizeMultipliers, ScriptBaselineShifts })[k]?.(v)).filter(Boolean)));
   return Object.freeze({ head: 'Style', expr, ds });
 }

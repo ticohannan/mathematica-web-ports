@@ -46,13 +46,15 @@
 //   {x, xmin, xmax, step} and {x, {v1, v2, …}}     short forms: the initial value is xmin, or v1
 //   [[name, init], xmin, xmax, None] or { ControlType: None }   also hidden; [[p, p0], Locator] a locator with no range
 // opts (Mathematica's option names): Appearance: 'Labeled' shows the value field (default: none, as in Mathematica);
-// Appearance: None on a locator draws no glyph (still draggable); ControlType: Slider (a plain slider, no ⊕ panel),
+// Appearance: None on a locator draws no glyph (still draggable); a locator's Appearance may also be Graphics primitives
+// drawn around the point (coordinates relative to it, in picture units), or a function (state, name) → primitives that
+// is evaluated again after every evaluation (a state-dependent locator picture); ControlType: Slider (a plain slider, no ⊕ panel),
 // VerticalSlider, PopupMenu, SetterBar, Checkbox, IntervalSlider; ImageSize: px width of a slider track; Enabled: a
 // boolean or a function of the state; any lower-case key is passed to the shared/ui*.js control unchanged (e.g. plus,
 // format, parse, animSeconds); a locator's picture: k puts it on picture k (several pictures, below). Labels may be
 // strings or Style/Subscript/Superscript/Row expressions.
 //
-// The body: body(state, { controlActive, rng }) returns a Graphics[…], or { state, view, graphics } (a model in the
+// The body: body(state, { controlActive, rng }) returns a Graphics[…], a list of primitives (options from spec.graphics), or { state, view, graphics } (a model in the
 // ports' style: the new Manipulate variables, the values the hook reports and the picture — a graphics list, or with
 // several pictures a list of them), or { state, view } with draw(view, state) → graphics list(s). Without `graphics`
 // the Graphics options come from spec.graphics (an options object, or a list of them with { id } = the container
@@ -60,6 +62,7 @@
 // picture's options (PlotRange, ImageSize, Background) are read once, at the first evaluation. Pure models stay testable
 // in Node: only this file and the renderer touch the DOM.
 //
+// Layout: ControlPlacement: 'Top' puts the controls above the picture (default: beside it, as the pages are written).
 // Front-end behaviour options: random (a seeded or replayed random source for the body, ?seed=N in the page URL, hook
 // setRng), settle(state) (evaluate again on the next frame while it is true — Mathematica re-evaluates a body that
 // changes its own variables), throttle: 'frame' (at most one evaluation per animation frame for control input),
@@ -71,9 +74,11 @@
 import { Controls } from './ui.js';
 import { addButton, addCheckbox, addPopup, addVerticalSlider, addRow } from './ui-extra.js';
 import { addIntervalSlider } from './ui-interval.js';
-import { createPlot, addLocators, darkLocatorGlyph, locatorGlyph } from './svg-plot.js';
+import { createPlot, addLocators, darkLocatorGlyph, locatorGlyph, svgNode } from './svg-plot.js';
 import { createRng, replayRng } from './random.js';
 import { render, htmlOf, textOf } from './graphics.js';
+import { decorationMargins, plotDecorations } from './graphics-extras.js';
+import { frameLayout } from './svg-frame.js';
 
 /** Markers used in control specs. */
 export const Locator = Object.freeze({ marker: 'Locator' });
@@ -195,7 +200,8 @@ const bound = (b, state) => (typeof b === 'function' ? b(state) : b);
  *   name                      the app's name (window.__demo.name)
  *   body(state, {controlActive, rng}) → Graphics | { state, view, graphics } | { state, view }
  *   draw(view, state) → graphics list (several pictures: a list of graphics lists)   (only for the { state, view } form)
- *   graphics: { PlotRange, ImageSize, PlotRangePadding, Background, label, id, testid, svgClass, maxWidth } or a list
+ *   graphics: { PlotRange, ImageSize, PlotRangePadding, Background, Axes, AxesOrigin, AxesLabel, Ticks, Frame, FrameTicks,
+ *             FrameLabel, PlotLabel, label, id, testid, svgClass, maxWidth } or a list
  *             of them (several pictures); svgClass/maxWidth replace svg-plot's class and width cap
  *   ControlActive: true       the body reads ControlActive[] (track mouse drags, re-evaluate on release)
  *   controls: [control specs]
@@ -246,9 +252,17 @@ export function Manipulate(spec) {
       if (g0[k]?.renderer) { plots.push(null); layers.push(null); return; } // drawn by its renderer (e.g. Graphics3D)
       if (!options?.PlotRange) throw new Error('Manipulate: give the Graphics a PlotRange (in the Graphics options or in spec.graphics)');
       const el = document.getElementById(options.id ?? g0[k]?.id ?? (k === 0 ? ids.graphic : `${ids.graphic}${k + 1}`));
+      const imageSize = (Array.isArray(options.ImageSize) ? options.ImageSize[0] : options.ImageSize) ?? 400;
+      const pad = options.PlotRangePadding ?? 0.02;
+      // Axes / Frame / labels (graphics-extras.js): room outside the padded plot range where the labels need it
+      const decor = { ...g0[k], ...options };
+      const margins = decorationMargins(decor);
+      const [[x0, x1], [y0, y1]] = options.PlotRange;
+      const padded = [[x0 - (x1 - x0) * pad, x1 + (x1 - x0) * pad], [y0 - (y1 - y0) * pad, y1 + (y1 - y0) * pad]];
+      const layout = margins ? frameLayout(padded, { imageSize, margins }) : null;
       const plot = createPlot(el, {
-        plotRange: options.PlotRange, imageSize: Array.isArray(options.ImageSize) ? options.ImageSize[0] : options.ImageSize,
-        padding: options.PlotRangePadding ?? 0.02, label: options.label ?? g0[k]?.label, testid: options.testid ?? g0[k]?.testid,
+        plotRange: layout ? layout.plotRange : options.PlotRange, imageSize,
+        padding: layout ? 0 : pad, label: options.label ?? g0[k]?.label, testid: options.testid ?? g0[k]?.testid,
       });
       const svgClass = options.svgClass ?? g0[k]?.svgClass, maxWidth = options.maxWidth ?? g0[k]?.maxWidth;
       if (svgClass !== undefined) plot.svg.setAttribute('class', svgClass ?? 'scene'); // e.g. null: no svg-plot locator CSS
@@ -257,14 +271,18 @@ export function Manipulate(spec) {
         const [[x0, x1], [y0, y1]] = options.PlotRange;
         plot.rect(plot.layer('background'), [x0, y0], [x1, y1], { fill: options.Background.rgb });
       }
+      const deco = plotDecorations(decor, { range: padded, plotRange: options.PlotRange, visible: layout ? layout.plotRange : padded, unitsPerPx: plot.unitsPerPx });
+      if (deco.below.length) render(plot, plot.layer('decorations'), deco.below);
       plots.push(plot);
       layers.push(plot.layer('graphics'));
+      if (deco.above.length) render(plot, plot.layer('labels'), deco.above);
     });
   };
   if (g0.every((g) => g.PlotRange || g.renderer)) ensurePlots(g0);
 
   // ---- evaluation
   let locatorPanes = null;
+  const locatorGraphics = []; // locators whose Appearance is Graphics data: { g, plot, name, a, drawn }
   let pending = 0, queued = 0;
   let pictures = []; // the graphics drawn by the last evaluation (one per picture)
   function run() {
@@ -272,7 +290,9 @@ export function Manipulate(spec) {
     if (queued) { cancelAnimationFrame(queued); queued = 0; }
     const r = spec.body(state, { controlActive, rng });
     let d;
-    if (r && r.head === 'Graphics') { d = several ? [r] : r; view = r; } else {
+    if (r && r.head === 'Graphics') { d = several ? [r] : r; view = r; } else if (Array.isArray(r) && !spec.draw) {
+      d = r; view = r; // a bare list of primitives (or, with several pictures, one list per picture)
+    } else {
       if (r && r.state) state = r.state;
       view = r && 'view' in r ? r.view : r;
       d = r && 'graphics' in r ? r.graphics : spec.draw(view, state);
@@ -286,6 +306,10 @@ export function Manipulate(spec) {
     });
     if (!locatorPanes) makeLocators();
     locatorPanes?.forEach((l) => l.redraw());
+    for (const L of locatorGraphics) {
+      if (L.drawn && typeof L.a !== 'function') continue;
+      L.g.replaceChildren(); render(L.plot, L.g, typeof L.a === 'function' ? L.a(state, L.name) : L.a); L.drawn = true;
+    }
     updateControls();
     spec.after?.(ctx);
     if (spec.settle && spec.settle(state)) pending = requestAnimationFrame(() => { pending = 0; run(); });
@@ -297,7 +321,10 @@ export function Manipulate(spec) {
   };
 
   // ---- controls
-  const root = new Controls(document.getElementById(ids.controls));
+  const controlsEl = document.getElementById(ids.controls);
+  // ControlPlacement: Top (Mathematica's option): controls above the picture (the pages' class controls-top)
+  if (String(spec.ControlPlacement ?? '').toLowerCase() === 'top') controlsEl?.closest('.manipulate')?.classList.add('controls-top', 'placement-top');
+  const root = new Controls(controlsEl);
   const apis = new Map();
   const dynamic = []; // controls whose Enabled or range depend on the state
   const shown = new Map(); // the value each control shows (what it was set to or what the user entered)
@@ -463,7 +490,13 @@ export function Manipulate(spec) {
         get: getLoc,
         appearance: (n) => {
           const c = locOf(n);
-          if (isNone(c.opts.Appearance)) return null;
+          const a = c.opts.Appearance;
+          if (isNone(a)) return null;
+          if (Array.isArray(a) || typeof a === 'function' || a?.head) { // Graphics primitives around the point
+            const g = svgNode('g', { class: 'locator-appearance' });
+            locatorGraphics.push({ g, plot, name: n, a });
+            return g;
+          }
           return L.appearance ? L.appearance(n, plot) : locatorGlyph(plot);
         },
         pickAnywhere: L.pickAnywhere ?? true, // Manipulate's locators form one LocatorPane

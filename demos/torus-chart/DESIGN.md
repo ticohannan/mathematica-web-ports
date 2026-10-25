@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.21 |
+| Code version: | 0.1.22 |
 | Document revision | 1 (2026-10-18) — first implementation |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Chart for a Torus", contributed by Aaron T. Becker and Haoran Zhao, published 2016-05-02 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ChartForATorus/>. Readable source: [`docs/original-source/torus-chart.txt`](../../docs/original-source/torus-chart.txt); snapshots: `docs/original-snapshots/torus-chart-1.png` … `-4.png` (files 5 and 6 of the extraction are 96 × 100 placeholder icons); golden data: `tests/golden/torus-chart.original-states.json` (COMMON-DECISIONS §1: `states[0]` = the live state, `snapshots[1…4]` = the snapshot cells' Settings, raw notebook lines 2311, 6086, 9212, 12067, `specs` = the initial settings; λ read from the raw notebook by `tools/extract_state.py --snapshots`, N-TC-01) |
@@ -175,7 +175,7 @@ npm run bundle -- torus-chart
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/torus-chart/`) | 5 | `index.html`, `main.js`, `model.js`, `surface.js`, `view3d.js` |
-| `shared/` | 16 | `exact-pi.js`, `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma-text.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-plot.js`, `three-helpers.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
+| `shared/` | 18 | `exact-pi.js`, `graphics-extras.js`, `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma-text.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-frame.js`, `svg-plot.js`, `three-helpers.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
 | `demos/common/` | 3 | `arrow-arcs.js`, `dial-control.js`, `prm-core.js` |
 | `vendor/three/` | 9 | `addons/controls/OrbitControls.js`, `addons/lines/Line2.js`, `addons/lines/LineGeometry.js`, `addons/lines/LineMaterial.js`, `addons/lines/LineSegments2.js`, `addons/lines/LineSegmentsGeometry.js`, `addons/renderers/CSS2DRenderer.js`, `three.core.js`, `three.module.js` |
 | added by the bundler | 8 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/torus-chart/DESIGN.md`, `vendor/three/LICENSE` |
@@ -243,6 +243,7 @@ Open proposals (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
 | 5 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
 | 6 | v0.1.20 | 2026-10-21 | version number only (Manipulate layer extended, eleven more apps migrated to it); no change to this app |
 | 7 | v0.1.21 | 2026-10-23 | `main.js` rewritten on the shared Manipulate layer (`shared/manipulate.js`: controls, state, reset, hook) with the app's own three.js renderer object for its picture; generic parts moved to MIT shared modules (owner decision D1) (drawing code moved unchanged into `view3d.js`); no change to behaviour or picture (all unit, golden and browser tests passing; three.js scene graph, full-page pixels (SwiftShader) and Manipulate state identical to v0.1.20 at sample settings) |
+| 8 | v0.1.22 | 2026-10-25 | version number; bundle table (`shared/manipulate.js` now also loads `shared/graphics-extras.js` and `shared/svg-frame.js` for the new Graphics options `Axes`/`Frame`/`PlotLabel`); no change to this app's code, behaviour or picture (pixel parity with v0.1.21) |
 
 ## 10. Improvements to consider (not implemented)
 

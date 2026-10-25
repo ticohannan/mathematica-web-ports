@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.21 |
+| Code version: | 0.1.22 |
 | Document revision | 5 (2026-10-17) — §11 Errors in the original (R-C); checklist items as operator procedures (R-B) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Unit Balls for Different p-Norms in 2D and 3D", contributed by Aaron T. Becker and Ravi Patel, published December 29, 2020 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/UnitBallsForDifferentPNormsIn2DAnd3D/>. Readable source: [`docs/original-source/unit-balls.txt`](../../docs/original-source/unit-balls.txt) (the flattened `(…)^1/p` is `(…)^(1/p)` in the notebook); saved state: `tests/golden/unit-balls.original-state.json`; snapshots: `docs/original-snapshots/unit-balls-1…7.png` |
@@ -170,7 +170,7 @@ Owner rule R-A: this one app can be taken out of the repository and hosted anywh
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/unit-balls/`) | 4 | `index.html`, `main.js`, `norms.js`, `plot3d.js` |
-| `shared/` | 15 | `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `plot3d.js`, `random.js`, `requirements.js`, `style.css`, `svg-plot.js`, `three-helpers.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
+| `shared/` | 17 | `graphics-extras.js`, `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `plot3d.js`, `random.js`, `requirements.js`, `style.css`, `svg-frame.js`, `svg-plot.js`, `three-helpers.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
 | `vendor/three/` | 9 | `addons/controls/OrbitControls.js`, `addons/lines/Line2.js`, `addons/lines/LineGeometry.js`, `addons/lines/LineMaterial.js`, `addons/lines/LineSegments2.js`, `addons/lines/LineSegmentsGeometry.js`, `addons/renderers/CSS2DRenderer.js`, `three.core.js`, `three.module.js` |
 | added by the bundler | 8 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/unit-balls/DESIGN.md`, `vendor/three/LICENSE` |
 <!-- bundle-contents:end -->
@@ -240,6 +240,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 9 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
 | 10 | v0.1.20 | 2026-10-21 | version number only (Manipulate layer extended, eleven more apps migrated to it); no change to this app |
 | 11 | v0.1.21 | 2026-10-23 | `main.js` rewritten on the shared Manipulate layer (`shared/manipulate.js`: controls, state, reset, hook) with the app's own three.js renderer object for its picture; generic parts moved to MIT shared modules (owner decision D1): Plot3D box, ticks and lighting shader → `shared/plot3d.js`; the fitted constants stay in `plot3d.js`; no change to behaviour or picture (all unit, golden and browser tests passing; three.js scene graph, full-page pixels (SwiftShader) and Manipulate state identical to v0.1.20 at sample settings) |
+| 12 | v0.1.22 | 2026-10-25 | version number; bundle table (`shared/manipulate.js` now also loads `shared/graphics-extras.js` and `shared/svg-frame.js` for the new Graphics options `Axes`/`Frame`/`PlotLabel`); no change to this app's code, behaviour or picture (pixel parity with v0.1.21) |
 
 ## 10. Improvements to consider (not implemented)
 

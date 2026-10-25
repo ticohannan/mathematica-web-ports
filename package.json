@@ -1,6 +1,6 @@
 {
   "name": "mathematica-web-ports",
-  "version": "0.1.21",
+  "version": "0.1.22",
   "private": true,
   "description": "Browser ports of twenty-six Wolfram Demonstrations (robot motion planning, rotations, Euler angles, probabilistic roadmaps, car paths, p-norm unit balls, art gallery, robot singularities, two-link kinematics, robot motion with obstacles, breadth-first search planning, distance norms, Dubins car paths and isochrons, RRT and RRT*, camera and lasers, Minkowski sums, four-bar linkage, Denavit-Hartenberg parameters, torus chart, manipulability ellipsoid, arm configurations, manipulator workspaces, PRM in 3D). Static site: all computation runs in the browser.",
   "author": "Tico Hannan",
@@ -13,6 +13,7 @@
   "scripts": {
     "serve": "node tools/serve.mjs",
     "bundle": "node tools/bundle-app.mjs",
+    "new-app": "node tools/new-app.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test --project=firefox --project=chromium --project=webkit",

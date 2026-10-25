@@ -1,0 +1,35 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-License-Identifier: MIT -->
+<!-- tests/e2e/fixtures/new-app-example.html — the example of docs/NEW_APP.md §2, unchanged, for
+     tests/e2e/graphics-options.spec.js (a test page, not an app, not linked from the site). -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>docs/NEW_APP.md example (test page)</title>
+  <link rel="stylesheet" href="../../../shared/style.css">
+</head>
+<body>
+<main class="page">
+  <section class="manipulate">
+    <div class="controls" id="controls"></div>
+    <div class="graphic" id="graphic" data-testid="graphic"></div>
+  </section>
+</main>
+<script type="module">
+import { Manipulate, Locator } from '../../../shared/manipulate.js';
+import { Graphics, Red, Disk, Line, Style, Italic } from '../../../shared/graphics.js';
+
+Manipulate({
+  name: 'my-demo',
+  body: ({ r, p }) => [Red, Disk(p, r), Line([[0, 0], p])],
+  graphics: { PlotRange: [[-2, 2], [-2, 2]], ImageSize: 400, Axes: true },
+  controls: [
+    [['r', 1, Style('r', Italic)], 0.1, 2, 0.1, { Appearance: 'Labeled' }],
+    [['p', [1, 1]], [-2, -2], [2, 2], Locator],
+  ],
+});
+</script>
+</body>
+</html>

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.21 |
+| Code version: | 0.1.22 |
 | Document revision | 1 (2026-10-18) — first implementation |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Common Robot Arm Configurations", contributed by Mohammad Sultan and Aaron T. Becker, published 2017-06-28 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/CommonRobotArmConfigurations/>. Readable source: [`docs/original-source/arm-configurations.txt`](../../docs/original-source/arm-configurations.txt); snapshots: `docs/original-snapshots/arm-configurations-1.png` … `-6.png` (pictures 1 and 2 are identical, N-AC-01); golden data: `tests/golden/arm-configurations.original-states.json` (written with `tools/extract_state.py --snapshots` from the raw notebook, COMMON-DECISIONS §1: `states[0]` = output-cell state, raw notebook line 1948; `snapshots[1…6]` = the snapshot cells' Settings, raw lines 5256, 7471, 9130, 10505, 12137, 13574; `specs` = the stored Specifications) |
@@ -201,7 +201,7 @@ npm run bundle -- arm-configurations
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/arm-configurations/`) | 4 | `index.html`, `main.js`, `model.js`, `robots.js` |
-| `shared/` | 20 | `exact-pi.js`, `graphics.js`, `graphics3d-three.js`, `graphics3d-view.js`, `graphics3d.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma-lighting.js`, `mma-text.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-plot.js`, `three-helpers.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
+| `shared/` | 22 | `exact-pi.js`, `graphics-extras.js`, `graphics.js`, `graphics3d-three.js`, `graphics3d-view.js`, `graphics3d.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma-lighting.js`, `mma-text.js`, `mma.js`, `random.js`, `requirements.js`, `style.css`, `svg-frame.js`, `svg-plot.js`, `three-helpers.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
 | `demos/common/` | 2 | `dh-chain.js`, `robot-draw.js` |
 | `vendor/three/` | 9 | `addons/controls/OrbitControls.js`, `addons/lines/Line2.js`, `addons/lines/LineGeometry.js`, `addons/lines/LineMaterial.js`, `addons/lines/LineSegments2.js`, `addons/lines/LineSegmentsGeometry.js`, `addons/renderers/CSS2DRenderer.js`, `three.core.js`, `three.module.js` |
 | added by the bundler | 8 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/arm-configurations/DESIGN.md`, `vendor/three/LICENSE` |
@@ -269,6 +269,7 @@ Template: [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md).
 | 5 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
 | 6 | v0.1.20 | 2026-10-21 | version number only (Manipulate layer extended, eleven more apps migrated to it); no change to this app |
 | 7 | v0.1.21 | 2026-10-23 | `main.js` rewritten on the shared Manipulate layer with a 3D picture (`shared/manipulate.js` + `shared/graphics3d-view.js` `View3D`; Graphics3D data model and renderer moved to MIT `shared/graphics3d.js` / `shared/graphics3d-three.js`, owner decision D1); no change to behaviour or picture (all unit, golden and browser tests passing; three.js scene graph, full-page pixels (SwiftShader) and Manipulate state identical to v0.1.20 at sample settings) |
+| 8 | v0.1.22 | 2026-10-25 | version number; bundle table (`shared/manipulate.js` now also loads `shared/graphics-extras.js` and `shared/svg-frame.js` for the new Graphics options `Axes`/`Frame`/`PlotLabel`); no change to this app's code, behaviour or picture (pixel parity with v0.1.21) |
 
 ## 10. Improvements to consider (not implemented)
 

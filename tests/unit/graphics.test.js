@@ -6,7 +6,7 @@ import {
   walk, DEFAULT_STYLE, Line, Disk, Polygon, Text, Rotate, Annotation, Style, Subscript, Italic, Bold, FontSize,
   Red, Blue, Black, Gray, Darker, Lighter, RGBColor, GrayLevel, EdgeForm, FaceForm, Directive, Opacity, Thin, Thick,
   AbsoluteThickness, Transparent, None, textOf, htmlOf, bounds, Rectangle, Point, Superscript, Row, Tooltip, cachedGraphics,
-  Graphics, Translate, Circle, Cases, annotations, annotation,
+  Graphics, Translate, Circle, Cases, annotations, annotation, ArrayPlot, FONT_SIZES,
 } from '../../shared/graphics.js';
 
 const styles = (list) => { const out = []; walk(list, (p, st) => out.push([p.head, st])); return out; };
@@ -137,5 +137,23 @@ describe('graphics: Cases and annotations read a picture', () => {
   it('cachedGraphics parts are searched too', () => {
     const part = cachedGraphics();
     expect(Cases([part([1], () => [Annotation(Disk([0, 0], 4), 'big')])], 'Disk')[0].r).toBe(4);
+  });
+});
+
+describe('graphics: ArrayPlot and named font sizes', () => {
+  it('ArrayPlot: row 1 at the top, 0 white … 1 black by default, ColorRules first, DataRange; one image per matrix', () => {
+    const m = [[0, 1], [0.5, true]];
+    const p = ArrayPlot(m);
+    expect(p.head).toBe('ImageRaster');
+    expect(p.box).toEqual([[0, 0], [2, 2]]);
+    expect([...p.image.data]).toEqual([255, 255, 255, 255, 0, 0, 0, 255, 128, 128, 128, 255, 0, 0, 0, 255]);
+    expect(ArrayPlot(m).image).toBe(p.image); // the same matrix: the same image (not re-encoded)
+    const q = ArrayPlot([[1, 2]], { ColorRules: [[2, Red]], ColorFunction: () => [0, 0, 1], DataRange: [[-1, 1], [0, 0.5]] });
+    expect([...q.image.data]).toEqual([0, 0, 255, 255, 255, 0, 0, 255]);
+    expect(q.box).toEqual([[-1, 0], [1, 0.5]]);
+  });
+  it('Style[expr, "Medium"] and FontSize["Large"] use the named sizes', () => {
+    expect(Style('x', 'Medium').ds[0]).toEqual(FontSize(12));
+    expect(FontSize('Large')).toEqual(FontSize(FONT_SIZES.Large));
   });
 });

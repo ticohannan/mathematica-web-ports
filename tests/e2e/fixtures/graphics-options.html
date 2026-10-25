@@ -1,0 +1,50 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-License-Identifier: MIT -->
+<!-- tests/e2e/fixtures/graphics-options.html — a test page (not an app, not linked from the site) for
+     tests/e2e/graphics-options.spec.js: a Manipulate whose two pictures use the Graphics options Axes, Ticks,
+     AxesLabel, Frame, FrameLabel and PlotLabel (shared/manipulate.js with shared/graphics-extras.js), the list
+     functions of shared/wl.js in the body, ControlPlacement: 'Top' and a locator drawn by a state-dependent Graphics
+     Appearance. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Graphics options (test page)</title>
+  <link rel="stylesheet" href="../../../shared/style.css">
+</head>
+<body>
+<main class="page">
+  <section class="manipulate">
+    <div class="panel-tools"><button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button></div>
+    <div class="controls" id="controls"></div>
+    <div class="graphic" id="graphic" data-testid="graphic"></div>
+    <div class="graphic" id="graphic2" data-testid="graphic2"></div>
+  </section>
+</main>
+<script type="module">
+  import { Manipulate, Locator } from '../../../shared/manipulate.js';
+  import { Line, Point, Disk, Red, Blue, PointSize, Annotation } from '../../../shared/graphics.js';
+  import { Table, Subdivide, Sin, Pi } from '../../../shared/wl.js';
+  Manipulate({
+    name: 'graphics-options',
+    ControlPlacement: 'Top',
+    body: ({ a }) => ({
+      view: { a },
+      graphics: [
+        [Red, Annotation(Line(Table((x) => [x, a * Sin(x)], [[...Subdivide(-Pi, Pi, 60)]])), 'curve')],
+        [Blue, PointSize(0.02), Annotation(Point([[0.5, a], [1, a / 2]]), 'points')],
+      ],
+    }),
+    graphics: [
+      { id: 'graphic', PlotRange: [[-3.2, 3.2], [-1.5, 1.5]], ImageSize: 360, Axes: true, AxesLabel: ['x', 'y'], Ticks: [1, 0.5] },
+      { id: 'graphic2', PlotRange: [[0, 2], [0, 1.5]], ImageSize: 300, Frame: true, FrameLabel: ['t', 'value'], PlotLabel: 'Frame and labels', testid: 'scene-svg-2' },
+    ],
+    controls: [
+      [['a', 1, 'amplitude'], 0, 1.5, 0.1, { Appearance: 'Labeled' }],
+      [['p', [-2, 1]], [-3, -1.4], [3, 1.4], Locator, { Appearance: (s) => [s.a > 1 ? Red : Blue, Annotation(Disk([0, 0], 0.15), 'p-look')] }],
+    ],
+  });
+</script>
+</body>
+</html>
