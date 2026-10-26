@@ -6,7 +6,7 @@ import {
   walk, DEFAULT_STYLE, Line, Disk, Polygon, Text, Rotate, Annotation, Style, Subscript, Italic, Bold, FontSize,
   Red, Blue, Black, Gray, Darker, Lighter, RGBColor, GrayLevel, EdgeForm, FaceForm, Directive, Opacity, Thin, Thick,
   AbsoluteThickness, Transparent, None, textOf, htmlOf, bounds, Rectangle, Point, Superscript, Row, Tooltip, cachedGraphics,
-  Graphics, Translate, Circle, Cases, annotations, annotation, ArrayPlot, FONT_SIZES,
+  Graphics, Translate, Circle, Cases, annotations, annotation, ArrayPlot, FONT_SIZES, sectorPoints, scaleGraphics,
 } from '../../shared/graphics.js';
 
 const styles = (list) => { const out = []; walk(list, (p, st) => out.push([p.head, st])); return out; };
@@ -155,5 +155,28 @@ describe('graphics: ArrayPlot and named font sizes', () => {
   it('Style[expr, "Medium"] and FontSize["Large"] use the named sizes', () => {
     expect(Style('x', 'Medium').ds[0]).toEqual(FontSize(12));
     expect(FontSize('Large')).toEqual(FontSize(FONT_SIZES.Large));
+  });
+});
+
+describe('graphics: sectors (v0.1.24)', () => {
+  it('Disk[c, r, {a0, a1}] keeps its angles; Disk[c, r] has none (unchanged form)', () => {
+    expect(Disk([1, 2], 0.5, [0, Math.PI]).angles).toEqual([0, Math.PI]);
+    expect('angles' in Disk([1, 2], 0.5)).toBe(false);
+  });
+  it('sectorPoints: the centre, then the arc from a0 to a1 (96 points per turn, at least 8)', () => {
+    const pts = sectorPoints([1, 2], 2, [-Math.PI / 2, Math.PI / 2]);
+    expect(pts[0]).toEqual([1, 2]);
+    expect(pts.length).toBe(1 + 48 + 1);
+    expect(pts[1][0]).toBeCloseTo(1, 14); expect(pts[1][1]).toBeCloseTo(0, 14);
+    expect(pts[25][0]).toBeCloseTo(3, 14); expect(pts[25][1]).toBeCloseTo(2, 14); // the middle of the arc: angle 0
+    expect(pts.at(-1)[1]).toBeCloseTo(4, 14);
+    expect(sectorPoints([0, 0], 1, [0, 0.1]).length).toBe(1 + 8 + 1);
+  });
+  it('scaleGraphics turns a sector into its outline polygon, scaled point by point', () => {
+    const [q] = scaleGraphics([Disk([0, 0], 1, [0, Math.PI / 2])], [2, 3]);
+    expect(q.head).toBe('Polygon');
+    expect(q.pts[0]).toEqual([0, 0]);
+    expect(q.pts[1][0]).toBeCloseTo(2, 14);
+    expect(q.pts.at(-1)[1]).toBeCloseTo(3, 14);
   });
 });

@@ -54,7 +54,7 @@
 // format, parse, animSeconds); a locator's picture: k puts it on picture k (several pictures, below). Labels may be
 // strings or Style/Subscript/Superscript/Row expressions.
 //
-// The body: body(state, { controlActive, rng }) returns a Graphics[…], a list of primitives (options from spec.graphics), or { state, view, graphics } (a model in the
+// The body: body(state, { controlActive, rng, time }) returns a Graphics[…], a list of primitives (options from spec.graphics), or { state, view, graphics } (a model in the
 // ports' style: the new Manipulate variables, the values the hook reports and the picture — a graphics list, or with
 // several pictures a list of them), or { state, view } with draw(view, state) → graphics list(s). Without `graphics`
 // the Graphics options come from spec.graphics (an options object, or a list of them with { id } = the container
@@ -66,7 +66,9 @@
 // Front-end behaviour options: random (a seeded or replayed random source for the body, ?seed=N in the page URL, hook
 // setRng), settle(state) (evaluate again on the next frame while it is true — Mathematica re-evaluates a body that
 // changes its own variables), throttle: 'frame' (at most one evaluation per animation frame for control input),
-// after(ctx) (runs after every evaluation and drawing: sounds, text outside the picture).
+// after(ctx) (runs after every evaluation and drawing: sounds, text outside the picture), clock (v0.1.24: the body
+// reads the time — Mathematica's AbsoluteTime[] — as `time` in its second argument: seconds since 1900-01-01 00:00 UTC;
+// hook setClock(t) fixes it at t for tests, setClock(null) returns to the real clock).
 //
 // Mathematica slider semantics are the default: values min + k·step in machine arithmetic, the right end = max
 // (shared/ui.js `steps: 'mma'`).
@@ -181,6 +183,9 @@ export function pageRng() {
   return createRng({ seed: seedParam !== null && /^\d+$/.test(seedParam) ? Number(seedParam) : null });
 }
 
+/** AbsoluteTime[]: seconds since 1900-01-01 00:00 (UTC here; Mathematica counts in the local time zone — only differences are used). */
+export const absoluteTime = () => (typeof performance !== 'undefined' && performance.timeOrigin ? performance.timeOrigin + performance.now() : Date.now()) / 1000 + 2208988800;
+
 const clampTo = ([x, y], lo, hi) => (lo ? [Math.min(Math.max(x, lo[0]), hi[0]), Math.min(Math.max(y, lo[1]), hi[1])] : [x, y]);
 const passThrough = (opts) => Object.fromEntries(Object.entries(opts).filter(([k]) => /^[a-z]/.test(k) && k !== 'picture'));
 /** a variable name with dots is a path into the state: 'theta.0' is state.theta[0] (keeps a model's state shape) */
@@ -198,7 +203,7 @@ const bound = (b, state) => (typeof b === 'function' ? b(state) : b);
 /**
  * Manipulate(spec) — see the file header. spec:
  *   name                      the app's name (window.__demo.name)
- *   body(state, {controlActive, rng}) → Graphics | { state, view, graphics } | { state, view }
+ *   body(state, {controlActive, rng, time}) → Graphics | { state, view, graphics } | { state, view }
  *   draw(view, state) → graphics list (several pictures: a list of graphics lists)   (only for the { state, view } form)
  *   graphics: { PlotRange, ImageSize, PlotRangePadding, Background, Axes, AxesOrigin, AxesLabel, Ticks, Frame, FrameTicks,
  *             FrameLabel, PlotLabel, label, id, testid, svgClass, maxWidth } or a list
@@ -209,7 +214,7 @@ const bound = (b, state) => (typeof b === 'function' ? b(state) : b);
  *   initialSettings() → state optional: what "Initial settings" restores when it differs from the opening state (a
  *                             notebook saved in another state than its Initial Settings; default initial)
  *   locators: { pickAnywhere, keyStep, describe(name), appearance(name, plot) }   options of the locator pane
- *   random, settle(state), throttle: 'frame', after(ctx)   front-end behaviour (file header)
+ *   random, settle(state), throttle: 'frame', after(ctx), clock   front-end behaviour (file header)
  *   hook: { view(view, state), copy, …extra }   what window.__demo.view() returns (copied by `copy`, default JSON with
  *             "Infinity"), plus extra hook functions (ctx) => fn
  *   elements: { controls, graphic, reset }  element ids (default 'controls', 'graphic', 'reset')
@@ -241,6 +246,8 @@ export function Manipulate(spec) {
   let view = null;
   let controlActive = false;
   let rng = spec.random ? pageRng() : null;
+  let fixedTime = null; // clock: a time set by the hook (tests), or null for the real clock
+  const clockNow = () => (fixedTime ?? absoluteTime());
 
   // ---- the pictures (one, or several side by side: Row/Column/Grid of Graphics)
   const several = Array.isArray(spec.graphics);
@@ -338,7 +345,7 @@ export function Manipulate(spec) {
   function run() {
     if (pending) { cancelAnimationFrame(pending); pending = 0; }
     if (queued) { cancelAnimationFrame(queued); queued = 0; }
-    const r = spec.body(state, { controlActive, rng });
+    const r = spec.body(state, spec.clock ? { controlActive, rng, time: clockNow() } : { controlActive, rng });
     let d;
     if (r && r.head === 'Graphics') { d = several ? [r] : r; view = r; } else if (Array.isArray(r) && !spec.draw) {
       d = r; view = r; // a bare list of primitives (or, with several pictures, one list per picture)
@@ -515,8 +522,11 @@ export function Manipulate(spec) {
   const syncControls = (how) => { for (const [n, api] of apis) { if (spec.resetStops) api.stop?.(); api.set(val(n), howFor(n, how)); shown.set(n, val(n)); } };
 
   // one locator per Locator control; a control whose value is a list of points gives one locator per point,
-  // named name-1, name-2, … (Mathematica's {{pts, {p1, p2, …}}, …, Locator})
-  const computeLocs = () => all.filter((c) => c.kind === 'locator').flatMap((c) => (c.multi
+  // named name-1, name-2, … (Mathematica's {{pts, {p1, p2, …}}, …, Locator}). v0.1.24: whether the value is a list
+  // of points is read from its current value, so that a body may change a point into a list of points and back
+  // (Mathematica's Locator follows the variable's value); an empty list keeps the form of the initial value.
+  const isMultiNow = (c) => { const v = val(c.name); return Array.isArray(v) && (v.length ? Array.isArray(v[0]) : c.multi); };
+  const computeLocs = () => all.filter((c) => c.kind === 'locator').flatMap((c) => (isMultiNow(c)
     ? val(c.name).map((_, i) => ({ ...c, name: `${c.name}-${i + 1}`, variable: c.name, index: i }))
     : [{ ...c, variable: c.name, index: null }]));
   let locs = computeLocs(); // computed again when a Locator list changes its length (v0.1.23, syncLocators)
@@ -554,6 +564,7 @@ export function Manipulate(spec) {
   // v0.1.23: picture k made again (its frame options changed); its locators move to the new picture
   function rebuildPicture(k, options) {
     rebuildLater.delete(k);
+    if (locatorPanes) syncLocators(); // v0.1.24: a Locator list that changed in the same evaluation (the new pane gets the new names)
     const next = plots[k].svg.nextSibling, parent = plots[k].svg.parentNode;
     plots[k].svg.remove();
     const f = framedPicture(options, k);
@@ -686,6 +697,10 @@ export function Manipulate(spec) {
       worldToClient: (p, k = 0) => plots[k].worldToClient(toWorld(k, p)),
     } : {}),
     controlActive: () => controlActive,
+    ...(spec.clock ? {
+      /** clock: fix the time the body reads at t (seconds, as AbsoluteTime[]), or null for the real clock */
+      setClock: (t) => { fixedTime = t ?? null; },
+    } : {}),
     ...(spec.random ? {
       /** replace the random source: {seed: n} (generated) or {reals: […], integers: […]} (replayed draws) */
       setRng: (s) => { rng = s && (s.reals || s.integers) ? replayRng(s) : createRng({ seed: s?.seed ?? null }); },

@@ -82,10 +82,10 @@ Details & Citations<<PaneSelectorBox>>
 Combining sensor measurements is called sensor fusion. If each sensor measurement is corrupted by independent noise, each measurement provides additional information. The information of a measurement is equal to the inverse of its variance.
 
 ### [Text]
-The measurements are combined according to Bayes's theorem. Given two measurements Subscript[z, 1] and Subscript[z, 2] with variances Subscript[σ,1]^2 and Subscript[σ,2]^2, the best estimate for the true value is Overscript[x, ^]=Subscript[z, 1](Subscript[σ,2]^2)/(Subscript[σ,1]^2+Subscript[σ,2]^2)+Subscript[z, 2](Subscript[σ,1]^2)/(Subscript[σ,1]^2+Subscript[σ,2]^2) with variance Overscript[σ, ^]^2=(Subscript[σ,1]^2Subscript[σ,2]^2)/(Subscript[σ,1]^2+Subscript[σ,2]^2).
+The measurements are combined according to Bayes's theorem. Given two measurements Subscript[z, 1] and Subscript[z, 2] with variances Subscript[σ,1]^2 and Subscript[σ,2]^2, the best estimate for the true value is Overscript[x, ^]=Subscript[z, 1](Subscript[σ,2]^2)/(Subscript[σ,1]^2+Subscript[σ,2]^2)+Subscript[z, 2](Subscript[σ,1]^2)/(Subscript[σ,1]^2+Subscript[σ,2]^2) with variance (Overscript[σ, ^])^2=(Subscript[σ,1]^2Subscript[σ,2]^2)/(Subscript[σ,1]^2+Subscript[σ,2]^2).
 
 ### [Text]
-This can be written in recursive form, to update estimate (Subscript[Overscript[x, ^], i],Overscript[Subscript[σ, i], ^]^2) with measurement (Subscript[z, i],Subscript[σ,i]^2) to form (Subscript[Overscript[x, ^], i+1],Subscript[Overscript[σ, ^],i+1]^2):
+This can be written in recursive form, to update estimate (Subscript[Overscript[x, ^], i],(Overscript[Subscript[σ, i], ^])^2) with measurement (Subscript[z, i],Subscript[σ,i]^2) to form (Subscript[Overscript[x, ^], i+1],Subscript[Overscript[σ, ^],i+1]^2):
 
 ### [Text]
 Subscript[K, i]=(Subscript[Overscript[σ, ^],i]^2)/(Subscript[Overscript[σ, ^],i]^2+Subscript[σ,2]^2),

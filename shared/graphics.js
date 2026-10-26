@@ -114,8 +114,13 @@ export const Line = (pts) => prim('Line', { pts });
 export const Polygon = (pts) => prim('Polygon', { pts });
 /** Rectangle[{x0, y0}, {x1, y1}, RoundingRadius -> r]. */
 export const Rectangle = (a, b, { RoundingRadius = 0 } = {}) => prim('Rectangle', { a, b, r: RoundingRadius });
-/** Disk[c, r]; Disk[c, {rx, ry}] is an ellipse. */
-export const Disk = (c, r) => prim('Disk', { c, r });
+/** Disk[c, r]; Disk[c, {rx, ry}] is an ellipse; Disk[c, r, {a0, a1}] the sector from angle a0 to a1 (v0.1.24). */
+export const Disk = (c, r, angles = null) => prim('Disk', angles ? { c, r, angles } : { c, r });
+/** The outline of a sector Disk[c, r, {a0, a1}] (r or {rx, ry}): the centre, then the arc sampled (≤ 96 per turn). */
+export function sectorPoints(c, r, [a0, a1], f = (p) => p) {
+  const [rx, ry] = Array.isArray(r) ? r : [r, r], n = Math.max(8, Math.ceil((Math.abs(a1 - a0) / (2 * Math.PI)) * 96));
+  return [f(c), ...Array.from({ length: n + 1 }, (_, i) => { const t = a0 + ((a1 - a0) * i) / n; return f([c[0] + rx * Math.cos(t), c[1] + ry * Math.sin(t)]); })];
+}
 /** Circle[c, r] or the arc Circle[c, r, {a0, a1}]. */
 export const Circle = (c, r, angles = null) => prim('Circle', { c, r, angles });
 /** Point[p] or Point[{p1, p2, …}]. */
@@ -258,6 +263,7 @@ export function scaleGraphics(g, [sx, sy]) {
       case 'Line': case 'Polygon': case 'Arrow': return prim(q.head, { ...q, pts: P(q.pts, f) });
       case 'Point': return prim('Point', { pts: q.pts.map(f) });
       case 'Disk': case 'Circle': {
+        if (q.head === 'Disk' && q.angles) return prim('Polygon', { pts: sectorPoints(q.c, q.r, q.angles, f) });
         if (f === base) return q.head === 'Disk' ? prim('Disk', { c: f(q.c), r: R(q.r, k) }) : prim('Circle', { c: f(q.c), r: R(q.r, k), angles: q.angles });
         // inside Rotate/Translate: the (rotated) ellipse as a sampled outline mapped point by point
         const [rx, ry] = Array.isArray(q.r) ? q.r : [q.r, q.r], [a0, a1] = q.angles ?? [0, 2 * Math.PI];
@@ -483,6 +489,7 @@ function textNode(plot, g, expr, pos, anchor, st, baseline) {
     fontPx: s.fontSize, color: s.color, anchor, italic: s.fontSlant === 'italic', weight: s.fontWeight, family: s.fontFamily,
   });
   if (baseline) t.setAttribute('dominant-baseline', baseline);
+  if (s.opacity !== undefined && s.opacity < 1) t.setAttribute('opacity', s.opacity); // v0.1.24: Opacity applies to text (Mathematica)
   if (e?.head === 'Column') {
     const n = e.items.length;
     e.items.forEach((line, i) => {
@@ -550,6 +557,7 @@ function draw(plot, g, p, st) {
       return grp;
     }
     case 'Disk': {
+      if (p.angles) return plot.polygon(g, sectorPoints(p.c, p.r, p.angles), { fill: fillOf(st), fillOpacity: opacity, ...edgePaint(st) }); // a sector
       if (!Array.isArray(p.r)) return plot.disk(g, p.c, p.r, { fill: fillOf(st), fillOpacity: opacity, ...edgePaint(st) });
       const e = st.edge, f = fillOf(st); // Disk[c, {rx, ry}]: an ellipse
       return g.appendChild(svgNode('ellipse', {
@@ -580,10 +588,12 @@ function draw(plot, g, p, st) {
         'stroke-linejoin': st.dash || st.cap ? 'round' : undefined, 'stroke-linecap': st.dash || st.cap ? st.cap ?? 'round' : undefined,
       }));
     case 'Point': {
-      if (p.pts.length === 1) return plot.point(g, p.pts[0], st.pointSize, st.color);
+      // v0.1.24: Opacity applies to points (Mathematica)
+      const faded = (n) => { if (opacity !== undefined && opacity < 1) n.setAttribute('opacity', opacity); return n; };
+      if (p.pts.length === 1) return faded(plot.point(g, p.pts[0], st.pointSize, st.color));
       const grp = plot.group(g);
       for (const q of p.pts) plot.point(grp, q, st.pointSize, st.color);
-      return grp;
+      return faded(grp);
     }
     case 'Arrow': {
       const grp = plot.group(g);

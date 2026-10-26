@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.23 |
+| Code version: | 0.1.24 |
 | Document revision | 1 (2026-10-17) — first implementation |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Measuring Distance and Orientation Using Camera and Lasers", contributed by Shiva Shahrokhi and Aaron T. Becker, published 2016-06-29 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/MeasuringDistanceAndOrientationUsingCameraAndLasers/>. Readable source: [`docs/original-source/camera-lasers.txt`](../../docs/original-source/camera-lasers.txt); snapshots: `docs/original-snapshots/camera-lasers-1.png` … `camera-lasers-4.png` (pictures 5 and 6 of the extraction are the Wolfram logo placeholder); saved states (COMMON-DECISIONS §1): [`tests/golden/camera-lasers.original-states.json`](../../tests/golden/camera-lasers.original-states.json), written by `python3 tools/extract_state.py --snapshots`, with `states[0]` = the live output-cell state, `snapshots[1…4]` = the four snapshot cells' `"Settings"` (raw notebook lines 3870, 5398, 7079, 8753) and `specs`, exact values kept as `{"wl":"-1/5"}` |
@@ -257,6 +257,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 7 | v0.1.21 | 2026-10-23 | the model builds the picture as `shared/graphics.js` Graphics data (owner decision D2) and the body returns {state, view, graphics}; `main.js` shortened; the `loc` icon is `demos/common/arm-view.js` `locIcon` (no `Raw` left); the old drawing output frozen in `tests/unit/fixtures/camera-lasers-drawing.pre-graphics.json` and tests that read the old format now read the same numbers through `annotations()`/`Cases()`; no change to behaviour or picture (screenshots and Manipulate state identical to v0.1.20 at sample settings) |
 | 8 | v0.1.22 | 2026-10-25 | version number; bundle table (`shared/manipulate.js` now also loads `shared/graphics-extras.js` and `shared/svg-frame.js` for the new Graphics options `Axes`/`Frame`/`PlotLabel`); no change to this app's code, behaviour or picture (pixel parity with v0.1.21) |
 | 9 | v0.1.23 | 2026-10-25 | version number; the shared code gained plot functions, a geometry kit, 3D text and tube primitives and fixes for new apps (v0.1.23); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.22) |
+| 10 | v0.1.24 | 2026-10-26 | version number; the shared code gained a clock for bodies that read the time, Locator variables that change between one point and a list, sector disks and Opacity on points and text (v0.1.24); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.23) |
 
 ## 10. Improvements to consider (not implemented)
 

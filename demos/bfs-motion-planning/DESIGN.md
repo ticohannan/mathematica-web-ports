@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.23 |
+| Code version: | 0.1.24 |
 | Document revision | 1 (2026-10-17) — first implementation |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Breadth-First Search Robot Motion Planning", contributed by Aaron T. Becker, Benedict Isichei and Praveen Reddy Padala, published 2017-12-12 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/BreadthFirstSearchRobotMotionPlanning/>. Readable source: `docs/original-source/bfs-motion-planning.txt`; snapshots: `docs/original-snapshots/bfs-motion-planning-1.png` … `-4.png` (the extraction's pictures 5 and 6 are the Wolfram logo); stored output cell (initial settings = stored `"Variables"`, Body, Specifications, Initialization): raw definition notebook lines 2373, 2749, 2949, 3336; fixture `tests/golden/bfs-motion-planning.original-states.json` (`states[0]` live state; `snapshots[1…4]` the snapshot Settings, raw lines 4456, 5720, 7383, 13618; `specs` the initial settings) |
@@ -258,6 +258,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 7 | v0.1.21 | 2026-10-23 | version number; bundle table (shared modules renamed in v0.1.21: `shared/graphics-extras.js` etc.) |
 | 8 | v0.1.22 | 2026-10-25 | version number; bundle table (`shared/manipulate.js` now also loads `shared/graphics-extras.js` and `shared/svg-frame.js` for the new Graphics options `Axes`/`Frame`/`PlotLabel`); no change to this app's code, behaviour or picture (pixel parity with v0.1.21) |
 | 9 | v0.1.23 | 2026-10-25 | version number; the shared code gained plot functions, a geometry kit, 3D text and tube primitives and fixes for new apps (v0.1.23); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.22) |
+| 10 | v0.1.24 | 2026-10-26 | version number; the shared code gained a clock for bodies that read the time, Locator variables that change between one point and a list, sector disks and Opacity on points and text (v0.1.24); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.23) |
 
 ## 10. Improvements to consider (not implemented)
 

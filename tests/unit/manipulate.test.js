@@ -5,7 +5,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   parseControl, Locator, Delimiter, None, Rule, hookCopy, hookRead, cacheLast, Control, Button, Row, PopupMenu, VerticalSlider,
-  IntervalSlider, Slider, SetterBar,
+  IntervalSlider, Slider, SetterBar, absoluteTime,
 } from '../../shared/manipulate.js';
 import { Style, Italic } from '../../shared/graphics.js';
 
@@ -92,5 +92,13 @@ describe('manipulate: test hook copies and cacheLast', () => {
     expect(c([grid], () => ++n)).toBe(1);
     expect(c([[[0]]], () => ++n)).toBe(2);
     expect(c([grid, 1], () => ++n)).toBe(3);
+  });
+});
+
+describe('manipulate: the clock (v0.1.24)', () => {
+  it('absoluteTime() is AbsoluteTime[]: seconds since 1900-01-01 (2208988800 s before the Unix epoch)', () => {
+    const t = absoluteTime(), unix = Date.now() / 1000;
+    expect(Math.abs(t - (unix + 2208988800))).toBeLessThan(5);
+    expect(absoluteTime()).toBeGreaterThanOrEqual(t);
   });
 });

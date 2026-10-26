@@ -38,13 +38,16 @@ plain HTML + JavaScript (ES modules, no build step), SVG for 2D, three.js/WebGL 
 | Ensemble Control of Robots with Unicycle Kinematics | `demos/ensemble-control/` | SVG | number of robots, forward command, turn counter-clockwise button |
 | Shortest Distance between Two Line Segments | `demos/segment-distance/` | WebGL 2 | four xy pads, four z sliders, show the two planes, rotate the 3D picture |
 | Distribution of a Swarm of Robots in a Circular Workplace under Gravity | `demos/swarm-circle/` | SVG | β and h sliders, show particles, show values |
+| Steering Multiple Radio Control (RC) Cars with One Joystick | `demos/steering-rc-cars/` | SVG | n, radius, mode (setup / running), robot (RC car, cell, particle), range, offset; drag cars and heading handles; a joystick locator drives all cars in real time |
 
-The apps came in four groups: the first three (motion planning, rotations, Euler angles); seven more from the
+The apps came in groups: the first three (motion planning, rotations, Euler angles); seven more from the
 seven-link PRM to robot singularities, added in v0.1.12 as further proofs of concept (developed first in a separate,
 unpublished repository and added here in one commit); ten, from two-link kinematics to the four-bar linkage, added in
-v0.1.15 as "batch A" (designed together, with common modules in `demos/common/`); and the last six, the 3D apps from
+v0.1.15 as "batch A" (designed together, with common modules in `demos/common/`); six 3D apps from
 Denavit-Hartenberg parameters to the PRM in 3D, added in v0.1.16 as "batch B" (sharing the DH-family modules moved
-from robot singularities to `demos/common/`).
+from robot singularities to `demos/common/`); and new demonstrations ported on the shared layer with the app
+generator: five from the Graham scan to the swarm in a circle in v0.1.23, and the RC cars steered with one joystick
+in v0.1.24.
 
 ## Where the code runs
 

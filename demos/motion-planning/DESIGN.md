@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.23 |
+| Code version: | 0.1.24 |
 | Document revision | 6 (2026-10-17) — polygon helpers moved to `demos/common/polygon-core.js`; §11 Errors in the original (R-C); checklist items as operator procedures (R-B) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Motion Planning for Robot Path around Obstacles" by Shreyas Poyrekar, Aaron T. Becker and Arifa Sultana (CC BY-NC-SA 3.0); author notebook made with Mathematica 10.2. Readable source: [`docs/original-source/motion-planning.txt`](../../docs/original-source/motion-planning.txt) |
@@ -232,6 +232,7 @@ Owner rule R-A: this one app can be taken out of the repository and hosted anywh
 | D-MP-04 | deviation | Locator look approximates Mathematica's; clicking on empty space does not move a locator (Mathematica's LocatorPane may move the nearest locator — verify in the original, M-MP-05). |
 | D-MP-05 | deviation | Line widths: `Thin` = 0.5 px, `Thick` = 2 px, "Large" text = 18 px at nominal size — approximations of Mathematica's sizes. The progress slider is 120 px wide (original `ImageSize -> 90`); its animation speed (8 s per sweep) is a guess. |
 | D-MP-06 | deviation | The original caches intermediate results (`prev*` variables) and recomputes the C-obstacles only when an obstacle or the robot shape changes; the port recomputes everything on each change. The C-obstacle coordinates depend in their last bits on where the robot stood when they were computed, and in near-degenerate scenes that can change the path or the validity, so the interactive original can give different results for the same scene depending on the order of drags. The port always gives the result of a fresh computation. Check with `npm run compare:original -- --history`. (Corrected in v0.1.3; first described as affecting speed only.) |
+| D-MP-07 | deviation | The red progress point is drawn opaque. The original draws it after `Opacity[0.5]` (with the moving robot), so in Mathematica it is half transparent; up to v0.1.23 the shared renderer ignored Opacity for points, and since v0.1.24, when it applies it, the port keeps the earlier picture with an explicit `Opacity(1)` before the point (course port: no change of picture without an owner decision). Removing that one directive makes the point as in the original. |
 | Q-MP-01 | quirk kept | `myAstarRev2` heuristic is `EuclideanDistance[verts[[nbr]], verts[[nbr]]]` = 0 → it is Dijkstra's algorithm (still optimal on its graph). |
 | Q-MP-02 | quirk kept | `angleSortCond` tie-break compares a distance with an angle (`c < b`, intended `c < d`). |
 | Q-MP-03 | quirk kept | In `visiblePolys` one `SegmentIntersectionQ` call has the wrong argument shape and never evaluates; the port reproduces the resulting no-op. |
@@ -281,6 +282,7 @@ No open proposal. Template for a request: copy a row (see [`docs/DESIGN_PROCESS.
 | 12 | v0.1.21 | 2026-10-23 | **owner decision 2026-10-23 (DEC-37):** the DEC-22 start-up notice (`shared/requirements.js`, `<noscript>`) added (A-MP-09); otherwise unchanged (screenshots identical to v0.1.20) |
 | 13 | v0.1.22 | 2026-10-25 | version number; bundle table (`shared/manipulate.js` now also loads `shared/graphics-extras.js` and `shared/svg-frame.js` for the new Graphics options `Axes`/`Frame`/`PlotLabel`); no change to this app's code, behaviour or picture (pixel parity with v0.1.21) |
 | 14 | v0.1.23 | 2026-10-25 | version number; the shared code gained plot functions, a geometry kit, 3D text and tube primitives and fixes for new apps (v0.1.23); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.22) |
+| 15 | v0.1.24 | 2026-10-26 | version number; the shared code gained a clock for bodies that read the time, Locator variables that change between one point and a list, sector disks and Opacity on points and text (v0.1.24); `main.js` pins the progress point's opacity with `Opacity(1)` so that the picture stays as before (D-MP-07); no change to behaviour or picture (pixel and scene parity with v0.1.23) |
 
 ## 10. Improvements to consider (not implemented)
 

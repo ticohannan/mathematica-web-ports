@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.23 |
+| Code version: | 0.1.24 |
 | Document revision | 1 (2026-10-18) — first implementation |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Denavit-Hartenberg Parameters for a Three-Link Robot", contributed by Aaron T. Becker and Mary Burbage, published 2016-06-16 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/DenavitHartenbergParametersForAThreeLinkRobot/>. Readable source: [`docs/original-source/dh-parameters.txt`](../../docs/original-source/dh-parameters.txt); snapshots: `docs/original-snapshots/dh-parameters-1.png` … `-5.png`; saved state: `tests/golden/dh-parameters.original-states.json` (written with `tools/extract_state.py --snapshots` from the raw notebook: live state, initial settings and the five snapshot `Settings`) |
@@ -277,6 +277,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 7 | v0.1.21 | 2026-10-23 | `main.js` rewritten on the shared Manipulate layer with a 3D picture (`shared/manipulate.js` + `shared/graphics3d-view.js` `View3D`; Graphics3D data model and renderer moved to MIT `shared/graphics3d.js` / `shared/graphics3d-three.js`, owner decision D1); no change to behaviour or picture (all unit, golden and browser tests passing; three.js scene graph, full-page pixels (SwiftShader) and Manipulate state identical to v0.1.20 at sample settings) |
 | 8 | v0.1.22 | 2026-10-25 | version number; bundle table (`shared/manipulate.js` now also loads `shared/graphics-extras.js` and `shared/svg-frame.js` for the new Graphics options `Axes`/`Frame`/`PlotLabel`); no change to this app's code, behaviour or picture (pixel parity with v0.1.21) |
 | 9 | v0.1.23 | 2026-10-25 | version number; the shared code gained plot functions, a geometry kit, 3D text and tube primitives and fixes for new apps (v0.1.23); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.22) |
+| 10 | v0.1.24 | 2026-10-26 | version number; the shared code gained a clock for bodies that read the time, Locator variables that change between one point and a list, sector disks and Opacity on points and text (v0.1.24); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.23) |
 
 ## 10. Improvements to consider (not implemented)
 

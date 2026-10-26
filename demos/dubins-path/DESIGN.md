@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.23 |
+| Code version: | 0.1.24 |
 | Document revision | 1 (2026-10-17) — first implementation |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Shortest Path for the Dubins Car", contributed by Aaron T. Becker and Shiva Shahrokhi, published 2017-12-14 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ShortestPathForTheDubinsCar/>. Readable source: [`docs/original-source/dubins-path.txt`](../../docs/original-source/dubins-path.txt); snapshots: `docs/original-snapshots/dubins-path-1.png` … `dubins-path-4.png` (pictures 5 and 6 of the extraction are the Wolfram icon, not snapshots); golden fixture (COMMON-DECISIONS §1): `tests/golden/dubins-path.original-states.json` with `states[0]` = the live output-cell state, `snapshots[1…4]` = the `"Settings"` of the four snapshot cells (raw definition notebook lines 3511, 4416, 5299, 6178) and `specs` = the initial settings (output cell `"Variables"`, line 2047, and `"Specifications"`, line 2235); exact values kept as `{"wl": …}` |
@@ -256,6 +256,7 @@ Template: see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md).
 | 7 | v0.1.21 | 2026-10-23 | the model builds the picture as `shared/graphics.js` Graphics data (owner decision D2) and the body returns {state, view, graphics}; `main.js` shortened; path pieces are `Circle`/`Line` data (hook `view().shortestPath.pieces` in that form); the car icon of `demos/common/car-icon.js` is Graphics data (no `Raw`); the old drawing output frozen in `tests/unit/fixtures/dubins-path-drawing.pre-graphics.json` and tests that read the old format now read the same numbers through `annotations()`/`Cases()`; no change to behaviour or picture (screenshots and Manipulate state identical to v0.1.20 at sample settings) |
 | 8 | v0.1.22 | 2026-10-25 | version number; bundle table (`shared/manipulate.js` now also loads `shared/graphics-extras.js` and `shared/svg-frame.js` for the new Graphics options `Axes`/`Frame`/`PlotLabel`); no change to this app's code, behaviour or picture (pixel parity with v0.1.21) |
 | 9 | v0.1.23 | 2026-10-25 | version number; the shared code gained plot functions, a geometry kit, 3D text and tube primitives and fixes for new apps (v0.1.23); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.22) |
+| 10 | v0.1.24 | 2026-10-26 | version number; the shared code gained a clock for bodies that read the time, Locator variables that change between one point and a list, sector disks and Opacity on points and text (v0.1.24); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.23) |
 
 ## 10. Improvements to consider (not implemented)
 

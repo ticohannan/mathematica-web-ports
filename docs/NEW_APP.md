@@ -59,6 +59,9 @@ Manipulate({
 | `ControlPlacement -> Top` (Mathematica's default) | `ControlPlacement: 'Top'` in the spec (the pages' default is beside) |
 | `Initialization :> (…)` | ordinary code at the top of `model.js` |
 | `x` changed inside the body | return `{ state: { …s, x: newX }, graphics: […] }` |
+| a body that changes its own variables and so evaluates again (e.g. moves a point a step per evaluation) | `settle: (s) => stillMoving(s)` in the spec: the body is evaluated again on the next frame while it is true |
+| `AbsoluteTime[]` in the body (motion in real time) | `clock: true` in the spec; `body: (s, { time }) => …` (seconds since 1900); tests fix it with `window.__demo.setClock(t)` |
+| a Locator variable that the body changes from a list of points to one point (or back) | nothing to do: the locators follow the variable's current value (`loc-1`, `loc-2`, … for a list, `loc` for one point) |
 | `TrackedSymbols`, `SaveDefinitions` | not needed |
 
 ## 3. Graphics → Graphics data
@@ -76,7 +79,7 @@ frame options `Axes: true`, `Ticks: [1, 0.5]`, `AxesLabel: ['x', 'y']`, `AxesOri
 pictures side by side: `graphics: [{ id: 'graphic', … }, { id: 'graphic2', … }]` and a body that returns one list per
 picture. 3D: see the generated `--3d` app (`Graphics3D` data drawn by `shared/graphics3d-view.js`; primitives
 `Sphere`, `Cylinder`, `Cone`, `Tube`, `Cuboid`, `Polygon`, `Line`, `Arrow`, `InfinitePlane`, `InfiniteLine`, `Text`).
-`Ellipsoid[c, Σ]` in 2D draws the ellipse of a 2 × 2 matrix; `Hue[h]` is available.
+`Ellipsoid[c, Σ]` in 2D draws the ellipse of a 2 × 2 matrix; `Hue[h]` is available. `Disk[c, r, {a0, a1}]` draws a sector; `Opacity` fades points and text too.
 
 ### Plots (`shared/plot.js`)
 

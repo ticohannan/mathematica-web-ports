@@ -1,0 +1,65 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-License-Identifier: MIT -->
+<!-- tests/e2e/fixtures/realtime.html — a test page (not an app, not linked from the site) for tests/e2e/realtime.spec.js:
+     the Manipulate layer's clock (the body reads AbsoluteTime[] as `time`), a body that keeps evaluating itself while it
+     moves a point (settle), a Locator variable that the body changes from a list of points to one point and back, and
+     the v0.1.24 primitives: a sector Disk[c, r, {a0, a1}] and Opacity on points and text. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Real-time body (test page)</title>
+  <link rel="stylesheet" href="../../../shared/style.css">
+</head>
+<body>
+<main class="page">
+  <section class="manipulate">
+    <div class="controls" id="controls"></div>
+    <div class="graphic" id="graphic" data-testid="graphic"></div>
+  </section>
+</main>
+<script type="module">
+  import { Manipulate, Locator, None } from '../../../shared/manipulate.js';
+  import { Disk, Point, Text, Red, Green, Black, Opacity, EdgeForm, Annotation } from '../../../shared/graphics.js';
+  // one point ("runner") follows the locator at speed 1 per second of the clock, at least 0.01 per evaluation; in mode
+  // "pick" the locator is a list of three points
+  const body = (state, { time }) => {
+    const s = { ...state, evaluations: state.evaluations + 1 };
+    if (s.mode === 'pick' && !Array.isArray(s.loc[0])) s.loc = [s.loc, [s.loc[0] + 0.5, s.loc[1]], [s.loc[0], s.loc[1] + 0.5]];
+    if (s.mode === 'follow' && Array.isArray(s.loc[0])) s.loc = s.loc[0];
+    if (s.mode === 'follow') {
+      const d = Math.hypot(s.loc[0] - s.runner[0], s.loc[1] - s.runner[1]);
+      if (d > 0) {
+        const step = Math.min(d, Math.min(Math.max(time - s.last, 0.01), 0.1));
+        s.runner = [s.runner[0] + (step * (s.loc[0] - s.runner[0])) / d, s.runner[1] + (step * (s.loc[1] - s.runner[1])) / d];
+      }
+    }
+    s.last = time;
+    return {
+      state: s,
+      view: { time },
+      graphics: [
+        Annotation([EdgeForm(Black), Red, Disk([0, 0], 0.5), Green, Disk([0, 0], 0.5, [-Math.PI / 2, Math.PI / 2])], 'janus'),
+        Annotation([Opacity(0.5), Point([-1, -1]), Text('faded', [-1, -1.2])], 'faded'),
+        Annotation(Point(s.runner), 'runner'),
+      ],
+    };
+  };
+  Manipulate({
+    name: 'realtime',
+    body,
+    clock: true,
+    settle: (s) => s.mode === 'follow' && (s.loc[0] !== s.runner[0] || s.loc[1] !== s.runner[1]),
+    graphics: { PlotRange: [[-2, 2], [-2, 2]], ImageSize: 300 },
+    controls: [
+      [['mode', 'pick', 'mode'], ['pick', 'follow']],
+      [['loc', [[0, 1], [0.5, 1], [0, 1.5]]], Locator],
+      [['runner', [0, 0]], None],
+      [['last', 0], None],
+      [['evaluations', 0], None],
+    ],
+  });
+</script>
+</body>
+</html>

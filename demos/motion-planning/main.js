@@ -81,7 +81,8 @@ function draw(sc, st) {
         : [LightBlue, Thickness(0.003), Annotation(Polygon(sc.robotStartPoly), 'robot-start', THIN), !inside && sc.path.length && [
           Opacity(1), Darker(Green), Annotation(Line(lineList(sc.discretePath).slice(0, Math.max(0, sIdx))), 'path-traveled'),
           Orange, Opacity(0.5), EdgeForm(Directive(Thin, Opacity(0.5))), Annotation(Polygon(regularPolygon(atS, st.n)), 'robot-moving', THIN),
-          Red, PointSize(0.01), Annotation(Point(atS), 'progress-point')]],
+          // Opacity(1): the point stays opaque as drawn up to v0.1.23 (D-MP-07; the original fades it with the Opacity[0.5] above)
+          Opacity(1), Red, PointSize(0.01), Annotation(Point(atS), 'progress-point')]],
     ],
     [Orange, Thickness(0.003), Opacity(0.25), Annotation(Line(sc.linesStarttoObstacles), 'lines-start')],
     [Purple, Thickness(0.003), Opacity(0.25), Annotation(Line(sc.linesEndtoObstacles), 'lines-end')],

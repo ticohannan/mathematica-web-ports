@@ -15,8 +15,8 @@ Initialization Code<<PaneSelectorBox>>
 
 ### [Input] (init)
 (*This shape has rotational symmetry, so calculate the mean and variance for Beta = 0, then rotate them to get answer for all Beta*)
-Meanx[Beta_,h_]:=(2 ((2-h) h)^3/2 Cos[Beta])/(3 ((-1+h) Sqrt[(2-h) h]+ArcCos[1-h]))
-Meany[Beta_,h_]:=(2 ((2-h) h)^3/2 Sin[Beta])/(3 ((-1+h) Sqrt[(2-h) h]+ArcCos[1-h]))
+Meanx[Beta_,h_]:=(2 ((2-h) h)^(3/2) Cos[Beta])/(3 ((-1+h) Sqrt[(2-h) h]+ArcCos[1-h]))
+Meany[Beta_,h_]:=(2 ((2-h) h)^(3/2) Sin[Beta])/(3 ((-1+h) Sqrt[(2-h) h]+ArcCos[1-h]))
 (* FullSimplify[RotationMatrix[Beta].(\[NoBreak]<<Grid:a0 | 0c>>\[NoBreak]).RotationMatrix[Beta]\[Transpose]]//MatrixForm
 (\[NoBreak]<<Grid:a Cos[Beta]^2+c Sin[Beta]^2(a-c) Cos[Beta] Sin[Beta] | (a-c) Cos[Beta] Sin[Beta]c Cos[Beta]^2+a Sin[Beta]^2>>\[NoBreak])*)
 VarXh[h_]:=(64 (-2+h)^3 h^3+9 ((-1+h) Sqrt[-(-2+h) h]+ArcCos[1-h]) (4 ArcCos[1-h]+Sin[4 ArcSin[1-h]]))/(144 ((-1+h) Sqrt[-(-2+h) h]+ArcCos[1-h])^2);
@@ -27,7 +27,7 @@ Covxy[Beta_,h_]:=(VarXh[h]-VarYh[h]) Cos[Beta] Sin[Beta]
 Corxy[Beta_,h_]:=(Covxy[Beta,h])/(Sqrt[Varx[Beta,h]*Vary[Beta,h]])
 numPts = 20;
 swarmPtsS = Flatten[Table[(1)/(numPts){+i+Boole[EvenQ[j]](1)/(2),+jSqrt[3]/2},{i,-numPts,numPts},{j,-Round[2/Sqrt[3]numPts],Round[2/Sqrt[3]numPts]}],1];
-swarmPts=Select[swarmPtsS,(#[[1]]^2+#[[2]]^2)<1&]; 
+swarmPts=Select[swarmPtsS,((#[[1]])^2+(#[[2]])^2)<1&]; 
 arrowArc[s_Circle]:=s/.Circle[a_,r_,{start_,end_}]:>({s,Arrow[{#-r/10^6 {-Sin@end,Cos@end},#}]}&[a+r {Cos@end,Sin@end}]);
 
 ### [Section]
@@ -70,7 +70,7 @@ cov=``\>",-(1-h)Sqrt[(2-h) h]+ArcCos[1-h],Chop[mean],Chop[cov]],{0,1/2}]}], (*op
 If[showParticles,{PointSize[0.011],Lighter[Blue,.5],Evaluate@Point[If[h<2,Select[swarmPts,(*half-plane test*)
 ({Cos[Beta],Sin[Beta]}.(#-(1-h){Cos[Beta],Sin[Beta]})>0)&],swarmPts]]}],
 (*draw the mean path*)
-{ColorData[97,"\<ColorList\>"][[1]],Thick, Circle[{0,0},(2 (-(-2+h) h)^3/2)/(3 ((-1+h) Sqrt[-(-2+h) h]+ArcCos[1-h]))]},
+{ColorData[97,"\<ColorList\>"][[1]],Thick, Circle[{0,0},(2 (-(-2+h) h)^(3/2))/(3 ((-1+h) Sqrt[-(-2+h) h]+ArcCos[1-h]))]},
 (*draw the direction of the vector*)
 {Blue,Thickness[.01],Arrow[{{0,0},(1)/(2){Cos[Beta],Sin[Beta]}}],
 Blue,Thin,Line[{{0,0},{1/3,0}}],
@@ -153,7 +153,7 @@ Therefore, the area under a chord is
 For a circular workspace with given Beta, the mean of x and y is:
 
 ### [Text]
-Overscript[x, _](h)=(2 (-(-2+h) h)^3/2)/(3 ((-1+h) Sqrt[-(-2+h) h]+arccos(1-h))),
+Overscript[x, _](h)=(2 (-(-2+h) h)^(3/2))/(3 ((-1+h) Sqrt[-(-2+h) h]+arccos(1-h))),
 
 ### [Text]
 Overscript[y, _](h)=0.
@@ -174,7 +174,7 @@ and finally,
 Subscript[σ, x\[InvisibleComma]y](h)=0.
 
 ### [Text]
-The locus of mean positions is aligned with Beta, and the mean position is at radius r(h)=(2 (-(-2+h) h)^3/2)/(3 ((-1+h) Sqrt[-(-2+h) h]+arccos(1-h))) from the center.
+The locus of mean positions is aligned with Beta, and the mean position is at radius r(h)=(2 (-(-2+h) h)^(3/2))/(3 ((-1+h) Sqrt[-(-2+h) h]+arccos(1-h))) from the center.
 The variance Subscript[σ,x]^2(h) is maximized at Beta=π/2+n π and h\[TildeTilde]1.43, while the covariance is maximized at Beta=3π/4+n π and h\[TildeTilde]0.92. For small h values, the correlation approaches \[PlusMinus]1.
 
 ### [Subsection]

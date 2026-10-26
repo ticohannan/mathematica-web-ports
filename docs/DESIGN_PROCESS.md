@@ -37,6 +37,7 @@ it is verified:
 | Ensemble Control of Robots with Unicycle Kinematics | [`demos/ensemble-control/DESIGN.md`](../demos/ensemble-control/DESIGN.md) | `demos/ensemble-control/` |
 | Shortest Distance between Two Line Segments | [`demos/segment-distance/DESIGN.md`](../demos/segment-distance/DESIGN.md) | `demos/segment-distance/` |
 | Distribution of a Swarm of Robots in a Circular Workplace under Gravity | [`demos/swarm-circle/DESIGN.md`](../demos/swarm-circle/DESIGN.md) | `demos/swarm-circle/` |
+| Steering Multiple Radio Control (RC) Cars with One Joystick | [`demos/steering-rc-cars/DESIGN.md`](../demos/steering-rc-cars/DESIGN.md) | `demos/steering-rc-cars/` |
 
 The originals came without design documents. Version 0.1.6 added best-effort design documents
 reconstructed from the original notebooks (their code, captions and details text) and from the

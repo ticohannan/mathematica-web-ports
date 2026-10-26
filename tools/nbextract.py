@@ -128,6 +128,18 @@ def unesc(t):
 
 def head(e): return e[1][1] if e[0] == 'Call' and e[1][0] == 'Sym' else None
 
+def grp(t):
+    """A compound base or exponent in parentheses (the box form shows the grouping by position only)."""
+    t = t.strip()
+    if re.fullmatch(r"[\w.$`\\\[\]]+", t): return t
+    if t.startswith('(') and t.endswith(')'):  # already one parenthesised group?
+        d = 0
+        for i, c in enumerate(t):
+            d += c == '('; d -= c == ')'
+            if d == 0 and i < len(t) - 1: break
+        else: return t
+    return f'({t})'
+
 def box(e):
     k = e[0]
     if k == 'Str': return unesc(e[1])
@@ -140,8 +152,8 @@ def box(e):
     if h in ('BoxData', 'StyleBox', 'TagBox', 'FormBox', 'AdjustmentBox', 'ItemBox', 'InterpretationBox', 'TooltipBox', 'FrameBox', 'DynamicWrapperBox', 'PaneBox'):
         return box(a[0])
     if h == 'SubscriptBox': return f'Subscript[{box(a[0])}, {box(a[1])}]'
-    if h == 'SuperscriptBox': return f'{box(a[0])}^{box(a[1])}'
-    if h == 'SubsuperscriptBox': return f'Subscript[{box(a[0])},{box(a[1])}]^{box(a[2])}'
+    if h == 'SuperscriptBox': return f'{grp(box(a[0]))}^{grp(box(a[1]))}'  # 10^(range-1), not 10^range-1
+    if h == 'SubsuperscriptBox': return f'Subscript[{box(a[0])},{box(a[1])}]^{grp(box(a[2]))}'
     if h == 'FractionBox': return f'({box(a[0])})/({box(a[1])})'
     if h == 'SqrtBox': return f'Sqrt[{box(a[0])}]'
     if h == 'OverscriptBox': return f'Overscript[{box(a[0])}, {box(a[1])}]'
