@@ -22,8 +22,8 @@
 //   * ControlActive (when spec.ControlActive is true, i.e. the body uses ControlActive[]): `controlActive` is true while
 //     a slider or locator is dragged with the mouse; on release the body is evaluated once more with false;
 //   * the "Initial settings" button (an element with id `reset`, if the page has one);
-//   * the test hook window.__demo (getState, setState, view, graphics, moveLocator, worldToClient, controlActive, ready; setRng
-//     with `random`) that the browser tests and the Mathematica comparison use.
+//   * the test hook window.__demo (getState, setState, view, graphics, moveLocator, worldToClient, controlActive, setClock,
+//     ready; setRng with `random`) that the browser tests and the Mathematica comparison use.
 //
 // Control specs (Manipulate's own forms; JS arrays for Mathematica lists):
 //   [[name, init, label], min, max, step, opts]         slider (step omitted or 0: continuous); min and max may be
@@ -68,7 +68,7 @@
 // changes its own variables), throttle: 'frame' (at most one evaluation per animation frame for control input),
 // after(ctx) (runs after every evaluation and drawing: sounds, text outside the picture), clock (v0.1.24: the body
 // reads the time — Mathematica's AbsoluteTime[] — as `time` in its second argument: seconds since 1900-01-01 00:00 UTC;
-// hook setClock(t) fixes it at t for tests, setClock(null) returns to the real clock).
+// the page clock of shared/clock.js, which the hook's setClock(t) fixes at t for tests and setClock(null) releases).
 //
 // Mathematica slider semantics are the default: values min + k·step in machine arithmetic, the right end = max
 // (shared/ui.js `steps: 'mma'`).
@@ -78,6 +78,7 @@ import { addButton, addCheckbox, addPopup, addVerticalSlider, addRow } from './u
 import { addIntervalSlider } from './ui-interval.js';
 import { createPlot, addLocators, darkLocatorGlyph, locatorGlyph, svgNode } from './svg-plot.js';
 import { createRng, replayRng } from './random.js';
+import { absoluteTime, setClock } from './clock.js';
 import { render, htmlOf, textOf, scaleGraphics } from './graphics.js';
 import { decorationMargins, plotDecorations, legendExtraPx } from './graphics-extras.js';
 import { frameLayout } from './svg-frame.js';
@@ -174,6 +175,43 @@ export function cacheLast() {
  * NaN becomes null, as in JSON.
  */
 export const hookCopy = (x) => JSON.parse(JSON.stringify(x, (k, v) => (v === Infinity ? 'Infinity' : v === -Infinity ? '-Infinity' : v)));
+/** An exact number in the saved-state form {wl, n} (tools/extract_state.py): n its double ({wl: "Infinity"} has no n). */
+const isExactNumber = (v) => v && typeof v === 'object' && !Array.isArray(v) && typeof v.wl === 'string' && (typeof v.n === 'number' || /^-?Infinity$/.test(v.wl)) && Object.keys(v).every((k) => k === 'wl' || k === 'n');
+/** Plain numbers for {wl, n} anywhere in a value (in lists and plain objects); a part without any is returned as it was
+ *  (the same array or object, so that caches keyed on identity keep working). */
+export function numbersOf(v) {
+  if (isExactNumber(v)) return v.n ?? (v.wl.startsWith('-') ? -Infinity : Infinity);
+  if (Array.isArray(v)) { const w = v.map(numbersOf); return w.some((x, i) => x !== v[i]) ? w : v; }
+  if (v && typeof v === 'object' && Object.getPrototypeOf(v) === Object.prototype) {
+    let changed = false;
+    const w = Object.fromEntries(Object.entries(v).map(([k, x]) => { const y = numbersOf(x); if (y !== x) changed = true; return [k, y]; }));
+    return changed ? w : v;
+  }
+  return v;
+}
+/**
+ * How Mathematica's slider field shows an exact value given in Wolfram form: rationals "1/7", "-1/2"; rational multiples
+ * of π in their InputForm variants ("5*Pi/32", "(-5*Pi)/32", "-1/2*Pi", "3/2*Pi", "-(Pi/2)", "Pi/4") → "5π/32",
+ * "-5π/32", "-π/2", "3π/2", "-π/2", "π/4"; "Infinity" → "∞"; 1/Sqrt[n] forms ("(2)^(-1/2)", "1/Sqrt[2]") → "1/√2",
+ * Sqrt[n] → "√n". Anything else (e.g. an arbitrary-precision real) → null (shown as a number).
+ */
+export function exactLabel(wl) {
+  let t = String(wl).replace(/\s+/g, '');
+  if (/^-?\d+(\/\d+)?$/.test(t)) return t;
+  if (/^-?Infinity$/.test(t)) return t.replace('Infinity', '∞');
+  let m = /^\(?(\d+)\)?\^\(-1\/2\)$/.exec(t) ?? /^1\/Sqrt\[(\d+)\]$/.exec(t);
+  if (m) return `1/√${m[1]}`;
+  m = /^Sqrt\[(\d+)\]$/.exec(t) ?? /^\(?(\d+)\)?\^\(1\/2\)$/.exec(t);
+  if (m) return `√${m[1]}`;
+  let sign = 1;
+  if (/^-\(.*\)$/.test(t)) { sign = -1; t = t.slice(2, -1); }
+  // p/q * Pi in its forms: [-]a*Pi/b, ([-]a*Pi)/b, [-]a/b*Pi, [-]Pi, ([-]Pi)/b
+  m = /^\(?(-?)(\d+)?\*?Pi\)?(?:\/(\d+))?$/.exec(t) ?? /^(-?)(\d+)\/(\d+)\*Pi$/.exec(t);
+  if (!m) return null;
+  if (m[1] === '-') sign = -sign;
+  const num = m[2] && m[2] !== '1' ? m[2] : '', den = m[3] ? `/${m[3]}` : '';
+  return `${sign < 0 ? '-' : ''}${num}π${den}`;
+}
 /** The reverse of hookCopy for values given to setState. */
 export const hookRead = (v) => (v === 'Infinity' ? Infinity : v === '-Infinity' ? -Infinity : Array.isArray(v) ? v.map(hookRead) : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, w]) => [k, hookRead(w)])) : v);
 
@@ -183,8 +221,8 @@ export function pageRng() {
   return createRng({ seed: seedParam !== null && /^\d+$/.test(seedParam) ? Number(seedParam) : null });
 }
 
-/** AbsoluteTime[]: seconds since 1900-01-01 00:00 (UTC here; Mathematica counts in the local time zone — only differences are used). */
-export const absoluteTime = () => (typeof performance !== 'undefined' && performance.timeOrigin ? performance.timeOrigin + performance.now() : Date.now()) / 1000 + 2208988800;
+// AbsoluteTime[] and the page clock: shared/clock.js (v0.1.25; re-exported here as in v0.1.24)
+export { absoluteTime } from './clock.js';
 
 const clampTo = ([x, y], lo, hi) => (lo ? [Math.min(Math.max(x, lo[0]), hi[0]), Math.min(Math.max(y, lo[1]), hi[1])] : [x, y]);
 const passThrough = (opts) => Object.fromEntries(Object.entries(opts).filter(([k]) => /^[a-z]/.test(k) && k !== 'picture'));
@@ -246,8 +284,6 @@ export function Manipulate(spec) {
   let view = null;
   let controlActive = false;
   let rng = spec.random ? pageRng() : null;
-  let fixedTime = null; // clock: a time set by the hook (tests), or null for the real clock
-  const clockNow = () => (fixedTime ?? absoluteTime());
 
   // ---- the pictures (one, or several side by side: Row/Column/Grid of Graphics)
   const several = Array.isArray(spec.graphics);
@@ -345,7 +381,7 @@ export function Manipulate(spec) {
   function run() {
     if (pending) { cancelAnimationFrame(pending); pending = 0; }
     if (queued) { cancelAnimationFrame(queued); queued = 0; }
-    const r = spec.body(state, spec.clock ? { controlActive, rng, time: clockNow() } : { controlActive, rng });
+    const r = spec.body(state, spec.clock ? { controlActive, rng, time: absoluteTime() } : { controlActive, rng });
     let d;
     if (r && r.head === 'Graphics') { d = several ? [r] : r; view = r; } else if (Array.isArray(r) && !spec.draw) {
       d = r; view = r; // a bare list of primitives (or, with several pictures, one list per picture)
@@ -519,7 +555,14 @@ export function Manipulate(spec) {
   // Moved(state): whether a slider shows its value as moved (machine number "1.") after a reset or setState
   const howFor = (n, how) => { const m = byName.get(n)?.opts?.Moved; return m ? { ...how, moved: !!m(state) } : how; };
   // resetStops: a reset or setState also stops running slider animations (the ports that did so by hand)
-  const syncControls = (how) => { for (const [n, api] of apis) { if (spec.resetStops) api.stop?.(); api.set(val(n), howFor(n, how)); shown.set(n, val(n)); } };
+  const syncControls = (how, exact) => {
+    for (const [n, api] of apis) {
+      if (spec.resetStops) api.stop?.();
+      const h = howFor(n, how);
+      api.set(val(n), exact?.has(n) ? { ...h, exactText: exact.get(n) } : h);
+      shown.set(n, val(n));
+    }
+  };
 
   // one locator per Locator control; a control whose value is a list of points gives one locator per point,
   // named name-1, name-2, … (Mathematica's {{pts, {p1, p2, …}}, …, Locator}). v0.1.24: whether the value is a list
@@ -650,8 +693,13 @@ export function Manipulate(spec) {
     /** replace Manipulate variables and evaluate once; how = { moved } is passed to the sliders */
     setState: (partial, how) => {
       cancelPending();
+      // v0.1.25: exact numbers as the saved states write them ({wl: "1/7", n: 0.142857…}) set the number and show
+      // the exact text in the slider's field ("1/7", "5π/32"), as Mathematica shows an exact value until it is moved
+      const exact = new Map();
+      for (const [k, v] of Object.entries(partial)) { const t = isExactNumber(v) ? exactLabel(v.wl) : null; if (t !== null) exact.set(k, t); }
+      partial = Object.fromEntries(Object.entries(partial).map(([k, v]) => [k, numbersOf(v)]));
       state = spec.merge ? spec.merge(state, partial) : { ...state, ...partial };
-      syncControls(how);
+      syncControls(how, exact);
       run();
       return state;
     },
@@ -697,10 +745,9 @@ export function Manipulate(spec) {
       worldToClient: (p, k = 0) => plots[k].worldToClient(toWorld(k, p)),
     } : {}),
     controlActive: () => controlActive,
-    ...(spec.clock ? {
-      /** clock: fix the time the body reads at t (seconds, as AbsoluteTime[]), or null for the real clock */
-      setClock: (t) => { fixedTime = t ?? null; },
-    } : {}),
+    /** fix the page clock (shared/clock.js) at t (seconds, as AbsoluteTime[]), or null for the real clock: the body's
+     *  `time` (clock), the sliders' animation and app animations read it (v0.1.24 with `clock`; v0.1.25 on every page) */
+    setClock: (t) => { setClock(t); },
     ...(spec.random ? {
       /** replace the random source: {seed: n} (generated) or {reals: […], integers: […]} (replayed draws) */
       setRng: (s) => { rng = s && (s.reals || s.integers) ? replayRng(s) : createRng({ seed: s?.seed ?? null }); },

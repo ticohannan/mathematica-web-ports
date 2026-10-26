@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.24 |
+| Code version: | 0.1.25 |
 | Document revision | 5 (2026-10-17) — §11 Errors in the original (R-C); checklist items as operator procedures (R-B) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
-| Original | Wolfram Demonstrations Project, "Unit Balls for Different p-Norms in 2D and 3D", contributed by Aaron T. Becker and Ravi Patel, published December 29, 2020 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/UnitBallsForDifferentPNormsIn2DAnd3D/>. Readable source: [`docs/original-source/unit-balls.txt`](../../docs/original-source/unit-balls.txt) (the flattened `(…)^1/p` is `(…)^(1/p)` in the notebook); saved state: `tests/golden/unit-balls.original-state.json`; snapshots: `docs/original-snapshots/unit-balls-1…7.png` |
+| Original | Wolfram Demonstrations Project, "Unit Balls for Different p-Norms in 2D and 3D", contributed by Aaron T. Becker and Ravi Patel, published December 29, 2020 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/UnitBallsForDifferentPNormsIn2DAnd3D/>. Readable source: [`docs/original-source/unit-balls.txt`](../../docs/original-source/unit-balls.txt) (since v0.1.25 it shows the notebook's `(…)^(1/p)`; earlier extractions flattened it to `(…)^1/p`); saved state: `tests/golden/unit-balls.original-state.json`; snapshots: `docs/original-snapshots/unit-balls-1…7.png` |
 | Port files | `norms.js` (the original's functions, p values and their display, plot ranges, surface and mesh-line generators; pure), `plot3d.js` (the picture of one evaluation: the fitted `LIGHTING`, `COLORS`, `FRAMING`, the two plots, the plane z = 1, axes, ticks, labels and plot label of this app, drawn with `shared/plot3d.js`; the renderer `UnitBallsView`), `main.js` (the Manipulate on `shared/manipulate.js`: the dimension setter, the formula line and the two p controls as `Control` factories, the body `scene(state)`, the test hook; v0.1.21), `index.html`; shared (MIT): `shared/plot3d.js` (the generic Plot3D frame: viewer, BoxRatios group, lit-surface shader, line segments, box edges, tick segments, anchored labels, framing; v0.1.21), `shared/manipulate.js`, `shared/three-helpers.js`, `shared/ui.js` |
 | Role in the project | further demonstration (extra proof of concept alongside the motion-planning port); developed in a separate, unpublished repository and added to this site in v0.1.12; WebGL 2 page (DEC-22) |
 
@@ -170,7 +170,7 @@ Owner rule R-A: this one app can be taken out of the repository and hosted anywh
 | Area | Files | Files loaded by the page |
 |---|---|---|
 | the app (`demos/unit-balls/`) | 4 | `index.html`, `main.js`, `norms.js`, `plot3d.js` |
-| `shared/` | 17 | `graphics-extras.js`, `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `plot3d.js`, `random.js`, `requirements.js`, `style.css`, `svg-frame.js`, `svg-plot.js`, `three-helpers.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
+| `shared/` | 18 | `clock.js`, `graphics-extras.js`, `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `mma.js`, `plot3d.js`, `random.js`, `requirements.js`, `style.css`, `svg-frame.js`, `svg-plot.js`, `three-helpers.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
 | `vendor/three/` | 9 | `addons/controls/OrbitControls.js`, `addons/lines/Line2.js`, `addons/lines/LineGeometry.js`, `addons/lines/LineMaterial.js`, `addons/lines/LineSegments2.js`, `addons/lines/LineSegmentsGeometry.js`, `addons/renderers/CSS2DRenderer.js`, `three.core.js`, `three.module.js` |
 | added by the bundler | 8 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/unit-balls/DESIGN.md`, `vendor/three/LICENSE` |
 <!-- bundle-contents:end -->
@@ -243,6 +243,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 12 | v0.1.22 | 2026-10-25 | version number; bundle table (`shared/manipulate.js` now also loads `shared/graphics-extras.js` and `shared/svg-frame.js` for the new Graphics options `Axes`/`Frame`/`PlotLabel`); no change to this app's code, behaviour or picture (pixel parity with v0.1.21) |
 | 13 | v0.1.23 | 2026-10-25 | version number; the shared code gained plot functions, a geometry kit, 3D text and tube primitives and fixes for new apps (v0.1.23); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.22) |
 | 14 | v0.1.24 | 2026-10-26 | version number; the shared code gained a clock for bodies that read the time, Locator variables that change between one point and a list, sector disks and Opacity on points and text (v0.1.24); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.23) |
+| 15 | v0.1.25 | 2026-10-26 | version number; the shared code gained one page clock (`shared/clock.js`: slider animations and app animations read it, tests fix it), tolerant `Equal`/`Unequal` in `shared/wl.js` and exact slider texts from saved states (v0.1.25); the readable source re-extracted with the exponent grouping (`(…)^(1/p)`), Original row and §11 note updated; no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.24) |
 
 ## 10. Improvements to consider (not implemented)
 
@@ -258,8 +259,8 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 Where the original is probably wrong, as distinct from the quirks of §7 that are merely unusual (owner rule R-C,
 [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) rule 9). Every row is an open question for the owner; the port
 keeps the original's behaviour. Checked on 2026-10-17 against the readable source
-[`docs/original-source/unit-balls.txt`](../../docs/original-source/unit-balls.txt). Not an error: `myNorm` reads
-`(…)^1/p` in the flattened source, but the measured plot range (K-UB-01: 24 for p = 1/4 at the corner, i.e.
+[`docs/original-source/unit-balls.txt`](../../docs/original-source/unit-balls.txt). Not an error: `myNorm` read
+`(…)^1/p` in the flattened source of that time (since v0.1.25 the extraction keeps the grouping: `(…)^(1/p)`), and the measured plot range (K-UB-01: 24 for p = 1/4 at the corner, i.e.
 (2·1.5<sup>1/4</sup>)<sup>4</sup>) shows that the notebook computes (…)<sup>1/p</sup>, not (…)<sup>1</sup>/p. The Details formulas
 for p = 1, 2, ∞ and 1/2 are correct as formulas.
 

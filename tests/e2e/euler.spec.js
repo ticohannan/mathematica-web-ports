@@ -4,6 +4,7 @@
 // tests/e2e/euler.spec.js — Euler Angles: Precession, Nutation, and Spin (browser tests)
 import { test, expect } from '@playwright/test';
 import { openDemo, reviewShot, inkAfterContextRestore } from './helpers.js';
+import { bookmarkAt } from '../../demos/euler-angles/model.js';
 
 const URL = '/demos/euler-angles/';
 const DEG = Math.PI / 180;
@@ -76,6 +77,35 @@ test.describe('Euler angles demo', () => {
     const a = await page.evaluate(() => window.__demo.getState());
     await page.waitForTimeout(600);
     expect(await page.evaluate(() => window.__demo.getState())).toEqual(a);
+  });
+
+  test('with the page clock fixed (setClock), "Animate bookmarks" is at the bookmark of the elapsed time (9 s per tour)', async ({ page }) => {
+    await openDemo(page, URL);
+    const T = 3.8e9;
+    await page.evaluate((t) => window.__demo.setClock(t), T);
+    await page.getByTestId('animate-bookmarks').click();
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))); // the animation's first frame has run
+    expect(await page.evaluate(() => window.__demo.getState())).toEqual(bookmarkAt(0));
+    await page.evaluate((t) => window.__demo.setClock(t), T + 4.5);
+    await expect.poll(async () => page.evaluate(() => window.__demo.getState())).toEqual(bookmarkAt(0.5));
+    await page.getByTestId('animate-bookmarks').click();
+    await page.evaluate(() => window.__demo.setClock(null));
+  });
+
+  test('with the page clock fixed (setClock), the ⊕ animation moves the spin angle 360° per 6 s of clock time', async ({ page }) => {
+    await openDemo(page, URL);
+    const T = 3.8e9;
+    await page.evaluate((t) => window.__demo.setClock(t), T);
+    await page.getByTestId('plus-a3').click();
+    await page.getByTestId('play-a3').click();
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))); // the animation's first frame has run
+    expect((await page.evaluate(() => window.__demo.getState())).a3).toBe(0); // the clock stands still
+    await page.evaluate((t) => window.__demo.setClock(t), T + 1);
+    await expect.poll(async () => (await page.evaluate(() => window.__demo.getState())).a3).toBe(60);
+    await page.waitForTimeout(150);
+    expect((await page.evaluate(() => window.__demo.getState())).a3).toBe(60);
+    await page.getByTestId('play-a3').click();
+    await page.evaluate(() => window.__demo.setClock(null));
   });
 
   test('slider animation (⊕ panel ▶) advances the angle', async ({ page }) => {

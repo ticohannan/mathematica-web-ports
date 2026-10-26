@@ -99,4 +99,4 @@ evaluate any cell. Open the review screenshots `test-output\review-screenshots\c
 **Record** — in `_internal\test-runs\<YYYY-MM-DD>_steering-rc-cars.md`, under the heading M-SR-09: per snapshot: "same" or the differences.
 **Save** — File > Close, Don't Save.
 **Port** — the review screenshots.
-**Expected / what it decides** — the same pictures; the radius field shows 0.142857 where Mathematica shows 1/7 (N-SR-02) (F-SR-13).
+**Expected / what it decides** — the same pictures and control values, also the radius field "1/7" in snapshots 4 and 5 (N-SR-02) (F-SR-13).

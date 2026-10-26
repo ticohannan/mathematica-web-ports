@@ -61,6 +61,8 @@ Manipulate({
 | `x` changed inside the body | return `{ state: { …s, x: newX }, graphics: […] }` |
 | a body that changes its own variables and so evaluates again (e.g. moves a point a step per evaluation) | `settle: (s) => stillMoving(s)` in the spec: the body is evaluated again on the next frame while it is true |
 | `AbsoluteTime[]` in the body (motion in real time) | `clock: true` in the spec; `body: (s, { time }) => …` (seconds since 1900); tests fix it with `window.__demo.setClock(t)` |
+| an animation outside the body (a port addition that plays through states) | `animate((t, dt, elapsed) => { ctx.setState(…); })` of `shared/clock.js` (returns `stop()`); the same clock as the sliders' ⊕ animation, so tests can fix it |
+| a snapshot's exact settings (`rad -> 1/7`) | `window.__demo.setState({ rad: { wl: '1/7', n: 1 / 7 } })` (the saved states' form): the number is used, the field shows "1/7" |
 | a Locator variable that the body changes from a list of points to one point (or back) | nothing to do: the locators follow the variable's current value (`loc-1`, `loc-2`, … for a list, `loc` for one point) |
 | `TrackedSymbols`, `SaveDefinitions` | not needed |
 
@@ -132,7 +134,7 @@ const c = Times(1 / pts.length, Total(pts));                          // Total[p
 | `Pi`, `E`, `Degree`, `Sin`, `Cos`, `Sqrt`, `Exp`, `Log[b, x]` | same names | |
 | `RandomReal[{0, 1}, n]`, `RandomInteger`, `RandomChoice`, `RandomSample` | same names | `SeedRandom[n]`: pass a seeded source as the last argument — the Manipulate's `rng` (with `random: true` in the spec; `body: (s, { rng }) => RandomReal([0, 1], 3, rng)`, `?seed=N` in the page URL) or `createRng({ seed: n })` of `shared/random.js` |
 | a value computed only when its inputs change (`If[a =!= aOld, …]`) | `const cached = cacheLast(); … cached([a, b], () => compute(a, b))` | |
-| `x == y`, `x < y` | `===`, `<` (or `Math.abs(x - y) < 1e-9`) | Mathematica's tolerant comparison only matters for faithful ports |
+| `x == y`, `x != y`, `x < y` on computed reals | `Equal(x, y)`, `Unequal(x, y)` (numbers or lists), `Less(x, y)` (numbers) | Mathematica ignores the last seven bits: `0.1 + 0.2 == 0.3` is True; use `===` for integers, strings and copied values |
 
 Results agree with Mathematica up to rounding, not bit for bit. That is enough for a new app; do not mix `shared/wl.js`
 with the exact helpers in one computation.

@@ -128,17 +128,40 @@ def unesc(t):
 
 def head(e): return e[1][1] if e[0] == 'Call' and e[1][0] == 'Sym' else None
 
+def one_group(s, op, cl):
+    """s is one bracket group from its first to its last character (op ... cl, balanced)."""
+    if not (s.startswith(op) and s.endswith(cl)): return False
+    d = 0
+    for i, c in enumerate(s):
+        d += c == op; d -= c == cl
+        if d == 0 and i < len(s) - 1: return False
+    return True
+
+NAMED_CHAR = r"\\\[\w+\]"  # a named character such as \[Theta]
+ATOM = rf"(?:{NAMED_CHAR}|[\w$`])+"  # a symbol (possibly with named characters) or an integer
+NUMBER = r"\d*\.\d+|\d+\.\d*"  # a decimal number
+
+def atomic(s):
+    """Needs no parentheses as a base or exponent: a symbol, number or named character; one character; a string;
+    f[...] / x[[...]] (a head followed by bracket groups only); or one parenthesised group."""
+    if re.fullmatch(ATOM, s) or re.fullmatch(NUMBER, s) or len(s) == 1: return True
+    if re.fullmatch(r'"(?:[^"\\]|\\.)*"', s): return True
+    m = re.match(ATOM, s)
+    if m and m.end() < len(s) and s[m.end()] == '[':
+        rest, d = s[m.end():], 0
+        for i, c in enumerate(rest):
+            d += c == '['; d -= c == ']'
+            if d == 0 and i < len(rest) - 1 and rest[i + 1] != '[': return False
+        return d == 0
+    return one_group(s, '(', ')')
+
 def grp(t):
-    """A compound base or exponent in parentheses (the box form shows the grouping by position only)."""
-    t = t.strip()
-    if re.fullmatch(r"[\w.$`\\\[\]]+", t): return t
-    if t.startswith('(') and t.endswith(')'):  # already one parenthesised group?
-        d = 0
-        for i, c in enumerate(t):
-            d += c == '('; d -= c == ')'
-            if d == 0 and i < len(t) - 1: break
-        else: return t
-    return f'({t})'
+    """A compound base or exponent in parentheses (the box form shows the grouping by position only); the text's own
+    surrounding spaces are kept."""
+    s = t.strip()
+    if not s or atomic(s): return t
+    lead, trail = t[:len(t) - len(t.lstrip())], t[len(t.rstrip()):]
+    return f'{lead}({s}){trail}'
 
 def box(e):
     k = e[0]

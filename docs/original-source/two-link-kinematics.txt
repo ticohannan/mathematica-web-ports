@@ -1,4 +1,4 @@
-# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Private reference (R-04). Extracted 2026-10-12 with tools/nbextract.py; cached outputs skipped.
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Private reference (R-04). Extracted 2026-10-12 with tools/nbextract.py; cached outputs skipped. Exponent grouping restored 2026-10-26 (tools/nbextract.py, v0.1.25).
 
 ### [Title]
 Forward and Inverse Kinematics for Two-Link Arm
@@ -182,7 +182,7 @@ The transformation from joint velocities q' to end effector velocities ξ is cal
 If all joint velocities are within the unit ball \[Sum](Subscript[q, i]')^2<=1, then the end effector velocities are constrained to lie within an ellipse, drawn in pink in the figure. This ellipse is called the manipulability ellipse.
 
 ### [Text]
-The inverse problem of determining what joint velocities q' are required to generate a desired ξ is inverse velocity kinematics. Inverse velocity kinematics is trivial if J(q)^-1 exists: J(q)^-1\[CenterDot]ξ= q', but when J(q) is singular this is not possible. In this Demonstration, singular configurations occur on the boundary of the workspace, where the manipulability ellipse loses a dimension and becomes a line. In this case, we solve for the required joint velocities by generating the Moore\[Dash]Penrose pseudoinverse. This is calculated in Mathematica as PseudoInverse[J]\[CenterDot]ξ= q'.
+The inverse problem of determining what joint velocities q' are required to generate a desired ξ is inverse velocity kinematics. Inverse velocity kinematics is trivial if (J(q))^(-1) exists: (J(q))^(-1)\[CenterDot]ξ= q', but when J(q) is singular this is not possible. In this Demonstration, singular configurations occur on the boundary of the workspace, where the manipulability ellipse loses a dimension and becomes a line. In this case, we solve for the required joint velocities by generating the Moore\[Dash]Penrose pseudoinverse. This is calculated in Mathematica as PseudoInverse[J]\[CenterDot]ξ= q'.
 
 ### [Subsection]
 References<<PaneSelectorBox>>

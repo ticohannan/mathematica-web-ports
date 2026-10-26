@@ -112,11 +112,17 @@ test.describe('chart for a torus', () => {
 
   test('the play button of lambda animates the morph', async ({ page }) => {
     await openDemo(page, URL);
+    // the page clock fixed (v0.1.25): one second of clock time moves λ by 2/6 from 2, wrapping to 1/3
+    const T = 3.8e9;
+    await page.evaluate((t) => window.__demo.setClock(t), T);
     await page.getByTestId('plus-lambda').click();
     await page.getByTestId('play-lambda').click();
-    await expect.poll(async () => (await getState(page)).λ, { timeout: 5000 }).not.toBe(2);
-    await page.waitForTimeout(1000);
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))); // the animation's first frame has run
+    expect((await getState(page)).λ).toBe(2);
+    await page.evaluate((t) => window.__demo.setClock(t), T + 1);
+    await expect.poll(async () => (await getState(page)).λ).toBeCloseTo(1 / 3, 12);
     await page.getByTestId('play-lambda').click(); // pause
+    await page.evaluate(() => window.__demo.setClock(null));
     const λ1 = (await getState(page)).λ;
     await expect(page.getByTestId('plot-label')).toHaveText(λ1 < 0.5 ? '2-Torus' : λ1 < 1.2 ? 'Cylinder' : 'Plane');
     await page.waitForTimeout(400);

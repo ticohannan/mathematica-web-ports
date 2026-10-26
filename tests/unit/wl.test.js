@@ -204,3 +204,24 @@ describe('wl.js: review findings (v0.1.22)', () => {
     expect([0, 1]).toContain(v);
   });
 });
+
+describe('wl.js: comparisons with Mathematica\'s tolerance (v0.1.25)', () => {
+  it('Equal ignores the last bits of machine reals: 0.1 + 0.2 == 0.3; a real difference stays unequal', () => {
+    expect(W.Equal(0.1 + 0.2, 0.3)).toBe(true);
+    expect(W.Unequal(0.1 + 0.2, 0.3)).toBe(false);
+    expect(W.Equal(1, 1 + 1e-10)).toBe(false);
+    expect(W.Equal(1, 1 + 2 ** -50)).toBe(true);
+  });
+  it('lists compare element by element; different shapes are unequal', () => {
+    expect(W.Equal([0.1 + 0.2, 1], [0.3, 1])).toBe(true);
+    expect(W.Unequal([[1, 2], [3, 4]], [[1, 2], [3, 4 + 1e-9]])).toBe(true);
+    expect(W.Equal([1, 2], [1, 2, 3])).toBe(false);
+  });
+  it('Less and Greater are False for tolerantly equal numbers; LessEqual and GreaterEqual True', () => {
+    expect(W.Less(0.3, 0.1 + 0.2)).toBe(false);
+    expect(W.Greater(0.1 + 0.2, 0.3)).toBe(false);
+    expect(W.LessEqual(0.1 + 0.2, 0.3)).toBe(true);
+    expect(W.GreaterEqual(0.3, 0.1 + 0.2)).toBe(true);
+    expect(W.Less(1, 2)).toBe(true);
+  });
+});

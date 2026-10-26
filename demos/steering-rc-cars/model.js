@@ -9,8 +9,7 @@ import {
   Black, White, Gray, Red, Green, Blue, Darker, EdgeForm, Opacity, Thick,
 } from '../../shared/graphics.js';
 import { ColorData } from '../../shared/plot.js';
-import { Pi, Cos, Sin, Sqrt, Tan, ArcTan, RandomReal, RotationMatrix, Dot } from '../../shared/wl.js';
-import { mUnequal } from '../../shared/mma.js';
+import { Pi, Cos, Sin, Sqrt, Tan, ArcTan, RandomReal, RotationMatrix, Dot, Unequal } from '../../shared/wl.js';
 
 const add = (a, b) => [a[0] + b[0], a[1] + b[1]];
 const sub = (a, b) => [a[0] - b[0], a[1] - b[1]];
@@ -120,7 +119,7 @@ export const initialState = () => structuredClone({ ...SAVED });
 export const initialSettings = () => structuredClone({ ...SPECS });
 
 /** The body keeps evaluating itself while it moves the runner (it writes runner and runPath): running and loc != runner. */
-export const settles = (s) => s.mode === 'running' && mUnequal(s.loc, s.runner);
+export const settles = (s) => s.mode === 'running' && Unequal(s.loc, s.runner);
 
 // ---- the body ---------------------------------------------------------------------------------------------------------
 
@@ -141,7 +140,7 @@ export function evaluate(state, { rng, time } = {}) {
     if (s.mode === 'running') { s.loc = s.ps[0]; s.runner = s.loc; s.runnerθ = s.θs[0]; }
     if (s.mode === 'setup') {
       const d = distPt2Pt(s.ps[0], s.runner); // distance from runner to original pose
-      const a = (mUnequal(s.runner, s.ps[0]) ? ArcTan(s.runner[0] - s.ps[0][0], s.runner[1] - s.ps[0][1]) : 0) - s.θs[0];
+      const a = (Unequal(s.runner, s.ps[0]) ? ArcTan(s.runner[0] - s.ps[0][0], s.runner[1] - s.ps[0][1]) : 0) - s.θs[0];
       s.ps = Array.from({ length: n }, (_, i) => add(s.ps[i], scale(d, dir(s.θs[i] + a))));
       s.psold = s.ps;
       const t1 = s.θs[0];
@@ -162,24 +161,24 @@ export function evaluate(state, { rng, time } = {}) {
       s.loc = [...s.ps, ...s.pθs];
     }
     s.ps = s.loc.slice(0, n);
-    if (mUnequal(s.psold, s.ps)) {
-      if (mUnequal(s.ps[0], s.psold[0])) { const v = sub(s.ps[0], s.psold[0]); s.runPath = s.runPath.map((x) => add(x, v)); } // update path
+    if (Unequal(s.psold, s.ps)) {
+      if (Unequal(s.ps[0], s.psold[0])) { const v = sub(s.ps[0], s.psold[0]); s.runPath = s.runPath.map((x) => add(x, v)); } // update path
       s.psold = s.ps;
     } else { // otherwise, let the other locators change the orientation of the robots
       const θtemp = s.θs[0];
-      s.θs = Array.from({ length: n }, (_, i) => (mUnequal(s.loc[n + i], s.loc[i]) ? ArcTan(s.loc[n + i][0] - s.loc[i][0], s.loc[n + i][1] - s.loc[i][1]) : 0));
-      if (mUnequal(s.θs[0], θtemp)) { // update path
+      s.θs = Array.from({ length: n }, (_, i) => (Unequal(s.loc[n + i], s.loc[i]) ? ArcTan(s.loc[n + i][0] - s.loc[i][0], s.loc[n + i][1] - s.loc[i][1]) : 0));
+      if (Unequal(s.θs[0], θtemp)) { // update path
         const Rm = RotationMatrix(s.θs[0] - θtemp), p1 = s.ps[0];
         s.runPath = s.runPath.map((x) => add(Dot(Rm, sub(x, p1)), p1));
       }
     }
     s.pθs = handles(s.ps, s.θs, n, 0.5 * 10 ** (s.range / 2) * s.rad);
-    if (mUnequal(s.loc.slice(n, 2 * n), s.pθs)) s.loc = [...s.loc.slice(0, n), ...s.pθs, ...s.loc.slice(2 * n)];
+    if (Unequal(s.loc.slice(n, 2 * n), s.pθs)) s.loc = [...s.loc.slice(0, n), ...s.pθs, ...s.loc.slice(2 * n)];
   }
   let dt = null;
-  if (s.mode === 'running' && mUnequal(s.loc, s.runner)) {
+  if (s.mode === 'running' && Unequal(s.loc, s.runner)) {
     const rundist = distPt2Pt(s.loc, s.runner);
-    s.runnerθ = mUnequal(s.loc, s.runner) ? ArcTan(s.loc[0] - s.runner[0], s.loc[1] - s.runner[1]) : s.runnerθ;
+    s.runnerθ = Unequal(s.loc, s.runner) ? ArcTan(s.loc[0] - s.runner[0], s.loc[1] - s.runner[1]) : s.runnerθ;
     const cTime = time ?? s.lastTime;
     dt = cTime - s.lastTime;
     if (dt < 0.01) dt = 0.01;
@@ -220,7 +219,7 @@ export function evaluate(state, { rng, time } = {}) {
     }
   } else { // RUNNING MODE
     const d = distPt2Pt(ps[0], s.runner); // distance from runner to original pose
-    const a = (mUnequal(s.runner, ps[0]) ? ArcTan(s.runner[0] - ps[0][0], s.runner[1] - ps[0][1]) : 0) - θs[0];
+    const a = (Unequal(s.runner, ps[0]) ? ArcTan(s.runner[0] - ps[0][0], s.runner[1] - ps[0][1]) : 0) - θs[0];
     for (let i = n; i >= 1; i--) {
       const cent = add(ps[i - 1], scale(d, dir(θs[i - 1] + a)));
       const heading = θs[i - 1] + s.runnerθ - θs[0];

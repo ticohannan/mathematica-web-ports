@@ -158,10 +158,16 @@ test.describe('dh parameters', () => {
   test('the ⊕ panel of θ1 animates the arm', async ({ page }) => {
     await openDemo(page, URL);
     const before = (await demo(page, () => window.__demo.transforms())).origins[2];
+    // the page clock fixed (v0.1.25): one second of clock time moves θ1 by 64/8 steps of π/32, from 5π/32 to 13π/32
+    const T = 3.8e9;
+    await page.evaluate((t) => window.__demo.setClock(t), T);
     await page.getByTestId('plus-theta1').click();
     await page.getByTestId('play-theta1').click();
-    await page.waitForTimeout(1000);
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))); // the animation's first frame has run
+    await page.evaluate((t) => window.__demo.setClock(t), T + 1);
+    await expect.poll(async () => (await state(page)).theta[0]).toBe(13);
     await page.getByTestId('play-theta1').click();
+    await page.evaluate(() => window.__demo.setClock(null));
     const s = await state(page);
     expect(s.theta[0]).not.toBe(5);
     expect(Number.isInteger(s.theta[0])).toBe(true);

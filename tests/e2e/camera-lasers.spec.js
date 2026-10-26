@@ -142,10 +142,16 @@ test.describe('camera and lasers', () => {
 
   test('the λ ⊕ panel animates the focal length', async ({ page }) => {
     await openDemo(page, URL);
+    // the page clock fixed (v0.1.25): one second of clock time moves λ by (2 − 0.1)/6 from 0.5, snapped to 0.01
+    const T = 3.8e9;
+    await page.evaluate((t) => window.__demo.setClock(t), T);
     await page.getByTestId('plus-lambda').click();
     await page.getByTestId('play-lambda').click();
-    await page.waitForTimeout(1000);
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))); // the animation's first frame has run
+    await page.evaluate((t) => window.__demo.setClock(t), T + 1);
+    await expect.poll(async () => (await getState(page)).lambda).toBeCloseTo(0.82, 12);
     await page.getByTestId('play-lambda').click();
+    await page.evaluate(() => window.__demo.setClock(null));
     const l1 = (await getState(page)).lambda;
     expect(l1).not.toBe(0.5);
     await expect(page.getByTestId('value-lambda')).not.toHaveValue('0.5');

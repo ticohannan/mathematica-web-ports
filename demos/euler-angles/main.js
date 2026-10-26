@@ -5,6 +5,7 @@
 // scene built once, the picture's renderer), on shared/manipulate.js (browser only).
 // On the shared Manipulate layer since v0.1.21; lighting as the other 3D ports since then (owner decision 2026-10-23,
 // DEC-36, D-EA-05).
+import { animate } from '../../shared/clock.js';
 import { Manipulate } from '../../shared/manipulate.js';
 import { THREE, createViewer, surface, cylinderBetween, fatLine, label, inkFraction } from '../../shared/three-helpers.js';
 import { addMathematicaLighting } from '../../shared/mma-lighting.js';
@@ -106,20 +107,13 @@ bmSelect.addEventListener('change', () => {
   const b = BOOKMARKS.find((x) => x.name === bmSelect.value);
   if (b) ctx.setState({ a1: b.a1, a2: b.a2, a3: b.a3 });
 });
-let bmPlaying = false, bmStart = 0;
+// v0.1.25: driven by the page clock (shared/clock.js animate; tests fix and step it with window.__demo.setClock)
+let stopBm = null;
 const BM_SECONDS = 9;
 const bmBtn = document.getElementById('animate-bookmarks');
-function bmTick(t) {
-  if (!bmPlaying) return;
-  if (!bmStart) bmStart = t;
-  ctx.setState(bookmarkAt(((t - bmStart) / 1000 / BM_SECONDS) % 1));
-  requestAnimationFrame(bmTick);
-}
 bmBtn.addEventListener('click', () => {
-  bmPlaying = !bmPlaying;
-  bmStart = 0;
-  bmBtn.textContent = bmPlaying ? '❚❚ Stop bookmark animation' : '▶ Animate bookmarks';
-  if (bmPlaying) requestAnimationFrame(bmTick);
+  if (stopBm) { stopBm(); stopBm = null; } else stopBm = animate((t, dt, elapsed) => { ctx.setState(bookmarkAt((elapsed / BM_SECONDS) % 1)); });
+  bmBtn.textContent = stopBm ? '❚❚ Stop bookmark animation' : '▶ Animate bookmarks';
 });
 document.getElementById('reset').addEventListener('click', () => { bmSelect.value = ''; }); // and the layer's reset
 document.getElementById('reset-view').addEventListener('click', () => viewer.resetView());

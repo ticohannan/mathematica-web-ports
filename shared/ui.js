@@ -35,9 +35,11 @@
 //            "1/2" with piFraction/fractionText of shared/mma-text.js; implies a text field.
 //   parse(text)  a typed text → a number (null / NaN rejects the entry and restores the shown text), e.g. "5π/32"
 //            → 5 for a slider over the integer n of nπ/32; the result is then clamped (and snapped with a step).
-// The returned api: get(), set(v, {moved}) (programmatic, stores v as given; `moved` sets what the default text
+// The returned api: get(), set(v, {moved, exactText}) (programmatic, stores v as given; `exactText` (v0.1.25) is shown
+// instead of the number until the value changes, unless the slider has its own format; `moved` sets what the default text
 // shows, otherwise unchanged), setRange(a, b), setEnabled(b), stop(), isMoved(), row.
 import { mmaNumberString } from './mma-extra.js';
+import { animate } from './clock.js';
 
 export function el(tag, attrs = {}, ...children) {
   const node = document.createElement(tag);
@@ -130,7 +132,7 @@ export class Controls {
     let { min, max } = opts;
     let value = opts.value;
     let enabled = opts.enabled !== false;
-    let playing = false, raf = 0, lastT = 0;
+    let playing = false, stopAnim = null;
     let moved = false;
     let typedExact = false; // the last user input was a typed whole number kept exact (file header, steps 'mma')
     const animSeconds = opts.animSeconds ?? 6; // time to sweep the full range
@@ -140,7 +142,8 @@ export class Controls {
     const textual = mma || !!format || !!parse; // the value field shows text, not an <input type=number>
     const shownMoved = () => moved && !typedExact;
     const info = () => ({ moved: shownMoved(), k: grid ? grid.indexOf(value) : undefined, min, max, step });
-    const show = (v) => (format ? format(v, info()) : mma ? mmaSliderText(v, { moved: shownMoved(), realValues }) : fmt(v, step));
+    let exactText = null; // v0.1.25: set({exactText}) — the text of an exact value (e.g. "1/7"), shown until the next change
+    const show = (v) => (exactText !== null ? exactText : format ? format(v, info()) : mma ? mmaSliderText(v, { moved: shownMoved(), realValues }) : fmt(v, step));
 
     const range = grid
       ? el('input', { type: 'range', min: 0, max: grid.n, step: 1, value: grid.indexOf(value), 'data-testid': `slider-${name}`, 'aria-label': label || name })
@@ -191,7 +194,7 @@ export class Controls {
     // (e.g. converted angles written back into disabled sliders).
     const set = (v, fire = true, typedInteger = null) => {
       v = Number(v);
-      if (fire) typedExact = false;
+      if (fire) { typedExact = false; exactText = null; }
       if (fire) {
         if (grid) v = grid.valueAt(grid.indexOf(v));
         else {
@@ -211,6 +214,7 @@ export class Controls {
       k = clamp(Math.round(k), 0, grid.n);
       moved = true;
       typedExact = false;
+      exactText = null;
       value = grid.valueAt(k);
       range.value = String(k);
       showField(value);
@@ -231,14 +235,13 @@ export class Controls {
     const stepBy = (dir) => (grid ? setIndex(grid.indexOf(value) + dir) : set(value + dir * (step || (max - min) / 100)));
     let animPos = 0; // continuous position; the displayed value snaps to the step
     const snapped = (x) => (grid ? grid.valueAt(grid.indexOf(x)) : snapTo(x, min, step));
-    const tick = (t) => {
-      if (!playing) return;
-      const dt = lastT ? (t - lastT) / 1000 : 0;
-      lastT = t;
+    // v0.1.25: driven by the page clock (shared/clock.js animate), so that tests can fix and step the time
+    const tick = (t, dt) => {
+      if (!playing) return false;
       animPos += ((max - min) * dt) / animSeconds;
       if (animPos > max) animPos = min + (animPos - max); // loop like Manipulate's default animator
       if (snapped(animPos) !== value) set(animPos);
-      raf = requestAnimationFrame(tick);
+      return true;
     };
     if (withPlus) {
       plus.addEventListener('click', () => {
@@ -251,9 +254,8 @@ export class Controls {
         playing = !playing;
         playBtn.textContent = playing ? '❚❚' : '▶';
         playBtn.setAttribute('aria-pressed', String(playing));
-        lastT = 0;
         animPos = value;
-        if (playing) raf = requestAnimationFrame(tick); else cancelAnimationFrame(raf);
+        stopAnim?.(); stopAnim = playing ? animate(tick) : null;
       });
     }
 
@@ -261,6 +263,7 @@ export class Controls {
       get: () => value,
       set: (v, how) => {
         if (how && 'moved' in how) { moved = !!how.moved; typedExact = false; }
+        exactText = format ? null : how?.exactText ?? null; // shown until the value changes (v0.1.25); a format keeps its own text
         set(v, false);
       },
       setRange: (a, b) => {

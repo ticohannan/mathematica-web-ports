@@ -7,6 +7,8 @@
 //    against the snapshot pictures and the older single-state fixtures.
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { loadStates, plain, isExact, exactPaths, isIntegerLiteral } from '../../tools/lib/wl-json.mjs';
 
@@ -27,6 +29,25 @@ describe('extraction tools', () => {
     const r = spawnSync(python, ['tools/extract_state.py', '--self-test'], { encoding: 'utf8', timeout: 60000 });
     expect(r.stdout + r.stderr).toMatch(/extract_state self-test: (\d+) of \1 checks passed/);
     expect(r.status).toBe(0);
+  });
+  it.skipIf(!python)('nbextract.py writes superscripts with the grouping the box form shows by position (v0.1.25)', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'nbx-'));
+    const nb = path.join(dir, 't.nb');
+    const sup = (a, b) => `SuperscriptBox[${a}, ${b}]`;
+    const row = (...xs) => `RowBox[{${xs.join(', ')}}]`;
+    const cell = (b) => `Cell[BoxData[${b}], "Input"]`;
+    fs.writeFileSync(nb, `Notebook[{${[
+      cell(sup('"10"', row('"range"', '"-"', '"1"'))), // 10^(range-1), not 10^range-1
+      cell(sup(row('"("', row('"a"', '"+"', '"b"'), '")"'), row('"1"', '"/"', '"p"'))), // (a+b)^(1/p)
+      cell(sup(row('"Subscript"', '"["', row('"x"', '","', '"1"'), '"]"'), '"*"')), // Subscript[x,1]^*
+      cell(sup('"x"', '"2 "')), // a trailing space is kept
+      cell(sup(row('"a"', '"."', '"b"'), '"2"')), // (a.b)^2
+      cell(sup('"\\[Theta]"', '"2"')), // a named character is one symbol (written out: Theta)
+    ].join(', ')}}]`);
+    const r = spawnSync(python, ['tools/nbextract.py', nb], { encoding: 'utf8', timeout: 60000 });
+    expect(r.status).toBe(0);
+    const code = r.stdout.split('\n').filter((l) => l && !l.startsWith('#'));
+    expect(code).toEqual(['10^(range-1)', '(a+b)^(1/p)', 'Subscript[x,1]^*', 'x^2 ', '(a.b)^2', 'Theta^2']);
   });
   it('isIntegerLiteral tells an exact integer from a machine real written with a point', () => {
     const text = '{"a": [2, 2.0, 1e-05, -3]}';

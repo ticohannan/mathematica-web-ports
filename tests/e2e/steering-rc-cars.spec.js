@@ -113,12 +113,25 @@ test.describe('steering-rc-cars', () => {
     await expect(page.getByTestId('value-n')).toHaveValue('4');
     await expect(page.locator('[data-testid^="locator-loc-"]')).toHaveCount(8);
   });
+  test('an exact radius (1/7) is shown as 1/7 until the slider is moved', async ({ page }) => {
+    await openDemo(page, URL);
+    await page.evaluate(() => window.__demo.setState({ rad: { wl: '1/7', n: 1 / 7 } }));
+    expect((await state(page)).rad).toBe(1 / 7);
+    await expect(page.getByTestId('value-rad')).toHaveValue('1/7');
+    await page.getByTestId('slider-rad').focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(page.getByTestId('value-rad')).not.toHaveValue('1/7');
+  });
   test('review screenshots at the five snapshot settings', async ({ page }, testInfo) => {
     await openDemo(page, URL);
     const fx = JSON.parse(fs.readFileSync('tests/golden/steering-rc-cars.original-states.json', 'utf8'));
     for (const k of Object.keys(fx.snapshots)) {
       const s = settings(fx.snapshots[k]);
-      await page.evaluate((st) => window.__demo.setState(st), s);
+      // the settings as saved (exact numbers as {wl, n}): the layer sets the numbers and shows exact values as text
+      const raw = { ...fx.snapshots[k], robot: s.robot };
+      await page.evaluate((st) => window.__demo.setState(st), raw);
+      // radius 1/7 (snapshots 4 and 5) is shown "1/7" as in Mathematica, the machine reals as numbers
+      await expect(page.getByTestId('value-rad')).toHaveValue({ 1: '0.143', 2: '0.196667', 3: '0.217667', 4: '1/7', 5: '1/7' }[k]);
       const after = await state(page);
       expect(after.mode).toBe(s.mode);
       expect(after.ps).toEqual(s.ps); // nold = n: the saved cars are kept

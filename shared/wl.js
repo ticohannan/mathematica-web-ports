@@ -3,7 +3,8 @@
 // shared/wl.js — Wolfram Language list, vector and number functions under their Mathematica names, for NEW apps written
 // on the Manipulate layer ("simple mode", internal porting guide §1). Plain JavaScript arithmetic: results agree with
 // Mathematica up to rounding, not bit for bit. The course ports that must reproduce an original bit for bit keep their
-// exact helpers (shared/mma.js, mma-exact.js, exact-pi.js); do not mix the two in one computation.
+// exact helpers (shared/mma.js, mma-exact.js, exact-pi.js); do not mix the two in one computation (the tolerant
+// comparisons below are re-exported from shared/mma.js: the same semantics, no exact arithmetic).
 //
 // Conventions (as in Mathematica, adapted to JavaScript):
 //   - lists are arrays, vectors are arrays of numbers, matrices arrays of rows; positions are 1-based where Mathematica
@@ -24,9 +25,13 @@
 //           Abs, Sqrt, Clip, Rescale, Chop, Boole, UnitStep, Sin, Cos, Tan, Exp, Log, Power, Min/Max of numbers
 // Statistics Erf, Binomial, NormalDistribution, UniformDistribution, TriangularDistribution, PDF, CDF, Mean / Variance /
 //           StandardDeviation (of a distribution or a list), RandomVariate (v0.1.23)
+// Compare   Equal, Unequal, Less, Greater, LessEqual, GreaterEqual with Mathematica's tolerance for machine reals
+//           (numbers equal in all but their last seven bits, ≈ 2⁻⁴⁶ relative; lists element by element) (v0.1.25)
 // Caching   cacheLast() — recompute only when the arguments change (the originals' "…Old" variables)
 // Random    RandomReal, RandomInteger, RandomChoice, RandomSample (optional last argument: a shared/random.js source,
 //           e.g. Manipulate's ctx.rng or createRng({ seed }), for reproducible draws)
+
+import { mEqual, mLess, mGreater, mLessEq, mGreaterEq } from './mma.js';
 
 const isArr = Array.isArray;
 const fail = (m) => { throw new Error(`wl: ${m}`); };
@@ -437,3 +442,17 @@ export function Variance(x) {
   return x.reduce((a, v) => a + (v - m) ** 2, 0) / (x.length - 1);
 }
 export const StandardDeviation = (x) => Math.sqrt(Variance(x));
+
+// ---- comparisons (v0.1.25) -----------------------------------------------------------------------------------------
+// Mathematica's == and != on machine reals ignore the last seven bits (shared/mma.js): 0.1 + 0.2 == 0.3 is True. Use
+// these where an original compares computed reals ("has the point arrived", "did anything move"); === is right for
+// integers, strings and values copied unchanged.
+/** Equal[a, b] (a == b): numbers within Mathematica's tolerance, or lists of the same shape element by element. */
+export const Equal = (a, b) => mEqual(a, b);
+/** Unequal[a, b] (a != b) = !Equal[a, b]. */
+export const Unequal = (a, b) => !mEqual(a, b);
+/** Less, Greater, LessEqual, GreaterEqual of numbers with the same tolerance (a < b is False when a == b). */
+export const Less = (a, b) => mLess(a, b);
+export const Greater = (a, b) => mGreater(a, b);
+export const LessEqual = (a, b) => mLessEq(a, b);
+export const GreaterEqual = (a, b) => mGreaterEq(a, b);

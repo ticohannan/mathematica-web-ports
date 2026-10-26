@@ -5,7 +5,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   parseControl, Locator, Delimiter, None, Rule, hookCopy, hookRead, cacheLast, Control, Button, Row, PopupMenu, VerticalSlider,
-  IntervalSlider, Slider, SetterBar, absoluteTime,
+  IntervalSlider, Slider, SetterBar, absoluteTime, exactLabel, numbersOf,
 } from '../../shared/manipulate.js';
 import { Style, Italic } from '../../shared/graphics.js';
 
@@ -100,5 +100,41 @@ describe('manipulate: the clock (v0.1.24)', () => {
     const t = absoluteTime(), unix = Date.now() / 1000;
     expect(Math.abs(t - (unix + 2208988800))).toBeLessThan(5);
     expect(absoluteTime()).toBeGreaterThanOrEqual(t);
+  });
+});
+
+describe('manipulate: exact values from saved states (v0.1.25)', () => {
+  it('exactLabel: rationals and multiples of π as Mathematica\'s slider field shows them; other forms null', () => {
+    expect(exactLabel('1/7')).toBe('1/7');
+    expect(exactLabel('-1/2')).toBe('-1/2');
+    expect(exactLabel('3')).toBe('3');
+    expect(exactLabel('5*Pi/32')).toBe('5π/32');
+    expect(exactLabel('-13*Pi/16')).toBe('-13π/16');
+    expect(exactLabel('Pi/4')).toBe('π/4');
+    expect(exactLabel('-Pi')).toBe('-π');
+    expect(exactLabel('(3*Pi)/4')).toBe('3π/4');
+    expect(exactLabel('Infinity')).toBe('∞');
+    expect(exactLabel('(-5*Pi)/32')).toBe('-5π/32');
+    expect(exactLabel('-1/2*Pi')).toBe('-π/2');
+    expect(exactLabel('3/2*Pi')).toBe('3π/2');
+    expect(exactLabel('-(Pi/2)')).toBe('-π/2');
+    expect(exactLabel('Pi')).toBe('π');
+    expect(exactLabel('(2)^(-1/2)')).toBe('1/√2');
+    expect(exactLabel('1/Sqrt[2]')).toBe('1/√2');
+    expect(exactLabel('Sqrt[3]')).toBe('√3');
+    expect(exactLabel('x/2')).toBeNull();
+    expect(exactLabel('3.728068747094218`16.324058901481486*^9')).toBeNull();
+  });
+  it('numbersOf: {wl, n} become their doubles, also inside lists; other values unchanged', () => {
+    expect(numbersOf({ wl: '1/7', n: 1 / 7 })).toBe(1 / 7);
+    expect(numbersOf([{ wl: '1/2', n: 0.5 }, 2, [{ wl: 'Pi', n: Math.PI }]])).toEqual([0.5, 2, [Math.PI]]);
+    expect(numbersOf({ wl: 'Infinity' })).toBe(Infinity);
+    expect(numbersOf({ wl: '-Infinity' })).toBe(-Infinity);
+    expect(numbersOf({ a: 1 })).toEqual({ a: 1 });
+    expect(numbersOf({ exact: { d1: { wl: '1/2', n: 0.5 } } })).toEqual({ exact: { d1: 0.5 } });
+    const big = [[1, 2], [3, 4]], obj = { a: [1] };
+    expect(numbersOf(big)).toBe(big); // nothing exact: the same array (identity-keyed caches keep working)
+    expect(numbersOf(obj)).toBe(obj);
+    expect(numbersOf('setup')).toBe('setup');
   });
 });
