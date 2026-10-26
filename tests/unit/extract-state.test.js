@@ -46,7 +46,7 @@ describe('extraction tools', () => {
     ].join(', ')}}]`);
     const r = spawnSync(python, ['tools/nbextract.py', nb], { encoding: 'utf8', timeout: 60000 });
     expect(r.status).toBe(0);
-    const code = r.stdout.split('\n').filter((l) => l && !l.startsWith('#'));
+    const code = r.stdout.split(/\r?\n/).filter((l) => l && !l.startsWith('#')); // Windows Python writes CRLF
     expect(code).toEqual(['10^(range-1)', '(a+b)^(1/p)', 'Subscript[x,1]^*', 'x^2 ', '(a.b)^2', 'Theta^2']);
   });
   it('isIntegerLiteral tells an exact integer from a machine real written with a point', () => {
