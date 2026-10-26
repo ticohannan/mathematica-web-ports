@@ -33,6 +33,11 @@ plain HTML + JavaScript (ES modules, no build step), SVG for 2D, three.js/WebGL 
 | Common Robot Arm Configurations | `demos/arm-configurations/` | WebGL 2 | joint sliders (2–6, per robot), grip slider, show robot, popup of nine DH-table robots, DH table and end-effector transform H |
 | Robot Manipulator Workspaces | `demos/manipulator-workspaces/` | WebGL 2 | robot popup menu (14 robots), three joint sliders, three range (interval) sliders, rotate the 3D picture |
 | Probabilistic Roadmap Method in 3D | `demos/prm-3d/` | WebGL 2 | θ₁–θ₃ sliders, two sphere pads with height sliders, show C-obstacles, add 100 vertices, restart, new goal, radius, progress; rotate both 3D pictures |
+| Graham Scan to Find the Convex Hull of a Set of Points in 2D | `demos/graham-scan/` | SVG | drag the points, step slider, number of points, generate n new points |
+| Sensor Fusion with Normally Distributed Noise | `demos/sensor-fusion/` | SVG | number of measurements, four variance sliders, drag the measurements on the axis |
+| Ensemble Control of Robots with Unicycle Kinematics | `demos/ensemble-control/` | SVG | number of robots, forward command, turn counter-clockwise button |
+| Shortest Distance between Two Line Segments | `demos/segment-distance/` | WebGL 2 | four xy pads, four z sliders, show the two planes, rotate the 3D picture |
+| Distribution of a Swarm of Robots in a Circular Workplace under Gravity | `demos/swarm-circle/` | SVG | β and h sliders, show particles, show values |
 
 The apps came in four groups: the first three (motion planning, rotations, Euler angles); seven more from the
 seven-link PRM to robot singularities, added in v0.1.12 as further proofs of concept (developed first in a separate,

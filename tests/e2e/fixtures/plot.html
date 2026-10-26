@@ -1,0 +1,55 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-License-Identifier: MIT -->
+<!-- tests/e2e/fixtures/plot.html — a test page (not an app, not linked from the site) for tests/e2e/plot.spec.js: the
+     plot functions of shared/plot.js on the Manipulate layer — Plot with Filling, PlotStyle, a legend outside, a
+     partial Frame with a two-line FrameLabel, Show with a ListPlot, a Locator on the plot with a state-dependent text
+     appearance; a second plot with Axes, π ticks, a Placed legend and an automatic plot range that follows a slider. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plot functions (test page)</title>
+  <link rel="stylesheet" href="../../../shared/style.css">
+</head>
+<body>
+<main class="page">
+  <section class="manipulate">
+    <div class="controls" id="controls"></div>
+    <div class="graphic" id="graphic" data-testid="graphic"></div>
+    <div class="graphic" id="graphic2" data-testid="graphic2"></div>
+  </section>
+</main>
+<script type="module">
+  import { Manipulate, Locator } from '../../../shared/manipulate.js';
+  import { Text, Style, Point, PointSize, Red, Dashed, Purple } from '../../../shared/graphics.js';
+  import { Plot, ListPlot, Show, Placed, ColorData } from '../../../shared/plot.js';
+  import { Pi, Sin, Cos, Exp, Sqrt } from '../../../shared/wl.js';
+  const pdf = (m, v) => (x) => Exp(-((x - m) ** 2) / (2 * v)) / Sqrt(2 * Pi * v);
+  Manipulate({
+    name: 'plot-functions',
+    body: ({ m, a, v }) => ({
+      view: { m, a, v },
+      graphics: [
+        Show(
+          Plot((x) => [pdf(m[0], 2)(x), pdf(4, v)(x)], [-10, 10], {
+            Filling: 0, PlotStyle: [[ColorData(97, 1)], [Dashed, Purple]], PlotLegends: ['measurement 1', 'combined\nestimate'],
+            PlotRange: ['All', [0, 1]], Frame: [true, true, false, false], FrameLabel: ['measurement value(s)\nDrag locators to change measurements', 'probability'],
+            AxesOrigin: [-10, 0], ImageSize: 520, testid: 'scene-svg' }),
+          ListPlot([[m[0], pdf(m[0], 2)(m[0])]], { Filling: 0 })),
+        Plot((b) => [a * Sin(b), Cos(b)], [0, 2 * Pi], {
+          Ticks: [[[0, '0'], [Pi / 2, 'π/2'], [Pi, 'π'], [3 * Pi / 2, '3π/2'], [2 * Pi, '2π']], 'Automatic'],
+          AxesLabel: ['β', 'mean'], PlotLegends: Placed(['a sin', 'cos'], [0.65, 0.85]), ImageSize: 300,
+          Epilog: [PointSize(0.03), Red, Point([1, a * Sin(1)])], testid: 'scene-svg-2' }),
+      ],
+    }),
+    graphics: [{ id: 'graphic' }, { id: 'graphic2' }],
+    controls: [
+      [['a', 1, 'amplitude'], 0.5, 3, 0.5, { Appearance: 'Labeled' }],
+      [['v', 1, 'variance'], 0.2, 5, 0.1, { Appearance: 'Labeled' }],
+      [['m', [2, 0]], [-10, 0], [10, 0], Locator, { Appearance: (s) => [Text(Style('⊙', ColorData(97, 1), 24), [0, 0])] }],
+    ],
+  });
+</script>
+</body>
+</html>

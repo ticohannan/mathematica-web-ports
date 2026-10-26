@@ -310,7 +310,7 @@ export function scene(state, locals) {
   out.push(stadium('link1', g.link1));
   if (g.robotArm.link === 1) out.push(robotArm);
   out.push([col('Black'), POINT, Annotation(Point([0, 0]), 'base')]);
-  out.push(arc('jointVel1', 'Red', myArrowArc([0, 0], 1 / 2, [Theta1 + 0, Theta1 + jv[0]]), { pointSize: PointSize('Large') }));
+  out.push(arc('jointVel1', 'Red', myArrowArc([0, 0], 1 / 2, [Theta1 + 0, Theta1 + jv[0]]), { pointSize: PointSize(0.013) }));
   out.push(arc('theta1-arc', 'DarkerGray', myArrowArc([0, 0], 1 / 4, [0, Theta1])));
   if (g.theta1Label.visible) out.push(text('theta1-label', 'θ₁', g.theta1Label.at, { color: 'DarkerGray', size: 'Medium' }));
   out.push(stadium('link2', g.link2));

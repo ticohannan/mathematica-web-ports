@@ -15,13 +15,15 @@
 // Arithmetic Plus, Subtract, Times, Divide, Minus — listable like Mathematica's (vectors and numbers mix)
 // Lists     Range, Table, Subdivide, Array, ConstantArray, Partition, Flatten, Transpose, Take, Drop, First, Last, Most,
 //           Rest, Part, Join, Append, Prepend, Reverse, RotateLeft, RotateRight, Select, Position, Count, MemberQ,
-//           FreeQ, DeleteDuplicates, Union, Intersection, Complement, Tally, Accumulate, Differences, Fold, FoldList,
+//           FreeQ, DeleteDuplicates, Union, Intersection, Complement, Tally, Ordering, Accumulate, Differences, Fold, FoldList,
 //           Nest, NestList, NestWhile, FixedPoint, Total, Mean, Median, Max, Min, Sort, SortBy, MinimalBy,
 //           MaximalBy, MapThread, MapIndexed, Riffle, Thread, Outer, Tuples, Length, Dimensions
 // Vectors   Dot, Cross, Norm, Normalize, EuclideanDistance, Det, Inverse, IdentityMatrix, RotationMatrix,
 //           RotationTransform, TranslationTransform, AngleVector, VectorAngle, Nearest
 // Numbers   Pi, E, Degree, Infinity, ArcTan, Mod, Quotient, Round, Floor, Ceiling, IntegerPart, FractionalPart, Sign,
 //           Abs, Sqrt, Clip, Rescale, Chop, Boole, UnitStep, Sin, Cos, Tan, Exp, Log, Power, Min/Max of numbers
+// Statistics Erf, Binomial, NormalDistribution, UniformDistribution, TriangularDistribution, PDF, CDF, Mean / Variance /
+//           StandardDeviation (of a distribution or a list), RandomVariate (v0.1.23)
 // Caching   cacheLast() — recompute only when the arguments change (the originals' "…Old" variables)
 // Random    RandomReal, RandomInteger, RandomChoice, RandomSample (optional last argument: a shared/random.js source,
 //           e.g. Manipulate's ctx.rng or createRng({ seed }), for reproducible draws)
@@ -185,6 +187,8 @@ export const Complement = (a, ...rest) => Sort(DeleteDuplicates(a.filter((x) => 
 /** Tally[list] → [[value, count], …] in order of first appearance. */
 export const Tally = (list) => DeleteDuplicates(list).map((x) => [x, Count(list, x)]);
 /** SortBy[list, f]: ties in f are ordered canonically by the elements themselves (as Mathematica). */
+/** Ordering[list]: the 1-based positions that put the list in canonical order (ties keep their order). v0.1.23 */
+export const Ordering = (list) => list.map((v, i) => [v, i]).sort((a, b) => canonical(a[0], b[0]) || a[1] - b[1]).map(([, i]) => i + 1);
 export const SortBy = (list, f) => list.map((x) => [f(x), x]).sort((a, b) => canonical(a[0], b[0]) || canonical(a[1], b[1])).map((t) => t[1]);
 export const MinimalBy = (list, f) => { const v = list.map((x) => f(x)); const m = Math.min(...v); return list.filter((_, i) => v[i] === m); };
 export const MaximalBy = (list, f) => { const v = list.map((x) => f(x)); const m = Math.max(...v); return list.filter((_, i) => v[i] === m); };
@@ -201,7 +205,7 @@ export const FixedPoint = (f, x, max = 1e6) => { let y = x; for (let i = 0; i < 
 const plus = (a, b) => (isArr(a) ? a.map((x, i) => plus(x, b[i])) : a + b);
 /** Total[list] (numbers, or vectors added componentwise). */
 export const Total = (list) => (list.length ? list.slice(1).reduce(plus, list[0]) : 0);
-export const Mean = (list) => { const t = Total(list); return isArr(t) ? t.map((x) => x / list.length) : t / list.length; };
+export const Mean = (list) => { if (list?.dist) return MeanOf(list); const t = Total(list); return isArr(t) ? t.map((x) => x / list.length) : t / list.length; };
 export const Median = (list) => { const s = Sort(list); const n = s.length; return n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2; };
 /** Max[a, b, …] or Max[list] (also nested lists, as Mathematica flattens). */
 export const Max = (...a) => Math.max(...a.flat(Infinity));
@@ -344,3 +348,92 @@ export function cacheLast() {
     return value;
   };
 }
+
+// ---- distributions (v0.1.23) ---------------------------------------------------------------------------------------
+/** Erf[x] (absolute error below 1e-14: series for |x| < 3, continued fraction beyond). */
+export function Erf(x) {
+  if (x < 0) return -Erf(-x);
+  if (x < 3) {
+    let term = x, sum = x;
+    for (let n = 1; n < 200 && Math.abs(term) > 1e-17 * Math.abs(sum); n++) { term *= (-x * x) / n; sum += term / (2 * n + 1); }
+    return (2 / Math.sqrt(Math.PI)) * sum;
+  }
+  // erfc by Lentz's continued fraction: erfc x = exp(−x²)/√π · 1/(x + 1/2/(x + 1/(x + 3/2/(x + …))))
+  let f = x, C = x, D = 0;
+  for (let n = 1; n < 300; n++) {
+    const a = n / 2;
+    D = x + a * D; D = 1 / D; C = x + a / C;
+    const delta = C * D; f *= delta;
+    if (Math.abs(delta - 1) < 1e-16) break;
+  }
+  return 1 - Math.exp(-x * x) / Math.sqrt(Math.PI) / f;
+}
+/** Binomial[n, k] for integers (a machine number; exact below 2^53). */
+export function Binomial(n, k) {
+  if (k < 0 || k > n) return 0;
+  k = Math.min(k, n - k);
+  let r = 1;
+  for (let i = 1; i <= k; i++) r = (r * (n - k + i)) / i;
+  return Math.round(r);
+}
+/** NormalDistribution[μ, σ], UniformDistribution[{min, max}], TriangularDistribution[{min, max}, c] (c default the middle). */
+export const NormalDistribution = (mu = 0, sigma = 1) => Object.freeze({ dist: 'Normal', mu, sigma });
+export const UniformDistribution = ([a, b] = [0, 1]) => Object.freeze({ dist: 'Uniform', a, b });
+export const TriangularDistribution = ([a, b] = [0, 1], c = (a + b) / 2) => Object.freeze({ dist: 'Triangular', a, b, c });
+/** PDF[dist, x] */
+export function PDF(d, x) {
+  switch (d.dist) {
+    case 'Normal': return Math.exp(-(((x - d.mu) / d.sigma) ** 2) / 2) / (d.sigma * Math.sqrt(2 * Math.PI));
+    case 'Uniform': return x >= d.a && x <= d.b ? 1 / (d.b - d.a) : 0;
+    case 'Triangular': {
+      const { a, b, c } = d;
+      if (x < a || x > b) return 0;
+      return x <= c ? (c === a ? 2 / (b - a) : (2 * (x - a)) / ((b - a) * (c - a))) : (2 * (b - x)) / ((b - a) * (b - c));
+    }
+    default: return fail(`PDF: unknown distribution ${d.dist}`);
+  }
+}
+/** CDF[dist, x] */
+export function CDF(d, x) {
+  switch (d.dist) {
+    case 'Normal': return (1 + Erf((x - d.mu) / (d.sigma * Math.SQRT2))) / 2;
+    case 'Uniform': return x <= d.a ? 0 : x >= d.b ? 1 : (x - d.a) / (d.b - d.a);
+    case 'Triangular': {
+      const { a, b, c } = d;
+      if (x <= a) return 0;
+      if (x >= b) return 1;
+      return x <= c ? (x - a) ** 2 / ((b - a) * (c - a)) : 1 - (b - x) ** 2 / ((b - a) * (b - c));
+    }
+    default: return fail(`CDF: unknown distribution ${d.dist}`);
+  }
+}
+/** Mean[dist] (also through Mean), Variance[dist or list], StandardDeviation[dist or list] (lists: the unbiased n − 1 form, as Mathematica) */
+const MeanOf = (d) => (d.dist === 'Normal' ? d.mu : d.dist === 'Uniform' ? (d.a + d.b) / 2 : (d.a + d.b + d.c) / 3);
+const VarianceOf = (d) => (d.dist === 'Normal' ? d.sigma ** 2 : d.dist === 'Uniform' ? (d.b - d.a) ** 2 / 12
+  : (d.a ** 2 + d.b ** 2 + d.c ** 2 - d.a * d.b - d.a * d.c - d.b * d.c) / 18);
+/**
+ * RandomVariate[dist] or RandomVariate[dist, n], with an optional source as RandomReal (inverse-CDF sampling; the
+ * normal by Box–Muller). Mathematica's own random stream cannot be reproduced: draws agree in distribution only.
+ */
+export function RandomVariate(d, n, rng) {
+  const [k, r] = args(n, rng);
+  const u = () => r.randomReal([0, 1]);
+  const one = () => {
+    switch (d.dist) {
+      case 'Normal': { let s = u(); while (s === 0) s = u(); return d.mu + d.sigma * Math.sqrt(-2 * Math.log(s)) * Math.cos(2 * Math.PI * u()); }
+      case 'Uniform': return d.a + (d.b - d.a) * u();
+      case 'Triangular': {
+        const { a, b, c } = d, p = u(), F = (c - a) / (b - a);
+        return p < F ? a + Math.sqrt(p * (b - a) * (c - a)) : b - Math.sqrt((1 - p) * (b - a) * (b - c));
+      }
+      default: return fail(`RandomVariate: unknown distribution ${d.dist}`);
+    }
+  };
+  return k === undefined ? one() : Array.from({ length: k }, one);
+}
+export function Variance(x) {
+  if (x?.dist) return VarianceOf(x);
+  const m = Mean(x);
+  return x.reduce((a, v) => a + (v - m) ** 2, 0) / (x.length - 1);
+}
+export const StandardDeviation = (x) => Math.sqrt(Variance(x));

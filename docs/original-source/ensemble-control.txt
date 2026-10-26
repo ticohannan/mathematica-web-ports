@@ -1,0 +1,230 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Extracted 2026-10-25 with tools/nbextract.py; cached outputs skipped.
+
+
+### [Title]
+Ensemble Control of Robots with Unicycle Kinematics
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+\<What can you do with multiple remote-control robots all slaved to one remote control? This Demonstration shows you can steer all the robots (represented by colored circles with a line indicating heading) to any desired final position (colored disks). This is possible because of noise: each time the robots are commanded to turn, every robot turns a slightly different amount. You can use these differences to slowly push the robots to goal positions, using the plot on the right for guidance. Research in this area is motivated by real-world challenges in micro- and nanorobotics, where often all the robots are steered by the same control signal.\>
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+r = 10;
+
+### [Input] (init)
+DrawRobot[x_,y_,Theta_]:={{White,Disk[{x,y},r/25]},Thick,Circle[{x,y},r/20],Line[{{x,y},{x,y}+r/15{Cos[Theta],Sin[Theta]}}]};
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[Module[{distBest},
+If[nold!= n,
+nold=n;
+Thetainit = RandomReal[{-π,π},n];
+xinit = RandomReal[{-r,r},n];
+yinit = RandomReal[{-r,r},n];
+xGoal = Table[r Cos[Theta (2π)/(n)],{Theta,0,n-1}];
+yGoal = Table[r Sin[Theta (2π)/(n)],{Theta,0,n-1}];
+xpath = {xinit};
+ypath = {yinit};
+];
+distBest=(1)/(n) Total[(xGoal-xinit) Cos[Thetainit]+(yGoal-yinit) Sin[Thetainit]];
+Grid[{{
+Graphics[{ White, Rectangle[1.1{-r,-r},1.1{r,r}],
+Table[{Hue[k/n],
+{Opacity[0.3],Thick,Line[Partition[Riffle[xpath[[;;,k]],ypath[[;;,k]]],2]]},
+
+Disk[{xGoal[[k]],yGoal[[k]]},r/20],
+{Dashed,Line[{{xinit[[k]],yinit[[k]]}-1.1r{Cos[Thetainit[[k]]],Sin[Thetainit[[k]]]} ,{xinit[[k]],yinit[[k]]}+1.1r{Cos[Thetainit[[k]]],Sin[Thetainit[[k]]]} }]},
+{Opacity[0.3],DrawRobot[xinit[[k]],yinit[[k]],Thetainit[[k]]]},
+DrawRobot[xinit[[k]]+vin Cos[Thetainit[[k]]],yinit[[k]]+vin Sin[Thetainit[[k]]],Thetainit[[k]]]
+
+},{k,1,n}]
+},ImageSize->Medium,PlotRange->{1.3{-r,r},1.3{-r,r}}],
+Plot[(1)/(n)Total[(xinit+v Cos[Thetainit]-xGoal)^2+(yinit+v Sin[Thetainit]-yGoal)^2],{v,-r,r},ImageSize->{220,300},
+PlotStyle->Thick,AspectRatio->2,
+Epilog->{
+PointSize->Large,
+Red,Line[{{distBest,0},{distBest,10^12}}],
+Point[{distBest,(1)/(n)Total[(xinit+distBest Cos[Thetainit]-xGoal)^2+(yinit+distBest Sin[Thetainit]-yGoal)^2]}],
+Blue,
+Point[{vin,(1)/(n)Total[(xinit+vin Cos[Thetainit]-xGoal)^2+(yinit+vin Sin[Thetainit]-yGoal)^2]}]
+
+} ,
+Frame->{True,True,False,False},FrameLabel->{"\<forward command\>","\<sum squared error\>"}]}}]],
+
+{{n,2,"\<number of robots\>"},2,15,1,Appearance->"\<Labeled\>"},
+{nold,1, ControlType-> None},
+{Thetainit, RandomReal[{-π,π},n], ControlType-> None},
+{xinit , RandomReal[{-r,r},n], ControlType-> None},
+{yinit , RandomReal[{-r,r},n], ControlType-> None},
+{xGoal , Table[r Cos[Theta (2π)/(n)],{Theta,0,n-1}], ControlType-> None},
+{yGoal , Table[r Sin[Theta (2π)/(n)],{Theta,0,n-1}], ControlType-> None},
+{xpath , {xinit}, ControlType-> None},
+{ypath , {yinit}, ControlType-> None},
+
+{{vin,0,"\<forward command\>"},-r,r,Appearance->"\<Labeled\>"},
+Button["\<turn counter\[Hyphen]clockwise\>",
+xinit=xinit+vin Cos[Thetainit]; 
+yinit=yinit+vin Sin[Thetainit]; 
+AppendTo[xpath,xinit];
+AppendTo[ypath,yinit];
+vin=0;
+Thetainit = Thetainit + π/3+RandomReal[{0,π/3},n]],
+SaveDefinitions-> True, 
+AutorunSequencing->{1}
+]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Aaron Becker
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+\<Micro- and nanorobots can be produced in extremely large quantities, however it is difficult to control each robot individually. Instead, large populations of robots are often controlled by broadcast (or uniform) control signals. Uniform control inputs are common to a variety of biological and artificial robotic systems.\>
+
+### [Text]
+A robot with unicycle kinematics has two control inputs: a turning command and a forward command. Each robot can be described by an (Subscript[x, i],Subscript[y, i]) location and a heading Subscript[Theta, i]. Roboticists often use this model to describe Roombas, tanks, and cars.
+
+### [Text]
+\<As long as the robots do not turn at exactly the same rate, the collection of robots can be steered to any desired final position by using a technique called a control Lyapunov function.\>
+
+### [Text]
+The plot on the right shows the sum of the squared distance errors S from the robots to the goal positions (Subscript[Subscript[x, Goal], i],Subscript[Subscript[y, Goal], i]) as a function of the commanded forward movement v.
+
+### [Text]
+<<UnderoverscriptBox>>(Subscript[x, i]+v cos(Subscript[Theta, i])-Subscript[x, Goal])^2+(Subscript[y, i]+v sin(Subscript[Theta, i])-Subscript[y, Goal])^2.
+
+### [Text]
+The movement Subscript[v, optimal] that minimizes the sum-square error is
+
+### [Text]
+Subscript[v, optimal]=<<UnderoverscriptBox>>(Subscript[x, Goal]-Subscript[x, i]) cos(Subscript[Theta, i])+(Subscript[y, Goal]-Subscript[y, i]) sin(Subscript[Theta, i]).
+
+### [Text]
+The movement Subscript[v, optimal] is shown by a red point. Iteratively moving this distance and then turning will eventually bring all the robots to their goal positions.
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] A. Becker, C. Onyuksel, T. Bretl, and J. McLurkin, "Controlling Many Differential-Drive Robots with Uniform Control Inputs," The International Journal of Robotics Research, 2014. doi:10.1177/0278364914543481.
+
+### [Text]
+[2] A. Becker, C. Onyuksel, and T. Bretl, "Feedback Control of Many Differential-Drive Robots with Uniform Control Inputs," IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS), Vilamoura, Algarve, Portugal, 2012 pp. 2256\[Dash]2262.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+ensemble control
+
+### [Item]
+differential drive robot
+
+### [Item]
+robot
+
+### [Item]
+broadcast control
+
+### [Item]
+uniform inputs
+
+### [Item]
+micro robots
+
+### [Item]
+nano robots
+
+### [Item]
+unicycle kinematics
+
+### [Item]
+nonholonomic unicycle
+
+### [Item]
+Lyapunov
+
+### [Item]
+Lyapunov control function
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Lyapunov Function
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2014-10-03
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

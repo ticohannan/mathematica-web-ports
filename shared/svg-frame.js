@@ -79,11 +79,27 @@ export function frameLayout([[x0, x1], [y0, y1]], { imageSize, margins = {} }) {
 
 const tickSpec = (axisOpts, lo, hi) => {
   if (axisOpts && (axisOpts.major != null || axisOpts.ticks)) {
-    if (axisOpts.ticks) return axisOpts.ticks;
+    if (axisOpts.ticks) return labelled(axisOpts.ticks);
     return ticks(lo, hi, { major: axisOpts.major, minor: axisOpts.minor ?? 0 });
   }
   const a = automaticTicks(lo, hi);
   return { major: a.major, minor: a.minor, majorStep: a.majorStep };
+};
+// explicit ticks may be [value, label] pairs (Mathematica's Ticks -> {{π/2, "π/2"}, …}); labels kept in a Map
+function labelled(t) {
+  if (!t.major.some(Array.isArray) && !(t.minor ?? []).some(Array.isArray)) return t;
+  const labels = new Map();
+  const major = t.major.map((v) => { if (Array.isArray(v)) { labels.set(v[0], v[1]); return v[0]; } return v; });
+  return { ...t, major, minor: (t.minor ?? []).map((v) => (Array.isArray(v) ? v[0] : v)), labels };
+}
+const labelOf = (t, v, step, minus) => (t.labels?.has(v) ? t.labels.get(v) : tickLabel(v, step, { minus }));
+// opts.scale = [sx, sy] (v0.1.23, plots with an AspectRatio): ranges, ticks and labels are in data units, the drawing in
+// world units x·sx, y·sy; pixel lengths use the world's unitsPerPx. Without it, nothing is scaled (as before).
+const scaler = (opts) => {
+  if (!opts.scale) return null;
+  const [sx, sy] = opts.scale;
+  const P = ([x, y]) => [x * sx, y * sy];
+  return { sx, sy, map: (prims) => ({ lines: prims.lines.map((l) => ({ ...l, pts: l.pts.map(P) })), texts: prims.texts.map((t) => ({ ...t, pos: P(t.pos) })) }) };
 };
 const stepOf = (t, fallback) => t.majorStep ?? (t.major.length > 1 ? t.major[1] - t.major[0] : fallback);
 
@@ -96,27 +112,35 @@ const stepOf = (t, fallback) => t.majorStep ?? (t.major.length > 1 ? t.major[1] 
  * 'minor', 'label-x', 'label-y'.
  */
 export function framePrimitives(opts) {
+  const sc = scaler(opts);
+  if (sc) return sc.map(framePrimitivesIn(opts, opts.unitsPerPx / sc.sx, opts.unitsPerPx / sc.sy));
+  return framePrimitivesIn(opts, opts.unitsPerPx, opts.unitsPerPx);
+}
+function framePrimitivesIn(opts, ux, uy) {
   const [[x0, x1], [y0, y1]] = opts.range;
-  const u = opts.unitsPerPx;
-  const [lM, lm] = (opts.tickLengthsPx ?? [4, 2.3]).map((p) => p * u);
-  const off = (opts.labelOffsetPx ?? 3) * u, font = (opts.fontPx ?? 11) * u;
+  const tl = opts.tickLengthsPx ?? [4, 2.3];
+  const [lMx, lmx] = tl.map((p) => p * ux), [lMy, lmy] = tl.map((p) => p * uy); // along x (ticks on vertical sides) / along y
+  const offx = (opts.labelOffsetPx ?? 3) * ux, offy = (opts.labelOffsetPx ?? 3) * uy, fonty = (opts.fontPx ?? 11) * uy;
   const both = opts.majorStep != null ? { major: opts.majorStep, minor: opts.minorStep ?? 0 } : null;
   const tx = tickSpec(opts.x ?? both, x0, x1), ty = tickSpec(opts.y ?? both, y0, y1);
-  const tickSides = opts.tickSides ?? ['left', 'right', 'bottom', 'top'];
-  const labelSides = opts.labelSides ?? opts.labels ?? ['left', 'bottom']; // `labels`: the DN draft's name
-  const lines = [{ role: 'frame', pts: [[x0, y0], [x1, y0], [x1, y1], [x0, y1], [x0, y0]] }];
+  const sides = opts.frameSides; // v0.1.23: Frame -> {bottom, left, top, right} with some False: only those sides
+  const tickSides = opts.tickSides ?? sides ?? ['left', 'right', 'bottom', 'top'];
+  const labelSides = opts.labelSides ?? opts.labels ?? (sides ? ['left', 'bottom'].filter((x) => sides.includes(x)) : ['left', 'bottom']); // `labels`: the DN draft's name
+  const SIDE = { bottom: [[x0, y0], [x1, y0]], right: [[x1, y0], [x1, y1]], top: [[x1, y1], [x0, y1]], left: [[x0, y1], [x0, y0]] };
+  const lines = sides ? sides.map((k) => ({ role: 'frame', pts: SIDE[k] })) : [{ role: 'frame', pts: [[x0, y0], [x1, y0], [x1, y1], [x0, y1], [x0, y0]] }];
   if (opts.axes) {
-    if (y0 < 0 && y1 > 0) lines.push({ role: 'axis-x', pts: [[x0, 0], [x1, 0]] });
-    if (x0 < 0 && x1 > 0) lines.push({ role: 'axis-y', pts: [[0, y0], [0, y1]] });
+    const [ox, oy] = opts.axesOrigin ?? [0, 0]; // v0.1.23: AxesOrigin (default the origin)
+    if (y0 < oy && y1 > oy) lines.push({ role: 'axis-x', pts: [[x0, oy], [x1, oy]] });
+    if (x0 < ox && x1 > ox) lines.push({ role: 'axis-y', pts: [[ox, y0], [ox, y1]] });
   }
   const texts = [];
-  for (const [vals, role, len] of [[tx.major, 'major', lM], [tx.minor, 'minor', lm]]) {
+  for (const [vals, role, len] of [[tx.major, 'major', lMy], [tx.minor, 'minor', lmy]]) {
     for (const x of vals) {
       if (tickSides.includes('bottom')) lines.push({ role, pts: [[x, y0], [x, y0 + len]] });
       if (tickSides.includes('top')) lines.push({ role, pts: [[x, y1], [x, y1 - len]] });
     }
   }
-  for (const [vals, role, len] of [[ty.major, 'major', lM], [ty.minor, 'minor', lm]]) {
+  for (const [vals, role, len] of [[ty.major, 'major', lMx], [ty.minor, 'minor', lmx]]) {
     for (const y of vals) {
       if (tickSides.includes('left')) lines.push({ role, pts: [[x0, y], [x0 + len, y]] });
       if (tickSides.includes('right')) lines.push({ role, pts: [[x1, y], [x1 - len, y]] });
@@ -124,12 +148,12 @@ export function framePrimitives(opts) {
   }
   const sx = stepOf(tx, 1), sy = stepOf(ty, 1), minus = opts.minus ?? MINUS;
   for (const x of tx.major) {
-    if (labelSides.includes('bottom')) texts.push({ role: 'label-x', str: tickLabel(x, sx, { minus }), pos: [x, y0 - off - font / 2], anchor: 'middle' });
-    if (labelSides.includes('top')) texts.push({ role: 'label-x', str: tickLabel(x, sx, { minus }), pos: [x, y1 + off + font / 2], anchor: 'middle' });
+    if (labelSides.includes('bottom')) texts.push({ role: 'label-x', str: labelOf(tx, x, sx, minus), pos: [x, y0 - offy - fonty / 2], anchor: 'middle' });
+    if (labelSides.includes('top')) texts.push({ role: 'label-x', str: labelOf(tx, x, sx, minus), pos: [x, y1 + offy + fonty / 2], anchor: 'middle' });
   }
   for (const y of ty.major) {
-    if (labelSides.includes('left')) texts.push({ role: 'label-y', str: tickLabel(y, sy, { minus }), pos: [x0 - off, y], anchor: 'end' });
-    if (labelSides.includes('right')) texts.push({ role: 'label-y', str: tickLabel(y, sy, { minus }), pos: [x1 + off, y], anchor: 'start' });
+    if (labelSides.includes('left')) texts.push({ role: 'label-y', str: labelOf(ty, y, sy, minus), pos: [x0 - offx, y], anchor: 'end' });
+    if (labelSides.includes('right')) texts.push({ role: 'label-y', str: labelOf(ty, y, sy, minus), pos: [x1 + offx, y], anchor: 'start' });
   }
   return { lines, texts };
 }
@@ -141,12 +165,17 @@ export function framePrimitives(opts) {
  * fontPx, axesLabel [xText, yText] (AxesLabel at the positive ends), skipOrigin (default true), minus.
  */
 export function axesPrimitives(opts) {
+  const sc = scaler(opts);
+  if (sc) return sc.map(axesPrimitivesIn(opts, opts.unitsPerPx / sc.sx, opts.unitsPerPx / sc.sy));
+  return axesPrimitivesIn(opts, opts.unitsPerPx, opts.unitsPerPx);
+}
+function axesPrimitivesIn(opts, ux, uy) {
   const [[x0, x1], [y0, y1]] = opts.range;
   const [[tx0, tx1], [ty0, ty1]] = opts.tickRange ?? opts.range;
   const [ox, oy] = opts.origin ?? [0, 0];
-  const u = opts.unitsPerPx;
-  const [lM, lm] = (opts.tickLengthsPx ?? [4, 2.3]).map((p) => p * u);
-  const off = (opts.labelOffsetPx ?? 3) * u, font = (opts.fontPx ?? 11) * u;
+  const tl = opts.tickLengthsPx ?? [4, 2.3];
+  const [lMx, lmx] = tl.map((p) => p * ux), [lMy, lmy] = tl.map((p) => p * uy);
+  const offx = (opts.labelOffsetPx ?? 3) * ux, offy = (opts.labelOffsetPx ?? 3) * uy, fonty = (opts.fontPx ?? 11) * uy;
   const both = opts.majorStep != null ? { major: opts.majorStep, minor: opts.minorStep ?? 0 } : null;
   const tx = tickSpec(opts.x ?? both, tx0, tx1), ty = tickSpec(opts.y ?? both, ty0, ty1);
   const skip = opts.skipOrigin !== false;
@@ -155,18 +184,18 @@ export function axesPrimitives(opts) {
   const texts = [];
   const atOrigin = (v, o, step) => skip && Math.abs(v - o) < EPS * step;
   const sx = stepOf(tx, 1), sy = stepOf(ty, 1);
-  for (const [vals, role, len] of [[tx.major, 'major', lM], [tx.minor, 'minor', lm]]) {
+  for (const [vals, role, len] of [[tx.major, 'major', lMy], [tx.minor, 'minor', lmy]]) {
     for (const x of vals) if (!atOrigin(x, ox, sx)) lines.push({ role: `${role}-x`, pts: [[x, oy], [x, oy + len]] });
   }
-  for (const [vals, role, len] of [[ty.major, 'major', lM], [ty.minor, 'minor', lm]]) {
+  for (const [vals, role, len] of [[ty.major, 'major', lMx], [ty.minor, 'minor', lmx]]) {
     for (const y of vals) if (!atOrigin(y, oy, sy)) lines.push({ role: `${role}-y`, pts: [[ox, y], [ox + len, y]] });
   }
-  for (const x of tx.major) if (!atOrigin(x, ox, sx)) texts.push({ role: 'label-x', str: tickLabel(x, sx, { minus }), pos: [x, oy - off - font / 2], anchor: 'middle' });
-  for (const y of ty.major) if (!atOrigin(y, oy, sy)) texts.push({ role: 'label-y', str: tickLabel(y, sy, { minus }), pos: [ox - off, y], anchor: 'end' });
+  for (const x of tx.major) if (!atOrigin(x, ox, sx)) texts.push({ role: 'label-x', str: labelOf(tx, x, sx, minus), pos: [x, oy - offy - fonty / 2], anchor: 'middle' });
+  for (const y of ty.major) if (!atOrigin(y, oy, sy)) texts.push({ role: 'label-y', str: labelOf(ty, y, sy, minus), pos: [ox - offx, y], anchor: 'end' });
   if (opts.axesLabel) {
     const [lx, ly] = opts.axesLabel;
-    if (lx) texts.push({ role: 'axes-label-x', str: lx, pos: [x1 + off, oy], anchor: 'start' });
-    if (ly) texts.push({ role: 'axes-label-y', str: ly, pos: [ox, y1 + off + font / 2], anchor: 'middle' });
+    if (lx) texts.push({ role: 'axes-label-x', str: lx, pos: [x1 + offx, oy], anchor: 'start' });
+    if (ly) texts.push({ role: 'axes-label-y', str: ly, pos: [ox, y1 + offy + fonty / 2], anchor: 'middle' });
   }
   return { lines, texts };
 }

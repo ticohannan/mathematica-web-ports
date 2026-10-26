@@ -30,6 +30,7 @@ h1.demo-title { font-size: 1.55rem; font-weight: 600; margin: 0 0 12px; padding-
 .controls { flex: 0 0 auto; min-width: 210px; max-width: 290px; display: flex; flex-direction: column; gap: 8px; font-size: 0.88rem; }
 .manipulate.controls-top .controls { max-width: none; width: 100%; }
 .manipulate.placement-top .graphic { flex: 0 0 auto; width: 100%; } /* ControlPlacement: Top set by shared/manipulate.js */
+.manipulate.placement-top .controls > .ctl-slider { max-width: 520px; } /* sliders about as wide as Mathematica's (v0.1.23) */
 .graphic { flex: 1 1 360px; max-width: 560px; min-width: 280px; background: #fff; border: 1px solid var(--line); border-radius: 3px; position: relative; }
 .graphic canvas, .graphic svg.scene { display: block; width: 100%; height: auto; touch-action: none; }
 .panel-tools { display: flex; gap: 6px; justify-content: flex-end; width: 100%; font-size: 0.8rem; }
@@ -71,6 +72,7 @@ details.details summary { cursor: pointer; font-weight: 600; }
 /* CSS2D labels (three.js) */
 .lbl { font: italic 15px "Times New Roman", serif; pointer-events: none; user-select: none; white-space: pre; }
 .lbl.tick { font: 12px "Times New Roman", serif; color: #444; }
+.lbl.lbl-text3d { font-style: normal; font-family: system-ui, sans-serif; } /* Text in Graphics3D (v0.1.23): upright, as Mathematica */
 
 @media (max-width: 640px) {
   .controls { max-width: none; width: 100%; }

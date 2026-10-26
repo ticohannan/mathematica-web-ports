@@ -76,8 +76,8 @@ import { addButton, addCheckbox, addPopup, addVerticalSlider, addRow } from './u
 import { addIntervalSlider } from './ui-interval.js';
 import { createPlot, addLocators, darkLocatorGlyph, locatorGlyph, svgNode } from './svg-plot.js';
 import { createRng, replayRng } from './random.js';
-import { render, htmlOf, textOf } from './graphics.js';
-import { decorationMargins, plotDecorations } from './graphics-extras.js';
+import { render, htmlOf, textOf, scaleGraphics } from './graphics.js';
+import { decorationMargins, plotDecorations, legendExtraPx } from './graphics-extras.js';
 import { frameLayout } from './svg-frame.js';
 
 /** Markers used in control specs. */
@@ -143,7 +143,7 @@ export function parseControl(spec) {
   if (isPoint(rest[0]) && isPoint(rest[1])) return { ...base, kind: 'slider2D', min: rest[0], max: rest[1] };
   if (Array.isArray(rest[0])) {
     const values = rest[0].map((v) => (v && v.rule ? { value: v.value, label: v.label } : { value: v, label: String(v) }));
-    const boolean = values.length === 2 && values[0].value === false && values[1].value === true;
+    const boolean = values.length === 2 && ((values[0].value === false && values[1].value === true) || (values[0].value === true && values[1].value === false)); // {False, True} or {True, False}
     const kind = type === 'PopupMenu' ? 'popup' : type === 'Checkbox' || (boolean && type !== 'SetterBar') ? 'checkbox' : 'setter';
     return { ...base, kind, values };
   }
@@ -246,10 +246,60 @@ export function Manipulate(spec) {
   const several = Array.isArray(spec.graphics);
   const g0 = several ? spec.graphics : [spec.graphics ?? {}];
   const plots = [], layers = [];
+  // v0.1.23: pictures with an AspectRatio, per-axis PlotRangePadding or UpdateFrame (plots of shared/plot.js) are made
+  // by framedPicture: data coordinates scaled to the AspectRatio, and (UpdateFrame) made again when their frame options
+  // change between evaluations. The other pictures keep the code below unchanged.
+  const scales = [], frameKeys = [];
+  let clipCount = Math.floor(Math.random() * 1e6); // clipPath ids unique in the page
+  const isFramed = (o) => o && (o.AspectRatio !== undefined || o.UpdateFrame || Array.isArray(o.PlotRangePadding));
+  const FRAME_OPTS = ['PlotRange', 'PlotRangePadding', 'AspectRatio', 'ImageSize', 'Background', 'Axes', 'AxesOrigin', 'Ticks',
+    'AxesLabel', 'Frame', 'FrameTicks', 'FrameLabel', 'PlotLabel', 'PlotLegends'];
+  const frameKey = (o) => JSON.stringify(FRAME_OPTS.map((n) => o[n] ?? null));
+  const elementOf = (options, k) => document.getElementById(options.id ?? g0[k]?.id ?? (k === 0 ? ids.graphic : `${ids.graphic}${k + 1}`));
+  function framedPicture(options, k) {
+    if (!options?.PlotRange) throw new Error('Manipulate: give the Graphics a PlotRange (in the Graphics options or in spec.graphics)');
+    const el = elementOf(options, k);
+    const R = options.PlotRange, [[x0, x1], [y0, y1]] = R;
+    const pad = options.PlotRangePadding ?? 0.02, [px, py] = Array.isArray(pad) ? pad : [pad, pad];
+    const Rp = [[x0 - (x1 - x0) * px, x1 + (x1 - x0) * px], [y0 - (y1 - y0) * py, y1 + (y1 - y0) * py]];
+    const ar = options.AspectRatio;
+    const sy = typeof ar === 'number' ? (ar * (Rp[0][1] - Rp[0][0])) / (Rp[1][1] - Rp[1][0]) : 1;
+    const S = [[Rp[0][0], Rp[0][1]], [Rp[1][0] * sy, Rp[1][1] * sy]];
+    const decor = { ...g0[k], ...options };
+    const margins = decorationMargins(decor) ?? {};
+    const extra = legendExtraPx(decor); // a legend outside widens the image (Mathematica)
+    const [mL, mR, mT, mB] = [margins.left ?? 0, (margins.right ?? 0) - extra, margins.top ?? 0, margins.bottom ?? 0];
+    let imageSize = options.ImageSize ?? 400;
+    // ImageSize -> {w, h}: the plot area and its labels fit inside w × h (the plot area keeps the AspectRatio)
+    if (Array.isArray(imageSize)) imageSize = typeof ar === 'number' ? Math.min(imageSize[0] - mL - mR, (imageSize[1] - mT - mB) / ar) + mL + mR : imageSize[0];
+    imageSize += extra;
+    const layout = frameLayout(S, { imageSize, margins });
+    const plot = createPlot(el, { plotRange: layout.plotRange, imageSize, padding: 0, label: options.label ?? g0[k]?.label, testid: options.testid ?? g0[k]?.testid });
+    if (options.Background) plot.rect(plot.layer('background'), [S[0][0], S[1][0]], [S[0][1], S[1][1]], { fill: options.Background.rgb });
+    const deco = plotDecorations(decor, { range: Rp, plotRange: Rp, visible: layout.plotRange, unitsPerPx: plot.unitsPerPx, scale: [1, sy] });
+    if (deco.below.length) render(plot, plot.layer('decorations'), deco.below);
+    const layer = plot.layer('graphics');
+    if (options.PlotRangeClipping) { // PlotRangeClipping -> True: the content is clipped to the (padded) plot range
+      const id = `prclip-${++clipCount}`;
+      const cp = svgNode('clipPath', { id, clipPathUnits: 'userSpaceOnUse' });
+      cp.append(svgNode('rect', { x: S[0][0], y: S[1][0], width: S[0][1] - S[0][0], height: S[1][1] - S[1][0] }));
+      const defs = svgNode('defs'); defs.append(cp); plot.svg.prepend(defs);
+      layer.setAttribute('clip-path', `url(#${id})`);
+    }
+    if (deco.above.length) render(plot, plot.layer('labels'), deco.above);
+    return { plot, layer, scale: [1, sy], key: frameKey(options) };
+  }
+  const toWorld = (k, p) => (scales[k] ? [p[0] * scales[k][0], p[1] * scales[k][1]] : p);
+  const fromWorld = (k, p) => (scales[k] ? [p[0] / scales[k][0], p[1] / scales[k][1]] : p);
   const ensurePlots = (optionsList) => {
     if (plots.length) return;
     optionsList.forEach((options, k) => {
       if (g0[k]?.renderer) { plots.push(null); layers.push(null); return; } // drawn by its renderer (e.g. Graphics3D)
+      if (isFramed(options)) {
+        const f = framedPicture(options, k);
+        plots.push(f.plot); layers.push(f.layer); scales[k] = f.scale; frameKeys[k] = f.key;
+        return;
+      }
       if (!options?.PlotRange) throw new Error('Manipulate: give the Graphics a PlotRange (in the Graphics options or in spec.graphics)');
       const el = document.getElementById(options.id ?? g0[k]?.id ?? (k === 0 ? ids.graphic : `${ids.graphic}${k + 1}`));
       const imageSize = (Array.isArray(options.ImageSize) ? options.ImageSize[0] : options.ImageSize) ?? 400;
@@ -298,17 +348,23 @@ export function Manipulate(spec) {
       d = r && 'graphics' in r ? r.graphics : spec.draw(view, state);
     }
     pictures = several ? d : [d];
-    ensurePlots(pictures.map((p, k) => (p?.head === 'Graphics' ? { ...p.options, id: g0[k]?.id } : g0[k])));
+    const optionsOf = (p, k) => (p?.head === 'Graphics' ? { ...p.options, id: g0[k]?.id } : g0[k]);
+    ensurePlots(pictures.map(optionsOf));
     pictures.forEach((p, k) => {
       const r = g0[k]?.renderer;
       if (r) { r.draw(p, { element: document.getElementById(g0[k].id ?? (k === 0 ? ids.graphic : `${ids.graphic}${k + 1}`)), state, view, k }); return; }
-      layers[k].replaceChildren(); render(plots[k], layers[k], p);
+      const o = optionsOf(p, k);
+      // v0.1.23: frame options changed → the picture is made again (not while one of its locators is dragged: then
+      // after the drag, see makePane's onEnd)
+      if (frameKeys[k] !== undefined && o?.UpdateFrame && frameKey(o) !== frameKeys[k]) { if (paneOf.get(k)?.dragging()) rebuildLater.add(k); else rebuildPicture(k, o); }
+      layers[k].replaceChildren(); render(plots[k], layers[k], scales[k] ? scaleGraphics(p, scales[k]) : p);
     });
-    if (!locatorPanes) makeLocators();
+    if (!locatorPanes) makeLocators(); else syncLocators();
     locatorPanes?.forEach((l) => l.redraw());
     for (const L of locatorGraphics) {
       if (L.drawn && typeof L.a !== 'function') continue;
-      L.g.replaceChildren(); render(L.plot, L.g, typeof L.a === 'function' ? L.a(state, L.name) : L.a); L.drawn = true;
+      const look = typeof L.a === 'function' ? L.a(state, L.name) : L.a;
+      L.g.replaceChildren(); render(L.plot, L.g, scales[L.k] ? scaleGraphics(look, scales[L.k]) : look); L.drawn = true;
     }
     updateControls();
     spec.after?.(ctx);
@@ -336,6 +392,7 @@ export function Manipulate(spec) {
   const markActive = (node) => { if (tracksActive) node?.addEventListener('pointerdown', () => { controlActive = true; }); };
   const setWidth = (api, px) => {
     const r = api.row.querySelector('input[type=range]');
+    if (typeof px === 'string') px = { Tiny: 60, Small: 100, Medium: 180, Large: 300 }[px]; // v0.1.23: ImageSize -> Small etc.
     if (r && px) Object.assign(r.style, { flex: `0 0 ${px}px`, width: `${px}px`, minWidth: `${px}px` });
   };
   const makeControl = (c, controls, parent) => {
@@ -459,9 +516,10 @@ export function Manipulate(spec) {
 
   // one locator per Locator control; a control whose value is a list of points gives one locator per point,
   // named name-1, name-2, … (Mathematica's {{pts, {p1, p2, …}}, …, Locator})
-  const locs = all.filter((c) => c.kind === 'locator').flatMap((c) => (c.multi
+  const computeLocs = () => all.filter((c) => c.kind === 'locator').flatMap((c) => (c.multi
     ? val(c.name).map((_, i) => ({ ...c, name: `${c.name}-${i + 1}`, variable: c.name, index: i }))
     : [{ ...c, variable: c.name, index: null }]));
+  let locs = computeLocs(); // computed again when a Locator list changes its length (v0.1.23, syncLocators)
   const locOf = (n) => locs.find((l) => l.name === n);
   const getLoc = (n) => { const c = locOf(n); return c.index === null ? val(c.variable) : val(c.variable)[c.index]; };
   const placeLocator = (n, p) => {
@@ -477,24 +535,65 @@ export function Manipulate(spec) {
     locatorPanes?.forEach((l) => l.redraw());
     if (!queued) queued = requestAnimationFrame(() => { queued = 0; run(); });
   };
+  const paneOf = new Map(); // picture index → its locator pane
+  const rebuildLater = new Set(); // pictures whose frame changed during a drag
+  const namesOn = (k) => locs.filter((c) => (c.opts.picture ?? 0) === k).map((c) => c.name);
+  // v0.1.23: a Locator list whose length changed (e.g. a Button made new points) gets locators added or removed
+  function syncLocators() {
+    const fresh = computeLocs();
+    if (fresh.length === locs.length && fresh.every((c, i) => c.name === locs[i].name)) return;
+    locs = fresh;
+    const names = new Set(locs.map((c) => c.name));
+    for (let i = locatorGraphics.length - 1; i >= 0; i--) if (!names.has(locatorGraphics[i].name)) locatorGraphics.splice(i, 1);
+    const ks = new Set([...paneOf.keys(), ...locs.map((c) => c.opts.picture ?? 0)]);
+    for (const k of ks) {
+      if (paneOf.has(k)) paneOf.get(k).setNames(namesOn(k));
+      else { const pane = makePane(k, namesOn(k)); paneOf.set(k, pane); locatorPanes.push(pane); }
+    }
+  }
+  // v0.1.23: picture k made again (its frame options changed); its locators move to the new picture
+  function rebuildPicture(k, options) {
+    rebuildLater.delete(k);
+    const next = plots[k].svg.nextSibling, parent = plots[k].svg.parentNode;
+    plots[k].svg.remove();
+    const f = framedPicture(options, k);
+    if (next) parent.insertBefore(f.plot.svg, next); // keep the element order of the container
+    plots[k] = f.plot; layers[k] = f.layer; scales[k] = f.scale; frameKeys[k] = f.key;
+    for (let i = locatorGraphics.length - 1; i >= 0; i--) if (locatorGraphics[i].k === k) locatorGraphics.splice(i, 1);
+    if (paneOf.has(k)) {
+      const old = paneOf.get(k);
+      old.destroy();
+      const pane = makePane(k, namesOn(k));
+      paneOf.set(k, pane); locatorPanes[locatorPanes.indexOf(old)] = pane;
+    }
+  }
   function makeLocators() {
     locatorPanes = [];
     if (!locs.length) return;
-    const L = spec.locators ?? {};
     const byPicture = new Map();
     for (const c of locs) { const k = c.opts.picture ?? 0; if (!byPicture.has(k)) byPicture.set(k, []); byPicture.get(k).push(c); }
     for (const [k, list] of byPicture) {
+      const pane = makePane(k, list.map((c) => c.name));
+      paneOf.set(k, pane);
+      locatorPanes.push(pane);
+    }
+  }
+  function makePane(k, names) {
+    const L = spec.locators ?? {};
+    {
       const plot = plots[k];
-      locatorPanes.push(addLocators(plot, {
-        names: list.map((c) => c.name),
-        get: getLoc,
+      const scaled = !!scales[k];
+      const onMove = (n, p) => (L.throttle === 'frame' ? moveLocatorLater(n, p) : moveLocator(n, p));
+      return addLocators(plot, {
+        names,
+        get: scaled ? (n) => toWorld(k, getLoc(n)) : getLoc,
         appearance: (n) => {
           const c = locOf(n);
           const a = c.opts.Appearance;
           if (isNone(a)) return null;
           if (Array.isArray(a) || typeof a === 'function' || a?.head) { // Graphics primitives around the point
             const g = svgNode('g', { class: 'locator-appearance' });
-            locatorGraphics.push({ g, plot, name: n, a });
+            locatorGraphics.push({ g, plot, name: n, a, k });
             return g;
           }
           return L.appearance ? L.appearance(n, plot) : locatorGlyph(plot);
@@ -503,10 +602,11 @@ export function Manipulate(spec) {
         keyStep: L.keyStep ?? 0.05,
         describe: L.describe ?? ((n) => `${n} locator; arrow keys move it`),
         onStart: tracksActive ? () => { controlActive = true; } : undefined,
-        onMove: (n, p) => (L.throttle === 'frame' ? moveLocatorLater(n, p) : moveLocator(n, p)),
+        ...(scaled ? { onEnd: () => { if (rebuildLater.has(k)) requestRun(); } } : {}),
+        onMove: scaled ? (n, p) => onMove(n, fromWorld(k, p)) : onMove,
         pointer: L.pointer ?? true,
         ...(L.testid ? { testid: L.testid } : {}),
-      }));
+      });
     }
   }
 
@@ -583,7 +683,7 @@ export function Manipulate(spec) {
     // locator and SVG-coordinate functions only where there is an SVG picture (not on pages of renderer pictures only)
     ...(plots.some(Boolean) ? {
       moveLocator: (n, p) => { moveLocator(n, p); return copy(state); },
-      worldToClient: (p, k = 0) => plots[k].worldToClient(p),
+      worldToClient: (p, k = 0) => plots[k].worldToClient(toWorld(k, p)),
     } : {}),
     controlActive: () => controlActive,
     ...(spec.random ? {

@@ -32,6 +32,11 @@ it is verified:
 | Common Robot Arm Configurations | [`demos/arm-configurations/DESIGN.md`](../demos/arm-configurations/DESIGN.md) | `demos/arm-configurations/` |
 | Robot Manipulator Workspaces | [`demos/manipulator-workspaces/DESIGN.md`](../demos/manipulator-workspaces/DESIGN.md) | `demos/manipulator-workspaces/` |
 | Probabilistic Roadmap Method in 3D | [`demos/prm-3d/DESIGN.md`](../demos/prm-3d/DESIGN.md) | `demos/prm-3d/` |
+| Graham Scan to Find the Convex Hull of a Set of Points in 2D | [`demos/graham-scan/DESIGN.md`](../demos/graham-scan/DESIGN.md) | `demos/graham-scan/` |
+| Sensor Fusion with Normally Distributed Noise | [`demos/sensor-fusion/DESIGN.md`](../demos/sensor-fusion/DESIGN.md) | `demos/sensor-fusion/` |
+| Ensemble Control of Robots with Unicycle Kinematics | [`demos/ensemble-control/DESIGN.md`](../demos/ensemble-control/DESIGN.md) | `demos/ensemble-control/` |
+| Shortest Distance between Two Line Segments | [`demos/segment-distance/DESIGN.md`](../demos/segment-distance/DESIGN.md) | `demos/segment-distance/` |
+| Distribution of a Swarm of Robots in a Circular Workplace under Gravity | [`demos/swarm-circle/DESIGN.md`](../demos/swarm-circle/DESIGN.md) | `demos/swarm-circle/` |
 
 The originals came without design documents. Version 0.1.6 added best-effort design documents
 reconstructed from the original notebooks (their code, captions and details text) and from the

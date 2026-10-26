@@ -1,0 +1,387 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Extracted 2026-10-25 with tools/nbextract.py; cached outputs skipped.
+
+
+### [Title]
+Shortest Distance between Two Line Segments
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+Select four points A, B, C, D in three dimensions to determine two line segments AB (green) and CD (blue). This Demonstration finds the shortest line segment between the segments AB and CD and draws it in red. The shortest line segment between the full lines Overscript[AB, _] and Overscript[CD, _] is drawn in yellow. If the segments are parallel, there can be an infinite number of solution lines, which are represented by the 3D rectangle ABCD. All possible solutions are drawn.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+drawShortestLineSeg[a_,b_]:={Red,Sphere[a,0.4],Sphere[b,0.4],Tube[{a,b},0.05]}
+
+### [Input] (init)
+drawPerpLineSeg[a_,b_,ua_,ub_,aPerp_,bPerp_]:=Module[{len = 0.5,dNorm,uba},
+(*Draws perpendicular symbol at a if aPerp is true, and at b if bPerp is true.*)
+dNorm = Norm[b-a];
+{Yellow,Sphere[a,0.4],Sphere[b,0.4],Tube[{a,b},0.04],
+If[dNorm>0,
+uba = (b-a)/ dNorm;
+{If[aPerp,Polygon[{a,a+len*ua,a+len*ua+len*uba,a+len*uba}]],
+If[bPerp,Polygon[{b,b+len*ub,b+len*ub-len*uba,b-len*uba}]]}]
+}]
+
+### [Input] (init)
+drawClosestPointLineSegment[{px_,py_,pz_},{lx1_,ly1_,lz1_},{lx2_,ly2_,lz2_}]:=Module[{lineLengthSq,t,pb,tC,pbC,lu},
+(*Draws points related to the closest point on Line Segment (l1,l2) to point p.  
+based on <<TemplateBox:https://stackoverflow.com/questions/2824478/shortest-distance-between-two-line-segments<<URL>>Nonehttps://stackoverflow.com/questions/2824478/shortest-distance-between-two-line-segmentsHyperlinkActionRecycledHyperlinkActive>> *)
+lineLengthSq = (lx2-lx1)^2+ (ly2-ly1)^2+ (lz2-lz1)^2;
+If[lineLengthSq==0, Return[{lx1,ly1,lz1}]]; (*Special case for zero-length line.*)
+ t=((px-lx1)*(lx2-lx1)+(py-ly1)*(ly2-ly1)+(pz-lz1)*(lz2-lz1))/lineLengthSq; (*'t' is the fraction along the line l2--l1 the point p projects onto. Uses the scaled Dot product: (p-l1).(l2-l1)/lineLengthSq  *)
+tC = t;
+If[t>1,tC=1;];
+If[t<0,tC=0;]; (*constrain t to be between [0,1].*)
+pb={lx1,ly1,lz1}+t*({lx2,ly2,lz2}-{lx1,ly1,lz1});
+pbC={lx1,ly1,lz1}+tC*({lx2,ly2,lz2}-{lx1,ly1,lz1});
+lu= ({lx2,ly2,lz2}-{lx1,ly1,lz1})/Norm[{lx2,ly2,lz2}-{lx1,ly1,lz1}];
+{drawPerpLineSeg[{px,py,pz},pb,None,If[t>0.5,lu,-lu],False,True],
+drawShortestLineSeg[{px,py,pz},pbC]}
+]
+
+### [Input] (init)
+findClosestPointLineSegment[{px_,py_,pz_},{lx1_,ly1_,lz1_},{lx2_,ly2_,lz2_}]:=Module[{lineLengthSq,t},
+(*Returns the closest point on Line Segment (l1,l2) to point p.  
+based on <<TemplateBox:https://stackoverflow.com/questions/2824478/shortest-distance-between-two-line-segments<<URL>>Nonehttps://stackoverflow.com/questions/2824478/shortest-distance-between-two-line-segmentsHyperlinkActionRecycledHyperlinkActive>> *)
+lineLengthSq = (lx2-lx1)^2+ (ly2-ly1)^2+ (lz2-lz1)^2;
+If[lineLengthSq==0, Return[{lx1,ly1,lz1}]]; (*Special case for zero-length line.*)
+ t=((px-lx1)*(lx2-lx1)+(py-ly1)*(ly2-ly1)+(pz-lz1)*(lz2-lz1))/lineLengthSq; (*'t' is the fraction along the line l2--l1 the point p projects onto. Uses the scaled Dot product: (p-l1).(l2-l1)/lineLengthSq  *)
+If[t>1,t=1];
+If[t<0,t=0]; (*constrain t to be between [0,1].*)
+Return[ {lx1,ly1,lz1}+t*({lx2,ly2,lz2}-{lx1,ly1,lz1})];
+]
+
+### [Input] (init)
+drawClosestDistanceBetweenLines[a0_,a1_,b0_,b1_]:=Module[{vA,vB,magA,magB,uA,uB,cross,denom,d0,d1,t,detA,detB,t0,t1,pA,pB,dot,pBc,pAc,projs}, (* Given two lines defined by pairs (a0,a1) and (b0,b1).
+Return {drawings for closest points on each segment, and their distance}. *)
+(* based on <<TemplateBox:https://stackoverflow.com/questions/2824478/shortest-distance-between-two-line-segments<<URL>>Nonehttps://stackoverflow.com/questions/2824478/shortest-distance-between-two-line-segmentsHyperlinkActionRecycledHyperlinkActive>> *)
+vA=a1-a0; (* Calculate denominators*)
+vB=b1-b0;
+magA=Norm[vA];
+magB=Norm[vB];
+uA=vA/magA;
+uB=vB/magB;
+cross=Cross[uA,uB];
+denom=Norm[cross]^2;
+(* If lines are parallel (denom=0) test if lines overlap. *)
+(* If they don't overlap then there is a closest point solution. *)
+ (* If they do overlap, there are infinite closest positions, but there is a closest distance. *)
+If[  denom == 0,
+d0=Dot[uA,(b0-a0)];
+d1=Dot[uA,(b1-a0)];
+If[ d0<=0&& d1<= 0, (*Is segment B before A?*)
+If[Abs[d0]<Abs[d1],
+Return[{drawShortestLineSeg[a0,b0],drawPerpLineSeg[a0,b0-(d0*uA),uA,uB,True,True],drawPerpLineSeg[b0,a0+(d0*uA),uA,uB,True,True]}];,
+Return[{drawShortestLineSeg[a0,b1],drawPerpLineSeg[a0,b1-(d1*uA),uA,uB,True,True],drawPerpLineSeg[b1,a0+(d1*uA),uA,uB,True,True]}];]];
+If[d0>=magA && d1>= magA, (*Is segment B after A?*)
+If[Abs[d0]<Abs[d1],
+Return[{drawShortestLineSeg[a1,b0],drawPerpLineSeg[a1,b0+(magA-d0)*uA,uA,uB,True,True] ,drawPerpLineSeg[b0,a1-(magA-d0)*uA,uA,uB,True,True] }];,
+Return [{drawShortestLineSeg[a1,b1],drawPerpLineSeg[a1,b1+(magA-d1)*uA,uA,uB,True,True],drawPerpLineSeg[b1,a1-(magA-d1)*uA,uA,uB,True,True]}];]];
+
+(* Segments overlap, draw polygon of possibilities.*)
+projs = Sort[{0,d0,d1,magA}];
+Return[{drawShortestLineSeg[a0+ uA*projs[[2]],a0+ uA*projs[[2]]+b0-((d0*uA)+a0)] ,
+Red,Opacity[0.5], Polygon[{a0+ uA*projs[[2]],a0+ uA*projs[[2]]+b0-((d0*uA)+a0),
+a0+ uA*projs[[3]]+b0-((d0*uA)+a0),a0+ uA*projs[[3]]}]
+}]];
+(*Lines not parallel: Calculate the projected closest points. *)
+t=(b0-a0);
+detA=Det[{t,uB,cross}];
+detB=Det[{t,uA,cross}];
+t0=detA/denom;
+t1=detB/denom;
+pA=a0+(uA*t0);(* Projected closest point on segment A.*)
+pB=b0+(uB*t1);(* Projected closest point on segment B.*)
+pAc = pA;pBc = pB;
+
+(* Clamp projections.*)
+If[ t0<0,pAc=a0];
+If[ t0>magA,pAc=a1];
+
+If[ t1<0,pBc=b0];
+If[t1>magB,pBc=b1];
+
+(*Clamp projection A.*)
+If[  t0<0 ||  t0>magA,
+dot=Dot[uB,(pA-b0)];
+	If[dot<0,dot=0];
+	If[dot>magB,dot=magB];
+	pBc=b0+(uB*dot);];
+(*Clamp projection B;*)
+If[ t1<0 ||  t1>magB,
+dot=Dot[uA,(pB-a0)];
+If[ dot<0,dot=0];
+If[ dot>magA,dot=magA];
+pAc=a0+(uA*dot);];
+
+Return [{
+drawShortestLineSeg[pAc,pBc],
+drawPerpLineSeg[pA,pB,If[t0>0.5,-uA,uA],If[t1>0.5,-uB,uB],True,True]
+}];
+]
+
+### [Input] (init)
+closestDistanceBetweenLines[a0_,a1_,b0_,b1_]:=Module[{vA,vB,magA,magB,uA,uB,cross,denom,d0,d1,t,detA,detB,t0,t1,pA,pB,dot,pBc,pAc}, (* Given two lines defined by pairs (a0,a1) and (b0,b1), *)
+(* Return the closest points on each segment and their distance. *)
+(* based on <<TemplateBox:https://stackoverflow.com/questions/2824478/shortest-distance-between-two-line-segments<<URL>>Nonehttps://stackoverflow.com/questions/2824478/shortest-distance-between-two-line-segmentsHyperlinkActionRecycledHyperlinkActive>> *)
+vA=a1-a0; (* Calculate denominator*)
+vB=b1-b0;
+magA=Norm[vA];
+magB=Norm[vB];
+uA=vA/magA;
+uB=vB/magB;
+cross=Cross[uA,uB];
+denom=Norm[cross]^2;
+(* If lines are parallel (denom=0) test if lines overlap. *)
+(*If they do not overlap then there is a closest point solution. *)
+(*If they do overlap, there are infinite closest positions, but there is a closest distance. *)
+If[  denom == 0,
+d0=Dot[uA,(b0-a0)];
+d1=Dot[uA,(b1-a0)];
+(*Is segment B before A?*)
+If[ d0<=0&& d1<= 0,
+If[Abs[d0]<Abs[d1],
+Return[ Norm[a0-b0]];,
+Return[Norm[a0-b1]];]];
+(*Is segment B after A?*)
+If[d0>=magA && d1>= magA,
+If[Abs[d0]<Abs[d1],
+Return[Norm[a1-b0]];,
+Return [Norm[a1-b1]];]];
+
+(* Segments overlap, return distance between parallel segments. *)
+Return[Norm[((d0*uA)+a0)-b0]]]; 
+
+(*Lines not parallel: Calculate the projected closest points. *)
+t=(b0-a0);
+detA=Det[{t,uB,cross}];
+detB=Det[{t,uA,cross}];
+t0=detA/denom;
+t1=detB/denom;
+pA=a0+(uA*t0);(* Projected closest point on segment A. *)
+pB=b0+(uB*t1);(* Projected closest point on segment B. *)
+pAc = pA;pBc = pB;
+
+(* Clamp projections*)
+If[ t0<0,pAc=a0];
+If[ t0>magA,pAc=a1];
+
+If[ t1<0,pBc=b0];
+If[t1>magB,pBc=b1];
+
+(*Clamp projection A*)
+If[  t0<0 ||  t0>magA,
+dot=Dot[uB,(pA-b0)];
+	If[dot<0,dot=0];
+	If[dot>magB,dot=magB];
+	pBc=b0+(uB*dot);];
+(*Clamp projection B*)
+If[ t1<0 ||  t1>magB,
+dot=Dot[uA,(pB-a0)];
+If[ dot<0,dot=0];
+If[ dot>magA,dot=magA];
+pAc=a0+(uA*dot);];
+
+Return [Norm[pAc-pBc]];
+]
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[Module[{a,b,c,d,dist },
+a=Join[axy,{az}]; (*the four end points of the line segments*)
+b=Join[bxy,{bz}];
+c=Join[cxy,{cz}];
+d=Join[dxy,{dz}];
+
+Graphics3D[{
+Green,Sphere[a,0.4],Sphere[b,0.4], (*Draw a and b*)
+If[a!= b,{InfiniteLine[{a,b}],Tube[{a,b},0.05]}],
+Blue, Sphere[c,0.4], Sphere[d,0.4], (*Draw c and d*)
+If[c!= d,{InfiniteLine[{c,d}],Tube[{c,d},0.05]}],
+If[a!= b && c!= d,dist = closestDistanceBetweenLines[a,b,c,d];
+drawClosestDistanceBetweenLines[a,b,c,d],
+If[a==b && c==d,dist =Norm[a-c]; (*draw line between them*) drawShortestLineSeg[a,c],
+If[a==b,
+dist=Norm[a-findClosestPointLineSegment[a,c,d]];drawClosestPointLineSegment[a,c,d],
+dist=Norm[c-findClosestPointLineSegment[c,a,b]];drawClosestPointLineSegment[c,a,b]]]],
+{Opacity[.4], (*Draw planes, determined by *)
+If[showPlaneAB && dist>0,{Green,InfinitePlane[a,{(b-a),((b-a)\[Cross](d-c))\[Cross](b-a)}]}],If[showPlaneCD && dist>0,{Blue,InfinitePlane[d,{(d-c),((b-a)\[Cross](d-c))\[Cross](d-c)}]}]},
+{FontSize->14,White,Text["\<A\>",a],Text["\<B\>",b],
+Text["\<C\>",c],Text["\<D\>",d]}
+}, Axes->True,AxesLabel->{Style["\<x\>",Italic],Style["\<y\>",Italic],Style["\<z\>",Italic]}, 
+PlotRange->5.2{{-1,1},{-1,1},{-1,1}},
+PlotLabel->Row[{"\<minimum distance is \>",Round[dist,0.01]}],ImageSize->{450,400}]],
+
+Row[{Style["\<xy\>",Italic],"\< coordinates:\>",Spacer[15],
+Control@{{axy,{-3,3},Subscript["\<A\>", Style["\<xy\>",Italic]]},{-5,-5},{5,5},Appearance->Tiny},"\< \>",
+Control@{{bxy,{1,1},Subscript["\<B\>", Style["\<xy\>",Italic]]},{-5,-5},{5,5},Appearance->Tiny},"\< \>",
+Control@{{cxy,{-2,-4},Subscript["\<C\>", Style["\<xy\>",Italic]]},{-5,-5},{5,5},Appearance->Tiny},"\< \>",
+Control@{{dxy,{4,-2},Subscript["\<D\>", Style["\<xy\>",Italic]]},{-5,-5},{5,5},Appearance->Tiny}}],
+Column[{"\<\>",Row[{Style["\<z\>",Italic],"\< coordinates: \>"}],
+Row[{
+Control@{{az,1,Subscript["\<A\>", Style["\<z\>",Italic]]},-5,5,ControlType->VerticalSlider,Appearance->Tiny},
+Control@{{bz,2,Subscript["\<B\>", Style["\<z\>",Italic]]},-5,5,ControlType->VerticalSlider,Appearance->Tiny},
+Control@{{cz,-1,Subscript["\<C\>", Style["\<z\>",Italic]]},-5,5,ControlType->VerticalSlider,Appearance->Tiny},
+Control@{{dz,-2,Subscript["\<D\>", Style["\<z\>",Italic]]},-5,5,ControlType->VerticalSlider,Appearance->Tiny}}],
+"\<\>",
+Control@{{showPlaneAB,True,"\<show plane for AB\>"},{False,True}},
+Control@{{showPlaneCD,True,"\<show plane for CD\>"},{False,True}}}]
+, ControlPlacement->{Top,Left},SaveDefinitions->True]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Aaron T. Becker
+
+### [Text]
+Victor M. Baez
+
+### [Text]
+Nikhil Navkar
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+To determine the shortest line joining two line segments, AB (green) and CD (blue), first compute the shortest line joining the full lines Overscript[AB, _] and Overscript[CD, _] and draw it in yellow. If this line is not contained within the two line segments, then the shortest line contains at least one of the segment endpoints, A, B, C or D, and is drawn in red.
+
+### [Text]
+\<If a line segment consists of a single point, then compute the shortest distance by projecting the point onto the second line segment. If the projection is within the line segment, this is the nearest point; otherwise, the nearest segment endpoint is selected. The solution is trivial if the segments intersect. If the lines are parallel and the segments overlap, there is a range of possible line segments, all the same length. These solutions are drawn as a transparent red rectangle as shown in Snapshot 2.\>
+
+### [Text]
+The sliders at the top control the x, y coordinates of points A, B, C and D; and the sliders on the left control the z coordinates. The minimum distance is displayed at the top.
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+line segment
+
+### [Item]
+line distance
+
+### [Item]
+skew
+
+### [Item]
+skew lines
+
+### [Item]
+segment distance
+
+### [Item]
+3d line
+
+### [Item]
+3d segment
+
+### [Item]
+closest point
+
+### [Item]
+segment distance
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Shortest Distance between Two Skew Lines
+
+### [Text]
+Skew Lines
+
+### [Text]
+Distance of a Point to a Segment
+
+### [Text]
+Distance from a Point to a Line
+
+### [Text]
+Line through Two Points
+
+### [Text]
+Noncoplanar Lines
+
+### [Text]
+Shortest Distance between a Point and a Line in 2D
+
+### [Text]
+Vectors in 3D
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2023-05-26
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

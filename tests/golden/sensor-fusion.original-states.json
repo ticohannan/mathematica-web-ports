@@ -1,0 +1,33 @@
+{
+ "source": "SensorFusionWithNormallyDistributedNoise.nb",
+ "note": "Manipulate states saved in the ORIGINAL notebook, computed by the original Mathematica code: states[0] = the live state of the output cell, specs = the initial settings (the Manipulate's stored \"Variables\"), snapshots = the Settings stored with each snapshot cell. Extracted with tools/extract_state.py --snapshots. Golden parity fixture (CC BY-NC-SA 3.0, as the original).",
+ "format": "Numbers: a JSON integer is an exact Wolfram integer (|x| <= 2^53 - 1; larger ones are {\"wl\": digits}); a JSON number written with a decimal point or an exponent is a machine real (the shortest text that reads back as the identical double); any other exact number (Rational, rational multiple of Pi, arbitrary-precision real, an unevaluated Sin[...], Infinity) is {\"wl\": a Wolfram-readable form (not necessarily InputForm: compare exact values by value), \"n\": its double} - \"n\" is the correctly rounded double for a Rational or rational multiple of Pi, Python's double evaluation otherwise, and absent for Infinity. Symbols are {\"sym\": name}, other expressions {\"head\": name, \"args\": [...]}; variable names without context and $$, Greek letters as Unicode. packedTypes maps the JSON pointer of a decoded packed array that was stored with a narrower element type (CompressedData tag b) to that type. snapshots[\"k\"] belongs to the picture docs/original-snapshots/<dir>-k.png (cells in file order).",
+ "specs": {
+  "MyColors": [{"head":"RGBColor","args":[0.368417,0.506779,0.709798]},{"head":"RGBColor","args":[0.880722,0.611041,0.142051]},{"head":"RGBColor","args":[0.560181,0.691569,0.194885]},{"head":"RGBColor","args":[0.922526,0.385626,0.209179]}],
+  "rg": 10,
+  "u": 2,
+  "z1": [2,0],
+  "z2": [4,0],
+  "z3": [6,0],
+  "z4": [8,0],
+  "σSq1": 5,
+  "σSq2": 10,
+  "σSq3": 10,
+  "σSq4": 10
+ },
+ "states": [
+  {"MyColors":[{"head":"RGBColor","args":[0.368417,0.506779,0.709798]},{"head":"RGBColor","args":[0.880722,0.611041,0.142051]},{"head":"RGBColor","args":[0.560181,0.691569,0.194885]},{"head":"RGBColor","args":[0.922526,0.385626,0.209179]}],"rg":10,"u":2,"z1":[2,0],"z2":[4,0],"z3":[6,0],"z4":[8,0],"σSq1":5,"σSq2":10,"σSq3":10,"σSq4":10}
+ ],
+ "snapshots": {
+  "1": {"rg":10,"MyColors":[{"head":"RGBColor","args":[0.368417,0.506779,0.709798]},{"head":"RGBColor","args":[0.880722,0.611041,0.142051]},{"head":"RGBColor","args":[0.560181,0.691569,0.194885]},{"head":"RGBColor","args":[0.922526,0.385626,0.209179]}],"u":2,"σSq1":5,"σSq2":10,"σSq3":10,"σSq4":10,"z1":[2,0],"z2":[4,0],"z3":[6,0],"z4":[8,0]},
+  "2": {"rg":10,"MyColors":[{"head":"RGBColor","args":[0.368417,0.506779,0.709798]},{"head":"RGBColor","args":[0.880722,0.611041,0.142051]},{"head":"RGBColor","args":[0.560181,0.691569,0.194885]},{"head":"RGBColor","args":[0.922526,0.385626,0.209179]}],"u":4,"σSq1":2.22,"σSq2":11.58,"σSq3":0.92,"σSq4":13.44,"z1":[2,0],"z2":[4,0],"z3":[6,0],"z4":[8,0]},
+  "3": {"rg":10,"MyColors":[{"head":"RGBColor","args":[0.368417,0.506779,0.709798]},{"head":"RGBColor","args":[0.880722,0.611041,0.142051]},{"head":"RGBColor","args":[0.560181,0.691569,0.194885]},{"head":"RGBColor","args":[0.922526,0.385626,0.209179]}],"u":1,"σSq1":2.22,"σSq2":11.58,"σSq3":0.92,"σSq4":13.44,"z1":[2,0],"z2":[4,0],"z3":[6,0],"z4":[8,0]},
+  "4": {"rg":10,"MyColors":[{"head":"RGBColor","args":[0.368417,0.506779,0.709798]},{"head":"RGBColor","args":[0.880722,0.611041,0.142051]},{"head":"RGBColor","args":[0.560181,0.691569,0.194885]},{"head":"RGBColor","args":[0.922526,0.385626,0.209179]}],"u":4,"σSq1":2.22,"σSq2":11.58,"σSq3":0.38,"σSq4":13.44,"z1":[2,0],"z2":[4,0],"z3":[6.550000000000001,0],"z4":[8,0]}
+ },
+ "snapshotCellIds": {
+  "1": 485338474,
+  "2": 1929672179,
+  "3": 702275459,
+  "4": 573515501
+ }
+}

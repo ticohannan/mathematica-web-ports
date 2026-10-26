@@ -1,0 +1,181 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Extracted 2026-10-25 with tools/nbextract.py; cached outputs skipped.
+
+
+### [Title]
+Sensor Fusion with Normally Distributed Noise
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+Given n unbiased sensor measurements of a scalar quantity, each corrupted by independent, normally distributed noise with variance Subscript[σ,n]^2, the likelihood function for the true value (purple, dashed) is also a normal density.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [CodeText]
+If you provide initialization code, include a SaveDefinitions->True option in the Manipulate.
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{σSq={σSq1,σSq2,σSq3,σSq4},
+z = {z1[[1]],z2[[1]],z3[[1]],z4[[1]]},
+zEst = z1[[1]],
+σEst = σSq1,n,k},
+For[n=2,n<= u,n++,
+k = (σEst)/(σSq[[n]]+σEst);
+zEst = zEst+k(z[[n]]-zEst);
+σEst = (1-k)σEst;
+];
+Show[
+Plot[{Evaluate@Table[PDF[NormalDistribution[z[[n]],Sqrt[σSq[[n]]]],x],{n,1,u}],
+PDF[NormalDistribution[zEst,Sqrt[σEst]],x]},{x,-rg,rg},Filling->0,
+PlotStyle->Append[ Table[{MyColors[[n]]},{n,1,u}],{Dashed,Purple}],
+PlotLegends->Flatten[{Table[StringForm["\<measurement ``\>",n],{n,1,u}],"\<combined
+      estimate\>"}],PlotRange->{All,{0,1}},
+FrameLabel->{"\<measurement value(s)
+Drag locators to change measurements\>","\<probability\>"},Frame->{True,True,False,False},AxesOrigin->{-rg,0}],
+ListPlot[Table[{{z[[n]],(1)/(Sqrt[2 π] Sqrt[σSq[[n]]])}},{n,1,u}],Filling->0,PlotStyle-> Table[{MyColors[[n]]},{n,1,u}]]]],
+{rg,10,None},
+{MyColors ,{{RGBColor[0.368417,0.506779,0.709798],RGBColor[0.880722,0.611041,0.142051],RGBColor[0.560181,0.691569,0.194885],RGBColor[0.922526,0.385626,0.209179]}},None},
+{{u,2,"\<number of measurements\>"},{1,2,3,4}},
+Style["\<measurement variances\>"],
+{{σSq1,5,"\<\!\(\*SubsuperscriptBox[\(σ\), \(1\), \(2\)]\)\>" },0.1,20,Appearance->"\<Labeled\>"},
+{{σSq2,10,"\<\!\(\*SubsuperscriptBox[\(σ\), \(2\), \(2\)]\)\>" },0.1,20,Appearance->"\<Labeled\>", Enabled->u>1},
+{{σSq3,10,"\<\!\(\*SubsuperscriptBox[\(σ\), \(3\), \(2\)]\)\>" },0.1,20,Appearance->"\<Labeled\>", Enabled->u>2},
+{{σSq4,10,"\<\!\(\*SubsuperscriptBox[\(σ\), \(4\), \(2\)]\)\>" },0.1,20,Appearance->"\<Labeled\>", Enabled->u>3},
+{{z1,{2,0}},{-rg,0},{rg,0},Locator,Appearance->Style["\<\[CircleDot]\>",MyColors[[1]],24]},
+{{z2,{4,0}},{-rg,0},{rg,0},Locator,Appearance->If[u>1,Style["\<\[CircleDot]\>",MyColors[[2]],24],Style["\<\>"]]},
+{{z3,{6,0}},{-rg,0},{rg,0},Locator,Appearance->If[u>2,Style["\<\[CircleDot]\>",MyColors[[3]],24],Style["\<\>"]]},
+{{z4,{8,0}},{-rg,0},{rg,0},Locator,Appearance->If[u>3,Style["\<\[CircleDot]\>",MyColors[[4]],24],Style["\<\>"]]}
+]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Item]
+Aaron Becker
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+Combining sensor measurements is called sensor fusion. If each sensor measurement is corrupted by independent noise, each measurement provides additional information. The information of a measurement is equal to the inverse of its variance.
+
+### [Text]
+The measurements are combined according to Bayes's theorem. Given two measurements Subscript[z, 1] and Subscript[z, 2] with variances Subscript[σ,1]^2 and Subscript[σ,2]^2, the best estimate for the true value is Overscript[x, ^]=Subscript[z, 1](Subscript[σ,2]^2)/(Subscript[σ,1]^2+Subscript[σ,2]^2)+Subscript[z, 2](Subscript[σ,1]^2)/(Subscript[σ,1]^2+Subscript[σ,2]^2) with variance Overscript[σ, ^]^2=(Subscript[σ,1]^2Subscript[σ,2]^2)/(Subscript[σ,1]^2+Subscript[σ,2]^2).
+
+### [Text]
+This can be written in recursive form, to update estimate (Subscript[Overscript[x, ^], i],Overscript[Subscript[σ, i], ^]^2) with measurement (Subscript[z, i],Subscript[σ,i]^2) to form (Subscript[Overscript[x, ^], i+1],Subscript[Overscript[σ, ^],i+1]^2):
+
+### [Text]
+Subscript[K, i]=(Subscript[Overscript[σ, ^],i]^2)/(Subscript[Overscript[σ, ^],i]^2+Subscript[σ,2]^2),
+
+### [Text]
+Subscript[Overscript[x, ^], i+1]=Subscript[Overscript[x, ^], i]+Subscript[K, i](Subscript[z, 2]-Subscript[Overscript[x, ^], i]),
+
+### [Text]
+Subscript[Overscript[σ, ^],i+1]^2=(1-Subscript[K, i])Subscript[Overscript[σ, ^],i]^2.
+
+### [Text]
+These recursive equations are the scalar Kalman filter equations, and Subscript[K, i] is also known as the optimal Kalman gain. If only one measurement exists, the combined measurement is identical to the original measurement.
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+keyword 1
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+The Normal Distribution
+
+### [Text]
+Standard Normal Distribution
+
+### [Text]
+Normal Distribution
+
+### [Text]
+Probability Density Function
+
+### [Text]
+Bayes' Theorem
+
+### [Text]
+Kalman Filter
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2015-06-04
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

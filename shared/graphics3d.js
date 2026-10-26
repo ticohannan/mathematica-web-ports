@@ -64,7 +64,7 @@ export const cuboidCorners = (p) => ({ min: [0, 1, 2].map((k) => Math.min(p.min[
 /** Polygon[{p1, p2, ...}] */
 export const Polygon = (points) => ({ prim: 'polygon', points });
 /** InfinitePlane[{p1, p2, p3}] (plane through three points; drawn clipped to the plot range) */
-export const InfinitePlane = (points) => ({ prim: 'infinitePlane', points });
+export const InfinitePlane = (points, vs) => ({ prim: 'infinitePlane', points: vs ? [points, points.map((x, k) => x + vs[0][k]), points.map((x, k) => x + vs[1][k])] : points }); // v0.1.23: also InfinitePlane[p, {v1, v2}]
 /** Point[p] */
 export const Point = (p) => ({ prim: 'point', points: isPoint(p) ? [p] : p });
 /** Arrow[{p1, p2}] */
@@ -81,6 +81,19 @@ export const GraphicsComplex = (points, content) => ({ prim: 'graphicsComplex', 
  * top-level parts of a Graphics3D become groups (shared/graphics3d-view.js); directives outside do not reach inside.
  */
 export const Group3D = (content, { key } = {}) => ({ prim: 'group', content, key });
+/** v0.1.23: Tube[{p1, p2, …}, r] — a thick polyline (drawn as cylinders without edges, joined by spheres) */
+export const Tube = (points, r = 0.05) => ({ prim: 'tube', points, radius: r });
+/** v0.1.23: Cone[{p1, p2}, r] — base centre p1, apex p2 */
+export const Cone = ([p1, p2], r = 1) => ({ prim: 'cone', p1, p2, radius: r });
+/** v0.1.23: InfiniteLine[{p1, p2}] — drawn clipped to the plot range */
+export const InfiniteLine = (points) => ({ prim: 'infiniteLine', points });
+/** v0.1.23: Text[expr, pos] — a label at a 3D point (expr: a string, or HTML via { html }), centred, in the current colour and FontSize */
+export const Text = (expr, pos) => ({ prim: 'text', expr, pos });
+/** v0.1.23: FontSize[px] for Text in 3D */
+export const FontSize = (px) => ({ directive: 'fontSize', value: px });
+export const White = color(NAMED.White);
+export const Black = color(NAMED.Black);
+export const Yellow = color(NAMED.Yellow);
 /** a sampled closed circle in the xy plane (an exact unit circle, sampled when drawn) */
 export const UnitCircle = () => ({ prim: 'circle' });
 
@@ -149,6 +162,7 @@ function applyDirective(st, d) {
   if (d.directive === 'pointSize') return { ...st, pointSize: d.value };
   if (d.directive === 'arrowheads') return { ...st, arrowheads: d.value };
   if (d.directive === 'edgeForm') return { ...st, edgeForm: d.value };
+  if (d.directive === 'fontSize') return { ...st, fontSize: d.value };
   return st;
 }
 
@@ -190,6 +204,10 @@ export function flatten(g, style = DEFAULT_STYLE, M = I4, out = []) {
     case 'circle': out.push({ type: 'circle', ...(ident ? {} : { matrix: M }), ...s }); break;
     case 'parametricCurve': out.push({ type: 'parametricCurve', f: g.f, u: g.u, ...(ident ? {} : { matrix: M }), ...s }); break;
     case 'parametricSurface': out.push({ type: 'parametricSurface', f: g.f, u: g.u, v: g.v, mesh: g.mesh, ...(ident ? {} : { matrix: M }), ...s }); break;
+    case 'tube': out.push({ type: 'tube', points: g.points.map(P), radius: g.radius, ...s }); break;
+    case 'cone': out.push({ type: 'cone', p1: P(g.p1), p2: P(g.p2), radius: g.radius, ...s }); break;
+    case 'infiniteLine': out.push({ type: 'infiniteLine', points: g.points.map(P), ...s }); break;
+    case 'text': out.push({ type: 'text', expr: g.expr, pos: P(g.pos), ...s, fontSize: style.fontSize ?? 12 }); break;
     default: throw new Error(`unknown primitive ${g.prim}`);
   }
   return out;
@@ -377,6 +395,7 @@ const cross3 = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], 
  */
 export function infinitePlanePolygon([p1, p2, p3], box) {
   const n = cross3(sub3(p2, p1), sub3(p3, p1));
+  if (n[0] === 0 && n[1] === 0 && n[2] === 0) return []; // v0.1.23: collinear points define no plane
   const c = dot3(n, p1);
   const scale = Math.hypot(...n) * Math.max(...box.map(([a, b]) => Math.abs(b - a)));
   const eps = 1e-12 * scale;
@@ -408,6 +427,18 @@ export function infinitePlanePolygon([p1, p2, p3], box) {
 
 // ---- bounds ------------------------------------------------------------------------------------------------
 /** Axis-aligned bounds [[x0,x1],[y0,y1],[z0,z1]] of flattened primitives (PlotRange -> All), or null if empty. */
+/** v0.1.23: the part of the line through p1, p2 inside the box [[x0, x1], [y0, y1], [z0, z1]] ([] if it misses it). */
+export function infiniteLineSegment([p1, p2], box) {
+  const d = [0, 1, 2].map((k) => p2[k] - p1[k]);
+  let lo = -Infinity, hi = Infinity;
+  for (let k = 0; k < 3; k++) {
+    if (d[k] === 0) { if (p1[k] < box[k][0] || p1[k] > box[k][1]) return []; continue; }
+    const t0 = (box[k][0] - p1[k]) / d[k], t1 = (box[k][1] - p1[k]) / d[k];
+    lo = Math.max(lo, Math.min(t0, t1)); hi = Math.min(hi, Math.max(t0, t1));
+  }
+  if (!(hi > lo) || !Number.isFinite(lo)) return [];
+  return [lo, hi].map((t) => [0, 1, 2].map((k) => p1[k] + t * d[k]));
+}
 export function primitiveBounds(prims) {
   const lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
   const add = (p, r = [0, 0, 0]) => { for (let k = 0; k < 3; k++) { lo[k] = Math.min(lo[k], p[k] - r[k]); hi[k] = Math.max(hi[k], p[k] + r[k]); } };
@@ -421,6 +452,9 @@ export function primitiveBounds(prims) {
         add(p.p1, r); add(p.p2, r); break;
       }
       case 'line': case 'polygon': case 'point': case 'arrow': case 'infinitePlane': case 'mesh': for (const q of p.points) add(q); break;
+      case 'tube': for (const q of p.points) add(q, [p.radius, p.radius, p.radius]); break;
+      case 'cone': add(p.p1, [p.radius, p.radius, p.radius]); add(p.p2); break;
+      case 'text': add(p.pos); break;
       case 'cuboid': for (let k = 0; k < 8; k++) {
         const q = [k & 1 ? p.max[0] : p.min[0], k & 2 ? p.max[1] : p.min[1], k & 4 ? p.max[2] : p.min[2]];
         add(p.matrix ? apply4(p.matrix, q) : q);

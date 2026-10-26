@@ -71,3 +71,23 @@ describe('shared/graphics3d.js', () => {
     expect(mul4Fma(A2, B2)[0][0]).toBe(-(2 ** -60)); // fma(a1, b1, a0*b0) keeps the exact product
   });
 });
+
+describe('graphics3d v0.1.23 primitives: Tube, Cone, InfiniteLine, Text', () => {
+  it('flatten keeps their geometry and style; Text takes FontSize and the colour', async () => {
+    const G = await import('../../shared/graphics3d.js');
+    const prims = G.flatten(G.Graphics3D([G.Red, G.Tube([[0, 0, 0], [1, 0, 0], [1, 1, 0]], 0.1), G.Cone([[0, 0, 0], [0, 0, 2]], 0.5),
+      G.InfiniteLine([[0, 0, 0], [1, 1, 1]]), [G.FontSize(14), G.White, G.Text('A', [1, 2, 3])]]));
+    expect(prims.map((p) => p.type)).toEqual(['tube', 'cone', 'infiniteLine', 'text']);
+    expect(prims[0]).toMatchObject({ radius: 0.1, color: [1, 0, 0] });
+    expect(prims[3]).toMatchObject({ expr: 'A', pos: [1, 2, 3], fontSize: 14, color: [1, 1, 1] });
+    const b = G.primitiveBounds(prims.slice(0, 2));
+    expect(b).toEqual([[-0.5, 1.1], [-0.5, 1.1], [-0.5, 2]]); // a conservative box (radii added in every direction)
+  });
+  it('infiniteLineSegment clips the line to the box; a line outside gives nothing', async () => {
+    const G = await import('../../shared/graphics3d.js');
+    const box = [[-1, 1], [-1, 1], [-1, 1]];
+    expect(G.infiniteLineSegment([[0, 0, 0], [1, 0, 0]], box)).toEqual([[-1, 0, 0], [1, 0, 0]]);
+    expect(G.infiniteLineSegment([[0, 0, 0], [1, 1, 1]], box)).toEqual([[-1, -1, -1], [1, 1, 1]]);
+    expect(G.infiniteLineSegment([[0, 5, 0], [1, 5, 0]], box)).toEqual([]);
+  });
+});

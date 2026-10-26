@@ -55,6 +55,12 @@ export const Darker = (c, f = 1 / 3) => color(blend(c.rgb, NAMED.Black, f));
 export const Lighter = (c, f = 1 / 3) => color(blend(c.rgb, NAMED.White, f));
 /** Blend[{a, b}, t]. */
 export const Blend = ([a, b], t = 0.5) => color(blend(a.rgb, b.rgb, t));
+/** Hue[h, s, b] (v0.1.23): the HSB colour, h taken modulo 1 (Hue[0] and Hue[1] are red), s and b default 1. */
+export function Hue(h, sat = 1, bri = 1) {
+  const t = ((h % 1) + 1) % 1 * 6, i = Math.floor(t) % 6, f = t - Math.floor(t);
+  const p = bri * (1 - sat), q = bri * (1 - sat * f), u = bri * (1 - sat * (1 - f));
+  return color([[bri, u, p], [q, bri, p], [p, bri, u], [p, q, bri], [u, p, bri], [bri, p, q]][i]);
+}
 /** The CSS colour of an RGBColor ("rgb(255,0,0)"). */
 export const cssColor = (c) => css(c.rgb);
 /** Mathematica's None (no edge, no glyph, no colour). */
@@ -74,7 +80,10 @@ export const Dashed = AbsoluteDashing([3, 3]), Dotted = AbsoluteDashing([0.5, 2]
 /** CapForm["Butt" | "Round" | "Square"]. */
 export const CapForm = (c) => directive('cap', c === 'Square' ? 'square' : c === 'Round' ? 'round' : 'butt');
 /** PointSize[d] (fraction of the width), AbsolutePointSize[px], or a named size 'Small' | 'Medium' | 'Large'. */
-export const PointSize = (d) => directive('pointSize', d);
+/** PointSize[d] (fraction of the width); PointSize[Tiny | Small | Medium | Large] (v0.1.23): absolute sizes as measured in
+ * Mathematica's pictures (2, 3, 4.4, 7 px at the image size), independent of the picture's width. */
+export const PointSize = (d) => directive('pointSize', typeof d === 'string' && NAMED_POINT[d] ? { abs: NAMED_POINT[d] } : d);
+const NAMED_POINT = { Tiny: 2, Small: 3, Medium: 4.4, Large: 7 };
 export const AbsolutePointSize = (px) => directive('pointSize', { abs: px });
 /** Arrowheads[s]: head length as a fraction of the plot width. */
 export const Arrowheads = (s) => directive('arrowheads', s);
@@ -213,6 +222,70 @@ export function ArrayPlot(m, { DataRange, ColorRules = [], ColorFunction } = {})
 }
 /** Annotation[g, id, attrs]: data-testid and further attributes for the element drawn for g. */
 export const Annotation = (g, id, attrs = {}) => prim('Annotation', { g, id, attrs });
+
+/**
+ * Ellipsoid[c, Σ] in 2D (v0.1.23): the ellipse {x : (x − c)·Σ⁻¹·(x − c) ≤ 1} of a symmetric positive (semi)definite
+ * 2 × 2 matrix Σ — a rotated Disk (filled and edged with the style in effect, as Mathematica's Ellipsoid).
+ */
+export function Ellipsoid(c, [[a, b], [, d]]) {
+  const m = (a + d) / 2, r = Math.hypot((a - d) / 2, b);
+  const l1 = Math.max(0, m + r), l2 = Math.max(0, m - r);
+  const angle = b === 0 ? (a >= d ? 0 : Math.PI / 2) : Math.atan2(l1 - a, b);
+  return Rotate(Disk(c, [Math.sqrt(l1), Math.sqrt(l2)]), angle, c);
+}
+
+/**
+ * scaleGraphics(g, [sx, sy]): the picture with every coordinate x, y replaced by x·sx, y·sy (v0.1.23) — what
+ * Mathematica does to a Graphics whose AspectRatio differs from its plot range's: positions move, Disk and Circle
+ * become ellipses, Rotate and Rectangle are applied before the scaling (a rotated part keeps its shape in data units);
+ * Point sizes, thicknesses, arrowheads and text stay in pixels. Pure. Raw parts are left as they are.
+ */
+export function scaleGraphics(g, [sx, sy]) {
+  if (sx === 1 && sy === 1) return g;
+  const tr = (list, f, k) => mapList(list, f, k);
+  // f: data point → world point; k: [kx, ky] radius scales (rotation ignored for radii)
+  function mapList(list, f, k) {
+    if (list == null || list === false || list === 0 || list === '') return list;
+    if (list.head === 'Graphics') return { ...list, list: mapList(list.list, f, k) };
+    if (Array.isArray(list)) return list.map((x) => mapList(x, f, k));
+    if (list.dir || !list.head) return list;
+    return mapPrim(list, f, k);
+  }
+  const P = (pts, f) => (isMulti(pts) ? pts.map((q) => q.map(f)) : pts.map(f));
+  const R = (r, k) => (Array.isArray(r) ? [r[0] * k[0], r[1] * k[1]] : [r * k[0], r * k[1]]);
+  function mapPrim(q, f, k) {
+    switch (q.head) {
+      case 'Line': case 'Polygon': case 'Arrow': return prim(q.head, { ...q, pts: P(q.pts, f) });
+      case 'Point': return prim('Point', { pts: q.pts.map(f) });
+      case 'Disk': case 'Circle': {
+        if (f === base) return q.head === 'Disk' ? prim('Disk', { c: f(q.c), r: R(q.r, k) }) : prim('Circle', { c: f(q.c), r: R(q.r, k), angles: q.angles });
+        // inside Rotate/Translate: the (rotated) ellipse as a sampled outline mapped point by point
+        const [rx, ry] = Array.isArray(q.r) ? q.r : [q.r, q.r], [a0, a1] = q.angles ?? [0, 2 * Math.PI];
+        const pts = Array.from({ length: 97 }, (_, i) => { const t = a0 + ((a1 - a0) * i) / 96; return f([q.c[0] + rx * Math.cos(t), q.c[1] + ry * Math.sin(t)]); });
+        return q.head === 'Disk' ? prim('Polygon', { pts: pts.slice(0, -1) }) : prim('Line', { pts });
+      }
+      case 'Rectangle': {
+        const [[a, b], [c, d]] = [q.a, q.b];
+        if (f === base && !q.r) { const p0 = f([a, b]), p1 = f([c, d]); return prim('Rectangle', { a: p0, b: p1, r: 0 }); }
+        return prim('Polygon', { pts: [[a, b], [c, b], [c, d], [a, d]].map(f) });
+      }
+      case 'Text': return prim('Text', { ...q, pos: f(q.pos) });
+      case 'Inset': return prim('Inset', { ...q, pos: f(q.pos) });
+      case 'ImageRaster': return prim('ImageRaster', { ...q, box: q.box.map(f) });
+      case 'Clip': { const [[x0, x1], [y0, y1]] = q.range; const a = f([x0, y0]), b = f([x1, y1]); return prim('Clip', { ...q, g: tr(q.g, f, k), range: [[a[0], b[0]], [a[1], b[1]]] }); }
+      case 'Annotation': case 'Tooltip': return prim(q.head, { ...q, g: tr(q.g, f, k) });
+      case 'Cached': return tr(q.thunk(), f, k);
+      case 'Translate': return tr(q.g, (p) => f([p[0] + q.v[0], p[1] + q.v[1]]), k);
+      case 'Rotate': {
+        const c = Math.cos(q.angle), s = Math.sin(q.angle), [ax, ay] = q.about;
+        return tr(q.g, (p) => f([ax + c * (p[0] - ax) - s * (p[1] - ay), ay + s * (p[0] - ax) + c * (p[1] - ay)]), k);
+      }
+      default: return q; // Raw and other parts without coordinates: unchanged
+    }
+  }
+  const base = ([x, y]) => [x * sx, y * sy];
+  return mapList(g, base, [sx, sy]);
+}
 
 // ---- text expressions ----------------------------------------------------------------------------------------------
 /** Style[expr, directives…] — Italic, Bold, a colour, FontSize[n], or an options object {FontSize, FontFamily}. */
@@ -494,6 +567,11 @@ function draw(plot, g, p, st) {
       }));
     }
     case 'Circle':
+      if (Array.isArray(p.r)) { // Circle[c, {rx, ry}] (and arcs of it): an elliptic outline
+        const [a0, a1] = p.angles ?? [0, 2 * Math.PI], n = Math.max(8, Math.ceil((Math.abs(a1 - a0) / (2 * Math.PI)) * 96));
+        const pts = Array.from({ length: n + 1 }, (_, i) => { const t = a0 + ((a1 - a0) * i) / n; return [p.c[0] + p.r[0] * Math.cos(t), p.c[1] + p.r[1] * Math.sin(t)]; });
+        return plot.line(g, pts, { stroke: st.color, thickness: st.thickness, dash: st.dash, cap: st.cap, opacity });
+      }
       if (p.angles) return plot.arc(g, p.c, p.r, p.angles[0], p.angles[1], { stroke: st.color, thickness: st.thickness, dash: st.dash, cap: st.cap, opacity });
       return g.appendChild(svgNode('circle', {
         cx: p.c[0], cy: p.c[1], r: p.r, fill: 'none', stroke: css(st.color), 'stroke-opacity': opacity,
@@ -514,9 +592,20 @@ function draw(plot, g, p, st) {
       const [tx, ty] = p.pts[n - 1], [px, py] = p.pts[n - 2];
       const len = Math.hypot(tx - px, ty - py) || 1;
       const ux = (tx - px) / len, uy = (ty - py) / len;
-      const s = st.arrowheads * (plot.plotRange[0][1] - plot.plotRange[0][0]);
-      const bx = tx - s * ux, by = ty - s * uy, hw = 0.3 * s;
-      plot.polygon(grp, [[tx, ty], [bx - hw * uy, by + hw * ux], [bx + hw * uy, by - hw * ux]], { fill: st.color, fillOpacity: opacity });
+      const W = plot.plotRange[0][1] - plot.plotRange[0][0];
+      const head = (tx2, ty2, ux2, uy2, s) => {
+        const bx = tx2 - s * ux2, by = ty2 - s * uy2, hw = 0.3 * s;
+        plot.polygon(grp, [[tx2, ty2], [bx - hw * uy2, by + hw * ux2], [bx + hw * uy2, by - hw * ux2]], { fill: st.color, fillOpacity: opacity });
+      };
+      if (!Array.isArray(st.arrowheads)) { head(tx, ty, ux, uy, st.arrowheads * W); return grp; }
+      // v0.1.23: Arrowheads[{s1, s2, …}]: heads spread along the arrow; a negative size points backwards (at the start)
+      const [sx0, sy0] = p.pts[0], [qx, qy] = p.pts[1];
+      const l0 = Math.hypot(qx - sx0, qy - sy0) || 1, vx = (qx - sx0) / l0, vy = (qy - sy0) / l0;
+      st.arrowheads.forEach((a, i, all) => {
+        const at = all.length === 1 ? 1 : i / (all.length - 1);
+        if (at === 0) head(sx0, sy0, a < 0 ? -vx : vx, a < 0 ? -vy : vy, Math.abs(a) * W);
+        else if (at === 1) head(tx, ty, a < 0 ? -ux : ux, a < 0 ? -uy : uy, Math.abs(a) * W);
+      });
       return grp;
     }
     case 'Text':

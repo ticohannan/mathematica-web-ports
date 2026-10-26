@@ -56,7 +56,7 @@ Manipulate({
 | `{{p, {0, 0}}, Locator}`, `Appearance -> None` | `[['p', [0, 0]], [xmin, ymin], [xmax, ymax], Locator, { Appearance: None }]` |
 | locator `Appearance -> Graphics[…]` (also depending on other variables) | `{ Appearance: [Blue, Disk([0, 0], 0.1)] }` or `{ Appearance: (s) => [s.on ? Red : Blue, Disk([0, 0], 0.1)] }` — coordinates relative to the point |
 | `Button["Reset", …]`, `Row[{…}]`, `Delimiter`, `"heading"` | `Button('Reset', (s) => { … })`, `Row([…])`, `Delimiter`, `'heading'` |
-| `ControlPlacement -> Top` | `ControlPlacement: 'Top'` in the spec |
+| `ControlPlacement -> Top` (Mathematica's default) | `ControlPlacement: 'Top'` in the spec (the pages' default is beside) |
 | `Initialization :> (…)` | ordinary code at the top of `model.js` |
 | `x` changed inside the body | return `{ state: { …s, x: newX }, graphics: […] }` |
 | `TrackedSymbols`, `SaveDefinitions` | not needed |
@@ -74,7 +74,33 @@ Options of the picture go in `graphics: {…}`: `PlotRange`, `ImageSize`, `Backg
 frame options `Axes: true`, `Ticks: [1, 0.5]`, `AxesLabel: ['x', 'y']`, `AxesOrigin`, `Frame: true`,
 `FrameTicks`, `FrameLabel: ['t', 'value']`, `PlotLabel: 'title'` (room for the labels is made automatically). Several
 pictures side by side: `graphics: [{ id: 'graphic', … }, { id: 'graphic2', … }]` and a body that returns one list per
-picture. 3D: see the generated `--3d` app (`Graphics3D` data drawn by `shared/graphics3d-view.js`).
+picture. 3D: see the generated `--3d` app (`Graphics3D` data drawn by `shared/graphics3d-view.js`; primitives
+`Sphere`, `Cylinder`, `Cone`, `Tube`, `Cuboid`, `Polygon`, `Line`, `Arrow`, `InfinitePlane`, `InfiniteLine`, `Text`).
+`Ellipsoid[c, Σ]` in 2D draws the ellipse of a 2 × 2 matrix; `Hue[h]` is available.
+
+### Plots (`shared/plot.js`)
+
+| Mathematica | Here |
+|---|---|
+| `Plot[{f[x], g[x]}, {x, a, b}, opts]` | `Plot((x) => [f(x), g(x)], [a, b], { … })` |
+| `ListPlot[data, Filling -> 0]`, `ListLinePlot[data]` | `ListPlot(data, { Filling: 0 })`, `ListLinePlot(data)` |
+| `ParametricPlot[{x[t], y[t]}, {t, a, b}]` | `ParametricPlot((t) => [x(t), y(t)], [a, b])` |
+| `Show[plot1, plot2]` | `Show(plot1, plot2)` |
+| `PlotStyle -> {Red, {Dashed, Purple}}`, `Filling -> 0` or `{1 -> {2}}` | `PlotStyle: [[Red], [Dashed, Purple]]`, `Filling: 0` or `{ 1: [2] }` |
+| `PlotLegends -> {"a", "b"}`, `PlotLegends -> Placed[{…}, {.6, .8}]` | `PlotLegends: ['a', 'b']`, `PlotLegends: Placed([…], [0.6, 0.8])` |
+| `PlotRange -> {All, {0, 1}}`, `Frame -> {True, True, False, False}`, `FrameLabel`, `AxesLabel`, `Epilog`, `ImagePadding`, `AspectRatio`, `ImageSize -> {w, h}` | the same keys |
+| `Ticks -> {{0, π/2, π}, Automatic}` | `Ticks: [[[0, '0'], [Pi / 2, 'π/2'], [Pi, 'π']], 'Automatic']` (labels as text) |
+| `ColorData[97, 2]` | `ColorData(97, 2)` |
+
+A plot is a `Graphics` value: return it from the body like any picture (one per picture). Its frame, ticks and legend
+are redrawn when they change (e.g. an automatic plot range), and a Locator on a plot works in the plot's coordinates.
+Curves are sampled adaptively (not Mathematica's sampler: identical to well under a pixel); a value that is not a
+number (NaN) leaves a gap.
+
+### Geometry (`shared/geometry.js`)
+
+`ConvexHull`, `PolygonArea`, `RegionMember` (point in polygon), `SignedArea`, `SegmentIntersection`, `RegionNearest`,
+`RegionDistance`, `SegmentsClosestPoints` (2D or 3D), `Eigensystem2`, `CircumCircle`, `RollPitchYawMatrix`.
 
 ## 4. Language → `shared/wl.js`
 
@@ -98,6 +124,7 @@ const c = Times(1 / pts.length, Total(pts));                          // Total[p
 | `a . b`, `Cross`, `Norm`, `Normalize`, `EuclideanDistance`, `Det`, `Inverse`, `RotationMatrix[θ]` | `Dot(a, b)` and the same names | |
 | `Total`, `Mean`, `Median`, `Max`, `Min`, `Accumulate`, `Differences` | same names | |
 | `ArcTan[x, y]` | `ArcTan(x, y)` | `Math.atan2` takes `(y, x)` — use `ArcTan` |
+| `PDF[NormalDistribution[μ, σ], x]`, `CDF`, `RandomVariate`, `Erf`, `Binomial`, `Ordering` | `PDF(NormalDistribution(mu, sigma), x)` and the same names (also `UniformDistribution`, `TriangularDistribution`) | random draws agree in distribution only |
 | `Round`, `Mod[m, n]`, `Quotient`, `Clip`, `Rescale`, `Chop`, `Boole` | same names | `Math.round` rounds halves up; `Round` rounds them to even, as in Mathematica; `%` is not `Mod` for negative numbers |
 | `Pi`, `E`, `Degree`, `Sin`, `Cos`, `Sqrt`, `Exp`, `Log[b, x]` | same names | |
 | `RandomReal[{0, 1}, n]`, `RandomInteger`, `RandomChoice`, `RandomSample` | same names | `SeedRandom[n]`: pass a seeded source as the last argument — the Manipulate's `rng` (with `random: true` in the spec; `body: (s, { rng }) => RandomReal([0, 1], 3, rng)`, `?seed=N` in the page URL) or `createRng({ seed: n })` of `shared/random.js` |

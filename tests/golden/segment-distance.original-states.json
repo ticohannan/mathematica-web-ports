@@ -1,0 +1,32 @@
+{
+ "source": "ShortestDistanceBetweenTwoLineSegments.nb",
+ "note": "Manipulate states saved in the ORIGINAL notebook, computed by the original Mathematica code: states[0] = the live state of the output cell, specs = the initial settings (the Manipulate's stored \"Variables\"), snapshots = the Settings stored with each snapshot cell. Extracted with tools/extract_state.py --snapshots. Golden parity fixture (CC BY-NC-SA 3.0, as the original).",
+ "format": "Numbers: a JSON integer is an exact Wolfram integer (|x| <= 2^53 - 1; larger ones are {\"wl\": digits}); a JSON number written with a decimal point or an exponent is a machine real (the shortest text that reads back as the identical double); any other exact number (Rational, rational multiple of Pi, arbitrary-precision real, an unevaluated Sin[...], Infinity) is {\"wl\": a Wolfram-readable form (not necessarily InputForm: compare exact values by value), \"n\": its double} - \"n\" is the correctly rounded double for a Rational or rational multiple of Pi, Python's double evaluation otherwise, and absent for Infinity. Symbols are {\"sym\": name}, other expressions {\"head\": name, \"args\": [...]}; variable names without context and $$, Greek letters as Unicode. packedTypes maps the JSON pointer of a decoded packed array that was stored with a narrower element type (CompressedData tag b) to that type. snapshots[\"k\"] belongs to the picture docs/original-snapshots/<dir>-k.png (cells in file order).",
+ "specs": {
+  "axy": [-3,3],
+  "az": 1,
+  "bxy": [1,1],
+  "bz": 2,
+  "cxy": [-2,-4],
+  "cz": -1,
+  "dxy": [4,-2],
+  "dz": -2,
+  "showPlaneAB": true,
+  "showPlaneCD": true
+ },
+ "states": [
+  {"axy":[-3,3],"az":1,"bxy":[1,1],"bz":2,"cxy":[-2,-4],"cz":-1,"dxy":[4,-2],"dz":-2,"showPlaneAB":true,"showPlaneCD":true}
+ ],
+ "snapshots": {
+  "1": {"axy":[-3,3],"bxy":[1,1],"cxy":[-2,-4],"dxy":[4,-2],"az":1,"bz":2,"cz":-1,"dz":-2,"showPlaneAB":true,"showPlaneCD":true},
+  "2": {"axy":[5.0,5.0],"bxy":[2.7,-1.0],"cxy":[-3.8499999999999996,2.3000000000000007],"dxy":[-1.5499999999999998,-5],"az":-3.2199999999999998,"bz":1.8600000000000003,"cz":5.0,"dz":-1.6400000000000001,"showPlaneAB":true,"showPlaneCD":true},
+  "3": {"axy":[-0.7000000000000002,5.0],"bxy":[5.0,5.0],"cxy":[-5,-5],"dxy":[5.0,-5],"az":5.0,"bz":5.0,"cz":-5.0,"dz":-5.0,"showPlaneAB":false,"showPlaneCD":false},
+  "4": {"axy":[-3,3],"bxy":[3.700000000000001,-4.6],"cxy":[-3.8499999999999996,2.3000000000000007],"dxy":[-1.5499999999999998,-5],"az":-3.2199999999999998,"bz":1.8600000000000003,"cz":5.0,"dz":-1.6400000000000001,"showPlaneAB":true,"showPlaneCD":true}
+ },
+ "snapshotCellIds": {
+  "1": 210222468,
+  "2": 2128202690,
+  "3": 214986398,
+  "4": 1208896932
+ }
+}

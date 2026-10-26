@@ -1,0 +1,205 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Extracted 2026-10-25 with tools/nbextract.py; cached outputs skipped.
+
+
+### [Title]
+Graham Scan to Find the Convex Hull of a Set of Points in 2D
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+This Demonstration shows the steps of the Graham scan, an algorithm to find the convex hull of a finite set of points in 2D. The method has time complexity O(n log n) for n points. You can drag the points to change their positions, move the step slider to step through the algorithm or generate n new points for a new problem.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+isLeftTurn[{px_,py_},{qx_,qy_},{rx_,ry_}]:=0.5 Det[(\[NoBreak]<<Grid:pxqxrx | pyqyry | 1.01.01.0>>\[NoBreak])]
+(* isLeftTurn[] returns the signed area of triangle defined by points p,q,r. 
+If it is positive, then going from pq to qr is a left turn. 
+If negative, it is a right turn. 
+*)
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[Module[{pts,stPt,slopeOrder,convexHullPts,droppedLines={}},
+(* Initialize system *) 
+stPt =First@MaximalBy[MinimalBy[Allpts,Last],First];
+(* Start with the lowest point. If multiple points have the same minimum y, use the rightmost. *)
+pts = Delete[Allpts,First@@Position[Allpts,stPt]];
+stPt = stPt+{0,-0.001};(* Avoid numerical instability with many points at y-minimum. You could instead sort them by x, but that would need another sort step. *)
+slopeOrder = Ordering[Table[If[pts[[i,2]]==stPt[[2]],-∞,(stPt[[1]]-pts[[i,1]])/(pts[[i,2]]-stPt[[2]])],{i,1,Length[pts]}]];
+If[iMax > Length[pts],iMax = Length[pts]];
+(* ========Start Computation for Convex Hull======== *)
+convexHullPts = {stPt,pts[[slopeOrder[[1]]]]};
+Table[
+droppedLines = {};
+While[ isLeftTurn[convexHullPts[[-2]],convexHullPts[[-1]],pts[[slopeOrder[[i]]]]]<0,
+AppendTo[droppedLines ,{convexHullPts[[-2]],convexHullPts[[-1]]}]; (* Added so we can plot the points that are removed. *)
+convexHullPts = Drop[convexHullPts,-1](*Remove steps*)
+];
+AppendTo[convexHullPts,pts[[slopeOrder[[i]]]]],
+{i,2,iMax}];
+If[iMax==Length[pts],AppendTo[convexHullPts,stPt]]; (*Added to pause the computation so you can see the steps.*)
+(* ========End Computation for Convex Hull+======== *)
+
+(* ========Draw process======== *)
+Graphics[{
+{Dashed,Red,Line[droppedLines]},
+{Thick, Blue,Line[Most[convexHullPts]], Dashed,Line[{convexHullPts[[-1]],convexHullPts[[-2]]}]},
+Table[{Hue[(i-1)/(1.1Length[pts])](*ColorData["\<Rainbow\>",(i-1)/(Length[pts])]*),Line[{stPt,pts[[slopeOrder[[i]]]]}]
+},{i,1,iMax}],
+PointSize[Medium], Point[pts],Red,Point[stPt]
+},PlotRange->1.05{{-1,1},{-1,1}},ImageSize->440]],
+(* ========Sliders and Buttons======== *)
+{{Allpts , RandomReal[{-1,1},{20,2}]},{-1,-1},{1,1},ControlType->Locator,Appearance->None},
+{{iMax,1,"\<step\>"},1,Length[Allpts]-1,1,ImageSize->120,Appearance->"\<Labeled\>"},"\< \>",
+Row[{"\<number of points \>"}],
+{{n,20, Style["\<n\>",Italic]},2,200,1,ImageSize->120,Appearance->"\<Labeled\>"},"\< \>",
+Row[{Button[ Row[{"\<generate \>",Style["\<n\>",Italic], "\< new points\>"}],
+ Allpts=RandomReal[{-1,1},{n,2}];
+]}],ControlPlacement->Left,SaveDefinitions->True,AutorunSequencing->{{2,8}}
+]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Aaron T. Becker
+
+### [Text]
+Yitong Lu
+
+### [Text]
+Daniel Biediger
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+The first step is to find the point with the lowest y coordinate. This is the starting point of the convex hull. (If more than one point has this value, the rightmost one is used). Second, all the remaining points are sorted by polar angle from the starting point. This can be accomplished without trigonometry by using the reciprocal of the slope (\[Dash]run/rise); use negative infinity if the points have the same y coordinate. Call this list sortedPoints.
+
+### [Text]
+\<The algorithm then considers each sorted point in sequence, which you can animate by moving the "step" slider.\>
+
+### [Text]
+A stack called convexHull is maintained, initialized with the starting point and the first sorted point. For every additional point in sortedPoints, we determine if connecting to this point from the convexHull required a left turn or a right turn. If a right turn was required, points are popped off the stack convexHull until connecting to the current point in sortedPoints requires a left turn (the removed lines from convexHull are drawn as dashed red lines). This point is then added to convexHull, and the process is repeated until all the points in sortedPoints have stepped through.
+
+### [Text]
+The function isLeftTurn[] returns the signed area of the triangle defined by the points p, q, r. If this area is positive, then going from pq to qr is a left turn. If the area is negative, it is a right turn. The area computation is the determinant of a 3\[Cross]3 matrix, and so requires no trigonometric functions.
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] R. L. Graham, "An Efficient Algorithm for Determining the Convex Hull of a Finite Planar Set," Information Processing Letters, 1(4), 1972 pp. 132\[Dash]133. doi:10.1016/0020-0190(72)90045-2.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+convex hull
+
+### [Item]
+algorithm
+
+### [Item]
+Jarvis
+
+### [Item]
+Graham
+
+### [Item]
+Graham scan
+
+### [Item]
+Grahams scan
+
+### [Item]
+Ronald Graham
+
+### [Item]
+tutorial
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Jarvis March to Find the Convex Hull of a Set of Points in 2D
+
+### [Text]
+Convex Hull
+
+### [Text]
+Convex Hull
+
+### [Text]
+Convex Hull and Delaunay Triangulation
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2020-11-25
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

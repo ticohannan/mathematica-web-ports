@@ -54,6 +54,7 @@ describe('tools/new-app.mjs', () => {
     expect(fs.existsSync(path.join(tmp, 'docs/checklists/wave-demo.md'))).toBe(false);
   });
   it('--3d writes a Graphics3D app with View3D and the WebGL 2 start-up check; a second new app joins the same section', () => {
+    const indexBefore = read('index.html');
     run('ball-demo', '--title', 'Ball Demo', '--slug', 'BallDemo', '--authors', 'C. Coder', '--3d');
     run('cone-demo', '--title', 'Cone Demo', '--slug', 'ConeDemo', '--authors', 'C. Coder');
     expect(read('demos/ball-demo/index.html')).toContain('data-needs-webgl2');
@@ -63,7 +64,7 @@ describe('tools/new-app.mjs', () => {
     expect(read('index.html').match(/New demonstrations/g)).toHaveLength(1);
     run('--remove', 'ball-demo');
     run('--remove', 'cone-demo');
-    expect(read('index.html')).not.toContain('New demonstrations');
+    expect(read('index.html')).toBe(indexBefore); // the section goes again when it was made for these apps
   });
   it("a title with quotes, '&', '<' and '$' stays intact in every file; options may come before the folder name", () => {
     const before = REG.map(read);

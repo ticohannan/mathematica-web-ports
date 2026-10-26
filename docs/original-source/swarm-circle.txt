@@ -1,0 +1,289 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Extracted 2026-10-25 with tools/nbextract.py; cached outputs skipped.
+
+
+### [Title]
+\<Distribution of a Swarm of Robots in a Circular Workplace under Gravity\>
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+This Demonstration examines the mean, variance, correlation, and covariance of a very large swarm of robots as they move inside a circular workplace under the influence of gravity pointing in the direction Beta. The swarm is large, whereas the robots are much smaller by comparison. Under gravity, the swarm flows like a liquid, moving to a side of the workplace and filling the area under a chord to height h.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+(*This shape has rotational symmetry, so calculate the mean and variance for Beta = 0, then rotate them to get answer for all Beta*)
+Meanx[Beta_,h_]:=(2 ((2-h) h)^3/2 Cos[Beta])/(3 ((-1+h) Sqrt[(2-h) h]+ArcCos[1-h]))
+Meany[Beta_,h_]:=(2 ((2-h) h)^3/2 Sin[Beta])/(3 ((-1+h) Sqrt[(2-h) h]+ArcCos[1-h]))
+(* FullSimplify[RotationMatrix[Beta].(\[NoBreak]<<Grid:a0 | 0c>>\[NoBreak]).RotationMatrix[Beta]\[Transpose]]//MatrixForm
+(\[NoBreak]<<Grid:a Cos[Beta]^2+c Sin[Beta]^2(a-c) Cos[Beta] Sin[Beta] | (a-c) Cos[Beta] Sin[Beta]c Cos[Beta]^2+a Sin[Beta]^2>>\[NoBreak])*)
+VarXh[h_]:=(64 (-2+h)^3 h^3+9 ((-1+h) Sqrt[-(-2+h) h]+ArcCos[1-h]) (4 ArcCos[1-h]+Sin[4 ArcSin[1-h]]))/(144 ((-1+h) Sqrt[-(-2+h) h]+ArcCos[1-h])^2);
+VarYh[h_]:=(12 ArcCos[1-h]-8 Sin[2 ArcCos[1-h]]+Sin[4 ArcCos[1-h]])/(48 ((-1+h) Sqrt[-(-2+h) h]+ArcCos[1-h]))
+Varx[Beta_,h_]:=VarXh[h] Cos[Beta]^2+VarYh[h] Sin[Beta]^2
+Vary[Beta_,h_]:=VarYh[h] Cos[Beta]^2+VarXh[h] Sin[Beta]^2
+Covxy[Beta_,h_]:=(VarXh[h]-VarYh[h]) Cos[Beta] Sin[Beta]
+Corxy[Beta_,h_]:=(Covxy[Beta,h])/(Sqrt[Varx[Beta,h]*Vary[Beta,h]])
+numPts = 20;
+swarmPtsS = Flatten[Table[(1)/(numPts){+i+Boole[EvenQ[j]](1)/(2),+jSqrt[3]/2},{i,-numPts,numPts},{j,-Round[2/Sqrt[3]numPts],Round[2/Sqrt[3]numPts]}],1];
+swarmPts=Select[swarmPtsS,(#[[1]]^2+#[[2]]^2)<1&]; 
+arrowArc[s_Circle]:=s/.Circle[a_,r_,{start_,end_}]:>({s,Arrow[{#-r/10^6 {-Sin@end,Cos@end},#}]}&[a+r {Cos@end,Sin@end}]);
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+ DynamicModule[{x,y,mean,cov,bwid=0.05,varx,vary,padding,imsize=220},
+x=Chop[Meanx[Beta,h]];
+y=Chop[Meany[Beta,h]];
+mean={x,y};
+cov=Chop[Covxy[Beta,h]];
+varx =Chop[ Varx[Beta,h]];
+vary =  Chop[Vary[Beta,h]];
+padding={{30,6},{5,20}};
+Row[{Column[{
+(*Mean*)Plot[{{Meanx[Beta,h],Meany[Beta,h]}},{Beta,0,2π},Ticks->{{0,π/2,π,3π/2, 2π},Automatic}, AxesLabel->{"\<Beta\>","\<mean\>"},PlotLegends-> Placed[{Row[{"\<mean \>",Style["\<x\>",Italic]}],Row[{"\<mean \>",Style["\<y\>",Italic]}]},{.65,0.85}], ImageSize->imsize,Exclusions->None,ImagePadding->padding,AxesOrigin->{0,0},
+PlotRange->{{0,2π},{-1,1}},PlotPoints->ControlActive[9,Automatic],
+PlotStyle->{ColorData[97,"\<ColorList\>"][[1]],ColorData[97,"\<ColorList\>"][[2]]}, Epilog->Dynamic@{PointSize[Large],ColorData[97,"\<ColorList\>"][[1]],Point[{Beta,x}],ColorData[97,"\<ColorList\>"][[2]],Point[{Beta,y}]}],
+(*correlation*)Plot[{Corxy[Beta,h]},{Beta,0,2π},Ticks->{{0,π/2,π,3π/2, 2π},Automatic}, AxesLabel->{"\<Beta\>","\<correlation\>"}, ImageSize->imsize,Exclusions->None,ImagePadding->padding,
+PlotRange->{{0,2π},1.1{-1,1}},PlotPoints->ControlActive[9,Automatic],
+PlotStyle->{ColorData[97,"\<ColorList\>"][[6]]},Epilog->Dynamic@{PointSize[Large],ColorData[97,"\<ColorList\>"][[6]],Point[{Beta,Corxy[Beta,h]}]} ],
+(*covariance*)Plot[{Covxy[Beta,h]},{Beta,0,2π},Ticks->{{0,π/2,π,3π/2, 2π},Automatic}, AxesLabel->{"\<Beta\>","\<covariance\>"}, ImageSize->imsize,Exclusions->None,ImagePadding->padding,PlotPoints->ControlActive[9,Automatic],
+PlotRange->{{0,2π},0.1{-1,1}},
+PlotStyle->{ColorData[97,"\<ColorList\>"][[5]]},Epilog->Dynamic@{PointSize[Large],ColorData[97,"\<ColorList\>"][[5]],Point[{Beta,cov}]} ]
+}](*end of column*),
+Column[{
+Graphics[{
+{LightBlue,Disk[{0,0},1](*interior region of square*)},
+{White,Rotate[Rectangle[{-1,-1},{1-h,1}],Beta,{0,0}](*draw the robot region*)},
+{Darker[Green],Arrowheads[.04{-1,1}],Arrow[{(1-h){Cos[Beta],Sin[Beta]}+1/10{-Sin[Beta],Cos[Beta]},{Cos[Beta],Sin[Beta]}+1/10{-Sin[Beta],Cos[Beta]}}],
+Thin,Line[{(1-h){Cos[Beta],Sin[Beta]},(1-h){Cos[Beta],Sin[Beta]}+2/10{-Sin[Beta],Cos[Beta]}}],
+Line[{(1){Cos[Beta],Sin[Beta]},(1){Cos[Beta],Sin[Beta]}+2/10{-Sin[Beta],Cos[Beta]}}],
+Text["\<h\>",(1-h/2){Cos[Beta],Sin[Beta]}+2/10{-Sin[Beta],Cos[Beta]}]},
+{Black,Thickness[bwid],Circle[{0,0},1+bwid](*obstacles*)},
+If[showStats,{Black,Text[StringForm["\<area=``
+mean=``
+cov=``\>",-(1-h)Sqrt[(2-h) h]+ArcCos[1-h],Chop[mean],Chop[cov]],{0,1/2}]}], (*optional title info*)
+(*draw swarm of robots*)
+If[showParticles,{PointSize[0.011],Lighter[Blue,.5],Evaluate@Point[If[h<2,Select[swarmPts,(*half-plane test*)
+({Cos[Beta],Sin[Beta]}.(#-(1-h){Cos[Beta],Sin[Beta]})>0)&],swarmPts]]}],
+(*draw the mean path*)
+{ColorData[97,"\<ColorList\>"][[1]],Thick, Circle[{0,0},(2 (-(-2+h) h)^3/2)/(3 ((-1+h) Sqrt[-(-2+h) h]+ArcCos[1-h]))]},
+(*draw the direction of the vector*)
+{Blue,Thickness[.01],Arrow[{{0,0},(1)/(2){Cos[Beta],Sin[Beta]}}],
+Blue,Thin,Line[{{0,0},{1/3,0}}],
+arrowArc[Circle[{0,0},1/4,{0,Beta}]],
+If[Abs[Beta]>π/6,Text["\<Beta\>",1/6{Cos[Beta/2],Sin[Beta/2]}]]
+},
+(*draw the mean*)
+{ColorData[97,"\<ColorList\>"][[2]],PointSize[Large],Point[mean]},
+(*draw the covariance ellipse*)
+{ColorData[97,"\<ColorList\>"][[3]],Opacity[0],EdgeForm[{Thick,Red}],Ellipsoid[mean,4{{varx, cov},{cov,vary}}]}
+},ImageSize->300,PlotRange->7/6{{-1,1},{-1,1}},PlotRangeClipping->True],
+(*variance*)Plot[{{Vary[Beta,h],Varx[Beta,h]}},{Beta,0,2π},
+Ticks->{{0,π/2,π,3π/2, 2π},Automatic},AxesLabel->{"\<Beta\>","\<variance\>"},
+PlotLegends->{Row[{"\<var \>",Style["\<y\>",Italic]}],Row[{"\<var \>",Style["\<x\>",Italic]}]},
+PlotRange->{{0,2π},{0,0.3}},PlotPoints->ControlActive[9,Automatic],
+ ImageSize->190,Exclusions->None,PlotStyle->{ColorData[97,"\<ColorList\>"][[3]],ColorData[97,"\<ColorList\>"][[4]]}, Epilog->Dynamic@{PointSize[Large],ColorData[97,"\<ColorList\>"][[4]],Point[{Beta,varx}],ColorData[97,"\<ColorList\>"][[3]],Point[{Beta,vary}]}]}]
+}]],
+Row[{Control@{{Beta,4.712,"\<Beta\>"},0,6.28,0.01, Appearance->"\<Labeled\>",ImageSize->Small},Spacer[10],Control@{{h,.66,Style["\<h\>", Italic]},0.001,2,0.001, Appearance->"\<Labeled\>",ImageSize->Small},Spacer[10],Control@{{showParticles,False,"\<show particles\>"},{True,False}},Spacer[10],Control@{{showStats,False,"\<show values\>"},{True,False}}}]
+,SaveDefinitions->True]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By:<<PaneSelectorBox>>
+
+### [Item]
+Haoran Zhao
+
+### [Item]
+Aaron T. Becker
+
+### [Subsection]
+Details<<PaneSelectorBox>>
+
+### [Text]
+Though rectangular boundaries are common in artificial workspaces, biological workspaces are usually rounded. The workspace in this example is a circle centered at (0,0) with radius 1 and thus area π. For notational simplicity, the swarm is parameterized by the angle of the force of gravity Beta and the fill level h. The range of possible angles for the angle of the force of gravity Beta is[0,2π). In this range of angles, the swarm always fills the area under a chord, but this shape is rotated around the unit circle.
+
+### [Text]
+\<The area under a chord of a circle is the area of a sector less the area of the triangle originating at the circle center:\>
+
+### [Text]
+A=Subscript[A, sector]-Subscript[A, triangle]=1/2 L R-1/2 C(1-h),
+
+### [Text]
+thus
+
+### [Text]
+A=(1)/(2)(L R-c(R-h)),
+
+### [Text]
+where L is the arc length, c is the chord length, R is the radius, and h is the height. Solving for L and c gives
+
+### [Text]
+L=2arccos(1-h),
+
+### [Text]
+c=2 Sqrt[(2-h) h].
+
+### [Text]
+Therefore, the area under a chord is
+
+### [Text]
+-(1-h)Sqrt[(2-h) h]+arccos(1-h).
+
+### [Text]
+For a circular workspace with given Beta, the mean of x and y is:
+
+### [Text]
+Overscript[x, _](h)=(2 (-(-2+h) h)^3/2)/(3 ((-1+h) Sqrt[-(-2+h) h]+arccos(1-h))),
+
+### [Text]
+Overscript[y, _](h)=0.
+
+### [Text]
+The variance of x and y is:
+
+### [Text]
+Subscript[σ,x]^2(h)=(64 (-2+h)^3 h^3+9 ((-1+h) Sqrt[-(-2+h) h]+arccos(1-h)) (4 arccos(1-h)+sin[4 arccos(1-h)]))/(144 ((-1+h) Sqrt[-(-2+h) h]+arccos(1-h))^2),
+
+### [Text]
+Subscript[σ,y]^2(h)=(12 ArcCos[1-h]-8 sin[2 arccos(1-h)]+sin[4 arccos(1-h)])/(48 ((-1+h) Sqrt[-(-2+h) h]+arccos(1-h))),
+
+### [Text]
+and finally,
+
+### [Text]
+Subscript[σ, x\[InvisibleComma]y](h)=0.
+
+### [Text]
+The locus of mean positions is aligned with Beta, and the mean position is at radius r(h)=(2 (-(-2+h) h)^3/2)/(3 ((-1+h) Sqrt[-(-2+h) h]+arccos(1-h))) from the center.
+The variance Subscript[σ,x]^2(h) is maximized at Beta=π/2+n π and h\[TildeTilde]1.43, while the covariance is maximized at Beta=3π/4+n π and h\[TildeTilde]0.92. For small h values, the correlation approaches \[PlusMinus]1.
+
+### [Subsection]
+References & Citations<<PaneSelectorBox>>
+
+### [Text]
+Reference or citation information
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+swarm
+
+### [Item]
+triangle
+
+### [Item]
+trapezoid
+
+### [Item]
+correlation
+
+### [Item]
+covariance
+
+### [Item]
+micro robot
+
+### [Item]
+nano robot
+
+### [Item]
+global input
+
+### [Item]
+shared control
+
+### [Item]
+under actuated
+
+### [Item]
+robot swarm
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+Links<<PaneSelectorBox>>
+
+### [Text]
+Distribution of a Robot Swarm in a Square under Gravity
+
+### [Text]
+Point Lattice
+
+### [Text]
+Moving Two Particles with Shared Control Inputs Using Wall Friction
+
+### [Text]
+Ensemble Control of Robots with Unicycle Kinematics
+
+### [Text]
+Ellipse Representing the Confidence Region of a Covariance Matrix
+
+### [Text]
+Correlation and Covariance of Random Discrete Signals
+
+### [Text]
+Correlation
+
+### [Text]
+Covariance
+
+### [Text]
+Variance
+
+### [Text]
+Arithmetic Mean
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+14.1+
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

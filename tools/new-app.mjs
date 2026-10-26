@@ -390,7 +390,8 @@ No open proposal. Template (see [\`docs/DESIGN_PROCESS.md\`](../../docs/DESIGN_P
 
 ## 11. Errors in the original (conceptual and mathematical)
 
-To be checked when the Demonstration's code is ported (owner rule R-C).
+To be checked when the Demonstration's code is ported (owner rule R-C). Kind: conceptual, mathematical, numerical or
+text; Status: open, kept or corrected in vX.Y.Z (the tests check these words).
 
 | ID | Kind | Where in the original | What is (probably) wrong | What the port does | Effect of correcting it | Status |
 |----|------|-----------------------|--------------------------|--------------------|-------------------------|--------|
@@ -494,7 +495,7 @@ const appendAfterLast = (s, re, row) => {
 edit('README.md', (s) => appendAfterLast(s, /^\| .* \| `demos\/[a-z0-9-]+\/` \|/, `| ${title} | \`demos/${dir}/\` | ${is3D ? 'WebGL 2' : 'SVG'} | (generated example; to be described) |`));
 edit('docs/DESIGN_PROCESS.md', (s) => appendAfterLast(s, /^\| .* \| \[`demos\/[a-z0-9-]+\/DESIGN\.md`\]/, `| ${title} | [\`demos/${dir}/DESIGN.md\`](../demos/${dir}/DESIGN.md) | \`demos/${dir}/\` |`));
 edit('LICENSE.md', (s) => {
-  const files = `| \`demos/${dir}/**\`, \`tests/unit/${dir}.test.js\`, \`tests/e2e/${dir}.spec.js\` | CC BY-NC-SA 3.0 | the port of "${title}" (${authorText}) and its tests |`;
+  const files = `| \`demos/${dir}/**\`, \`tests/unit/${dir}.test.js\`, \`tests/e2e/${dir}.spec.js\`, \`docs/checklists/${dir}.md\` | CC BY-NC-SA 3.0 | the port of "${title}" (${authorText}), its tests and its manual checklist |`;
   const t = s.replace(/\n(\| `index\.html`, `README\.md`, `LICENSE\.md` \|)/, (_, row) => `\n${files}\n${row}`);
   return appendAfterLast(t, /^\| `demos\/[a-z0-9-]+\/` \| "/, `| \`demos/${dir}/\` | "${title}" — <${url}>${published ? ` (published ${published})` : ''} | ${authorText} |`);
 });

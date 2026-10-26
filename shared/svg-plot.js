@@ -183,7 +183,8 @@ export const darkLocatorGlyph = (plot) => locatorGlyph(plot, { color: [0, 0, 0],
 export function addLocators(plot, { names, get, onMove, onStart, onEnd, appearance, hitPx = 12, keyStep = 0.05, throttle = 'raf', pickAnywhere = false, describe = (n) => `${n} locator; arrow keys move it`, layerName = 'locators', pointer = true, testid = (n) => `locator-${n}` }) {
   const g = plot.layer(layerName);
   const nodes = {};
-  for (const name of names) {
+  names = [...names]; // setNames (v0.1.23) changes the list
+  const addOne = (name) => {
     const holder = svgNode('g', { class: 'locator', 'data-testid': testid(name), tabindex: 0, role: 'button', 'aria-label': describe(name) });
     const glyph = appearance ? appearance(name) : locatorGlyph(plot);
     if (glyph) holder.append(glyph);
@@ -198,7 +199,8 @@ export function addLocators(plot, { names, get, onMove, onStart, onEnd, appearan
       const [x, y] = get(name);
       onMove(name, [x + delta[0], y + delta[1]], { source: 'key' });
     });
-  }
+  };
+  for (const name of names) addOne(name);
   const redraw = () => { for (const n of names) { const [x, y] = get(n); nodes[n].setAttribute('transform', `translate(${x},${y})`); } };
 
   let active = null, pendingPt = null, raf = 0, offset = [0, 0];
@@ -214,7 +216,7 @@ export function addLocators(plot, { names, get, onMove, onStart, onEnd, appearan
     return [best, bd];
   };
   // pointer: false — no picking on the picture (a page that handles presses on the glyphs itself); keys still work
-  if (pointer) plot.svg.addEventListener('pointerdown', (e) => {
+  const down = (e) => {
     if (e.button !== 0) return;
     const p = plot.clientToWorld(e.clientX, e.clientY);
     const [n, d] = nearestTo(p);
@@ -230,7 +232,8 @@ export function addLocators(plot, { names, get, onMove, onStart, onEnd, appearan
     e.preventDefault();
     onStart?.(n);
     if (!grabbed) onMove(n, p, { source: 'pointer' }); // LocatorPane: the nearest locator jumps to the click
-  });
+  };
+  if (pointer) plot.svg.addEventListener('pointerdown', down);
   const move = (e) => {
     if (!active) return;
     const q = plot.clientToWorld(e.clientX, e.clientY);
@@ -249,5 +252,19 @@ export function addLocators(plot, { names, get, onMove, onStart, onEnd, appearan
   window.addEventListener('pointerup', up);
   window.addEventListener('pointercancel', up);
   redraw();
-  return { redraw, nodes, dragging: () => active };
+  /** setNames(list) (v0.1.23): locators added or removed at run time (a Locator list whose length changed) */
+  const setNames = (list) => {
+    for (const n of names) if (!list.includes(n)) { if (active === n) active = null; nodes[n].remove(); delete nodes[n]; }
+    for (const n of list) if (!nodes[n]) addOne(n);
+    names.splice(0, names.length, ...list);
+    redraw();
+  };
+  /** destroy() (v0.1.23): remove the listeners (a picture made again gets a new pane) */
+  const destroy = () => {
+    plot.svg.removeEventListener('pointerdown', down);
+    window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
+    if (raf) cancelAnimationFrame(raf);
+    active = null;
+  };
+  return { redraw, nodes, dragging: () => active, setNames, destroy };
 }

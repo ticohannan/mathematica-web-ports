@@ -19,8 +19,8 @@
 //                                 ViewAngle, v0.1.21) the vertical angle is that instead.
 //   'mesh' primitives (GraphicsComplex polygons, v0.1.21): one indexed BufferGeometry (each polygon a triangle fan),
 //                                 smooth vertex normals, both faces; edges as polygons unless EdgeForm[].
-import { THREE, surface, cylinderBetween, fatLine } from './three-helpers.js';
-import { sampleCurve, sampleSurface, sampleCircle, infinitePlanePolygon, apply4, cuboidCorners } from './graphics3d.js';
+import { THREE, surface, cylinderBetween, fatLine, label } from './three-helpers.js';
+import { sampleCurve, sampleSurface, sampleCircle, infinitePlanePolygon, apply4, cuboidCorners, infiniteLineSegment } from './graphics3d.js';
 
 /** Mathematica's default ViewPoint */
 export const VIEWPOINT = [1.3, -2.4, 2];
@@ -222,6 +222,41 @@ export function addPrims(group, prims, ctx) {
             group.add(line(grid.map((row) => row[j]), ms));
           }
         }
+        break;
+      }
+      // v0.1.23 ------------------------------------------------------------------------------------------------
+      case 'tube': {
+        const m = mat(p);
+        for (let i = 0; i + 1 < p.points.length; i++) {
+          if (p.points[i].every((x, k) => x === p.points[i + 1][k])) continue;
+          group.add(cylinderBetween(p.points[i], p.points[i + 1], p.radius, m, 24));
+        }
+        if (p.points.length > 2) { // joints
+          const geo = new THREE.SphereGeometry(p.radius, 16, 12);
+          for (const q of p.points.slice(1, -1)) { const s = new THREE.Mesh(geo, m); s.position.set(...q); group.add(s); }
+        }
+        break;
+      }
+      case 'cone': {
+        const a = new THREE.Vector3(...p.p1), b = new THREE.Vector3(...p.p2), len = a.distanceTo(b);
+        if (len === 0) break;
+        const cone = new THREE.Mesh(new THREE.ConeGeometry(p.radius, len, 40), mat(p));
+        cone.position.copy(a.clone().add(b).multiplyScalar(0.5));
+        cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize());
+        group.add(cone);
+        break;
+      }
+      case 'infiniteLine': {
+        const seg = infiniteLineSegment(p.points, ctx.box);
+        if (seg.length) group.add(line(seg, p));
+        break;
+      }
+      case 'text': {
+        const html = typeof p.expr === 'object' && p.expr?.html != null;
+        const obj = label(html ? p.expr.html : String(p.expr), p.pos, p.color ?? DEFAULT_LINE, { html, cls: 'lbl-text3d' });
+        obj.element.style.fontSize = `${p.fontSize}px`;
+        obj.element.dataset.testid = 'text3d';
+        group.add(obj);
         break;
       }
       default: break;
