@@ -1,0 +1,363 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Extracted 2026-10-26 with tools/nbextract.py; cached outputs skipped.
+
+
+### [Title]
+Probabilistic Models for Robot Motion
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+A mobile robot, repeatedly commanded to move for one second with linear velocity v and angular velocity Omega, will travel approximately the same distance each time. However, small random errors due to wheel slip, terrain interactions, and unmodeled dynamics mean that the robot's expected final position is better described as a probability density function (PDF). This Demonstration implements four probabilistic motion models[1], allowing you to modify noise parameters and see their effect. The initial pose is shown in green and the final pose in red; the position and the heading of the robot are indicated by a circle and a line, respectively.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+DrawRobot[x_,y_,Theta_,diam_]:={Circle[{x,y},diam/2],Line[{{x,y},{x,y}+diam/1.5{Cos[Theta],Sin[Theta]}}]};
+
+### [Input] (init)
+signedAngleDist[Theta1_,Theta2_]:=ArcTan[Cos[Theta1-Theta2],Sin[Theta1-Theta2]] (*signed angular distance between two angles, Theta1-Theta2*)
+
+### [Input] (init)
+probTriangularDistribution[a_,bSq_] :=If[bSq>0,Max[0,(1)/(Sqrt[6 bSq])-(Abs[a])/(6 bSq)],If[a==0,1,0]];
+
+### [Input] (init)
+MyTriangularDistribution[myrange_] := If[myrange[[2]]>0,TriangularDistribution[myrange],UniformDistribution[myrange]];
+
+### [Input] (init)
+probNormalDistribution[a_,bSq_] :=Max[(1)/(Sqrt[2 π bSq])\[ExponentialE]^(-(a^2)/(2 bSq)),0];
+(*sampleNormalDist[b_]:=(1)/(2)<<UnderoverscriptBox>>RandomReal[{-b,b}];*)
+
+### [Input] (init)
+nominalMotionModel[v_,Omega_,x_,y_,Theta_,ΔT_ ]:=Module[{xp,yp,Thetap},
+If[Omega!=0,
+xp=x-v/Omega Sin[Theta]+v/Omega Sin[Theta+Omega ΔT];
+yp=y+v/Omega Cos[Theta]-v/Omega Cos[Theta+Omega ΔT];
+Thetap=Theta+Omega ΔT,
+(*else, no angular velocity, so just move straight*)
+xp=x+v ΔT Cos[Theta];
+yp=y+v ΔT Sin[Theta];
+Thetap=Theta];
+{xp,yp,Thetap}
+]
+
+### [Input] (init)
+motionModelVelocityNoAng[xt_,ut_,xtm1_,Δt_,Alpha1_,Alpha2_,Alpha3_,Alpha4_,Alpha5_,Alpha6_]:=
+Module[{μ,xs,ys,rs,ΔTheta,vh,Omegah,a1,a2,speed,
+x=xtm1[[1]],y=xtm1[[2]],Theta=xtm1[[3]],
+xp=xt[[1]],yp=xt[[2]],
+v= ut[[1]],Omega = ut[[2]]},
+If[ Abs[(y-yp)Cos[Theta]-(x-xp)Sin[Theta]]>0.01, (*if new point is NOT along original heading. Should be != 0, buy inequality makes graph look better  Abs[(y-yp)Cos[Theta]-(x-xp)Sin[Theta]]>0.01*)
+μ =(x Cos[Theta]-xp Cos[Theta]+y Sin[Theta]-yp Sin[Theta])/(2 (y Cos[Theta]-yp Cos[Theta]-x Sin[Theta]+xp Sin[Theta]));(*a compromise for numerical stability. Should really be ∞ if denominator is zero*)
+(*change #1, infinity*)
+xs=(x+xp)/(2)+μ(y-yp); (*{xs,ys} is the center of a circle robot follows from xtm1 to xt*)
+ys=(y+yp)/(2)+μ(xp-x); 
+rs=Sqrt[(x-xs)^2+(y-ys)^2];(*radius of circle*)
+a1=If[xp-xs==0&&yp-ys==0,0,ArcTan[xp-xs,yp-ys]];
+a2=If[x-xs==0&&0==y-ys,0,ArcTan[x-xs,y-ys]];
+ΔTheta=signedAngleDist[a1,a2];
+(*ΔTheta =ArcTan[Cos[a1-a2],Sin[a1-a2]];*)(*change #2, pick the ΔTheta that is CLOSEST to the control input Omega*Δt. *)
+While[ΔTheta- π>Omega Δt,ΔTheta=ΔTheta-2π];
+While[ΔTheta+ π<Omega Δt,ΔTheta=ΔTheta+2π];
+vh=If[a2 Cos[Theta]>= 0,-(ΔTheta)/(Δt)rs,(ΔTheta)/(Δt)rs];(*need a sign*)
+Omegah=(ΔTheta)/(Δt),
+(*ELSE: new point is along original heading*)
+a1=ArcTan[xp-x,yp-y]; (*angle of movement*)
+ΔTheta= ArcTan[Cos[a1-Theta],Sin[a1-Theta]]; (*signed angular difference*)
+speed=(Sqrt[(x-xp)^2+(y-yp)^2])/(Δt);
+vh=If[Cos[ΔTheta]>= 0,speed,-speed];
+Omegah=0;
+(*Print[StringForm["\<Is zero, a1 = ``, ΔTheta=``, speed=``,vh=``\>",a1,ΔTheta,speed,vh]];*)
+];
+probTriangularDistribution[v-vh,Alpha1 v^2+Alpha2 Omega^2]*probTriangularDistribution[Omega-Omegah,Alpha3 v^2+Alpha4 Omega^2]
+(*probNormalDistribution[v-vh,Alpha1 v^2+Alpha2 Omega^2]*probNormalDistribution[Omega-Omegah,Alpha3 v^2+Alpha4 Omega^2]*)
+]
+
+### [Input] (init)
+sampleMotionModelVelocityNsamples[ut_,xtm1_,ΔT_,Alpha1_,Alpha2_,Alpha3_,Alpha4_,Alpha5_,Alpha6_,Nsamples_]:=
+Module[{μ,xp,yp,Thetap,
+x=xtm1[[1]],y=xtm1[[2]],Theta=xtm1[[3]],
+v=ut[[1]],Omega = ut[[2]],xs,ys,rs,ΔTheta,vh,Omegah,Gammah},
+vh=v+RandomVariate[MyTriangularDistribution[Sqrt[(Alpha1 v^2+Alpha2 Omega^2)]{-1,1}],Nsamples];
+Omegah=Omega+RandomVariate[MyTriangularDistribution[Sqrt[(Alpha3 v^2+Alpha4 Omega^2)]{-1,1}],Nsamples];
+Gammah=RandomVariate[MyTriangularDistribution[Sqrt[(Alpha5 v^2+Alpha6 Omega^2)]{-1,1}],Nsamples];
+xp=x-(vh)/(Omegah) Sin[Theta]+(vh)/(Omegah) Sin[Theta+Omegah ΔT];
+yp=y+(vh)/(Omegah) Cos[Theta]-(vh)/(Omegah)Cos[Theta+Omegah ΔT];
+Thetap=Theta+Omegah ΔT+Gammah ΔT;
+Transpose[{xp,yp,Thetap}]
+]
+
+### [Input] (init)
+MotionModelOdometryNoAng[xt_,ut_,xtm1_,ΔT_,Alpha1_,Alpha2_,Alpha3_,Alpha4_]:=
+Module[{μ,p1,p2,
+xb=xtm1[[1]],yb=xtm1[[2]],Thetab=xtm1[[3]],(*old pose Subscript[x, t-1]*)
+x=xtm1[[1]],y=xtm1[[2]],Theta=xtm1[[3]],(*old odometry Subscript[Overscript[x, _], t-1]*)
+xp=xt[[1]],yp=xt[[2]],(*query point Subscript[x, t-1]*)
+xbp,ybp,Thetabp, (*new odometry Subscript[Overscript[x, _], t]*)
+v=ut[[1]],Omega=ut[[2]],δrot1,δtrans,δhatrot1,δhattrans
+},
+{xbp,ybp,Thetabp}=nominalMotionModel[v,Omega,x,y,Theta,ΔT ]; (*new odometry Subscript[Overscript[x, _], t]*)
+(*δrot1 = signedAngleDist[ArcTan[xbp-x,ybp-y],Theta];*) (*FIX #1: δrot1 = ArcTan[xbp-x,ybp-y]-Theta;*)
+δrot1 = ArcTan[xbp-x,ybp-y]-Theta;
+δtrans = Sqrt[(xbp-xb)^2+(ybp-yb)^2];
+δhatrot1 =signedAngleDist[ ArcTan[xp-x,yp-y],Theta] ; (*FIX #2: δhatrot1 = ArcTan[xp-x,yp-y]- Theta;*)
+(*δhatrot1 = ArcTan[xp-x,yp-y]- Theta;*)
+δhattrans = Sqrt[(-x+xp)^2+(-y+yp)^2];
+(*FIX #3: p1=probTriangularDistribution[δrot1-δhatrot1 ,Alpha1 δhatrot1^2+Alpha2 δhattrans ^2]*)
+p1=probTriangularDistribution[signedAngleDist[δrot1,δhatrot1],Alpha1 δhatrot1^2+Alpha2 δhattrans ^2];
+p2=probTriangularDistribution[δtrans-δhattrans,Alpha3 δhattrans ^2+Alpha4 (δhatrot1^2)];
+p1*p2
+]
+
+### [Input] (init)
+sampleMotionModelOdometryNsamples[ut_,xtm1_,ΔT_,Alpha1_,Alpha2_,Alpha3_,Alpha4_,Nsamples_]:=
+Module[{μ,xp,yp,Thetap, xbp,ybp,Thetabp,ΔTheta,δrot1,δtrans, δrot2,δhatrot1,δhattrans, δhatrot2,
+x=xtm1[[1]],y=xtm1[[2]],Theta=xtm1[[3]],
+v= ut[[1]],Omega = ut[[2]]},
+{xbp,ybp,Thetabp}=nominalMotionModel[v,Omega,x,y,Theta,ΔT ];
+δrot1 = signedAngleDist[ArcTan[xbp-x,ybp-y],Theta];(*FIX #1: ArcTan[xbp-x,ybp-y]-Theta*)
+δtrans = Sqrt[(-x+xbp)^2+(-y+ybp)^2];
+δrot2=signedAngleDist[signedAngleDist[Thetabp,Theta],δrot1];(*FIX #2: Thetabp-Theta-δrot1*)
+δhatrot1 = δrot1+RandomVariate[MyTriangularDistribution[Sqrt[(Alpha1 δrot1^2+Alpha2 δtrans ^2)]{-1,1}],Nsamples];
+δhattrans=δtrans+RandomVariate[MyTriangularDistribution[Sqrt[(Alpha3 δtrans^2+Alpha4 (δrot1^2+δrot2^2))]{-1,1}],Nsamples];
+δhatrot2 = δrot2+RandomVariate[MyTriangularDistribution[Sqrt[(Alpha1 δrot1^2+Alpha2 δtrans ^2)]{-1,1}],Nsamples];
+xp=x+δhattrans Cos[Theta+δhatrot1];
+yp=y+δhattrans Sin[Theta+δhatrot1];
+Thetap=Theta+δhatrot1 + δhatrot2;
+Transpose[{xp,yp,Thetap}]
+]
+
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{ΔT = 1,numSamples=500,r,xc,yc,xp,yp,Thetap,x=0,y=0,diam=1, pr3 ={{-3,3},{-3,3},All},pr2 ={{-3,3},{-3,3}}},
+Show[
+SeedRandom[1]; (*make samples repeatable*)
+Which[
+mode=="\<VelocityPDF\>",
+DensityPlot[motionModelVelocityNoAng[{xx,yy},{v,Omega},{x,y,Theta},ΔT,Alpha1,Alpha2,Alpha3,Alpha4,Alpha5,Alpha6],
+{xx,-3,3},{yy,-3,3},PlotRange->pr3,MaxRecursion->5,ColorFunctionScaling->False,PerformanceGoal->"\<Quality\>"],
+mode=="\<VelocitySample\>",
+Show[Plot[Null,{xx,-3,3},PlotRange->pr2,Frame->{True,True,False,False},AspectRatio->1,AxesOrigin->{-3,-3}],
+Graphics[{ Blue,
+Module[{robotSamples },robotSamples =sampleMotionModelVelocityNsamples[{v,Omega},{x,y,Theta},ΔT,Alpha1,Alpha2,Alpha3,Alpha4,Alpha5,Alpha6,numSamples];Table[DrawRobot[robotSample[[1]],robotSample[[2]],robotSample[[3]],diam/15],{robotSample,robotSamples}]]},PlotRange->pr2]],
+mode=="\<OdometryPDF\>",
+DensityPlot[MotionModelOdometryNoAng[{xx,yy},{v,Omega},{x,y,Theta},ΔT,Alpha1,Alpha2,Alpha3,Alpha4],
+{xx,-3,3},{yy,-3,3},PlotRange->pr3,MaxRecursion->5,ColorFunctionScaling->False,PerformanceGoal->"\<Quality\>"],
+mode=="\<OdometrySample\>",
+Show[Plot[Null,{xx,-3,3},PlotRange->pr2,Frame->{True,True,False,False},AspectRatio->1,AxesOrigin->{-3,-3}],
+Graphics[{ Blue,
+Module[{robotSamples },
+robotSamples = sampleMotionModelOdometryNsamples[{v,Omega},{x,y,Theta},ΔT,Alpha1,Alpha2,Alpha3,Alpha4,numSamples];
+Table[DrawRobot[robotSample[[1]],robotSample[[2]],robotSample[[3]],diam/15],{robotSample,robotSamples}]]},PlotRange->pr2]]
+],
+Graphics[{ 
+(*initial position*)
+{Thick,Green,DrawRobot[x,y,Theta,diam]},
+{xp,yp,Thetap}=nominalMotionModel[v,Omega,x,y,Theta,ΔT ];
+(*default ending position*)
+If[mode =="\<VelocityPDF\>" ||mode =="\<VelocitySample\>" ,
+If[Omega!=0,
+r = Abs[v/Omega];(*radius of robot's path*)
+xc =x-v/Omega Sin[Theta]; (*point the robot is turning around -- center of rotation*)
+yc = y+v/Omega Cos[Theta];
+(*circle center*)
+{Line[{{x,y},{xc,yc},{xp,yp}}],PointSize[Large],Point[{xc,yc}],
+Module[{offset,circRad},
+offset=If[v/Omega>0,(-π)/(2),(-3π)/(2)];
+{Circle[{xc,yc},r+(diam)/(2),Theta+offset+{0,Omega ΔT}],
+If[r-(diam)/(2)>= 0, Circle[{xc,yc},Abs[r-(diam)/(2)],Theta+offset+{0,Omega ΔT}]]}
+]
+ }],
+(*odometry*)
+{Black,Line[{{x,y},{xp+.7*diam*Cos[ArcTan[xp-x,yp-y]],yp+.7*diam*Sin[ArcTan[xp-x,yp-y]]}}],
+Module[{Alpha},{
+Alpha=ArcTan[xp-x,yp-y];
+If[Omega>0 && Alpha<Theta, Alpha=Alpha+2π];
+If[Omega<0 && Alpha>Theta, Alpha=Alpha-2π];
+If[Omega>0 && Thetap<Alpha, Thetap= Thetap+2π];
+If[Omega<0 && Thetap>Alpha, Thetap= Thetap-2π];
+Green, Circle[{x,y},.6*diam,{Theta,Alpha}],(*fix sign issue according to Omega ΔT*)
+Red, Circle[{xp,yp},.6*diam,{Alpha,Thetap}]}]
+}
+],
+{Thick,Red,DrawRobot[xp,yp,Thetap,diam]}
+}],ImageSize->1.1{400,400}]
+],
+"\<mode\>",
+{{mode, "\<VelocityPDF\>", "\<\>"},{"\<VelocityPDF\>","\<VelocitySample\>","\<OdometryPDF\>","\<OdometrySample\>"},ControlType->PopupMenu},
+"\<\>",
+"\<heading Theta\>",
+{ {Theta,0,"\<\>"},-3.14,3.14,.001,Appearance->"\<Labeled\>",ImageSize-> Tiny},
+"\<\>",
+Row[{"\<linear velocity \>",Style["\<v\>", Italic]}],
+{ {v,2,"\<\>"},-2,2,.001,Appearance->"\<Labeled\>", ImageSize-> Tiny},
+"\<\>",
+"\<angular velocity Omega\>",
+{ {Omega,1.57,"\<\>"},-2,2,.001,Appearance->"\<Labeled\>", ImageSize-> Tiny},
+"\<\>",
+Delimiter,
+"\<\>",
+"\<noise parameters\>",
+"\<\>",
+{ {Alpha1,.02,"\<\!\(\*SubscriptBox[\(Alpha\), \(1\)]\)\>"},0,.1,.001,Appearance->"\<Labeled\>", ImageSize-> Tiny},
+{ {Alpha2,.02,"\<\!\(\*SubscriptBox[\(Alpha\), \(2\)]\)\>"},0,.1,.001,Appearance->"\<Labeled\>", ImageSize-> Tiny},
+{ {Alpha3,.02,"\<\!\(\*SubscriptBox[\(Alpha\), \(3\)]\)\>"},0,.1,.001,Appearance->"\<Labeled\>", ImageSize-> Tiny},
+{ {Alpha4,.02,"\<\!\(\*SubscriptBox[\(Alpha\), \(4\)]\)\>"},0,.1,.001,Appearance->"\<Labeled\>", ImageSize-> Tiny},
+{ {Alpha5,.02,"\<\!\(\*SubscriptBox[\(Alpha\), \(5\)]\)\>"},0,.5,.001,Appearance->"\<Labeled\>",ImageSize-> Tiny,Enabled->mode =="\<VelocityPDF\>" ||mode =="\<VelocitySample\>" },
+{ {Alpha6,.02,"\<\!\(\*SubscriptBox[\(Alpha\), \(6\)]\)\>"},0,.5,.001,Appearance->"\<Labeled\>",ImageSize-> Tiny,Enabled->mode =="\<VelocityPDF\>" ||mode =="\<VelocitySample\>"},ControlPlacement->Left,SaveDefinitions->True
+]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Aaron T. Becker
+
+### [Text]
+Renuka Pakeetharan
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+This Demonstration implements two motion models for a 2D nonholonomic robot with two inputs: linear velocity v and angular velocity Omega. These versatile models can be used to describe the movement of a differential-drive robot, a skid-steer tank robot, a kinematic unicycle, or an Ackerman car. The first model is a velocity model, which takes as inputs the commanded linear and angular velocities. This assumes the robot moves with constant linear and angular velocities, so that the robot path is an arc of a circle with radius v/Omega.
+
+### [Text]
+The nominal, noise-free motion model is given by
+
+### [Text]
+Subscript[x, t+1]=Subscript[x, t]-v/Omega sin(Subscript[Theta, t])+v/Omega sin(Subscript[Theta, t]+Omega ΔT),
+
+### [Text]
+Subscript[y, t+1]=Subscript[y, t]+v/Omega cos(Subscript[Theta, t])-v/Omega cos(Subscript[Theta, t]+Omega ΔT),
+
+### [Text]
+and Subscript[Theta, t+1]=Subscript[Theta, t]+Omega ΔT.
+
+### [Text]
+The probabilistic velocity motion model injects noise into the control inputs v and Omega as well as randomness in the final rotation. The noise amplitude is determined by parameters Subscript[Alpha, 1] through Subscript[Alpha, 6].
+
+### [Text]
+In practice, robots often have odometry information from wheel encoders that is more accurate than the commanded motor velocities. This odometric model approximates motion by a rotation in place, then a translation, followed by another rotation in place. The probabilistic odometric motion model injects noise into each of these three stages. In this case, the noise is governed by parameters Subscript[Alpha, 1]through Subscript[Alpha, 4].
+
+### [Text]
+Models were derived from[1], with small adaptations to fix issues with the robot's orientation wrapping at 2π.
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] S. Thrun, W. Burgard, and D. Fox, Probabilistic Robotics, Cambridge: MIT Press, 2005. www.probabilistic-robotics.org.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+robot
+
+### [Item]
+robotic
+
+### [Item]
+motion model
+
+### [Item]
+odometric motion model
+
+### [Item]
+velocity motion model
+
+### [Item]
+probabilistic robot
+
+### [Item]
+encoder
+
+### [Item]
+robot motion
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Parking A Car
+
+### [Text]
+Approximating Ackermann Steering Geometry with a Trapezoidal Linkage
+
+### [Text]
+ArcTan
+
+### [Text]
+Angular Distance
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2016-01-12
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

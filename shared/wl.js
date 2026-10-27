@@ -43,7 +43,7 @@ export const { sin: Sin, cos: Cos, tan: Tan, exp: Exp, sqrt: Sqrt, abs: Abs, flo
 export const Log = (a, b) => (b === undefined ? Math.log(a) : Math.log(b) / Math.log(a));
 export const Power = (a, b) => a ** b;
 /** ArcTan[y/x] or ArcTan[x, y] (Mathematica's argument order: x first; ArcTan[0, 0] is 0 here, Indeterminate there). */
-export const ArcTan = (x, y) => (y === undefined ? Math.atan(x) : Math.atan2(y, x));
+export const ArcTan = (x, y) => (y === undefined ? Math.atan(x) : Math.atan2(y + 0, x + 0)); // + 0: Mathematica has no −0 (ArcTan[−1, −0.] = π), v0.1.26
 /** Mod[m, n] with the sign of n (also for reals); Mod[m, n, d] gives a result in [d, d + n). */
 export const Mod = (m, n, d = 0) => m - n * Math.floor((m - d) / n);
 export const Quotient = (m, n) => Math.floor(m / n);
@@ -251,6 +251,9 @@ export const EuclideanDistance = (a, b) => Math.hypot(...a.map((x, i) => x - b[i
 export const IdentityMatrix = (n) => Table((i, j) => (i === j ? 1 : 0), [n], [n]);
 /** Det[m] for any square matrix (Gaussian elimination with partial pivoting). */
 export function Det(m) {
+  // v0.1.26: a 2 × 2 by its expansion a·d − b·c (what the visibility-region snapshots show Mathematica computing; the
+  // elimination below can put a point exactly on a line where Mathematica's value does not); larger by elimination
+  if (m.length === 2) return m[0][0] * m[1][1] - m[0][1] * m[1][0];
   const a = m.map((r) => r.slice()), n = a.length;
   let d = 1;
   for (let c = 0; c < n; c++) {

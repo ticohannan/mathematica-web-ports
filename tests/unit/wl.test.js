@@ -225,3 +225,12 @@ describe('wl.js: comparisons with Mathematica\'s tolerance (v0.1.25)', () => {
     expect(W.Less(1, 2)).toBe(true);
   });
 });
+
+describe('wl.js: Det of a 2 × 2 by its expansion (v0.1.26)', () => {
+  it('Det[{{a, b}, {c, d}}] = a d − b c exactly as written (no elimination rounding)', () => {
+    const m = [[0.1, 0.7], [0.3, 2.1]];
+    expect(W.Det(m)).toBe(0.1 * 2.1 - 0.7 * 0.3);
+    expect(W.Det([[1, 2], [3, 4]])).toBe(-2);
+    expect(W.Det([[2, 0, 0], [0, 3, 0], [0, 0, 4]])).toBe(24); // larger matrices by elimination, as before
+  });
+});

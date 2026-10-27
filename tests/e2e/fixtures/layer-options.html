@@ -1,0 +1,54 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-License-Identifier: MIT -->
+<!-- tests/e2e/fixtures/layer-options.html — a test page (not an app, not linked from the site) for
+     tests/e2e/layer-options.spec.js: the Manipulate layer's v0.1.26 additions — ImageSize -> {w, h} fitting a
+     non-square plot range, runs of spaces kept in text, settleInterval (a self-evaluating body with Pause[dt]), the
+     hook's setState(partial, { moved: [names] }), and empty Point/Line drawing nothing. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Layer options (test page)</title>
+  <link rel="stylesheet" href="../../../shared/style.css">
+</head>
+<body>
+<main class="page">
+  <section class="manipulate">
+    <div class="controls" id="controls"></div>
+    <div class="graphic" id="graphic" data-testid="graphic"></div>
+  </section>
+</main>
+<script type="module">
+  import { Manipulate, None } from '../../../shared/manipulate.js';
+  import { Text, Style, Point, Line, Disk, Arrow, Annotation } from '../../../shared/graphics.js';
+  const interval = Number(new URLSearchParams(location.search).get('interval') ?? 0);
+  Manipulate({
+    name: 'layer-options',
+    // counts its evaluations while `go` is on (settle), at most one per `interval` seconds
+    body: (s) => ({
+      state: { ...s, evaluations: s.go ? s.evaluations + 1 : s.evaluations },
+      view: {},
+      graphics: [
+        Annotation(Disk([0, 0], 1), 'disk'),
+        Annotation(Text(Style('a   b', 14), [0, -5]), 'spaced-text'),
+        Annotation(Text(Style('a b', 14), [0, -7]), 'single-text'),
+        Annotation(Point([]), 'empty-point'),
+        Annotation(Line([[], []]), 'empty-line'),
+        Annotation(Line([[], [[1, 1], [2, 2]]]), 'partly-empty-line'),
+        Annotation(Arrow([[3, 3]]), 'one-point-arrow'),
+      ],
+    }),
+    settle: (s) => s.go && s.evaluations < 1000,
+    settleInterval: interval,
+    graphics: { PlotRange: [[-15, 15], [-9, 12]], ImageSize: [600, 400], PlotRangePadding: 0 },
+    controls: [
+      [['a', 1, 'a'], 0, 10, { Appearance: 'Labeled' }],
+      [['b', 1, 'b'], 0, 10, { Appearance: 'Labeled' }],
+      [['go', false], None],
+      [['evaluations', 0], None],
+    ],
+  });
+</script>
+</body>
+</html>

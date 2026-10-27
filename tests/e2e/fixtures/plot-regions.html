@@ -1,0 +1,80 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-License-Identifier: MIT -->
+<!-- tests/e2e/fixtures/plot-regions.html — a test page (not an app, not linked from the site) for
+     tests/e2e/plot-regions.spec.js: the v0.1.26 additions of shared/plot.js and shared/graphics.js on the Manipulate
+     layer — a RegionPlot (a disk with a hole whose radius follows a slider), a ParametricPlot region (two mirrored regions
+     that fold over themselves, PlotStyle Blue, AxesLabel, LabelStyle), a DensityPlot (a bump that follows a slider, raw
+     values) and a Graphics holding a framed RegionPlot inset (an empty region used as a canvas: Epilog, FrameLabel,
+     LabelStyle Bold, ImageSize 230, as in "Moving Two Particles … Using Wall Friction") and an Arrow along a BSplineCurve
+     (as in "Maximizing Apparent Velocity in a Camera's Frame"). -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Region and density plots (test page)</title>
+  <link rel="stylesheet" href="../../../shared/style.css">
+</head>
+<body>
+<main class="page">
+  <section class="manipulate">
+    <div class="controls" id="controls"></div>
+    <div class="graphic" id="graphic" data-testid="graphic"></div>
+    <div class="graphic" id="graphic2" data-testid="graphic2"></div>
+    <div class="graphic" id="graphic3" data-testid="graphic3"></div>
+    <div class="graphic wide" id="graphic4" data-testid="graphic4"></div>
+  </section>
+</main>
+<script type="module">
+  import { Manipulate } from '../../../shared/manipulate.js';
+  import {
+    Graphics, Inset, Arrow, BSplineCurve, Arrowheads, Rectangle, Disk, Line, Point, PointSize, Text, Style, Row, Italic, Black,
+    Bold, Directive, LightBlue, LightGreen, LightGray, Blue, Green, Red, Cyan, Darker, EdgeForm, Opacity, Dashed, Annotation,
+    AbsoluteThickness,
+  } from '../../../shared/graphics.js';
+  import { RegionPlot, ParametricPlot, DensityPlot } from '../../../shared/plot.js';
+  import { Table, Sin, Cos, Exp } from '../../../shared/wl.js';
+
+  // Inset[RegionPlot[x < -3, {x, -1, 1}, {y, -1, 1}, Epilog -> {…}, FrameLabel -> …, LabelStyle -> Directive[Black, Bold], ImageSize -> 230], {1.38, .45}]
+  const delta = (s) => Row(['Δ', Style(s, Italic)]);
+  const insetPlot = (d, g) => RegionPlot((x) => x < -3, [-1, 1], [-1, 1], {
+    Epilog: [
+      [LightBlue, EdgeForm(Blue), Rectangle([d[0] - 1, d[1]], [1, 0])],
+      [LightGreen, EdgeForm(Green), Opacity(0.5), Rectangle([0, -1], [d[0], 1 + d[1]])],
+      Green, Disk(g, 0.04), Text(Style(delta('r'), { FontSize: 16 }, Black), [d[0] - 0.1, d[1] - 0.1]),
+      Red, Rectangle([d[0] - 0.04, d[1] - 0.04], [d[0] + 0.04, d[1] + 0.04]), Text(Style(delta('g'), { FontSize: 16 }, Black), [g[0] + 0.1, g[1] + 0.1]),
+    ],
+    FrameLabel: [delta('x'), delta('y')], LabelStyle: Directive(Black, Bold), ImageSize: 230, testid: 'inset-plot',
+  });
+  // Arrow[BSplineCurve[Table[{x0 + ρ Cos[θ], y0 + ρ Sin[θ]}, {θ, 0, ang, ang/12}]]]
+  const arc = (ang) => Table((t) => [0.5 + 0.3 * Cos(t), 0.6 + 0.3 * Sin(t)], [0, ang, ang / 12]);
+
+  Manipulate({
+    name: 'plot-regions',
+    body: ({ r, a, ang }) => ({
+      view: { r, a, ang, arc: arc(ang) },
+      graphics: [
+        RegionPlot((x, y) => x * x + y * y < 2.25 && (x - 0.5) ** 2 + y ** 2 > r * r, [-2, 2], [-2, 2], {
+          FrameLabel: ['x', 'y'], PlotLabel: 'RegionPlot', ImageSize: 300, testid: 'region-svg' }),
+        ParametricPlot((u, v) => [[u, v - 1.5 * u * v * v], [-u, v - 1.5 * u * v * v]], [0, 1], [0, 1], {
+          Frame: false, // a region's default Frame (v0.1.26) turned off: this plot tests the axes and their labels
+          PlotStyle: Blue, AxesLabel: ['x̂', 'ẑ'], LabelStyle: [Black], Exclusions: 'None', PerformanceGoal: 'Quality', ImageSize: 300, testid: 'parametric-svg' }),
+        DensityPlot((x, y) => Exp(-((x - a) ** 2 + y * y)), [-3, 3], [-3, 3], {
+          ColorFunctionScaling: false, MaxRecursion: 5, PlotRange: [[-3, 3], [-3, 3], 'All'], ImageSize: 300, testid: 'density-svg' }),
+        Graphics([
+          [LightGray, Dashed, Line(arc(ang))], [PointSize(0.012), Darker(Cyan), Point(arc(ang))],
+          [Darker(Cyan), AbsoluteThickness(1.5), Arrowheads(0.03), Annotation(Arrow(BSplineCurve(arc(ang))), 'bspline-arrow')],
+          Inset(insetPlot([0.28, -0.29], [0.3, -0.27]), [1.38, 0.45]),
+        ], { PlotRange: [[0, 2], [0, 1.2]], ImageSize: 520, testid: 'inset-svg' }),
+      ],
+    }),
+    graphics: [{ id: 'graphic' }, { id: 'graphic2' }, { id: 'graphic3' }, { id: 'graphic4' }],
+    controls: [
+      [['r', 0.5, 'hole radius'], 0.1, 1, 0.1, { Appearance: 'Labeled' }],
+      [['a', 0, 'bump position'], -2, 2, 0.5, { Appearance: 'Labeled' }],
+      [['ang', 3, 'arc angle'], 1, 6, 0.5, { Appearance: 'Labeled' }],
+    ],
+  });
+</script>
+</body>
+</html>

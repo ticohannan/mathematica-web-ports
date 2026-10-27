@@ -19,8 +19,15 @@
 //                                 ViewAngle, v0.1.21) the vertical angle is that instead.
 //   'mesh' primitives (GraphicsComplex polygons, v0.1.21): one indexed BufferGeometry (each polygon a triangle fan),
 //                                 smooth vertex normals, both faces; edges as polygons unless EdgeForm[].
+//   textured polygons (v0.1.26: a polygon with `texture` and `textureCoordinates`, shared/graphics3d.js Texture): the
+//                                 same triangle fan with the texture coordinates as UVs; a white Lambert material with
+//                                 the image as its map (one THREE.CanvasTexture per image object, from shared/graphics.js
+//                                 imageCanvas; colour values used as they are; anisotropic filtering up to 8), always
+//                                 blended (the image's alpha × Opacity), both faces, no depth writes; edges as for any
+//                                 polygon.
 import { THREE, surface, cylinderBetween, fatLine, label } from './three-helpers.js';
 import { sampleCurve, sampleSurface, sampleCircle, infinitePlanePolygon, apply4, cuboidCorners, infiniteLineSegment } from './graphics3d.js';
+import { imageCanvas } from './graphics.js';
 
 /** Mathematica's default ViewPoint */
 export const VIEWPOINT = [1.3, -2.4, 2];
@@ -68,6 +75,33 @@ function polygonMesh(points, material) {
   geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
   geo.computeVertexNormals();
   return new THREE.Mesh(geo, material);
+}
+
+// v0.1.26: Texture on a Polygon — one texture per image object (kept while the image object lives). The GL texture is
+// not freed with the object (three.js frees it only on dispose()), so a body should make its image once (a module
+// constant, as camera-apparent-velocity does) rather than a new Rasterize or RGBA image on every evaluation.
+const textures = new WeakMap();
+function textureOf(image, renderer) {
+  let t = textures.get(image);
+  if (!t) {
+    t = new THREE.CanvasTexture(imageCanvas(image)); // flipY: texture coordinate t = 1 is the image's top row
+    t.colorSpace = THREE.NoColorSpace; // the colour values as they are (the 3D pictures write them unencoded)
+    t.anisotropy = Math.min(8, renderer?.capabilities?.getMaxAnisotropy?.() ?? 1); // sharp when seen at a slant
+    textures.set(image, t);
+  }
+  return t;
+}
+function texturedPolygonMesh(p, { clip, viewer }) {
+  const geo = new THREE.BufferGeometry();
+  const pos = [], uv = [];
+  const { points: q, textureCoordinates: c } = p;
+  for (let i = 1; i + 1 < q.length; i++) { pos.push(...q[0], ...q[i], ...q[i + 1]); uv.push(...c[0], ...c[i], ...c[i + 1]); }
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  geo.computeVertexNormals();
+  const m = new THREE.MeshLambertMaterial({ color: new THREE.Color(1, 1, 1), map: textureOf(p.texture, viewer?.renderer), transparent: true, opacity: p.opacity, side: THREE.DoubleSide, depthWrite: false });
+  if (clip) m.clippingPlanes = clip;
+  return new THREE.Mesh(geo, m);
 }
 
 function surfaceMesh(grid, material) {
@@ -165,7 +199,10 @@ export function addPrims(group, prims, ctx) {
         edges(segs, p);
         break;
       }
-      case 'polygon': group.add(polygonMesh(p.points, mat(p, THREE.DoubleSide))); edges(loop(p.points), p); break;
+      case 'polygon':
+        if (p.texture && p.textureCoordinates) group.add(texturedPolygonMesh(p, ctx)); // v0.1.26
+        else group.add(polygonMesh(p.points, mat(p, THREE.DoubleSide)));
+        edges(loop(p.points), p); break;
       case 'infinitePlane': {
         const poly = infinitePlanePolygon(p.points, ctx.box);
         if (poly.length >= 3) { group.add(polygonMesh(poly, mat(p, THREE.DoubleSide))); edges(loop(poly), p); }

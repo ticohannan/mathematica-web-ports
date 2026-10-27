@@ -105,6 +105,9 @@ export function createPlot(container, opts) {
         'font-family': family, 'data-testid': testid,
       });
       t.textContent = str;
+      // v0.1.26: runs of spaces are kept, as Mathematica draws them (SVG collapses them by default); only such texts
+      // get the style, so that every other text is written exactly as before
+      if (/\s\s/.test(str)) t.setAttribute('style', 'white-space:pre');
       return g.appendChild(t);
     },
     group: (g, attrs = {}) => g.appendChild(svgNode('g', attrs)),

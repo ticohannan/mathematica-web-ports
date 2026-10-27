@@ -22,6 +22,9 @@
 //     same (===) — the 3D counterpart of shared/graphics.js cachedGraphics; groupsOf(graphics) lists the parts;
 //   - pure helpers of the renderer: clipPlaneData (explicit PlotRange → six clipping planes), boxRatioTransform
 //     (BoxRatios), niceTicks (Ticks -> Automatic), frameData (Boxed / Axes / Ticks / AxesLabel geometry), imageWidth.
+// Added in v0.1.26 (additive; existing outputs unchanged): Texture[image] and Polygon[pts, VertexTextureCoordinates ->
+//   {{s, t}, …}] — a flattened polygon carries `texture` and `textureCoordinates` only when it has both (images: RGBA data
+//   or shared/graphics.js Rasterize; drawn by shared/graphics3d-three.js).
 import { NAMED, darker } from './mma-colors.js';
 import { fma } from './mma-exact.js';
 
@@ -45,6 +48,12 @@ export const Arrowheads = (s) => ({ directive: 'arrowheads', value: s });
 export const Directive = (list) => ({ directive: 'list', value: list });
 /** EdgeForm[] (no edges: EdgeForm()) or EdgeForm[c] (edges in colour c, an RGB list) */
 export const EdgeForm = (c = 'None') => ({ directive: 'edgeForm', value: c });
+/**
+ * v0.1.26: Texture[image] — the following Polygons with VertexTextureCoordinates show the image instead of their colour
+ * (Opacity multiplies its alpha; lit like a white surface). image: an RGBA image {width, height, data} (row 1 at the
+ * top) or a shared/graphics.js Rasterize / ImageReflect description; other primitives ignore the texture.
+ */
+export const Texture = (image) => ({ directive: 'texture', value: image });
 
 // ---- primitives ---------------------------------------------------------------------------------------
 const isPoint = (p) => Array.isArray(p) && typeof p[0] === 'number';
@@ -61,8 +70,12 @@ export const Cuboid = (min, max) => ({ prim: 'cuboid', min, max });
  * corners as written in the source (robot-singularities' outputs stay bit-identical); the renderer and tests use this.
  */
 export const cuboidCorners = (p) => ({ min: [0, 1, 2].map((k) => Math.min(p.min[k], p.max[k])), max: [0, 1, 2].map((k) => Math.max(p.min[k], p.max[k])) });
-/** Polygon[{p1, p2, ...}] */
-export const Polygon = (points) => ({ prim: 'polygon', points });
+/**
+ * Polygon[{p1, p2, ...}]; v0.1.26: Polygon[pts, VertexTextureCoordinates -> {{s1, t1}, …}] — with a Texture in effect
+ * the polygon shows the image ({0, 0} its bottom-left, {1, 1} its top-right corner)
+ */
+export const Polygon = (points, { VertexTextureCoordinates } = {}) => (VertexTextureCoordinates
+  ? { prim: 'polygon', points, textureCoordinates: VertexTextureCoordinates } : { prim: 'polygon', points });
 /** InfinitePlane[{p1, p2, p3}] (plane through three points; drawn clipped to the plot range) */
 export const InfinitePlane = (points, vs) => ({ prim: 'infinitePlane', points: vs ? [points, points.map((x, k) => x + vs[0][k]), points.map((x, k) => x + vs[1][k])] : points }); // v0.1.23: also InfinitePlane[p, {v1, v2}]
 /** Point[p] */
@@ -163,6 +176,7 @@ function applyDirective(st, d) {
   if (d.directive === 'arrowheads') return { ...st, arrowheads: d.value };
   if (d.directive === 'edgeForm') return { ...st, edgeForm: d.value };
   if (d.directive === 'fontSize') return { ...st, fontSize: d.value };
+  if (d.directive === 'texture') return { ...st, texture: d.value };
   return st;
 }
 
@@ -195,7 +209,9 @@ export function flatten(g, style = DEFAULT_STYLE, M = I4, out = []) {
     case 'sphere': out.push({ type: 'sphere', centers: g.centers.map(P), radius: g.radius, ...s }); break;
     case 'line': out.push({ type: 'line', points: g.points.map(P), ...s }); break;
     case 'cylinder': out.push({ type: 'cylinder', p1: P(g.p1), p2: P(g.p2), radius: g.radius, ...s }); break;
-    case 'polygon': out.push({ type: 'polygon', points: g.points.map(P), ...s }); break;
+    case 'polygon': out.push(g.textureCoordinates && style.texture // v0.1.26: a textured polygon also carries both
+      ? { type: 'polygon', points: g.points.map(P), ...s, texture: style.texture, textureCoordinates: g.textureCoordinates }
+      : { type: 'polygon', points: g.points.map(P), ...s }); break;
     case 'infinitePlane': out.push({ type: 'infinitePlane', points: g.points.map(P), ...s }); break;
     case 'point': out.push({ type: 'point', points: g.points.map(P), ...s }); break;
     case 'arrow': out.push({ type: 'arrow', points: g.points.map(P), ...s }); break;

@@ -82,6 +82,11 @@ pictures side by side: `graphics: [{ id: 'graphic', … }, { id: 'graphic2', …
 picture. 3D: see the generated `--3d` app (`Graphics3D` data drawn by `shared/graphics3d-view.js`; primitives
 `Sphere`, `Cylinder`, `Cone`, `Tube`, `Cuboid`, `Polygon`, `Line`, `Arrow`, `InfinitePlane`, `InfiniteLine`, `Text`).
 `Ellipsoid[c, Σ]` in 2D draws the ellipse of a 2 × 2 matrix; `Hue[h]` is available. `Disk[c, r, {a0, a1}]` draws a sector; `Opacity` fades points and text too.
+`BSplineCurve[pts]` (`SplineDegree`, `SplineClosed`; Mathematica's clamped default knots) is drawn like a `Line`, and
+`Arrow[BSplineCurve[pts]]` puts the head at the curve's end along its tangent. `Inset[g, pos]` takes any Graphics, a
+plot of the next section included: `Inset(RegionPlot(…, { Epilog, FrameLabel, ImageSize: 230 }), [1.38, 0.45])` draws the
+framed plot with its ticks and labels, `ImageSize` being its whole width in pixels (labels included, as in Mathematica)
+and `pos` the centre of that box; give it `testid` to find it in tests.
 
 ### Plots (`shared/plot.js`)
 
@@ -96,11 +101,21 @@ picture. 3D: see the generated `--3d` app (`Graphics3D` data drawn by `shared/gr
 | `PlotRange -> {All, {0, 1}}`, `Frame -> {True, True, False, False}`, `FrameLabel`, `AxesLabel`, `Epilog`, `ImagePadding`, `AspectRatio`, `ImageSize -> {w, h}` | the same keys |
 | `Ticks -> {{0, π/2, π}, Automatic}` | `Ticks: [[[0, '0'], [Pi / 2, 'π/2'], [Pi, 'π']], 'Automatic']` (labels as text) |
 | `ColorData[97, 2]` | `ColorData(97, 2)` |
+| `LabelStyle -> Directive[Black, Bold]` (tick labels, frame and axes labels, plot label) | `LabelStyle: Directive(Black, Bold)` |
+| `RegionPlot[x^2 + y^2 < 1, {x, -1, 1}, {y, -1, 1}, PlotStyle -> Red, BoundaryStyle -> None]` | `RegionPlot((x, y) => x * x + y * y < 1, [-1, 1], [-1, 1], { PlotStyle: Red, BoundaryStyle: None })` |
+| `ParametricPlot[{u Cos[v], u Sin[v]}, {u, 0, 1}, {v, 0, 2 Pi}]` (a region; `{{…}, {…}}` for several) | `ParametricPlot((u, v) => [u * Cos(v), u * Sin(v)], [0, 1], [0, 2 * Pi])` (`Mesh: n` optional) |
+| `DensityPlot[f[x, y], {x, -3, 3}, {y, -3, 3}, ColorFunctionScaling -> False, PlotRange -> {{-3, 3}, {-3, 3}, All}]` | `DensityPlot((x, y) => f(x, y), [-3, 3], [-3, 3], { ColorFunctionScaling: false, PlotRange: [[-3, 3], [-3, 3], 'All'] })` |
 
 A plot is a `Graphics` value: return it from the body like any picture (one per picture). Its frame, ticks and legend
 are redrawn when they change (e.g. an automatic plot range), and a Locator on a plot works in the plot's coordinates.
 Curves are sampled adaptively (not Mathematica's sampler: identical to well under a pixel); a value that is not a
-number (NaN) leaves a gap.
+number (NaN) leaves a gap. `RegionPlot` and `DensityPlot` have Mathematica's defaults (a frame, no axes, `AspectRatio`
+1, the plot range = the given ranges); a `RegionPlot` whose predicate is nowhere true draws only the frame (a framed
+canvas for an `Epilog`). Region faces are one seamless shape at `Opacity[0.3]` in the `PlotStyle` colour; boundaries are
+1 px lines in the region's default colour `ColorData[97, i]` whatever the `PlotStyle` (as Mathematica draws them; set
+`BoundaryStyle` to change them); a parametric region that folds over itself is darker where it is doubly covered.
+`DensityPlot` samples a 150 × 150 grid (`PlotPoints`) and colours it with Mathematica's default gradient
+(`DensityGradient`, or your `ColorFunction`).
 
 ### Geometry (`shared/geometry.js`)
 

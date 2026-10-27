@@ -24,10 +24,41 @@
 // 'Large'), Axes, AxesOrigin (default: 0 when inside the range, else the nearer end), Ticks, AxesLabel, Frame (True or
 // {bottom, left, top, right}; the axes stay as plain lines inside), FrameTicks, FrameLabel, PlotLabel, ImagePadding
 // ({{left, right}, {bottom, top}} px), PlotRangeClipping (default True: curves and Epilog clipped to the plot range),
-// Background; ListPlot: Joined (true, or a list per data set), PlotMarkers are not supported.
-// Not supported: Exclusions (jumps are joined unless the function gives a non-number there), Mesh, ColorFunction.
+// Background, LabelStyle (v0.1.26); ListPlot: Joined (true, or a list per data set), PlotMarkers are not supported.
+// Not supported by the curve and list plots: Exclusions (jumps are joined unless the function gives a non-number there),
+// Mesh, ColorFunction.
+//
+// v0.1.26 — regions and densities (Mathematica 10+ defaults; the same options as above unless said otherwise):
+//   RegionPlot((x, y) => x * x + y * y < 1, [-1, 1], [-1, 1])     RegionPlot[x^2 + y^2 < 1, {x, -1, 1}, {y, -1, 1}]
+//   ParametricPlot((u, v) => [u * Cos(v), u * Sin(v)], [0, 1], [0, 2 * Pi])    ParametricPlot[{u Cos[v], u Sin[v]},
+//                                                                  {u, 0, 1}, {v, 0, 2 Pi}] (a region: a v range given)
+//   DensityPlot((x, y) => Sin(x) * Sin(y), [-3, 3], [-3, 3], { ColorFunctionScaling: false })
+//   DensityGradient(v), DENSITY_GRADIENT_STOPS                     Mathematica's default DensityPlot colours
+// RegionPlot: Frame, no Axes, AspectRatio 1, PlotRange = the given ranges (padded Scaled[0.02]); a grid of PlotPoints (default 50)
+// cells per axis, marching squares, each boundary crossing on a cell edge refined by 10 bisections, then each boundary
+// chord halved with its midpoint moved onto the boundary MaxRecursion times (default 1, at most 2; not Mathematica's sampler);
+// the face in the PlotStyle colour (default ColorData[97, 1]; a colour or a list of directives) at Opacity 0.3 drawn as one
+// seamless shape (FilledPolygons), the boundary (BoundaryStyle, None for none) as joined lines. A region where pred is
+// nowhere true draws only the frame. Test ids region-face, region-boundary.
+// ParametricPlot regions: f(u, v) → a point or a list of points (several regions, PlotStyle cyclic); a PlotPoints ×
+// PlotPoints grid (default 40) of quads, the face drawn seamlessly — the quads of each orientation as one shape, so a
+// region that folds over itself is darker where it is doubly covered, as Mathematica's —, the boundary = the images of the
+// four edges of the domain; Mesh (default None; n: n lines each way, MeshStyle default the darker face colour); PlotRange
+// and AspectRatio as the curve form; Exclusions, PerformanceGoal accepted and ignored. Test ids region-face-i,
+// region-boundary-i, region-mesh-i.
+// Boundaries (both): opaque, AbsoluteThickness 1 and the region's default colour ColorData[97, i] whatever the PlotStyle
+// (as the Mathematica snapshots of ReachableSetForADrone show: Blue faces, boundaries in ColorData[97, 1] and [97, 2]).
+// DensityPlot: samples at the centres of a PlotPoints × PlotPoints grid (default 150) drawn as an image over the plot range,
+// interpolated by the browser; Frame, no Axes, AspectRatio 1; ColorFunction (default DensityGradient) of the value scaled
+// by the z range to 0…1 (ColorFunctionScaling, default true) or of the raw value (false: DensityGradient clips it to
+// 0…1); PlotRange {{x0, x1}, {y0, y1}} (default the given ranges), a third entry {z0, z1} or All, or {z0, z1} alone, sets
+// the z range (automatic: min…max of the samples); non-numbers are transparent; MaxRecursion, PerformanceGoal ignored.
+// Test id density-raster.
 
-import { Graphics, RGBColor, Opacity, AbsoluteThickness, AbsolutePointSize, PointSize, Line, Polygon, Point, applyDirective, DEFAULT_STYLE } from './graphics.js';
+import {
+  Graphics, RGBColor, Opacity, AbsoluteThickness, AbsolutePointSize, PointSize, Line, Polygon, Point, applyDirective, DEFAULT_STYLE,
+  Annotation, EdgeForm, Darker, FilledPolygons, ImageRaster,
+} from './graphics.js';
 
 /** ColorData[97] — Mathematica's default plot colours (the first 10, then repeated). */
 export const COLOR_DATA_97 = Object.freeze([
@@ -114,6 +145,9 @@ export function segments(xs, ys) {
 // PlotStyle -> {s1, s2, …}: one style per curve, used cyclically (as Mathematica); a single directive: every curve
 const styleList = (PlotStyle, n) => {
   if (PlotStyle == null) return Array(n).fill(null);
+  // v0.1.26: one curve and a flat list of directives ({Dashed, Black, Thick}) — all of them style that curve, as in
+  // Mathematica (with several curves a list gives the successive curves their styles)
+  if (n === 1 && Array.isArray(PlotStyle) && PlotStyle.length > 1 && PlotStyle.every((d) => !Array.isArray(d))) return [PlotStyle];
   if (Array.isArray(PlotStyle) && PlotStyle.length) return Array.from({ length: n }, (_, i) => PlotStyle[i % PlotStyle.length]);
   return Array(n).fill(PlotStyle);
 };
@@ -164,7 +198,7 @@ function plotOptions(opts, range, items, aspect) {
     AxesInFrame: frame && opts.Axes !== false, // Mathematica keeps the axes (lines, no ticks) inside a Frame
     AxesOrigin: opts.AxesOrigin ?? [clampTo(0, PlotRange[0]), clampTo(0, PlotRange[1])],
   };
-  for (const k of ['Ticks', 'AxesLabel', 'Frame', 'FrameTicks', 'FrameLabel', 'PlotLabel', 'Background', 'ImagePadding', 'label', 'testid', 'id']) if (opts[k] !== undefined) o[k] = opts[k];
+  for (const k of ['Ticks', 'AxesLabel', 'Frame', 'FrameTicks', 'FrameLabel', 'PlotLabel', 'LabelStyle', 'Background', 'ImagePadding', 'label', 'testid', 'id']) if (opts[k] !== undefined) o[k] = opts[k];
   const lg = opts.PlotLegends;
   if (lg != null && items.length) {
     const labels = lg.placed ? lg.labels : lg;
@@ -217,8 +251,13 @@ export function Plot(f, [a, b], opts = {}) {
   return Graphics([...asList(opts.Prolog), ...prims, ...asList(opts.Epilog)], o);
 }
 
-/** ParametricPlot[{x(t), y(t)}, {t, a, b}, opts]: f returns [x, y] or a list of such points (several curves). */
-export function ParametricPlot(f, [a, b], opts = {}) {
+/**
+ * ParametricPlot[{x(t), y(t)}, {t, a, b}, opts]: f returns [x, y] or a list of such points (several curves).
+ * ParametricPlot(f, [u0, u1], [v0, v1], opts) (v0.1.26, a third argument that is an array): the region f(u, v) — see the
+ * header.
+ */
+export function ParametricPlot(f, [a, b], opts = {}, regionOpts = {}) {
+  if (Array.isArray(opts)) return parametricRegion(f, [a, b], opts, regionOpts ?? {});
   const first = f((a + b) / 2);
   const many = Array.isArray(first[0]);
   const g = (t) => { const v = f(t); return (many ? v : [v]).flat(); };
@@ -276,4 +315,273 @@ export const ListLinePlot = (data, opts = {}) => ListPlot(data, { Joined: true, 
 export function Show(...gs) {
   const list = gs.flat().filter((g) => g && g.head === 'Graphics');
   return Graphics(list.map((g) => g.list), { ...list[0].options });
+}
+
+// ---- regions and densities (v0.1.26) -------------------------------------------------------------------------------
+const gridSize = (pp, dflt) => (Array.isArray(pp) ? pp : [pp ?? dflt, pp ?? dflt]).map((n) => Math.max(1, Math.round(n)));
+const isNone = (s) => s === 'None' || s === false || s?.dir === 'none';
+/**
+ * The PlotRange of RegionPlot and DensityPlot: the given ranges unless the option gives others. Padding (v0.1.26): the
+ * PlotRangePadding option (a number or [px, py], fractions of the ranges), else `pad` — RegionPlot Scaled[0.02] as
+ * Mathematica draws it, DensityPlot none (its raster fills the frame).
+ */
+function domainRange(spec, xr, yr, opts = {}, pad = 0) {
+  let xs = xr, ys = yr;
+  if (Array.isArray(spec) && spec.length >= 2 && (Array.isArray(spec[0]) || isAuto(spec[0])) && (Array.isArray(spec[1]) || isAuto(spec[1]))) {
+    if (Array.isArray(spec[0])) xs = spec[0];
+    if (Array.isArray(spec[1])) ys = spec[1];
+  }
+  const p = opts.PlotRangePadding ?? pad;
+  return { PlotRange: [xs, ys], PlotRangePadding: Array.isArray(p) ? p : [p, p], auto: [false, false] };
+}
+/** The face of region i: its default colour at Opacity 0.3 without edges, then the user's PlotStyle. */
+const faceStyle = (i, user) => [RGBColor(...COLOR_DATA_97[i % 10]), Opacity(0.3), EdgeForm(), ...asList(user)];
+/** The boundary of region i: opaque, AbsoluteThickness 1, the region's default colour (whatever the PlotStyle), then BoundaryStyle. */
+const boundaryStyle = (i, user) => [RGBColor(...COLOR_DATA_97[i % 10]), AbsoluteThickness(1), ...asList(user)];
+const legendItems = (faces) => faces.map((s) => ({ ...resolve(s), filled: true }));
+/** The runs of a list of points with gaps (null): [[p, …], …], runs of one point dropped. */
+const runsOf = (pts) => {
+  const out = [];
+  let run = [];
+  for (const p of pts) { if (p) run.push(p); else { if (run.length > 1) out.push(run); run = []; } }
+  if (run.length > 1) out.push(run);
+  return out;
+};
+const signedArea = (pts) => { let a = 0; for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length]; a += p[0] * q[1] - q[0] * p[1]; } return a / 2; };
+
+/**
+ * The outline of a union of counter-clockwise polygons given as lists of vertex ids (integers): an edge that two polygons
+ * traverse in opposite directions (shared by neighbours) cancels; the others are linked into closed loops of ids. The
+ * loops wind around each point as often as the polygons cover it, so FilledPolygons of them paints exactly the union.
+ */
+function outlineLoops(polys) {
+  let M = 1;
+  for (const poly of polys) for (const id of poly) if (id >= M) M = id + 1;
+  const count = new Map(); // a·M + b → number of edges a → b not cancelled
+  for (const poly of polys) {
+    for (let i = 0; i < poly.length; i++) {
+      const a = poly[i], b = poly[(i + 1) % poly.length];
+      if (a === b) continue;
+      const back = b * M + a, c = count.get(back);
+      if (c) { if (c === 1) count.delete(back); else count.set(back, c - 1); } else count.set(a * M + b, (count.get(a * M + b) ?? 0) + 1);
+    }
+  }
+  const next = new Map(); // a → [b, …]
+  for (const [key, c] of count) {
+    const a = Math.floor(key / M), b = key % M;
+    if (!next.has(a)) next.set(a, []);
+    for (let i = 0; i < c; i++) next.get(a).push(b);
+  }
+  const loops = [];
+  for (const start of [...next.keys()]) {
+    while (next.get(start)?.length) {
+      const loop = [start];
+      for (let a = start; ;) {
+        const outs = next.get(a);
+        if (!outs?.length) break;
+        const b = outs.pop();
+        if (!outs.length) next.delete(a);
+        if (b === start) break;
+        loop.push(b); a = b;
+      }
+      loops.push(loop);
+    }
+  }
+  return loops;
+}
+
+/** RegionPlot[pred, {x, x0, x1}, {y, y0, y1}, opts]: the region where pred(x, y) is true — see the header. */
+export function RegionPlot(pred, [x0, x1], [y0, y1], opts = {}) {
+  const [nx, ny] = gridSize(opts.PlotPoints, 50), STEPS = 10, W = nx + 1;
+  const X = (i) => (i === nx ? x1 : x0 + ((x1 - x0) * i) / nx), Y = (j) => (j === ny ? y1 : y0 + ((y1 - y0) * j) / ny);
+  const test = (x, y) => !!pred(x, y);
+  const inside = new Uint8Array(W * (ny + 1));
+  for (let j = 0; j <= ny; j++) for (let i = 0; i <= nx; i++) inside[j * W + i] = test(X(i), Y(j)) ? 1 : 0;
+  // vertex ids: the grid corners, then the crossings on the horizontal edges (from corner (i, j) to (i + 1, j)), then on
+  // the vertical edges (from (i, j) to (i, j + 1)); a crossing lies between a corner inside and one outside
+  const C = W * (ny + 1), H = nx * (ny + 1);
+  const cId = (i, j) => j * W + i, hId = (i, j) => C + j * nx + i, vId = (i, j) => C + H + j * W + i;
+  const crossings = new Map();
+  const bisect = (ax, ay, bx, by, inA) => { // the boundary between a (inA) and b (not inA), 10 halvings
+    for (let s = 0; s < STEPS; s++) {
+      const mx = (ax + bx) / 2, my = (ay + by) / 2;
+      if (test(mx, my) === inA) { ax = mx; ay = my; } else { bx = mx; by = my; }
+    }
+    return [(ax + bx) / 2, (ay + by) / 2];
+  };
+  const pointOf = (id) => {
+    if (id < C) return [X(id % W), Y(Math.floor(id / W))];
+    let p = crossings.get(id);
+    if (!p) {
+      if (id < C + H) { const i = (id - C) % nx, j = Math.floor((id - C) / nx); p = bisect(X(i), Y(j), X(i + 1), Y(j), inside[cId(i, j)] === 1); }
+      else { const r = id - C - H, i = r % W, j = Math.floor(r / W); p = bisect(X(i), Y(j), X(i), Y(j + 1), inside[cId(i, j)] === 1); }
+      crossings.set(id, p);
+    }
+    return p;
+  };
+  // marching squares: the inside part of each cell as a counter-clockwise polygon of ids
+  const polys = [];
+  for (let j = 0; j < ny; j++) {
+    for (let i = 0; i < nx; i++) {
+      const c = [cId(i, j), cId(i + 1, j), cId(i + 1, j + 1), cId(i, j + 1)];
+      const ins = c.map((id) => inside[id]);
+      const mask = ins[0] | (ins[1] << 1) | (ins[2] << 2) | (ins[3] << 3);
+      if (mask === 0) continue;
+      if (mask === 15) { polys.push(c); continue; }
+      const e = [hId(i, j), vId(i + 1, j), hId(i, j + 1), vId(i, j)]; // edge k joins corners k and k + 1
+      if ((mask === 5 || mask === 10) && !test((X(i) + X(i + 1)) / 2, (Y(j) + Y(j + 1)) / 2)) { // a saddle, centre outside: two corners
+        if (mask === 5) polys.push([c[0], e[0], e[3]], [e[1], c[2], e[2]]);
+        else polys.push([e[0], c[1], e[1]], [e[2], c[3], e[3]]);
+        continue;
+      }
+      const poly = [];
+      for (let k = 0; k < 4; k++) { if (ins[k]) poly.push(c[k]); if (ins[k] !== ins[(k + 1) % 4]) poly.push(e[k]); }
+      polys.push(poly);
+    }
+  }
+  // the loops as points, each marked whether it lies on the boundary (a crossing) or on the edge of the domain (a corner);
+  // a loop edge between two crossings is a chord of the boundary
+  let shapes = outlineLoops(polys).map((loop) => loop.map((id) => ({ p: pointOf(id), on: id >= C })));
+  // MaxRecursion (default 1, at most 2): each chord is halved and its midpoint moved onto the boundary (bisection across
+  // the chord, within half its length), so that curved boundaries are smoother than the grid
+  const onBoundary = (a, b) => {
+    const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, dx = (b[0] - a[0]) / 2, dy = (b[1] - a[1]) / 2;
+    const px = mx + dy, py = my - dx, qx = mx - dy, qy = my + dx, inP = test(px, py);
+    return dx === 0 && dy === 0 || inP === test(qx, qy) ? [mx, my] : bisect(px, py, qx, qy, inP);
+  };
+  for (let level = Math.max(0, Math.min(2, Math.round(opts.MaxRecursion ?? 1))); level > 0; level--) {
+    shapes = shapes.map((loop) => loop.flatMap((a, k) => {
+      const b = loop[(k + 1) % loop.length];
+      return a.on && b.on ? [a, { p: onBoundary(a.p, b.p), on: true }] : [a];
+    }));
+  }
+  // the boundary: the runs of chords (the rest of a loop runs along the edge of the domain)
+  const runs = [];
+  for (const loop of shapes) {
+    const m = loop.length, chord = (k) => loop[k].on && loop[(k + 1) % m].on;
+    let s = -1;
+    for (let k = 0; k < m && s < 0; k++) if (chord(k) && !chord((k + m - 1) % m)) s = k;
+    if (s < 0) { if (m > 2 && chord(0)) runs.push([...loop, loop[0]].map((v) => v.p)); continue; } // a closed curve
+    let run = null;
+    for (let t = 0; t < m; t++) {
+      const k = (s + t) % m;
+      if (chord(k)) { if (!run) run = [loop[k].p]; run.push(loop[(k + 1) % m].p); } else if (run) { runs.push(run); run = null; }
+    }
+    if (run) runs.push(run);
+  }
+  const face = faceStyle(0, opts.PlotStyle);
+  const o = plotOptions({ Frame: true, Axes: false, ...opts }, domainRange(opts.PlotRange, [x0, x1], [y0, y1], opts, 0.02), legendItems([face]), 1);
+  const prims = [];
+  if (shapes.length) prims.push(Annotation([...face, FilledPolygons(shapes.map((l) => l.map((v) => v.p)))], 'region-face'));
+  if (runs.length && !isNone(opts.BoundaryStyle)) prims.push(Annotation([...boundaryStyle(0, opts.BoundaryStyle), Line(runs.length === 1 ? runs[0] : runs)], 'region-boundary'));
+  return Graphics([asList(opts.Prolog), ...prims, asList(opts.Epilog)], o);
+}
+
+/** ParametricPlot[{x(u, v), y(u, v)}, {u, u0, u1}, {v, v0, v1}, opts] — see the header. */
+function parametricRegion(f, [u0, u1], [v0, v1], opts) {
+  const [nu, nv] = gridSize(opts.PlotPoints, 40), W = nu + 1;
+  const U = (i) => (i === nu ? u1 : u0 + ((u1 - u0) * i) / nu), V = (j) => (j === nv ? v1 : v0 + ((v1 - v0) * j) / nv);
+  const first = f((u0 + u1) / 2, (v0 + v1) / 2);
+  const many = Array.isArray(first?.[0]);
+  const m = many ? first.length : 1;
+  const ok = (p) => Array.isArray(p) && finite(p[0]) && finite(p[1]);
+  const grids = Array.from({ length: m }, () => new Array(W * (nv + 1)));
+  for (let j = 0; j <= nv; j++) {
+    for (let i = 0; i <= nu; i++) {
+      const val = f(U(i), V(j)), pts = many ? val : [val];
+      for (let r = 0; r < m; r++) grids[r][j * W + i] = ok(pts?.[r]) ? pts[r] : null;
+    }
+  }
+  const styles = styleList(opts.PlotStyle, m), faces = styles.map((s, r) => faceStyle(r, s));
+  const range = resolveRange(opts.PlotRange, grids.flat().filter(Boolean), null);
+  // v0.1.26: Mathematica's defaults for a region ParametricPlot (read from a saved notebook): Frame and Axes, automatic
+  // ranges padded by Scaled[0.05] on both axes; a PlotRangePadding option replaces that
+  range.PlotRangePadding = opts.PlotRangePadding !== undefined ? (Array.isArray(opts.PlotRangePadding) ? opts.PlotRangePadding : [opts.PlotRangePadding, opts.PlotRangePadding])
+    : range.auto.map((a) => (a ? 0.05 : 0));
+  const o = plotOptions({ Frame: true, Axes: true, ...opts, AspectRatio: opts.AspectRatio ?? 'Automatic' }, range, legendItems(faces), undefined);
+  // the domain's edge: v = v0 (u increasing), u = u1, v = v1 (u decreasing), u = u0 — closed, split where a point is missing
+  const edge = [];
+  for (let i = 0; i <= nu; i++) edge.push(i);
+  for (let j = 1; j <= nv; j++) edge.push(j * W + nu);
+  for (let i = nu - 1; i >= 0; i--) edge.push(nv * W + i);
+  for (let j = nv - 1; j >= 0; j--) edge.push(j * W);
+  const meshCounts = isNone(opts.Mesh) || opts.Mesh == null ? [0, 0] : Array.isArray(opts.Mesh) ? opts.Mesh : [opts.Mesh, opts.Mesh];
+  const faceParts = [], meshParts = [], boundaryParts = [];
+  for (let r = 0; r < m; r++) {
+    const P = grids[r];
+    // the quads, counter-clockwise in (u, v); those the map turns over are reversed and filled as a second shape
+    const pos = [], neg = [];
+    for (let j = 0; j < nv; j++) {
+      for (let i = 0; i < nu; i++) {
+        const q = [j * W + i, j * W + i + 1, (j + 1) * W + i + 1, (j + 1) * W + i];
+        if (!q.every((id) => P[id])) continue;
+        if (signedArea(q.map((id) => P[id])) >= 0) pos.push(q); else neg.push([q[0], q[3], q[2], q[1]]);
+      }
+    }
+    const shapes = [pos, neg].filter((s) => s.length).map((s) => FilledPolygons(outlineLoops(s).map((l) => l.map((id) => P[id]))));
+    if (shapes.length) faceParts.push(Annotation([...faces[r], ...shapes], `region-face-${r + 1}`));
+    if (meshCounts[0] > 0 || meshCounts[1] > 0) { // Mesh -> n: n lines u = const and n lines v = const
+      const at = (u, v) => { const val = f(u, v), p = many ? val?.[r] : val; return ok(p) ? p : null; };
+      const lines = [];
+      for (let k = 1; k <= meshCounts[0]; k++) { const u = u0 + ((u1 - u0) * k) / (meshCounts[0] + 1); lines.push(...runsOf(Array.from({ length: nv + 1 }, (_, j) => at(u, V(j))))); }
+      for (let k = 1; k <= meshCounts[1]; k++) { const v = v0 + ((v1 - v0) * k) / (meshCounts[1] + 1); lines.push(...runsOf(Array.from({ length: nu + 1 }, (_, i) => at(U(i), v)))); }
+      if (lines.length) meshParts.push(Annotation([Darker(RGBColor(...resolve(faces[r]).color)), AbsoluteThickness(0.5), ...asList(opts.MeshStyle), Line(lines)], `region-mesh-${r + 1}`));
+    }
+    if (!isNone(opts.BoundaryStyle)) {
+      const runs = runsOf(edge.map((id) => P[id]));
+      const user = styleList(opts.BoundaryStyle, m)[r];
+      if (runs.length) boundaryParts.push(Annotation([...boundaryStyle(r, user), Line(runs.length === 1 ? runs[0] : runs)], `region-boundary-${r + 1}`));
+    }
+  }
+  return Graphics([asList(opts.Prolog), ...faceParts, ...meshParts, ...boundaryParts, asList(opts.Epilog)], o);
+}
+
+/** DENSITY_GRADIENT_STOPS: [value, [r, g, b]] — Mathematica's default DensityPlot colours, fitted to snapshot pictures. */
+export const DENSITY_GRADIENT_STOPS = Object.freeze([
+  [0, [0.2, 0.231, 0.498]], [0.05, [0.338, 0.247, 0.466]], [0.1, [0.444, 0.267, 0.429]], [0.15, [0.538, 0.286, 0.392]],
+  [0.2, [0.626, 0.302, 0.357]], [0.25, [0.702, 0.326, 0.333]], [0.3, [0.755, 0.359, 0.329]], [0.35, [0.8, 0.396, 0.333]],
+  [0.4, [0.843, 0.435, 0.341]], [0.45, [0.883, 0.475, 0.349]], [0.5, [0.922, 0.504, 0.351]], [0.55, [0.941, 0.569, 0.361]],
+  [0.6, [0.955, 0.618, 0.369]], [0.65, [0.964, 0.666, 0.376]], [0.7, [0.974, 0.721, 0.388]], [0.75, [0.984, 0.769, 0.424]],
+  [0.8, [0.992, 0.813, 0.486]], [0.85, [0.996, 0.851, 0.554]], [0.9, [1, 0.894, 0.641]], [0.95, [1, 0.929, 0.713]],
+  [1, [1, 0.959, 0.769]],
+].map(([t, c]) => Object.freeze([t, Object.freeze(c)])));
+const gradientRgb = (v) => {
+  const S = DENSITY_GRADIENT_STOPS, t = v >= 0 ? (v <= 1 ? v : 1) : 0; // clipped to [0, 1] (not a number: 0)
+  let k = 1;
+  while (k < S.length - 1 && S[k][0] < t) k++;
+  const [ta, a] = S[k - 1], [tb, b] = S[k], s = (t - ta) / (tb - ta);
+  return [a[0] + (b[0] - a[0]) * s, a[1] + (b[1] - a[1]) * s, a[2] + (b[2] - a[2]) * s];
+};
+/** DensityGradient(v): the colour of DensityPlot's default colour function at v (clipped to 0…1), linear between the stops. */
+export const DensityGradient = (v) => RGBColor(...gradientRgb(v));
+
+/** DensityPlot[f, {x, x0, x1}, {y, y0, y1}, opts] — see the header. */
+export function DensityPlot(f, [x0, x1], [y0, y1], opts = {}) {
+  const [nx, ny] = gridSize(opts.PlotPoints, 150);
+  const z = new Float64Array(nx * ny);
+  let lo = Infinity, hi = -Infinity;
+  for (let r = 0; r < ny; r++) { // row 0 at the top (ImageRaster)
+    const y = y1 - ((y1 - y0) * (r + 0.5)) / ny;
+    for (let c = 0; c < nx; c++) {
+      const v = f(x0 + ((x1 - x0) * (c + 0.5)) / nx, y);
+      z[r * nx + c] = finite(v) ? v : NaN;
+      if (finite(v)) { if (v < lo) lo = v; if (v > hi) hi = v; }
+    }
+  }
+  const spec = opts.PlotRange;
+  const zSpec = Array.isArray(spec) && spec.length === 2 && finite(spec[0]) ? spec : Array.isArray(spec) && spec.length === 3 ? spec[2] : null;
+  const [z0, z1] = Array.isArray(zSpec) && finite(zSpec[0]) && finite(zSpec[1]) ? zSpec : [lo, hi];
+  const scaling = opts.ColorFunctionScaling !== false, cf = opts.ColorFunction;
+  const data = new Uint8ClampedArray(nx * ny * 4);
+  for (let k = 0; k < z.length; k++) {
+    const v = z[k];
+    if (Number.isNaN(v)) continue; // transparent
+    const s = scaling ? Math.min(1, Math.max(0, z1 > z0 ? (v - z0) / (z1 - z0) : 0)) : v;
+    const c = cf ? cf(s) : gradientRgb(s), rgb = c.rgb ?? c;
+    data[4 * k] = 255 * rgb[0]; data[4 * k + 1] = 255 * rgb[1]; data[4 * k + 2] = 255 * rgb[2]; data[4 * k + 3] = 255;
+  }
+  const o = plotOptions({ Frame: true, Axes: false, ...opts }, domainRange(spec, [x0, x1], [y0, y1], opts, 0), [], 1);
+  o.FrameInFront = opts.FrameInFront ?? true; // v0.1.26: the frame and its ticks over the raster, as Mathematica draws them
+  const raster = Annotation(ImageRaster({ width: nx, height: ny, data }, [[x0, y0], [x1, y1]], { smooth: true }), 'density-raster');
+  return Graphics([asList(opts.Prolog), raster, asList(opts.Epilog)], o);
 }

@@ -113,7 +113,9 @@ export class Controls {
   }
 
   heading(text) {
-    this.root.append(el('div', { class: 'ctl-heading' }, text));
+    const h = el('div', { class: 'ctl-heading' }, text);
+    this.root.append(h);
+    return h; // v0.1.26: the element (a typeset heading sets its HTML)
   }
 
   delimiter() {

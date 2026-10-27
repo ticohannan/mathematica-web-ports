@@ -1,0 +1,514 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Extracted 2026-10-26 with tools/nbextract.py; cached outputs skipped.
+
+
+### [Title]
+Maximizing Apparent Velocity in a Camera's Frame
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+How should a drone move to maximize its apparent velocity in the frame of a camera? This Demonstration solves this problem for a drone that can move a distance r in any direction.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+(*this function shows x, y, z, Theta and Phi for the optimum distance point*)
+computeShortestPt[xc_,yc_,zc_,r_]:=Module[{x,y,z,Theta,Phi},
+(*Theta is the angle from +ve x axis where the optimum value occurred*)
+If[xc==0\[And]yc==0,Theta=0,Theta=N[ArcTan[xc,yc]]];(*Phi is the angle from +ve z axis where the optimum value occurred*)
+Phi=(3π)/(2)-N[ArcTan[Sqrt[r^2],Sqrt[xc^2+zc^2+yc^2-r^2]]+ArcTan[Sqrt[xc^2+yc^2],zc]];
+(*sphere parametric equations*)
+x=Chop[xc+r Cos[Theta]Sin[Phi]];
+y=Chop[yc+r Sin[Theta]Sin[Phi]];
+z=Chop[zc+r Cos[Phi]];
+Return[{Theta,Phi,x,y,z}]
+]
+
+### [Input] (init)
+sphericaldist[unusedvariab_,xc_,yc_,zc_,r_]:=Module[{x,y,z,Theta,Phi,var,val},
+{Theta,Phi,x,y,z}=computeShortestPt[xc,yc,zc,r];
+If[xc== 0\[And]yc==0,
+var={"\<\>", Row[{"\<(\>",Style["\<x\>",Italic],"\<, \>"Style["\<y\>",Italic],"\<) =\>"}],Row[{Style["\<z\>",Italic],"\< =\>"}],"\<Theta ∈ \>","\<Phi =\>"}; 
+val={"\<infinite solutions\>",StringForm["\<``(cos Theta, sin Theta)\>",NumberForm[r Sin[Phi],{10,1}]] ,
+NumberForm[z,{10,1}],"\<(0, 360\!\(\*SuperscriptBox[\()\), \(\[SmallCircle]\)]\)\>",NumberForm[Phi(180)/(π),{10,1}]^"\<\[SmallCircle]\>"};
+,
+var={Row[{Style["\<x\>",Italic],"\< =\>"}],Row[{Style["\<y\>",Italic],"\< =\>"}],Row[{Style["\<z\>",Italic],"\< =\>"}],"\<Theta =\>","\<Phi =\>"};
+val={NumberForm[x,{10,1}],NumberForm[y,{10,1}],NumberForm[z,{10,1}],NumberForm[Theta(180)/(π),{10,1}]^"\<\[SmallCircle]\>",NumberForm[Phi(180)/(π),{10,1}]^"\<\[SmallCircle]\>"};
+];
+Text[Grid[Transpose[{var,val}],Alignment->{{Right,Left}},Spacings->0.25]]
+]
+
+### [Input] (init)
+(*this function shows u, v and λ for the optimum distance point on the image plane*)
+imagePlaneCoor[unusedvariabl_,xc_,yc_,zc_,r_]:=Module[{x,y,z,Theta,Phi,vari,vali,maxdist,λ=5},
+{Theta,Phi,x,y,z}=computeShortestPt[xc,yc,zc,r];
+maxdist=Sqrt[((x)/(z)-(xc)/(zc))^2+((y)/(z)-(yc)/(zc))^2];
+If[xc== 0 \[And]yc == 0,
+vari={Row[{"\<(\>",Style["\<u\>",Italic],"\<, \>",Style["\<v\>",Italic],"\<) =\>"}],"\<λ =\>",Row[{NumberForm[maxdist,{10,1}],"\< =\>"}]};
+vali={
+StringForm["\<``(cos Theta, sin Theta)\>",NumberForm[r λ/z Sin[Phi],{10,1}]] ,
+λ,"\<maxdist\>"};
+Text[Grid[Transpose[{vari,vali}],Alignment->{{Right,Left}},Spacings->0.25]]
+,
+vari={Row[{"\<(\>",Style["\<u\>",Italic],"\<, \>",Style["\<v\>",Italic],"\<) =\>"}],"\<λ =\>",Row[{NumberForm[maxdist,{10,1}],"\< =\>"}]};
+vali={StringForm["\<(``, ``)\>",NumberForm[λ(x)/(z),{10,1}],NumberForm[λ(y)/(z),{10,1}]],λ,"\<maxdist\>"};
+Text[Grid[Transpose[{vari,vali}],Alignment->{{Right,Left}},Spacings->0.25]]]
+]
+
+### [Input] (init)
+(*this function draws a drone at position (x,y,z) in color color*)
+drawDrone[x_,y_,z_,color_]:=
+Translate[{
+color,
+Cylinder[{{0.5,0.5,-0.125},{0.5,0.5,0.125}},0.1],
+Cylinder[{{-0.5,-0.5,-0.125},{-0.5,-0.5,0.125}},0.1],
+Cylinder[{{-0.5,0.5,-0.125},{-0.5,0.5,0.125}},0.1],
+Cylinder[{{0.5,-0.5,-0.125},{0.5,-0.5,0.125}},0.1],
+Ellipsoid[{0,0,0},{0.25,0.2,0.25}],
+
+Yellow,
+Cylinder[{{0,0,-0.025},{0.5,0.5,0.025}},0.05],
+Cylinder[{{0,0,-0.025},{0.5,-0.5,0.025}},0.05],
+Cylinder[{{0,0,-0.025},{-0.5,0.5,0.025}},0.05],
+Cylinder[{{0,0,-0.025},{-0.5,-0.5,0.025}},0.05],
+
+Gray,
+Ellipsoid[{0.5,0.5,0.125},{0.25,0.25,0}],
+Ellipsoid[{0.5,-0.5,0.125},{0.25,0.25,0}],
+Ellipsoid[{-0.5,0.5,0.125},{0.25,0.25,0}],
+Ellipsoid[{-0.5,-0.5,0.125},{0.25,0.25,0}]
+},{x,y,z}]
+
+### [Input] (init)
+(*this function draws a 2D drone at (x,y,z) into a camera with focal length λ*)
+draw2Ddrone[x_,y_,z_,λ_,color_]:={
+Gray,EdgeForm[Directive[Thin,Black]],
+Table[ Disk[(p+{x,y})(λ)/(z),0.25(λ)/(z)],{p,{{0.5,0.5},{-0.5,0.5},{0.5,-0.5},{-0.5,-0.5}}}],
+{Darker[Brown],Thick,
+Line[(λ)/(z){{-0.35+x,-0.35+y},{0.35+x,0.35+y}}],
+Line[(λ)/(z){{-0.35+x,0.35+y},{0.35+x,-0.35+y}}]},
+color,
+Disk[(λ)/(z){x,y},(0.25)(λ)/(z)]}
+
+### [Input] (init)
+(*draw x, y, z, u and v coordinate axes*)
+drawaxes[]:=
+{FontSize->12,Arrowheads[0.011],
+(*x, y, z*)
+Darker@Green,Arrow[{{-5,-5,0},{-3,-5,0}}],Arrow[{{-5,-5,0},{-5,-3,0}}],Arrow[{{-5,-5,0},{-5,-5,2}}],
+Text[Style["\<x\>",Italic],{-3.5,-5.3,-0.5}],
+Text[Style["\<y\>",Italic],{-4,-3.5,1}],
+Text[Style["\<z\>",Italic],{-5,-5,2.5}],
+(*u, v*)
+Black,Arrow[{{-5,-5,5},{-3,-5,5}}],Arrow[{{-5,-5,5},{-5,-3,5}}],
+Text[Style["\<u\>",Italic],{-3,-6.5,5.5}],
+Text[Style["\<v\>",Italic],{-5.3,-3.5,5.5}]
+}
+
+### [Input] (init)
+ (*this function draws the camera*)
+drawCamera[]:=
+{
+(*draw the camera box*)
+Darker@Green,Opacity[0.3],Cuboid[{-0.5,-0.5,-0.5},{0.5,0.5,0.5}],
+
+(*draw the camera aperture pyramid*)
+Module[{apWid=0.9,aph =0.1},
+Polygon[{{apWid,apWid,1},{-apWid,apWid,1},{-apWid,-apWid,1},{apWid,-apWid,1},{apWid,apWid,1},{0.2,0.2,aph},{-0.2,0.2,aph},{-apWid,apWid,1},{-0.2,0.2,aph},{-0.2,-0.2,aph},{-apWid,-apWid,1},{-0.2,-0.2,aph},{0.2,-0.2,aph},{apWid,-apWid,1},{0.2,-0.2,aph},{0.2,0.2,aph}}]
+],EdgeForm[Thick]}
+
+### [Input] (init)
+drawSphereLinesArrowsPoints[x_,y_,z_,xc_,yc_,zc_,λ_,r_,Silhouette_]:=
+{If[Silhouette,{Purple,Opacity[0.3],Sphere[{xc,yc,zc},r]}],
+PointSize[0.01],Opacity[1],Darker@Green,Point[{xc,yc,zc}],
+Opacity[0.4],Black,Arrowheads[0.0075],Arrow[{{λ(xc)/(zc),λ(yc)/(zc),λ},{λ(x)/(z),λ(y)/(z),λ}}],
+Opacity[1],Blue,Arrowheads[0.011],Arrow[{{0,0,0},{x,y,z}}],Arrow[{{0,0,0},{λ(x)/(z),λ(y)/(z),λ}}],Black,Arrowheads[0.011],Arrow[{{xc,yc,zc},{x,y,z}}],Black,Thin,Line[{{0,0,0},{xc,yc,zc}}],Line[{{xc,yc,zc-r},{xc,yc,zc+r}}],Red,PointSize[0.01],Point[{x,y,z}],Black,Line[{{xc,yc-r,zc},{xc,yc+r,zc}}],Line[{{xc-r,yc,zc},{xc+r,yc,zc}}],
+Opacity[1],Red,PointSize[0.01],Point[{λ(x)/(z),λ(y)/(z),λ}],Darker@Green,PointSize[0.01],Point[{λ(xc)/(zc),λ(yc)/(zc),λ}]
+}
+
+### [Input] (init)
+infiniteArrowsPoints[x_,y_,z_,xc_,yc_,zc_,λ_,r_,Phi_]:={
+Opacity[1],Blue,
+Table[Line[{{0,0,0},{xc+r Cos[Theta]Sin[Phi],yc+r Sin[Theta] Sin[Phi],z}}],{Theta,0,2Pi,0.1Pi}],
+Opacity[1],Gray,Arrowheads[0.011],
+Table[Arrow[{{xc,yc,zc},{xc+r Cos[Theta]Sin[Phi],yc+r Sin[Theta]Sin[Phi],z}}],{Theta,0,2Pi,0.1Pi}],
+Opacity[1],Gray,Arrowheads[0.0075],
+Table[Arrow[{{λ(xc)/(zc),λ(yc)/(zc),λ},{λ(xc+r Cos[Theta]Sin[Phi])/(z),λ(yc+r Sin[Theta]Sin[Phi])/(z),λ}}],{Theta,0,2Pi,0.1Pi}],
+Opacity[1],Red,PointSize[0.01],
+Table[Point[{{0,0,0},{(xc+r*Cos[Theta]*Sin[Phi]) λ/z,(yc+r Sin[Theta]Sin[Phi])λ/z,λ}}],{Theta,0,2Pi,0.1Pi}],Table[Point[{{0,0,0},{(xc+r*Cos[Theta]*Sin[Phi]),(yc+r Sin[Theta]Sin[Phi]),zc+r*Cos[Phi]}}],{Theta,0,2Pi,0.1Pi}],
+Darker@Green,PointSize[0.01],Point[{λ(xc)/(zc),λ(yc)/(zc),λ}]
+}
+
+### [Input] (init)
+(*in 3D view, draw Theta and Phi*)
+drawThetaPhi[xc_,yc_,y_,zc_,λ_,r_,Theta_,Phi_]:=
+{(*drawing Theta*)
+Darker@Cyan,Line[{{xc,yc,zc},{xc+0.5r,yc,zc}}],
+Arrowheads[0.0075],
+If[Theta== 0,{
+Arrow[{{xc,yc,zc},{xc+0.5r,yc,zc}}]},{Arrow[Table[{xc+0.25r Cos[t],yc+0.25r Sin[t],zc},{t,0 ,Theta,(Theta)/(12)}]] ,
+Arrow[Table[{xc(λ)/(zc)+0.25r*Cos[t],yc(λ)/(zc)+0.25r*Sin[t],λ},{t,0 ,Theta,(Theta)/(12)}]] 
+}],
+Text[Style["\<Theta\>",Darker@Cyan],{xc+0.35r*Cos[0.5Theta],yc+0.35r*Sin[0.5Theta],zc}],
+(*2D*)
+Text[Style["\<Theta\>",Darker@Cyan,FontSize->12],{xc(λ)/(zc)+0.35r*Cos[0.5Theta],yc(λ)/(zc)+0.35r*Sin[0.5Theta],λ}],
+Line[{{xc(λ)/(zc),yc(λ)/(zc),λ},{xc(λ)/(zc)+0.5r,yc(λ)/(zc),λ}}],
+(*drawing Phi*)
+Magenta,Line[{{xc,yc,zc},{xc,yc,zc+0.5r}}],
+If[Phi!= 0,Arrow[Table[{xc+0.45r Cos[Theta]Sin[t],yc+0.45r Sin[Theta]Sin[t],zc+0.45r Cos[t]},{t,0 ,Phi,(Phi)/(12)}]]],
+Text[Style["\<Phi\>",Magenta,FontSize->12],{xc+0.45r Cos[0.5Theta] Sin[0.5Phi],yc+0.45r Sin[0.5Theta]Sin[0.5Phi],zc+0.45r Cos[0.5Phi]}]
+}
+
+### [Input] (init)
+drawArrowsPoints2D[x_,y_,z_,xc_,yc_,zc_,λ_]:={Black,Arrowheads[0.015],Arrow[{{λ(xc)/(zc),λ(yc)/(zc)},{λ(x)/(z),λ(y)/(z)}}],
+Opacity[1],Darker@Green,PointSize[0.01],Point[{λ(xc)/(zc),λ(yc)/(zc)}],Red,Point[(λ)/(z){x,y}]}
+
+### [Input] (init)
+(*u and v axes*)
+drawaxesuv[]:=
+{Black,Arrowheads[0.03],Arrow[{{-5,-5},{-5,-3}}],Arrow[{{-5,-5},{-3,-5}}],
+Opacity[1],Black,FontSize->12,
+Text[Style["\<u\>",Italic],{-3.5,-5.3}],
+Text[Style["\<v\>",Italic],{-5.3,-3.5}]}
+
+### [Input] (init)
+infiniteArrowsPoints2D[x_,y_,z_,xc_,yc_,zc_,λ_,r_,Phi_]:=
+{Opacity[1],PointSize[0.015],Red,
+Table[Point[{{((xc+r Cos[Theta]Sin[Phi]))/(z)λ,((yc+r Sin[Theta]Sin[Phi]))/(z)λ}}],{Theta,0,2Pi,0.1Pi}],
+Opacity[1],Gray,Arrowheads[0.01],
+Table[Arrow[{{λ(xc)/(zc),λ(yc)/(zc)},{λ(xc+r*Cos[Theta]*Sin[Phi])/(z),λ(yc+r*Sin[Theta]*Sin[Phi])/(z)}}],{Theta,0,2Pi,0.1Pi}]
+}
+
+### [Input] (init)
+(* draws 2D Arc centered at (xc,yx)*)
+arc2D[xc_,yc_,r_,zc_,λ_,ellipAng_]:= 
+{Arrowheads[0.015],
+If[ellipAng== 0,{Arrow[{(λ)/(zc){xc,yc},{xc(λ)/(zc)+0.5r,yc(λ)/(zc)}}]},
+{Arrow[BSplineCurve[Table[{(xc+0.5r Cos[Theta])(λ)/(zc),(yc+0.5r Sin[Theta])(λ)/(zc)},{Theta,0,ellipAng,(ellipAng)/(12) }]]]}]
+}
+
+### [Input] (init)
+drawTheta2D[xc_,yc_,zc_,λ_,r_,ellipAng_,Theta_]:=
+{Darker@Cyan,Line[{(λ)/(zc){xc,yc},{xc(λ)/(zc)+0.5r,yc(λ)/(zc)}}],
+arc2D[xc,yc,r,zc,λ,ellipAng],
+Text[StyleForm["\<Theta\>",Darker@Cyan,FontSize->12],{xc(λ)/(zc)+0.35r Cos[0.5Theta],yc(λ)/(zc)+0.35r Sin[0.5Theta]}]
+}
+
+### [Input] (init)
+text=Rasterize[Style["\<image plane\>","\<SR\>"],RasterSize->500,ImageSize->200,Background->None];
+
+### [Input] (init)
+label=With[{rectangle=With[{dz=.001},{{-5,3.6,5+dz},{3,3.6,5+dz},{3,5,5+dz},{-5,5,5+dz}}],textCorners={{0,0},{1,0},{1,1},{0,1}}},{Texture[text],EdgeForm[None],Opacity[0.5],Polygon[rectangle,VertexTextureCoordinates->textCorners]}];
+
+### [Input] (init)
+label2D=With[{rectangle={{-5,3.6},{3,3.6},{3,5},{-5,5}},textCorners={{0,0},{1,0},{1,1},{0,1}}},{Texture[text],EdgeForm[None],Opacity[0.5],Polygon[rectangle,VertexTextureCoordinates->textCorners]}];
+
+### [Input] (init)
+(*draw image plane in 2D*)
+imagePlane2D[]:={EdgeForm[Black],Yellow,
+Opacity[0.3],
+Polygon[{{-5,-5},{5,-5},{5,5},{-5,5}}],
+label2D
+}
+
+### [Input] (init)
+imagePlane[]:=
+{FontSize->12,Yellow,Opacity[0.3],Polygon[{{-5,-5,5},{5,-5,5},{5,5,5},{-5,5,5}}],
+{EdgeForm[None],Opacity[0.1],Polygon[{{-15,-15,4.95},{15,-15,4.95},{15,15,4.95},{-15,15,4.95}}]},
+Pink,Opacity[1],
+label,
+Arrowheads[{-0.011,0.011}],Arrow[{{-5,0,0},{-5,0,5}}],Text[Style["\<λ\>",Pink],{-5.5,0,2.5}]}
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+If[animation, a = Mod[a+.1,1]];
+Module[{λ=5, (*focal length, the distance between the pinhole and the film*)
+x,y,z,(*optimum value position*)
+Theta,Phi,(*optimum value angles*)
+majSalAxis,minSalAxis, (*ellipse major and minor axis*)
+i,xcimp,ycimp,ellipAng},
+{Theta,Phi,x,y,z}=computeShortestPt[xc,yc,zc,r];
+(*silhouette equations*)
+(*silhouette axes*)
+majSalAxis=r λSqrt[(xc^2+yc^2+zc^2-r^2)/((r^2-zc^2)^2)];
+minSalAxis= (r λ)/(Sqrt[zc^2-r^2]);
+(*silhouette rotating angle from +ve u axis*)
+ellipAng=ArcTan[x,y];
+(*silhouette center point*)
+xcimp=x(λ)/(z)-majSalAxis Cos[ellipAng];
+ycimp=y(λ)/(z)-majSalAxis Sin[ellipAng];
+If[imPlaneView == True,
+Graphics[ (*2D*)
+{imagePlane2D[],drawArrowsPoints2D[x,y,z,xc,yc,zc,λ],drawaxesuv[],
+(*2D silhouette*)
+EdgeForm[Thick],Purple,Opacity[0.4],If[Silhouette== True,Rotate[
+Polygon[Table[{xcimp+ majSalAxis Cos[Psi],ycimp+minSalAxis Sin[Psi]},{Psi,0,2π,π/24}]],ellipAng]],
+If[xc== 0 && yc == 0,(*xc = 0 & yc = 0 case when there are infinite solutions*)
+{infiniteArrowsPoints2D[x,y,z,xc,yc,zc,λ,r,Phi],
+(*draw infinite (many) 2D drones*)
+If[showDrone == True && animation == False,{draw2Ddrone[xc,yc,zc,λ,Darker@Green],Table[draw2Ddrone[xc+r Cos[Theta]Sin[Phi],yc+r Sin[Theta]Sin[Phi],z,λ,Red],{Theta,0,2Pi,0.1Pi}]},If[showDrone == True, {draw2Ddrone[xc,yc,zc,λ,Purple],Table[draw2Ddrone[xc+r Cos[Theta]Sin[Phi],yc+r Sin[Theta]Sin[Phi],z,λ,Purple],{Theta,0,2Pi,0.1Pi}],Table[draw2Ddrone[xc+a r Cos[Theta]Sin[Phi],yc+a r Sin[Theta]Sin[Phi],zc+ a r Cos[Phi],λ,Purple],{Theta,0,2Pi,0.1Pi}]}]]},
+(*xc or yc not equal to 0, there is only one solution*)
+{drawTheta2D[xc,yc,zc,λ,(r)/(z)*λ,ellipAng,Theta],
+(*draw 2D drone*)
+If[showDrone == True && animation == False,{ draw2Ddrone[xc,yc,zc,λ,Darker@Green], draw2Ddrone[x,y,z,λ,Red]},If[showDrone == True,{draw2Ddrone[xc,yc,zc,λ,Purple], draw2Ddrone[x,y,z,λ,Purple],draw2Ddrone[xc+a r*Cos[Theta]*Sin[Phi],yc+a r*Sin[Theta]*Sin[Phi],zc+ a r Cos[Phi],λ,Purple]}]]
+}]
+},ImageSize->1.5{285,285}],
+
+Graphics3D[{drawaxes[],drawCamera[],imagePlane[],drawSphereLinesArrowsPoints[x,y,z,xc,yc,zc,λ,r,Silhouette],
+If[xc== 0 && yc == 0,(*xc = 0 & yc = 0 case when there are infinite solutions*)
+{infiniteArrowsPoints[x,y,z,xc,yc,zc,λ,r,Phi],
+(*draw infinite drones*)
+If[showDrone == True&& animation == False,{drawDrone[xc,yc,zc,Darker@Green],Table[drawDrone[xc+r*Cos[Theta]*Sin[Phi],yc+r*Sin[Theta]*Sin[Phi],z,Red],{Theta,0,2Pi,0.1Pi}]},
+If[showDrone == True ,{drawDrone[xc,yc,zc,Purple],Table[drawDrone[xc+r*Cos[Theta]*Sin[Phi],yc+r*Sin[Theta]*Sin[Phi],z,Purple],{Theta,0,2Pi,0.1Pi}]}]],
+If[animation,Table[drawDrone[xc+a r*Cos[Theta]*Sin[Phi],yc+a r*Sin[Theta]*Sin[Phi],zc+ a r Cos[Phi],Purple],{Theta,0,2Pi,0.1Pi}]]},
+(*xc or yc not equal to 0, there is only one solution*)
+{drawThetaPhi[xc,yc,y,zc,λ,r,Theta,Phi],
+(*draw 2 drones*)
+If[showDrone == True && animation == False,{ drawDrone[x,y,z,Red],drawDrone[xc,yc,zc,Darker@Green]},If[showDrone == True ,{ drawDrone[x,y,z,Purple],drawDrone[xc,yc,zc,Purple]}]],
+If[animation,drawDrone[xc+a r*Cos[Theta]*Sin[Phi],yc+a r*Sin[Theta]*Sin[Phi],zc+ a r Cos[Phi],Purple]]}],
+
+(*draw silhouette*)
+Purple,Opacity[0.4],If[Silhouette== True,Rotate[
+Polygon[Table[{xcimp+ majSalAxis Cos[Psi],ycimp+minSalAxis Sin[Psi],5+0.01},{Psi,0,2π,π/12}]],
+ellipAng,{0,0,1},{xcimp,ycimp,5}]]
+},SphericalRegion->True,ImageSize->1.5{285,285},Boxed->False,ViewAngle->12Degree,PlotRange->20{{-1,1},{-1,1},{-0.1,1}}]
+]]
+
+,"\<drone starting location (green point)\>",
+{{a,0.5},0,1,.1,ControlType->None},
+{{xc,1,Subscript[Style["\<x\>",Italic],"\<c\>"]},-10,10,1,Appearance->"\<Labeled\>",ImageSize->60},
+{{yc,1,Subscript[Style["\<y\>",Italic],"\<c\>"]},-10,10,1,Appearance->"\<Labeled\>",ImageSize->60},
+{{zc,15,Subscript[Style["\<z\>",Italic],"\<c\>"]},10,20,1,Appearance->"\<Labeled\>",ImageSize->60},"\<\>",
+"\<sphere radius\>",{{r,4,Style["\<r\>",Italic]},1,5,Appearance->"\<Labeled\>",ImageSize->60},"\<\>",
+{{Silhouette,False,"\<show sphere\>"},{True,False}},
+{{imPlaneView,False,"\<show 2D view\>"},{True,False}},
+{{showDrone,False,"\<show drone\>"},{True,False}},
+{{animation,False,"\<animate\>"},{True,False}},"\<\>",
+"\<Red point maximizes pixel change.
+
+coordinates in camera frame\>",
+Control@{{unusedVariable,1,"\<\>"},(sphericaldist[#1,xc,yc,zc,r]&),ImageSize->45},"\<\>",
+"\<image plane coordinates\>",
+Control@{{unusedVariable,1,"\<\>"},(imagePlaneCoor[#1,xc,yc,zc,r]&),ImageSize->45},ControlPlacement->Left,SaveDefinitions->True]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By:<<PaneSelectorBox>>
+
+### [Item]
+Mohammad Sultan
+
+### [Item]
+Aaron T. Becker
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+If a drone (represented as a particle) can move with equal velocity in any direction, the set of possible 3D coordinates after one time step is a 3D sphere. The image plane of a camera projects all 3D points into a 2D camera frame[1]. If the sphere is centered at (Subscript[x, c],Subscript[y, c],Subscript[z, c]) with radius r and camera focal length λ, then the optimal goal location (x,y,z) for the drone is parameterized by the (latitude, longitude) pair (Phi,Theta):
+
+### [Text]
+Phi=(3π)/(2)-arctan(Sqrt[r^2],Sqrt[Subscript[x, c]^2+Subscript[y, c]^2+Subscript[z, c]^2-r^2])+arctan(Sqrt[Subscript[x, c]^2+Subscript[y, c]^2],Subscript[z, c]),
+
+### [Text]
+Theta=arctan(Subscript[x, c],Subscript[y, c]).
+
+### [Text]
+If (Subscript[x, c],Subscript[y, c]) is (0,0), there are infinite solutions with Theta∈([0,360])^\[SmallCircle].
+
+### [Text]
+The goal location is:
+
+### [Text]
+x=Subscript[x, c]+r cos Theta sin Phi
+
+### [Text]
+y=Subscript[y, c]+r sin Theta sin Phi
+
+### [Text]
+z=Subscript[z, c]+r cos Phi
+
+### [Text]
+This projects onto the image plane at the point (λ)/(z)(x,y). Because cos Phi is always negative, the drone decreases the distance in z. Interestingly, the sphere projects into a 2D ellipse in the image plane. With equations given by[2], the ellipse is centered at
+
+### [Text]
+(x (λ)/(z)-rλ Sqrt[(Subscript[x, c]^2+Subscript[y, c]^2+Subscript[z, c]^2-r^2)/((r^2-Subscript[z, c]^2)^2)]cos(arctan((y)/(x))), y(λ)/(z)-rλ Sqrt[(Subscript[x, c]^2+Subscript[y, c]^2+Subscript[z, c]^2-r^2)/((r^2-Subscript[z, c]^2)^2)]sin(arctan((y)/(x)))),
+
+### [Text]
+with
+
+### [Text]
+major axis=rλ Sqrt[(Subscript[x, c]^2+Subscript[y, c]^2+Subscript[z, c]^2-r^2)/((r^2-Subscript[z, c]^2)^2)],
+
+### [Text]
+minor axis=(rλ)/(Sqrt[r^2-Subscript[z, c]^2])
+
+### [Text]
+and
+
+### [Text]
+ellipse rotation angle=arctan((y)/(x)).
+
+### [Text]
+The focal length λ is 5 in this Demonstration.
+
+### [Text]
+Snapshot 1: Subscript[x, c]=1, Subscript[y, c]=1, Subscript[z, c]=15 and r=4
+
+### [Text]
+Snapshot 2: 2D view when Subscript[x, c]=1, Subscript[y, c]=1, Subscript[z, c]=15 and r=4
+
+### [Text]
+Snapshot 3: Subscript[x, c]=8, Subscript[y, c]=5, Subscript[z, c]=14 and r=3.4 with "show drone" turned off
+
+### [Text]
+Snapshot 4: 2D view when Subscript[x, c]=8, Subscript[y, c]=5, Subscript[z, c]=14 and r=3.4 with "show sphere" turned off
+
+### [Text]
+Snapshot 5: Subscript[x, c]=0, Subscript[y, c]=0, Subscript[z, c]=17 and r=3
+
+### [Text]
+Snapshot 6: Subscript[x, c]=0, Subscript[y, c]=0, Subscript[z, c]=17 and r=3 with "show drone" turned off
+
+### [Text]
+Snapshot 7: 2D view when Subscript[x, c]=0, Subscript[y, c]=0, Subscript[z, c]=12 and r=3
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] M. W. Spong, S. Hutchinson and M. Vidyasagar, Robot Modeling and Control, Hoboken, NJ: John Wiley and Sons, 2006.
+
+### [Text]
+[2] D. Eberly. "Perspective Projection of an Ellipsoid." (Oct 30, 2018) www.geometrictools.com/Documentation/PerspectiveProjectionEllipsoid.pdf.
+
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+drone
+
+### [Item]
+image plane
+
+### [Item]
+pixel coordinates
+
+### [Item]
+ellipse
+
+### [Item]
+sphere
+
+### [Item]
+sphere silhouette
+
+### [Item]
+sphere parametric equations
+
+### [Item]
+ellipse parametric equation
+
+### [Item]
+camera
+
+### [Item]
+pinhole
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Quadrotor
+
+### [Text]
+Projection
+
+### [Text]
+ArcTan
+
+### [Text]
+Measuring Distance and Orientation Using Camera and Lasers
+
+### [Text]
+Perspective Projection of a Cube onto a Plane
+
+### [Text]
+Orthogonal Projection of a Rectangular Solid
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2018-11-07
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

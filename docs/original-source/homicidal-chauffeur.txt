@@ -1,0 +1,359 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Extracted 2026-10-26 with tools/nbextract.py; cached outputs skipped.
+
+
+### [Title]
+The Homicidal Chauffeur Problem
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+In this Demonstration, a chauffeur driving a car with a minimum turning radius Subscript[r, min] pursues a slower pedestrian with an unrestricted turning radius. The car is red and the evading pedestrian is blue. Click "setup" to set values for Subscript[r, min] and the velocity ratio Subscript[v, car]/Subscript[v, pedestrian], and drag the locators to set the initial positions of the car and pedestrian and the orientation of the car. Then click "running" and move the locator to control the goal position of the pedestrian; after three seconds, the car attempts to run over the pedestrian. Avoid the car as long as possible!
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+(*draws a top-down view of a running person whose arms and legs move if isRunning is true*)
+drawRunner[xy_,Theta_,isRunning_]:=Translate[Rotate[{EdgeForm[Darker[Blue]],
+{If[isRunning,{Rectangle[{0,-.4},{0.65*2(Clock[1,.3]-.5),-.1}],
+Rectangle[{0,.4},-{0.65*2(Clock[1,.3]-.5),-.1}]}]},
+Rectangle[{-.1,-.5},{0.1,.5}],
+Disk[{0,0},{.3,.25}]
+},Theta,{0,0}],xy]
+
+### [Input] (init)
+drawCar[xy_,Theta_,Alpha_,opac_]:= (* draws a car icon, (x,y) is centered at middle of rear axle. Theta is the orientation of car, Alpha is orientation of wheels, opc is the opacity of the car.*){Opacity[opac],EdgeForm[Directive[Opacity[opac],Black]],Translate[Rotate[
+Translate[{Rectangle[{-1,-1/2},{1,1/2}],
+Darker[Gray],
+{Yellow,Opacity[0.8*opac],EdgeForm[None],Polygon[{{1,.35},{8,.05},{8,.55}}],Polygon[{{1,-.35},{8,-.05},{8,-.55}}]},
+Line[{{-.7,.35},{-.7,-.35}}],Line[{{.7,.35},{.7,-.35}}],
+Rotate[Rectangle[{.5,.35},{.9,.4}],If[Alpha==0,0,ArcTan[Alpha-.375,1.4]],{.7,.375}],
+Rectangle[{-.5,.35},{-.9,.4}],
+Rectangle[{-.5,-.35},{-.9,-.4}],
+Rotate[Rectangle[{.5,-.35},{.9,-.4}],If[Alpha==0,0,ArcTan[Alpha+.375,1.4]],{.7,-.375}],
+Black,Arrowheads[.02],Arrow[{{0,0},{1.0,0}}]
+},{0.7,0}],Theta,{0,0}],xy]}
+
+### [Input] (init)
+ptInCar[xy_,Theta_,pt_]:=(*determines if a collision between pt and a car*)Module[{Phi,d,ptCarRef},Phi = angPt2Pt[xy,pt];d=distPt2Pt[xy,pt];
+ptCarRef = d*{Cos[Theta-Phi],Sin[Theta-Phi]};
+(*car at point xy, orientation theta. To change pt to car reference frame, *)
+ -.3<= ptCarRef[[1]]<= 1.7 \[And] -.5<= ptCarRef[[2]]<= .5]
+
+### [Input] (init)
+(*Euclidean distance between 2D points*)
+distPt2Pt[ps_,pe_]:=Sqrt[(pe[[1]]-ps[[1]])^2+(pe[[2]]-ps[[2]])^2]
+
+### [Input] (init)
+(*numerical angle for triangle ps,{0,0},pe *)
+angPt2Pt[ps_,pe_]:=Chop[N[ArcTan[pe[[1]]-ps[[1]],pe[[2]]-ps[[2]]]]]
+
+### [Input] (init)
+(*ensures output angle is between -π and π*)
+mod2pi[Theta_]:=ArcTan[Cos[Theta],Sin[Theta]]
+
+### [Input] (init)
+(*ensures output angle is between 0 and 2π*)
+mod0to2pi[Theta_]:=Module[{ang=ArcTan[Cos[Theta],Sin[Theta]]},If[ang<0,ang+=2π];ang]
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{runnerTheta,rundist,dt ,dTheta,ceL,ceR,omega,goalTheta,cTime,sText,Alpha},
+If[ state=="\<Collision\>",loc={runner}];
+If[stateP!= state,
+If[ state=="\<running\>",runPath = {};carPath = {};loc={runner};timer = AbsoluteTime[];];
+If[ state=="\<setup\>",loc={runner,carXYold,carXYold+2{Cos[carTheta],Sin[carTheta]}};];
+stateP=state;
+];
+If[state=="\<setup\>",
+If[Length[loc]<2,loc={runner,carXYold,carXYold+2{Cos[carTheta],Sin[carTheta]}};];
+runner=loc[[1]];
+If[carXYold !=loc[[2]],
+carXYold=loc[[2]];,(*otherwise, let 3rd locator change orientation of car*)
+dTheta =Sqrt[(loc[[3,1]]-carXYold[[1]])^2+(loc[[3,2]]-carXYold[[2]])^2];
+carTheta=If[dTheta >0,ArcTan[loc[[3,1]]-carXYold[[1]],loc[[3,2]]-carXYold[[2]]],0];
+ ];
+If[loc[[3]] != carXYold+2{Cos[carTheta],Sin[carTheta]},loc[[3]]=carXYold + 2{Cos[carTheta],Sin[carTheta]}]];
+ceL=carXYold+minRadius{Cos[carTheta+π/2],Sin[carTheta+π/2]};
+ceR=carXYold+minRadius{Cos[carTheta-π/2],Sin[carTheta-π/2]};
+rundist = distPt2Pt[loc[[1]],runner];
+runnerTheta=If[state=="\<running\>"&&loc[[1]]!= runner,ArcTan[loc[[1,1]]-runner[[1]], loc[[1,2]]-runner[[2]]],0];
+If[state=="\<running\>",
+cTime=AbsoluteTime[];dt=cTime-lastTime;If[dt<0.01,dt=0.01];lastTime=cTime;
+(*apply control to runner, which is provided by the player*)
+runner+=If[rundist<dt,rundist,dt]*{Cos[runnerTheta],Sin[runnerTheta]};
+(*simple controller for pursuer (chaffeur)*)
+goalTheta= mod2pi[angPt2Pt[carXYold,runner]-carTheta]; (*shortest angle from car heading to runner*)
+Alpha=mod0to2pi[If[goalTheta<0, (*the runner is in the right plane of the car.*)
+angPt2Pt[ceR,carXYold]-angPt2Pt[ceR,runner],
+angPt2Pt[ceL,runner]-angPt2Pt[ceL,carXYold]]];
+
+If [(Abs[Alpha minRadius]-ArcTan[2.5/minRadius]minRadius)/(vcar)<= (Max[ distPt2Pt[If[goalTheta<0,ceR,ceL],runner]-minRadius,0])/(1),(*turn toward evader until straight path exists to evader*)
+omega =If[Abs[goalTheta]>vcar*(dt)/(minRadius), Sign[goalTheta],(goalTheta*minRadius)/(vcar*dt )];,
+(*else, turn away from evader until pointing straight away*)
+omega =If[π-Abs[goalTheta]>vcar*(dt)/(minRadius),- Sign[goalTheta],- Sign[goalTheta]((π-Abs[goalTheta])*minRadius)/(vcar*dt )];
+];
+AppendTo[runPath,runner];
+If[ cTime-timer>3, (*runner gets 3 second head start*)
+carTheta+=omega*vcar*dt/minRadius;
+carXYold+=dt*vcar*{ Cos[carTheta],Sin[carTheta]};AppendTo[carPath,carXYold];
+],cTime=lastTime;];
+Graphics[{Blue,{Thick,Line[runPath]},
+If[state=="\<running\>"&&cTime-timer<3,
+Text[Style[Ceiling[3+timer-cTime],24],{0,5}]],{LightBlue,
+drawRunner[runner,runnerTheta,state=="\<running\>"&&rundist>0]},
+
+Red,{Thick,Line[carPath]},drawCar[carXYold,carTheta,0,1],
+{Gray,Dashed,
+Circle[ceL,minRadius],Circle[ceR,minRadius]},
+
+If[ptInCar[carXYold,carTheta,runner],
+If[state=="\<running\>",state="\<Collision\>";];
+sText="\<pedestrian hit!\>";,
+sText="\<pedestrian missed.\>";];
+
+{Black,Text[Style[sText,20],{0,8.5}]},
+{Black,Text[Style[StringForm["\<running time `` s\>",NumberForm[Round[cTime-timer,0.01],{3,1},NumberPadding->{"\< \>","\<0\>"}]],20],{-4,-8.5},{Left,Center}]},
+
+Locator[#,Graphics[{Black,{AbsoluteThickness[1],Antialiasing->False,LineBox[{{{0,-10},{0,-2}},{{0,2},{0,10}},{{-10,0},{-2,0}},{{2,0},{10,0}}}],Antialiasing->True,CircleBox[{-0.5,0.5},5]},{AbsoluteThickness[3],Opacity[0.3],CircleBox[{-0.5,0.5},3]}},ImageSize->17,PlotRange->{{-8,8},{-8,8}}]]&/@loc
+,Pause[0.01];
+},PlotRange->{{-15,15},{-9,12}},ImageSize->{600,400}]],
+{{minRadius,3,Row[{Subscript[Style["\<r\>",Italic],"\<min\>"]}]},0.001,5,Enabled->(state==="\<setup\>"),Appearance->"\<Labeled\>",ImageSize->400},
+{{runner,{-2,0}},None},
+{{vcar,2,Row[{Subscript[Style["\<v\>",Italic],"\<car\>"],"\</\>",Subscript[Style["\<v\>",Italic],"\<pedestrian\>"]}]},1.1,5,Enabled->(state==="\<setup\>"),Appearance->"\<Labeled\>",ImageSize->400},
+{{state,"\<setup\>","\<mode\>"},{"\<setup\>","\<running\>"}},
+{{stateP,"\<\>"} ,None},
+{{timer,AbsoluteTime[]} ,0,None},
+{{runPath,{}},None},(*array of xy positions of the pedestrian*)
+{{carPath,{}},None},(*array of xy positions of the car*)
+{{loc,{{-4,2},{2,2},{4,0}}},{-15,-9},{15,10},Locator,Appearance->None},
+{{carXYold,{2,2}},None},
+{{carTheta,.6},-π,π,None},
+{{lastTime,AbsoluteTime[]},None},SaveDefinitions->True,ControlPlacement->Top, AutorunSequencing->{1}
+]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Aaron T. Becker
+
+### [Text]
+Javier Garcia
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+The homicidal chauffeur is a pursuit-evasion game introduced in 1951 by Rufus Isaacs[1]. The object of the pursuer is to move within a capture radius of the evader in minimum time. The evader seeks to maximize this time. The pursuer moves forward at a constant rate, and can vary its angular velocity between a hard left or a hard right around a circle of radius Subscript[r, min]. The minimum turn circles are drawn with dashed gray lines.
+
+### [Text]
+\<The optimal controls are not unique, and depend both on the speed ratio and minimum turning radius ratio between the pursuer and the evader. In 1971, Antony Merz identified 20 qualitatively different optimal solutions that depend on the values of those two parameters[2]; this Demonstration only implements one algorithm for the pursuer. The chauffeur steers toward the pedestrian if the latter cannot escape into the disks outlined by dashed gray lines; otherwise, it turns away from the pedestrian and increases separation until it determines the pedestrian can be captured. Furthermore, this Demonstration determines collision if the car boundary intersects the pedestrian, while the classic formulation defines capture if the evader is within the capture radius of the pursuer.\>
+
+### [Text]
+The car has forward velocity of Subscript[v, car] units per second and is modeled as a Dubins car[3] with system equations:
+
+### [Text]
+(d)/(dt)x=Subscript[v, car] cos Theta,
+
+### [Text]
+(d)/(dt)y=Subscript[v, car] sin Theta,
+
+### [Text]
+(d)/(dt)Theta=Subscript[v, car]u,
+
+### [Text]
+where u is chosen from the interval {-1/Subscript[r, min],1/Subscript[r, min]}. This is often a reasonable model for a boat or car with no reverse gear or a fixed-wing airplane.
+
+### [Text]
+The pedestrian is a simple integrator with system equations:
+
+### [Text]
+(d)/(dt)x=Subscript[u, x],
+
+### [Text]
+(d)/(dt)y=Subscript[u, y],
+
+### [Text]
+and a maximum speed constraint on the control inputs,
+
+### [Text]
+Sqrt[Subscript[u, x]^2 +Subscript[u, y ]^2]<=Subscript[v, pedestrian].
+
+### [Text]
+\<The implemented algorithm is imperfect, so you can find regions of the parameter space where the evader can avoid collision forever.\>
+
+### [Text]
+\<The homicidal chauffeur model can be used to study surveillance where an aircraft must fly over evasive targets and is often used by researchers as an unclassified proxy for missile defense.\>
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] R. Isaacs, Games of Pursuit, Scientific Report of the RAND Corporation, P-257, Santa Monica, 1951. (Jan 19, 2018) www.rand.org/pubs/papers/P257.html.
+
+### [Text]
+[2] A. W. Merz, "The Homicidal Chauffeur: A Differential Game," Ph.D. thesis, Department of Aeronautics and Astronautics, Stanford University, CA, 1971. (Jan 19, 2018) www.dtic.mil/dtic/tr/fulltext/u2/885270.pdf.
+
+### [Text]
+[3] L. E. Dubins, "On Curves of Minimal Length with a Constraint on Average Curvature, and with Prescribed Initial and Terminal Positions and Tangents," American Journal of Mathematics, 79(3), 1957 pp. 497\[Dash]516. doi:10.2307/2372560.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+calculus of variations
+
+### [Item]
+Dubins car
+
+### [Item]
+Dubin
+
+### [Item]
+differential game
+
+### [Item]
+evasion
+
+### [Item]
+mathematical optimization
+
+### [Item]
+missile defense
+
+### [Item]
+mobile robot
+
+### [Item]
+motion planning
+
+### [Item]
+optimal path
+
+### [Item]
+pursuit
+
+### [Item]
+pursuit-evasion
+
+### [Item]
+robot
+
+### [Item]
+robotics
+
+### [Item]
+Rufus Isaacs
+
+### [Item]
+shortest path
+
+### [Item]
+homicidal chauffeur
+
+### [Item]
+suicidal pedestrian
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Isochrons for a Dubins Car
+
+### [Text]
+Shortest Path for the Dubins Car
+
+### [Text]
+Parking a Car
+
+### [Text]
+Driving out of a Parking Space
+
+### [Text]
+Paths inside a Polygon
+
+### [Text]
+Shortest Path between Two Points in the Unit Disk Reflecting off the Circumference
+
+### [Text]
+Group Chase and Escape
+
+### [Text]
+Pursuit Curves
+
+### [Text]
+Intercepting ICBMs in Three Dimensions
+
+### [Text]
+Braking a Car
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2018-01-22
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

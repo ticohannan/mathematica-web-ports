@@ -91,3 +91,33 @@ describe('graphics3d v0.1.23 primitives: Tube, Cone, InfiniteLine, Text', () => 
     expect(G.infiniteLineSegment([[0, 5, 0], [1, 5, 0]], box)).toEqual([]);
   });
 });
+
+describe('graphics3d v0.1.26: Texture and Polygon with VertexTextureCoordinates', () => {
+  const img = { width: 2, height: 1, data: new Uint8ClampedArray([0, 0, 0, 255, 255, 255, 255, 0]) };
+  const square = [[0, 0, 5], [1, 0, 5], [1, 1, 5], [0, 1, 5]];
+  const unit = [[0, 0], [1, 0], [1, 1], [0, 1]];
+  it('a textured polygon carries the image and its texture coordinates; Opacity and EdgeForm stay as for any polygon', async () => {
+    const G = await import('../../shared/graphics3d.js');
+    const [p] = G.flatten(G.Graphics3D([G.Texture(img), G.EdgeForm(), G.Opacity(0.5), G.Polygon(square, { VertexTextureCoordinates: unit })]));
+    expect(p).toMatchObject({ type: 'polygon', points: square, opacity: 0.5, edgeForm: 'None', textureCoordinates: unit });
+    expect(p.texture).toBe(img); // the same image object (the renderer keeps one texture per image)
+  });
+  it('without a Texture, or without VertexTextureCoordinates, a polygon flattens exactly as before', async () => {
+    const G = await import('../../shared/graphics3d.js');
+    const [a, b] = G.flatten(G.Graphics3D([G.Polygon(square, { VertexTextureCoordinates: unit }), G.Texture(img), G.Polygon(square)]));
+    const plain = { type: 'polygon', points: square, color: null, opacity: 1, thickness: 'Normal', pointSize: null, arrowheads: null };
+    expect(a).toEqual(plain);
+    expect(b).toEqual(plain);
+    expect(G.Polygon(square)).toEqual({ prim: 'polygon', points: square }); // the data shape of v0.1.25
+  });
+  it('the Texture directive is scoped like any directive and follows transforms', async () => {
+    const G = await import('../../shared/graphics3d.js');
+    const g = G.Graphics3D([[G.Texture(img), G.Polygon(square, { VertexTextureCoordinates: unit })], G.Polygon(square, { VertexTextureCoordinates: unit }),
+      G.Texture(img), G.Rotate(G.Polygon([[1, 0, 0], [0, 1, 0], [0, 0, 1]], { VertexTextureCoordinates: [[0, 0], [1, 0], [0, 1]] }), π / 2, [0, 0, 1])]);
+    const [inside, outside, turned] = G.flatten(g);
+    expect('texture' in inside).toBe(true);
+    expect('texture' in outside).toBe(false);
+    close3(turned.points[0], [0, 1, 0], 15); // the points turn, the texture coordinates stay with their vertices
+    expect(turned.textureCoordinates).toEqual([[0, 0], [1, 0], [0, 1]]);
+  });
+});

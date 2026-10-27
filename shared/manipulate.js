@@ -65,7 +65,8 @@
 // Layout: ControlPlacement: 'Top' puts the controls above the picture (default: beside it, as the pages are written).
 // Front-end behaviour options: random (a seeded or replayed random source for the body, ?seed=N in the page URL, hook
 // setRng), settle(state) (evaluate again on the next frame while it is true — Mathematica re-evaluates a body that
-// changes its own variables), throttle: 'frame' (at most one evaluation per animation frame for control input),
+// changes its own variables; settleInterval: seconds of real time at least between such evaluations, Mathematica's
+// Pause[dt] in the body), throttle: 'frame' (at most one evaluation per animation frame for control input),
 // after(ctx) (runs after every evaluation and drawing: sounds, text outside the picture), clock (v0.1.24: the body
 // reads the time — Mathematica's AbsoluteTime[] — as `time` in its second argument: seconds since 1900-01-01 00:00 UTC;
 // the page clock of shared/clock.js, which the hook's setClock(t) fixes at t for tests and setClock(null) releases).
@@ -102,6 +103,9 @@ export const Control = (factory, options = {}) => Object.freeze({ marker: 'Contr
 export const Button = (label, action, options = {}) => Object.freeze({ marker: 'Button', label, action, options });
 
 const isPoint = (x) => Array.isArray(x) && x.length === 2 && x.every((v) => typeof v === 'number');
+/** A text expression (Style, Subscript, Superscript, or a Row of strings and text expressions) — not a control spec. */
+const isTextExpr = (x) => !!x && typeof x === 'object' && !Array.isArray(x) && (['Style', 'Subscript', 'Superscript'].includes(x.head)
+  || (x.head === 'Row' && Array.isArray(x.items) && x.items.length > 0 && x.items.every((i) => typeof i === 'string' || typeof i === 'number' || isTextExpr(i))));
 const isNone = (x) => x && x.dir === 'none';
 const isBound = (x) => typeof x === 'number' || typeof x === 'function';
 
@@ -113,6 +117,9 @@ const isBound = (x) => typeof x === 'number' || typeof x === 'function';
 export function parseControl(spec) {
   if (spec === Delimiter) return { kind: 'delimiter' };
   if (typeof spec === 'string') return { kind: 'heading', label: spec };
+  // v0.1.26: a text expression in the control list is a heading too (Row[{"linear velocity ", Style["v", Italic]}]);
+  // a Row of control specs stays a row of controls
+  if (isTextExpr(spec)) return { kind: 'heading', label: spec };
   if (spec && spec.marker === 'Button') {
     const name = spec.options.name ?? textOf(spec.label);
     return { kind: 'button', name: null, buttonName: name, label: spec.label, action: spec.action, opts: spec.options };
@@ -296,7 +303,7 @@ export function Manipulate(spec) {
   let clipCount = Math.floor(Math.random() * 1e6); // clipPath ids unique in the page
   const isFramed = (o) => o && (o.AspectRatio !== undefined || o.UpdateFrame || Array.isArray(o.PlotRangePadding));
   const FRAME_OPTS = ['PlotRange', 'PlotRangePadding', 'AspectRatio', 'ImageSize', 'Background', 'Axes', 'AxesOrigin', 'Ticks',
-    'AxesLabel', 'Frame', 'FrameTicks', 'FrameLabel', 'PlotLabel', 'PlotLegends'];
+    'AxesLabel', 'Frame', 'FrameTicks', 'FrameLabel', 'PlotLabel', 'PlotLegends', 'LabelStyle'];
   const frameKey = (o) => JSON.stringify(FRAME_OPTS.map((n) => o[n] ?? null));
   const elementOf = (options, k) => document.getElementById(options.id ?? g0[k]?.id ?? (k === 0 ? ids.graphic : `${ids.graphic}${k + 1}`));
   function framedPicture(options, k) {
@@ -320,7 +327,8 @@ export function Manipulate(spec) {
     const plot = createPlot(el, { plotRange: layout.plotRange, imageSize, padding: 0, label: options.label ?? g0[k]?.label, testid: options.testid ?? g0[k]?.testid });
     if (options.Background) plot.rect(plot.layer('background'), [S[0][0], S[1][0]], [S[0][1], S[1][1]], { fill: options.Background.rgb });
     const deco = plotDecorations(decor, { range: Rp, plotRange: Rp, visible: layout.plotRange, unitsPerPx: plot.unitsPerPx, scale: [1, sy] });
-    if (deco.below.length) render(plot, plot.layer('decorations'), deco.below);
+    // FrameInFront (v0.1.26, set by DensityPlot): the frame, ticks and labels over the picture instead of under it
+    if (deco.below.length && !options.FrameInFront) render(plot, plot.layer('decorations'), deco.below);
     const layer = plot.layer('graphics');
     if (options.PlotRangeClipping) { // PlotRangeClipping -> True: the content is clipped to the (padded) plot range
       const id = `prclip-${++clipCount}`;
@@ -329,6 +337,7 @@ export function Manipulate(spec) {
       const defs = svgNode('defs'); defs.append(cp); plot.svg.prepend(defs);
       layer.setAttribute('clip-path', `url(#${id})`);
     }
+    if (deco.below.length && options.FrameInFront) render(plot, plot.layer('labels'), deco.below);
     if (deco.above.length) render(plot, plot.layer('labels'), deco.above);
     return { plot, layer, scale: [1, sy], key: frameKey(options) };
   }
@@ -345,7 +354,11 @@ export function Manipulate(spec) {
       }
       if (!options?.PlotRange) throw new Error('Manipulate: give the Graphics a PlotRange (in the Graphics options or in spec.graphics)');
       const el = document.getElementById(options.id ?? g0[k]?.id ?? (k === 0 ? ids.graphic : `${ids.graphic}${k + 1}`));
-      const imageSize = (Array.isArray(options.ImageSize) ? options.ImageSize[0] : options.ImageSize) ?? 400;
+      // ImageSize -> {w, h} (v0.1.26): the plot range is fitted into w × h, as Mathematica does (the width is the smaller of
+      // w and h × the range's aspect); a square picture of a square range is unchanged
+      const [[rx0, rx1], [ry0, ry1]] = options.PlotRange;
+      const IS = options.ImageSize;
+      const imageSize = (Array.isArray(IS) ? (IS.length > 1 ? Math.min(IS[0], (IS[1] * (rx1 - rx0)) / (ry1 - ry0)) : IS[0]) : IS) ?? 400;
       const pad = options.PlotRangePadding ?? 0.02;
       // Axes / Frame / labels (graphics-extras.js): room outside the padded plot range where the labels need it
       const decor = { ...g0[k], ...options };
@@ -378,7 +391,9 @@ export function Manipulate(spec) {
   const locatorGraphics = []; // locators whose Appearance is Graphics data: { g, plot, name, a, drawn }
   let pending = 0, queued = 0;
   let pictures = []; // the graphics drawn by the last evaluation (one per picture)
+  let lastRun = 0; // performance.now() when the last evaluation started (settleInterval)
   function run() {
+    lastRun = typeof performance !== 'undefined' ? performance.now() : Date.now();
     if (pending) { cancelAnimationFrame(pending); pending = 0; }
     if (queued) { cancelAnimationFrame(queued); queued = 0; }
     const r = spec.body(state, spec.clock ? { controlActive, rng, time: absoluteTime() } : { controlActive, rng });
@@ -411,7 +426,13 @@ export function Manipulate(spec) {
     }
     updateControls();
     spec.after?.(ctx);
-    if (spec.settle && spec.settle(state)) pending = requestAnimationFrame(() => { pending = 0; run(); });
+    // settle: evaluate again on the next frame; settleInterval (v0.1.26, seconds of real time) waits at least that long
+    // between evaluations (Mathematica's Pause[dt] in a self-evaluating body)
+    if (spec.settle && spec.settle(state)) {
+      const iv = (spec.settleInterval ?? 0) * 1000;
+      const tick = () => { pending = 0; if (iv && performance.now() - lastRun < iv) { pending = requestAnimationFrame(tick); return; } run(); };
+      pending = requestAnimationFrame(tick);
+    }
   }
   // control input: at once, or (throttle 'frame') at most once per animation frame
   const requestRun = () => {
@@ -447,7 +468,11 @@ export function Manipulate(spec) {
     let api = null;
     switch (c.kind) {
       case 'delimiter': controls.delimiter(); return;
-      case 'heading': controls.heading(c.label); return;
+      case 'heading': {
+        const h = controls.heading(textOf(c.label));
+        if (h && typeof c.label !== 'string' && htmlOf(c.label) !== textOf(c.label)) h.innerHTML = htmlOf(c.label); // typeset (v0.1.26)
+        return;
+      }
       case 'row': {
         const rowEl = addRow(controls, { name: c.opts.name });
         if (c.opts.class) rowEl.classList.add(c.opts.class);
@@ -553,7 +578,11 @@ export function Manipulate(spec) {
     for (const [n, api] of apis) if (!sameValue(shown.get(n), val(n))) { api.set(val(n)); shown.set(n, val(n)); }
   }
   // Moved(state): whether a slider shows its value as moved (machine number "1.") after a reset or setState
-  const howFor = (n, how) => { const m = byName.get(n)?.opts?.Moved; return m ? { ...how, moved: !!m(state) } : how; };
+  // how.moved may be a list of variable names (v0.1.26: only those sliders show their value as moved, "5.")
+  const howFor = (n, how) => {
+    if (Array.isArray(how?.moved)) how = { ...how, moved: how.moved.includes(n) };
+    const m = byName.get(n)?.opts?.Moved; return m ? { ...how, moved: !!m(state) } : how;
+  };
   // resetStops: a reset or setState also stops running slider animations (the ports that did so by hand)
   const syncControls = (how, exact) => {
     for (const [n, api] of apis) {
@@ -725,6 +754,7 @@ export function Manipulate(spec) {
   }
 
   // ---- test / automation hook
+  const flushQueued = () => { if (queued) run(); }; // run() cancels the queued frame
   const H = spec.hook ?? {};
   // hook.copy: how values leave the hook (default JSON with "Infinity"; e.g. structuredClone keeps Infinity and -0)
   const copy = H.copy ?? hookCopy;
@@ -732,12 +762,14 @@ export function Manipulate(spec) {
   const extras = Object.fromEntries(Object.entries(H).filter(([k]) => k !== 'view' && k !== 'copy').map(([k, f]) => [k, f(ctx)]));
   window.__demo = {
     name: spec.name,
-    getState: () => copy(state),
+    // a control or locator input waiting for its animation frame (throttle 'frame') is evaluated first, so the hook never
+    // reads the state or view of the evaluation before (v0.1.26; the page itself still evaluates once per frame)
+    getState: () => { flushQueued(); return copy(state); },
     /** replace any Manipulate variables (e.g. a snapshot's Settings) and evaluate once */
-    setState: (partial) => copy(ctx.setState(read(partial))),
-    view: () => copy(H.view ? H.view(view, state) : view),
+    setState: (partial, how) => copy(ctx.setState(read(partial), how)), // how: { moved: true | [names] } (v0.1.26)
+    view: () => { flushQueued(); return copy(H.view ? H.view(view, state) : view); },
     /** the Graphics data of picture k as last drawn (Raw parts and functions are dropped by the copy) */
-    graphics: (k = 0) => hookCopy(pictures[k]), // always JSON (functions dropped), whatever hook.copy is
+    graphics: (k = 0) => { flushQueued(); return hookCopy(pictures[k]); }, // always JSON (functions dropped), whatever hook.copy is
     /** move a locator to world point p as one front-end update (its range applies) */
     // locator and SVG-coordinate functions only where there is an SVG picture (not on pages of renderer pictures only)
     ...(plots.some(Boolean) ? {

@@ -1,0 +1,515 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Extracted 2026-10-26 with tools/nbextract.py; cached outputs skipped.
+
+
+### [Title]
+\<Moving Two Particles with Shared Control Inputs Using Wall Friction\>
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+How can two particles in a two-dimensional workspace, steered by the same global control signal, be moved to arbitrary final positions? This is difficult because the control input is symmetrical. This Demonstration provides an algorithm to move the particles from starting positions (denoted by squares) to the desired final positions (denoted by circles) with the shortest path, making use of boundary interactions (dark red boundaries) to break this control symmetry. The parameter ε controls how the particles approach the boundaries.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+(*wallFrictionMoveDir rotates or unrotates the coordinate frame*)
+wallFrictionMoveDir[dir_,s1_,s2_,g1_,g2_,moves_,pm1_, pm2_, ε_]:=Module[{Δex, Δey, path = moves, path1= pm1, path2= pm2},
+(*
+s1 = starting position of robot 1 for this move;
+s2 = starting position of robot 2 for this move;
+moves to contact wall in direction dir.
+
+If one robot is already touching the wall in direction dir, just move the second robot. 
+
+Movements are chosen to minimize |Δex| and |Δey|, the error from the desired spacing of the robots, where Δex = (g2x-g1x) - (r2x-r1x) and Δey = (g2y-g1y) - (r2y-r1y). If robots would end up overlapping, returns multiple possibilities +/- ε. *)
+
+(*STEP 1: is base case 1 possible? If so, do it and return*)
+{Δex, Δey} = (g2-g1)-(s2-s1);
+If[-0.00001<= Δex<= 0.00001 && -0.00001<= Δey < 0.00001,
+AppendTo[path, {g2[[1]]- s2[[1]], g2[[2]]- s2[[2]]}];AppendTo[path1, g1]; AppendTo[path2, g2];
+Return[ { distanceMoved[ path],g1,g2,path,path1,path2, True } ]];
+
+(*OTHERWISE, move in the desired direction to contact a wall. 
+We will need to rotate the coordinate frames so the movement is up, and ensure robot 1 is the first to contact.
+Then we will call wallFrictionMoveUp, 
+then we take the answer, and reassign robot 1 and 2 to match original
+then rotate answer into original coordinate frame.*)
+Module[{r1,r2,newPathEntries,s1t,s2t,g1t,g2t,movest, pm1st, pm2st},
+(*if move is up, call wallFrictionMoveUp, otherwise rotate frame, then unrotate answers*)
+If[dir=="\<u\>", 
+newPathEntries= wallFrictionMoveUp[s1,s2,g1,g2,moves,pm1, pm2,ε];
+];
+
+(*if move is down, rotate frame 180 deg, then unrotate answers*)
+If[dir=="\<d\>", 
+{s1t,s2t,g1t,g2t}= Map[rotate180,{s1,s2,g1,g2}];
+movest= Map[rotate180inplace,moves];
+pm1st= Map[rotate180,pm1];
+pm2st= Map[rotate180,pm2];
+newPathEntries= wallFrictionMoveUp[s1t,s2t,g1t,g2t,movest,pm1st, pm2st,ε];
+(*undo the change*)
+newPathEntries[[2]] = rotate180[newPathEntries[[2]]];
+newPathEntries[[3]] = rotate180[newPathEntries[[3]] ];
+newPathEntries[[4]] = Map[rotate180inplace, newPathEntries[[4]] ];
+newPathEntries[[5]] = Map[rotate180, newPathEntries[[5]] ];
+newPathEntries[[6]] = Map[rotate180, newPathEntries[[6]] ];
+];
+
+(*if move is right, rotate frame 90 deg, then unrotate answers*)
+If[dir=="\<r\>", 
+{s1t,s2t,g1t,g2t}= Map[rotate90,{s1,s2,g1,g2}];
+movest= Map[rotate90inplace,moves];
+pm1st= Map[rotate90,pm1];
+pm2st= Map[rotate90,pm2];
+newPathEntries= wallFrictionMoveUp[s1t,s2t,g1t,g2t,movest,pm1st, pm2st,ε];
+(*undo the change*)
+newPathEntries[[2]] = rotate270[newPathEntries[[2]]];
+newPathEntries[[3]] = rotate270[newPathEntries[[3]] ];
+newPathEntries[[4]] = Map[rotate270inplace, newPathEntries[[4]] ];
+newPathEntries[[5]] = Map[rotate270, newPathEntries[[5]] ];
+newPathEntries[[6]] = Map[rotate270, newPathEntries[[6]] ]
+];
+
+(*if move is left, rotate frame 270 deg, then unrotate answers*)
+If[dir=="\<l\>", 
+{s1t,s2t,g1t,g2t}= Map[rotate270,{s1,s2,g1,g2}];
+movest= Map[rotate270inplace,moves];
+pm1st= Map[rotate270,pm1];
+pm2st= Map[rotate270,pm2];
+newPathEntries= wallFrictionMoveUp[s1t,s2t,g1t,g2t,movest,pm1st, pm2st,ε];
+(*undo the change*)
+newPathEntries[[2]] = rotate90[newPathEntries[[2]]];
+newPathEntries[[3]] = rotate90[newPathEntries[[3]] ];
+newPathEntries[[4]] = Map[rotate90inplace, newPathEntries[[4]] ];
+newPathEntries[[5]] = Map[rotate90, newPathEntries[[5]] ];
+newPathEntries[[6]] = Map[rotate90, newPathEntries[[6]] ]
+];
+newPathEntries
+](*end inner module*)
+](*end outer module*)
+
+### [Input] (init)
+(*algorithm wallFrictionMoveUp*)
+wallFrictionMoveUp[r1in_,r2in_,g1in_,g2in_,moves_,pm1_, pm2_ , ε_]:= 
+Module[{r1,r2,g1,g2,Δgx,Δgy,m1,m2,r1out,r2out,Δtgx,Δtgy,
+Δey ,Δex ,
+L= 1 (*size of workspace*),
+path1= pm1(*desired moves for r1*),
+path2= pm2(*desired moves for r2*),
+path ,
+isMirrored = False,
+isFlipped = False
+},
+(*robot 1 must be the top left robot. If it is not the top robot, flip entries, if it is not the left robot, mirror entries. Remember to switch again at end!
+ Then move robot while first robot is touching wall.*)
+{r1,r2,g1,g2,isMirrored,isFlipped,path}= ensurer1r2[r1in,r2in,g1in,g2in,moves];
+{Δgx,Δgy} = g2-g1;
+(*If the second robot is already touching the up wall, just return.*)
+If[r2[[2]]== 1, Return [{Infinity, r1, r2, path, path1, path2 , False}]];
+(*If the goal Δgx,Δgy is achievable, do it in one move. Otherwise, *) 
+If[r2[[1]]- r1[[1]]-1(*+2ε*)>  Δgx , Δtgx = r2[[1]]- r1[[1]]-1(*+2ε*), Δtgx = Δgx];
+If[ Δgy > 0, Δtgy = 0, Δtgy = Δgy];
+If[Δgy < r2[[2]]- r1[[2]], Δtgy = r2[[2]]- r1[[2]],, Δtgy = Δgy];
+
+If[r2[[1]]- r1[[1]]-1+ 2ε<= Δtgx <= 1 -2ε && r2[[2]]- r1[[2]] <= Δtgy<= 0,
+(*in achievable range*)
+(*move r1 and r2 so that r1 will touch the up wall in the line of the goal*)
+m1={(1-r1[[2]])/(2-g1[[2]]- r1[[2]])(g1[[1]]-r1[[1]]),1-r1[[2]]};
+,
+(*not in achievable range*)
+(*move the shortest path to the wall*)
+ m1 = {0,1- r1[[2]]};
+];
+
+(*check the boundaries*)
+If[r2[[1]]+ m1[[1]] >1 , m1[[1]] = 1-r2[[1]]];
+If[r1[[1]]+ m1[[1]]<0, m1[[1]] = -r1[[1]]];
+If[r1[[1]]+m1[[1]]+Δtgx > 1&& Δtgx >0, m1[[1]]-= Δtgx + r1[[1]]+ m1[[1]]-1];
+If[r1[[1]]+m1[[1]]+Δtgx<0 && Δtgx<0,m1[[1]] += Abs[Δtgx]-r1[[1]]-m1[[1]]];
+If[r1[[2]] == 1, m1 = {0,0}, If[ m1[[1]]==0, If[r1[[1]]== 1 || r2[[1]]== 1, m1[[1]]-= ε];
+If[r1[[1]]== 0|| r2[[1]]== 0, m1[[1]] += ε]]];
+r1 += m1; r2+= m1;
+{Δex, Δey} = {Δtgx, Δtgy}-(r2-r1);
+
+(*move r2 to get correct spacing*)
+If[Δex >= 0 , m2 = {Min[Δtgx-(r2[[1]]-r1[[1]]), 1-r2[[1]]],Δtgy-(r2[[2]]-r1[[2]]) }, m2 = {Max[Δtgx-(r2[[1]]-r1[[1]]), -r2[[1]]],Δtgy-(r2[[2]]-r1[[2]]) }];
+
+(*check if the robots are in ε difference with each other*)
+If[r1[[1]]-ε/2<= r2[[1]] +m2[[1]] <= r1[[1]]+ε/2&& r1[[2]]== r2[[2]]+ m2[[2]] , If[r2[[1]]+ m2[[1]]> L/2, m2[[1]] +=r1[[1]]+ε-r2[[1]]- m2[[1]], m2[[1]] +=r1[[1]]-ε-r2[[1]]- m2[[1]]]];
+
+If[r2[[2]] == 1, m2 = {0,0}];
+If[m1!= {0,0},
+(*add m1*)
+AppendTo[path, m1];
+{r1out,r2out}= returnr1r2[isFlipped,isMirrored, r1,r2];
+AppendTo[path1, r1out];
+AppendTo[path2,r2out];];
+(*add m2*)
+r2 += m2;
+AppendTo[path, m2];
+{r1out,r2out}= returnr1r2[isFlipped,isMirrored, r1,r2];
+AppendTo[path1, r1out];
+AppendTo[path2,r2out];
+(*change the path back if it was mirrored*)
+If[isMirrored,
+path = Map[mirrorInplace, path];
+];
+{If[ -0.00001<m2[[1]]<0.00001 && -0.00001<m2[[2]]<0.00001, Infinity,distanceMoved[ path]],r1out,r2out,path,path1,path2 ,False }
+]
+
+### [Input] (init)
+(*undoing the mirroring and flipping*)
+returnr1r2[isFlipped_,isMirrored_, r1_,r2_]:=Module[{r1out, r2out},If[isMirrored,If[isFlipped,r1out= mirror[r2];r2out=mirror[r1],r1out= mirror[r1]; r2out = mirror[r2]],If[isFlipped,r1out= r2; r2out=r1,r1out=r1;r2out=r2]];
+{r1out,r2out}]
+
+### [Input] (init)
+(*doing mirroring and flipping*)
+ensurer1r2[r1in_, r2in_,g1in_,g2in_,moves_]:=Module[{r1,r2,isFlipped,isMirrored,g1,g2,path},
+isFlipped= False;
+isMirrored= False;
+If[r1in[[2]]<r2in[[2]],
+If[r1in[[1]]>r2in[[1]],
+{r1,r2,g1,g2}={r2in,r1in,g2in,g1in};
+isFlipped = True; path = moves,
+{r1,r2,g1,g2}= Map[mirror, {r2in,r1in,g2in,g1in}];
+path = Map[mirrorInplace, moves];
+isFlipped = True;
+isMirrored = True],
+
+If[r1in[[1]]>r2in[[1]],
+{r1,r2,g1,g2}= Map[mirror, {r1in,r2in,g1in,g2in}];
+path = Map[mirrorInplace, moves];
+isMirrored= True,
+{r1,r2,g1,g2}={r1in,r2in,g1in,g2in};
+path= moves
+];
+];
+{r1,r2,g1,g2,isMirrored,isFlipped,path}]
+
+### [Input] (init)
+(*rotate the coordinate frame 270 deg*)
+rotate270[r_]:={1- r[[2]], r[[1]]}
+
+### [Input] (init)
+(*changes in path when we rotate 270 deg*)
+rotate90inplace[r_]:={ r[[2]], -r[[1]]}
+
+### [Input] (init)
+(*rotate the coordinate frame 90 deg*)
+rotate90[r_] := {r[[2]],1- r[[1]]}
+
+### [Input] (init)
+(*changes in path when we rotate 90 deg*)
+rotate270inplace[r_] := {-r[[2]], r[[1]]}
+
+### [Input] (init)
+(*rotate the coordinate frame 180 deg*)
+rotate180[r_] := {1-r[[1]],1- r[[2]]}
+
+### [Input] (init)
+(*changes in path when we rotate 180 deg*)
+rotate180inplace[r_] := {-r[[1]],- r[[2]]}
+
+### [Input] (init)
+(*mirror the coordinate frame about the right wall*)
+mirror[r_] := {1-r[[1]],r[[2]]}
+
+### [Input] (init)
+(*changes in path when we mirror*)
+mirrorInplace[r_]:= {-r[[1]],r[[2]]}
+
+### [Input] (init)
+(*total distance moved with the sequence of moves*)
+distanceMoved[moves_]:= Total[Table[Norm[m],{m,moves}]]
+
+### [Input] (init)
+(*optimal2robotPath the top level algorithm*)
+(*function that does an A* search to find the shortest path*)
+optimal2robotPath[s1_,s2_, g1_,g2_,ε_]:=Module[{optimalPathList
+,pathToExplore,r1,r2,wallMoves,moves,pm1, pm2
+},
+pathToExplore= {Infinity,s1,s2,{{0,0}},{s1},{s2},False};
+optimalPathList={pathToExplore};
+While[pathToExplore[[7]] != True,
+(*body of while loop*)
+r1 = pathToExplore[[2]];
+r2 = pathToExplore[[3]];
+
+moves= pathToExplore[[4]];
+pm1 = pathToExplore[[5]];
+pm2 = pathToExplore[[6]];
+
+Table[
+wallMoves = wallFrictionMoveDir[dir,r1,r2,g1,g2,moves,pm1, pm2, ε];
+optimalPathList=AppendTo[optimalPathList,wallMoves];,
+{dir,{"\<u\>","\<d\>","\<l\>","\<r\>"}}];
+optimalPathList = SortBy[optimalPathList, First];(*sorts the current list by their total distance moved*)
+pathToExplore = First[optimalPathList]; (*read first entry*)
+optimalPathList= Delete[optimalPathList,1](*pop off first entry*)
+];
+(*return the best movement*)
+{optimalPathList[[1]][[4]], optimalPathList[[1]][[5]], optimalPathList[[1]][[6]]}
+]
+
+### [Input] (init)
+keepRobotsInWorkspaceAndSpaced[r1_,r2_,ε_]:=Module[{ds, tp,p1,p2},
+(*keep robots in ε workspace*)
+p1 = {Clip[r1[[1]],{ε,1-ε}], Clip[r1[[2]],{ε,1-ε}]};
+p2 = {Clip[r2[[1]],{ε,1-ε}], Clip[r2[[2]],{ε,1-ε}]};
+
+(*keep ε-spacing between robots*)
+ds =EuclideanDistance[p1,p2];
+If[ds<ε,If[ds==0,p1=p2+ If[p2[[1]]>2ε,{-ε,0},{ε,0}],
+   tp = p1+ε((p2-p1))/(ds);(*temp position*)
+If[ε<tp[[1]]<1-ε && ε<tp[[2]]<1-ε,p2=tp,tp = p2+ε((p1-p2))/(ds)
+If[ε<tp[[1]]<1-ε && ε<tp[[2]]<1-ε,p1=tp,p1 = p2+ε(({1/2,1/2}-p2))/(EuclideanDistance[{1/2,1/2},p2])]]]];
+{p1,p2}
+]
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[Module[{movesAndPositions,path,(*paths for each robot*)path1,path2,
+r = 1/40 (*radius of start and end markers*),
+thickness = 0.005,rotateSolution,
+(*left robot*) ps1,pe1,
+(*right robot*) ps2,pe2,
+(*current particle position*) pm1,pm2,offset,
+c1=Blue,c2 =Magenta,
+mvNum,
+mvFrac,ds,tp},
+(*keep robots in ε workspace*)
+{s1,s2}=keepRobotsInWorkspaceAndSpaced[s1,s2,ε];
+{e1,e2}=keepRobotsInWorkspaceAndSpaced[e1,e2,ε];
+
+{ps1 ,pe1,ps2,pe2} = {s1,e1,s2,e2};
+
+{path,path1,path2} = optimal2robotPath[ps1,ps2,pe1,pe2,ε ];
+
+mvNum = Floor[progress*(Length[path]-1)] ;
+mvFrac = FractionalPart[progress*(Length[path]-1)];
+pm2= If[mvFrac>0,path2[[mvNum+1,;;]]+mvFrac*(path2[[mvNum+2,;;]]-path2[[mvNum+1,;;]]),path2[[mvNum+1,;;]]];
+pm1 = If[mvFrac>0,path1[[mvNum+1,;;]]+mvFrac*(path1[[mvNum+2,;;]]-path1[[mvNum+1,;;]]),path1[[mvNum+1,;;]]];
+
+Graphics[{
+(*workspace*)
+{Darker[Red], Rectangle[-0.025{1,1},1.025{1,1}]},
+{Lighter[Gray,0.8], Rectangle[{0,0},{1,1}]},
+{White, Rectangle[{ε, ε},{1-ε,1-ε}]},
+{Lighter[Gray,0.8], Disk[ps2,ε]},
+{Lighter[Gray,0.8], Disk[pe2,ε]},
+PointSize[0.01],
+Arrowheads[.03],
+Thickness[thickness],
+(*starting poses, dashed line from start to end*)
+{c1,{ Opacity[.3],Dashed,Arrow[{ps1,pe1}]},Point@ps1,EdgeForm[Directive[c1,Thickness[thickness]]],FaceForm[None],Rectangle[ps1-2/3r {1,1},ps1+2/3r{1,1}],Circle[pe1,r]},
+{c2,{ Opacity[.3],Dashed,Arrow[{ps2,pe2}]},Point@ps2,EdgeForm[Directive[c2,Thickness[thickness]]],FaceForm[None],Rectangle[ps2-2/3r {1,1},ps2+2/3r{1,1}], Circle[pe2,r]},
+(*plot path of particle 1*)
+{c1,
+Table[Arrow[{path1[[i,;;]],path1[[i+1,;;]]}],{i,1,mvNum}],
+ Arrow[{path1[[mvNum+1,;;]],pm1}],
+{If[pm1[[1]]==0||pm1[[2]]==0||pm1[[1]]==1||pm1[[2]]==1,{Point@pm1 ,PointSize[0.005],White,Point@pm1 },Point@pm1] }
+},
+(*plot path of particle 2*)
+ {c2,
+Table[Arrow[{path2[[i,;;]],path2[[i+1,;;]]}],{i,1,mvNum}],
+ Arrow[{path2[[mvNum+1,;;]],pm2}],
+{If[pm2[[1]]==0||pm2[[2]]==0||pm2[[1]]==1||pm2[[2]]==1,{Point@pm2 ,PointSize[0.005],White,Point@pm2 },Point@pm2]}
+},
+If[ifMove == "\<Δ configuration space\>",
+Inset[RegionPlot[x<-3,{x,-1,1},{y,-1,1},Epilog->{
+(*reachable region*)
+{LightBlue,EdgeForm[Blue],If[pm1[[1]]<pm2[[1]] ,
+Rectangle[{pm2[[1]]-1-pm1[[1]],pm2[[2]]-pm1[[2]]},{1,0}],Rectangle[{1-pm1[[1]]+pm2[[1]], pm2[[2]]-pm1[[2]]},{-1,0}]]
+},
+{LightGreen,EdgeForm[Green],Opacity[0.5],
+If[pm1[[2]]>pm2[[2]],
+Rectangle[{0,-1},{pm2[[1]]-pm1[[1]],1+ pm2[[2]]-pm1[[2]]}],Rectangle[{0,1},{(pm2[[1]]-pm1[[1]]),-(1+ pm1[[2]]-pm2[[2]])}]]
+},
+(*goal deltas*)
+Green,
+Disk[pe2-pe1,2r],Text[Style[Row[{"\<Δ\>",Style["\<r\>",Italic]}],FontSize->16,Black],{pm2[[1]]-pm1[[1]]- 0.1,pm2[[2]]-pm1[[2]]-0.1}],
+(*current deltas*)
+Red,Rectangle[pm2-pm1-4/3r {1,1},pm2-pm1+4/3r{1,1}],Text[Style[Row[{"\<Δ\>",Style["\<g\>",Italic]}],FontSize->16,Black],{pe2[[1]]-pe1[[1]]+ 0.1,pe2[[2]]-pe1[[2]]+0.1}]
+
+},FrameLabel->{Row[{"\<Δ\>",Style["\<x\>",Italic]}],Row[{"\<Δ\>",Style["\<y\>",Italic]}]},LabelStyle->Directive[Black,Bold],ImageSize->230],{1.38,.45}],
+{If[mvNum+1== Length[path],{mvNum= Length[path]-2,mvFrac=1}];
+Darker[Red], Text[Style[StringForm["\<move `` of ``\>", mvNum+1,Length[path]-1],FontSize->18],{1.4,.9}],
+Text[Style[StringForm["\<total distance `` \>", Round[N[Total[Table[EuclideanDistance[path[[i]],{0,0}],{i,2, Length[path]}] ] ],.01]],FontSize->18],{1.4,.8}],
+offset = {1.55,.5}-(1)/(2)path[[mvNum+2,;;]];
+{Opacity[0.3], Arrow[{offset,offset+path[[mvNum+2,;;]]}]},
+Point[offset+mvFrac(path[[mvNum+2,;;]])],
+Arrow[{offset, offset+mvFrac(path[[mvNum+2,;;]]) }]
+}]
+},ImageSize->600,PlotRange->{{-0.05,1.75},{-.05,1.05}}]],
+Row[{Control@{{ifMove,"\<Δ configuration space\>","\<on the right, show\>"},{"\<moves\>","\<Δ configuration space\>"}}}],Row[{Control@{{progress,1,"\<progress\>"},0,1,1/420,Slider,Appearance->"\<Labeled\>"},
+Control@{{ε,1/20,"\<ε\>"},1/1000,1/10,1/1000,Slider,Appearance->"\<Labeled\>"}}],
+{{s1,{0.95,0.95}},{0,0}+ ε,{1,1}- ε,Locator,Appearance->None},
+{{s2,{0.2,0.8}},{0,0}+ ε,{1,1}- ε,Locator,Appearance->None},
+{{e1,{0.05,0.95}},{0,0}+ ε,{1,1}- ε,Locator,Appearance->None},
+{{e2,{0.33,0.66}},{0,0}+ ε,{1,1}- ε,Locator,Appearance->None}
+, SaveDefinitions->True
+]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Shiva Shahrokhi
+
+### [Text]
+Aaron T. Becker
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+\<There are many applications for large swarms of tiny robots in robotics, biology and chemistry. These robots often lack onboard computation, actuation and communication capabilities. Instead, these \[OpenCurlyDoubleQuote]robots\[CloseCurlyDoubleQuote] are particles carrying some payload, and the particle swarm is controlled by a shared, global control input, such as a uniform magnetic gradient or electric field. In previous work, we showed that the two-dimensional position of each particle in such a swarm is controllable if the workspace contains a single obstacle the size of one particle.\>
+
+### [Text]
+\<Requiring a small rigid obstacle suspended in the middle of the workspace is a strong constraint, especially in three dimensions. This Demonstration relaxes that constraint and provides a position control algorithm that requires interactions only with the boundaries. Both in vivo and artificial environments often have boundaries. We assume that particles in contact with the boundaries have zero velocity if the global control input pushes the particle into the wall. This Demonstration provides a shortest-path algorithm for positioning a two-particle swarm.\>
+
+### [Text]
+\<The solution is a best-first search algorithm that maintains a list of possible paths (moves) sorted according to an admissible heuristic on path length. The algorithm works by expanding the path with the shortest estimated length. Expanding a path means either moving directly to the goal or pushing one robot to a wall and adjusting the relative position of the other robot. As soon as the goal is reached, the algorithm returns this shortest path.\>
+
+### [Text]
+Both the robots and their paths are shown on the left plot, while the right plot shows either the Δ configuration space or the moves and their distances. The Δ configuration is defined as the difference between the positions of robot 1 and robot 2. The red square represents the starting Δx and Δy, and the green circle represents the goal Δx and Δy. The green rectangle represents Δx and Δy configurations reachable in one move by first colliding with a horizontal wall. The blue rectangle represents Δx and Δy configurations reachable in one move by first colliding with a vertical wall.
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] A. Becker, G. Habibi, J. Werfel, M. Rubenstein and J. McLurkin, \[OpenCurlyDoubleQuote]Massive Uniform Manipulation: Controlling Large Populations of Simple Robots with a Common Input Signal,\[CloseCurlyDoubleQuote] in 2013 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS), Tokyo, Japan: IEEE, 2013 pp. 520\[Dash]527. doi: 10.1109/IROS.2013.6696401.
+
+### [Text]
+[2] S. Shahrokhi, A. Mahadev and A. Becker, "Algorithms for Shaping a Particle Swarm with a Shared Input Using Non-Slip Wall Contacts," in 2017 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS), forthcoming.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+micro robot
+
+### [Item]
+nano robot
+
+### [Item]
+global input
+
+### [Item]
+shared control
+
+### [Item]
+under actuated
+
+### [Item]
+swarm
+
+### [Item]
+robot swarm
+
+### [Item]
+configuration space
+
+### [Item]
+robotics
+
+### [Item]
+robot
+
+### [Item]
+workspace
+
+### [Item]
+optimal
+
+### [Item]
+shortest
+
+### [Item]
+path planning
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Effect of Friction on Ball Rolling Down a Ramp
+
+### [Text]
+Ensemble Control of Robots with Unicycle Kinematics
+
+### [Text]
+Friction
+
+### [Text]
+Static Friction
+
+### [Text]
+Static Friction
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2015-11-23
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

@@ -180,3 +180,60 @@ describe('graphics: sectors (v0.1.24)', () => {
     expect(q.pts.at(-1)[1]).toBeCloseTo(3, 14);
   });
 });
+
+describe('graphics: empty primitives (v0.1.26)', () => {
+  it('Point[{}] has no points (Mathematica draws nothing; it was a point at the origin)', () => {
+    expect(Point([]).pts).toEqual([]);
+    expect(Point([1, 2]).pts).toEqual([[1, 2]]);
+  });
+});
+
+describe('graphics v0.1.26: Texture, Rasterize, ImageReflect, textureMatrix', () => {
+  it('Polygon with VertexTextureCoordinates keeps them; a Texture directive is in the style of what follows only', async () => {
+    const G = await import('../../shared/graphics.js');
+    const vtc = [[0, 0], [1, 0], [1, 1], [0, 1]];
+    const p = G.Polygon([[-5, 3.6], [3, 3.6], [3, 5], [-5, 5]], { VertexTextureCoordinates: vtc });
+    expect(p.vtc).toEqual(vtc);
+    expect(G.Polygon([[0, 0], [1, 0], [0, 1]])).toEqual({ head: 'Polygon', pts: [[0, 0], [1, 0], [0, 1]] }); // unchanged shape
+    const img = G.Rasterize('image plane', { RasterSize: 500, ImageSize: 200, Background: G.None });
+    const s = styles([G.Polygon([[0, 0], [1, 0], [0, 1]]), [G.Texture(img), p], G.Polygon([[0, 0], [1, 0], [0, 1]])]);
+    expect(s.map(([, st]) => st.texture)).toEqual([undefined, img, undefined]);
+    // scaleGraphics (AspectRatio) keeps the texture coordinates with their vertices
+    expect(G.scaleGraphics([p], [1, 2])[0]).toEqual({ head: 'Polygon', pts: [[-5, 7.2], [3, 7.2], [3, 10], [-5, 10]], vtc });
+  });
+  it('Rasterize is a description (Mathematica options, default Background White); ImageReflect marks it, twice undoes it', async () => {
+    const G = await import('../../shared/graphics.js');
+    const r = G.Rasterize(G.Style('image plane', 12), { RasterSize: 500, ImageSize: 200, Background: G.None });
+    expect(r).toMatchObject({ head: 'Rasterize', RasterSize: 500, ImageSize: 200, Background: G.None, reflected: false });
+    expect(G.Rasterize('a').Background).toBe(G.White);
+    expect(G.ImageReflect(r).reflected).toBe(true);
+    expect(G.ImageReflect(G.ImageReflect(r))).toEqual(r);
+  });
+  it('ImageReflect of RGBA data reverses the rows (row 1 at the top becomes the bottom row)', async () => {
+    const G = await import('../../shared/graphics.js');
+    const img = { width: 2, height: 3, data: Uint8ClampedArray.from({ length: 24 }, (_, i) => Math.floor(i / 8)) }; // row k: all k
+    const f = G.ImageReflect(img);
+    expect([...f.data].filter((_, i) => i % 8 === 0)).toEqual([2, 1, 0]);
+    expect([f.width, f.height]).toEqual([2, 3]);
+    expect([...G.ImageReflect({ ...img, data: [...img.data] }).data]).toEqual([...f.data]); // a plain array works too
+  });
+  it('textureMatrix: the image unit square (y down) lands on the polygon with {0, 0} at its bottom-left texture corner', async () => {
+    const G = await import('../../shared/graphics.js');
+    const map = (m, [x, y]) => [m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]];
+    // the original's label: rectangle {{-5, 3.6}, {3, 3.6}, {3, 5}, {-5, 5}} with the unit square's corners
+    const m = G.textureMatrix([[-5, 3.6], [3, 3.6], [3, 5], [-5, 5]], [[0, 0], [1, 0], [1, 1], [0, 1]]);
+    const c = (p, q) => p.forEach((v, i) => expect(v).toBeCloseTo(q[i], 12));
+    c(map(m, [0, 0]), [-5, 5]); // the image's top-left corner (row 1) at the top-left vertex (texture {0, 1})
+    c(map(m, [1, 1]), [3, 3.6]); // its bottom-right corner at texture {1, 0}
+    c(map(m, [0.5, 0.5]), [-1, 4.3]);
+    // texture coordinates upside down: the image appears upside down
+    const f = G.textureMatrix([[-5, 3.6], [3, 3.6], [3, 5], [-5, 5]], [[0, 1], [1, 1], [1, 0], [0, 0]]);
+    c(map(f, [0, 0]), [-5, 3.6]);
+    // a triangle with part of the image: {1/2, 0} → (0, 0), {1, 0} → (2, 0), {1/2, 1} → (0, 2)
+    const t = G.textureMatrix([[0, 0], [2, 0], [0, 2]], [[0.5, 0], [1, 0], [0.5, 1]]);
+    c(map(t, [0.5, 1]), [0, 0]);
+    c(map(t, [0, 0]), [-2, 2]);
+    // degenerate texture coordinates: no map
+    expect(G.textureMatrix([[0, 0], [1, 0], [0, 1]], [[0, 0], [1, 1], [2, 2]])).toBe(null);
+  });
+});

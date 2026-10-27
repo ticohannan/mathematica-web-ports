@@ -38,6 +38,13 @@ it is verified:
 | Shortest Distance between Two Line Segments | [`demos/segment-distance/DESIGN.md`](../demos/segment-distance/DESIGN.md) | `demos/segment-distance/` |
 | Distribution of a Swarm of Robots in a Circular Workplace under Gravity | [`demos/swarm-circle/DESIGN.md`](../demos/swarm-circle/DESIGN.md) | `demos/swarm-circle/` |
 | Steering Multiple Radio Control (RC) Cars with One Joystick | [`demos/steering-rc-cars/DESIGN.md`](../demos/steering-rc-cars/DESIGN.md) | `demos/steering-rc-cars/` |
+| Visibility Region of a Polygon | [`demos/visibility-region/DESIGN.md`](../demos/visibility-region/DESIGN.md) | `demos/visibility-region/` |
+| Moving Two Particles with Shared Control Inputs Using Wall Friction | [`demos/wall-friction/DESIGN.md`](../demos/wall-friction/DESIGN.md) | `demos/wall-friction/` |
+| Reachable Set for a Drone | [`demos/drone-reachable-set/DESIGN.md`](../demos/drone-reachable-set/DESIGN.md) | `demos/drone-reachable-set/` |
+| 3D Reachability Set for a Dubins Car | [`demos/dubins-reachability-3d/DESIGN.md`](../demos/dubins-reachability-3d/DESIGN.md) | `demos/dubins-reachability-3d/` |
+| Probabilistic Models for Robot Motion | [`demos/probabilistic-motion/DESIGN.md`](../demos/probabilistic-motion/DESIGN.md) | `demos/probabilistic-motion/` |
+| The Homicidal Chauffeur Problem | [`demos/homicidal-chauffeur/DESIGN.md`](../demos/homicidal-chauffeur/DESIGN.md) | `demos/homicidal-chauffeur/` |
+| Maximizing Apparent Velocity in a Camera's Frame | [`demos/camera-apparent-velocity/DESIGN.md`](../demos/camera-apparent-velocity/DESIGN.md) | `demos/camera-apparent-velocity/` |
 
 The originals came without design documents. Version 0.1.6 added best-effort design documents
 reconstructed from the original notebooks (their code, captions and details text) and from the

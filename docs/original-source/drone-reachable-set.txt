@@ -1,0 +1,313 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Extracted 2026-10-26 with tools/nbextract.py; cached outputs skipped.
+
+
+### [Title]
+Reachable Set for a Drone
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+This Demonstration shows the set of all positions (x,z) a drone can reach in time Overscript[T, ^]. To ensure applicability to many different kinds of drones, this Demonstration uses a nondimensionalized two-dimensional model with two parameters: minimum/maximum thrust values Subscript[U, min/max]. The plot shows the reachable set of positions in blue and the path of a particular drone with a dashed line. The optimal control inputs are all functions of two switching times, Subscript[Overscript[t, ^], R] and Subscript[Overscript[t, ^], T], which are controlled by the locator. The drone rotates at maximum angular speed for time less than Subscript[Overscript[t, ^], R] and flies with no rotation afterward. The drone moves with minimum thrust for time less than Subscript[Overscript[t, ^], T], and maximum thrust afterward.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+drawdrone[Theta_,x_,z_,r_,color_: Gray]:= (*Draws a 2D drone at position (x,z), orientation Theta, arm length r, and color 'color'. *)Translate[Rotate[{EdgeForm[Black],color,Rectangle[r {-0.3,0},r {0.3,0.25}],Rectangle[r {-1.1,-1/16},r{1.1,1/16}],{Lighter[color],Disk[r {1.2,.25},r {.4,.08}],Disk[r {.8,.25},r {.4,.08}],Disk[r {1.2-2,.25},r {.4,.08}],Disk[r {.8-2,.25},r {.4,.08}]},Rectangle[r {-1.05,-.15},r {-.90,.2}],Rectangle[r {1.05,-.15},r {.90,.2}]},-Theta],{x,z}]
+
+### [Input] (init)
+(*Angular state variable evolution. t is time. The system turns at speed UR1 until time tR, and at speed UR2 after. *)
+Theta[t_,tR_,UR1_,UR2_]:=\[Piecewise]<<Grid:UR1 tt< tR | UR1 tR+UR2 (t-tR)t>= tR >>
+
+### [Input] (init)
+UR1=1; (*maximum turning rate (in radians/s) *)
+
+### [Input] (init)
+xphaseshift[t_,tR_,tT_,theta0_:0,UT1_,UT2_]:= (*Nondimensionalized x function. t is time, turns at maximum turning rate till time tR (then zero turning), uses thrust UT1 until time tT then thrust U2. *)
+If[tR<=tT,<<Grid:\[Piecewise]<<Grid:(UT1 (t UR1 Cos[theta0 UR1]+Sin[theta0 UR1]-Sin[(t+theta0) UR1]))/(UR1^2)t< tR | (1)/(2 UR1^2)UT1 (2 t UR1 Cos[theta0 UR1]+2 (-t+tR) UR1 Cos[(theta0+tR) UR1]+2 Sin[theta0 UR1]+(-2+(t-tR)^2 UR1^2) Sin[(theta0+tR) UR1])tR<=t<tT  | (1)/(2 UR1^2)(2 (-t+tR) UR1 UT1 Cos[(theta0+tR) UR1]+2 UT1 (t UR1 Cos[theta0 UR1]+Sin[theta0 UR1])+((-2+(tR-tT) (-2 t+tR+tT) UR1^2) UT1+(t-tT)^2 UR1^2 UT2) Sin[(theta0+tR) UR1])t>=tT>>>>
+, If[tR>tT,<<Grid:\[Piecewise]<<Grid:(UT1 (t UR1 Cos[theta0 UR1]+Sin[theta0 UR1]-Sin[(t+theta0) UR1]))/(UR1^2)t<tT  | (1)/(UR1^2)(t UR1 UT1 Cos[theta0 UR1]-(t-tT) UR1 (UT1-UT2) Cos[(theta0+tT) UR1]+UT1 Sin[theta0 UR1]-UT2 Sin[(t+theta0) UR1]+(-UT1+UT2) Sin[(theta0+tT) UR1])tT<=t<tR | (1)/(2 UR1^2)(2 t UR1 UT1 Cos[theta0 UR1]+2 (-t+tR) UR1 UT2 Cos[(theta0+tR) UR1]+2 (t-tT) UR1 (-UT1+UT2) Cos[(theta0+tT) UR1]+2 UT1 Sin[theta0 UR1]-2 UT2 Sin[(theta0+tR) UR1]+t^2 UR1^2 UT2 Sin[(theta0+tR) UR1]-2 t tR UR1^2 UT2 Sin[(theta0+tR) UR1]+tR^2 UR1^2 UT2 Sin[(theta0+tR) UR1]+2 (-UT1+UT2) Sin[(theta0+tT) UR1])t>=tR>>>>]];
+
+zphaseshift[t_,tR_,tT_,theta0_:0,UT1_,UT2_]:= (*Nondimensionalized z function.*)
+If[tR<=tT,<<Grid:\[Piecewise]<<Grid:-(t^2)/(2)-(UT1 (-Cos[theta0 UR1]+Cos[(t+theta0) UR1]+t UR1 Sin[theta0 UR1]))/(UR1^2)t<tR | (1)/(2 UR1^2)(2 UT1 Cos[theta0 UR1]+(-2+(t-tR)^2 UR1^2) UT1 Cos[(theta0+tR) UR1]-t UR1 (t UR1+2 UT1 Sin[theta0 UR1])+2 (t-tR) UR1 UT1 Sin[(theta0+tR) UR1])tR<=t<tT  | (1)/(2 UR1^2)(2 UT1 Cos[theta0 UR1]+((-2+(tR-tT) (-2 t+tR+tT) UR1^2) UT1+(t-tT)^2 UR1^2 UT2) Cos[(theta0+tR) UR1]-t UR1 (t UR1+2 UT1 Sin[theta0 UR1])+2 (t-tR) UR1 UT1 Sin[(theta0+tR) UR1])t>=tT>>>>
+, If[tR>tT, <<Grid:\[Piecewise]<<Grid:-(t^2)/(2)-(UT1 (-Cos[theta0 UR1]+Cos[(t+theta0) UR1]+t UR1 Sin[theta0 UR1]))/(UR1^2)t<tT  | (1)/(2 UR1^2)(2 UT1 Cos[theta0 UR1]-2 UT2 Cos[(t+theta0) UR1]+2 (-UT1+UT2) Cos[(theta0+tT) UR1]-t UR1 (t UR1+2 UT1 Sin[theta0 UR1])+2 (t-tT) UR1 (UT1-UT2) Sin[(theta0+tT) UR1])tT<=t<tR | (1)/(2 UR1^2)(-t^2 UR1^2+(-2+(t-tR)^2 UR1^2) UT2 Cos[(theta0+tR) UR1]+2 (UT1 Cos[theta0 UR1]+(-UT1+UT2) Cos[(theta0+tT) UR1]+UR1 (-t UT1 Sin[theta0 UR1]+(t-tR) UT2 Sin[(theta0+tR) UR1]+(t-tT) (UT1-UT2) Sin[(theta0+tT) UR1])))t>=tR>>>>  ]];
+
+### [Input] (init)
+nothing=Graphics[{PointSize[0.00],Point[{0,0}]}]; (*a blank graphics object*)
+
+### [Input] (init)
+regions[T_,pg_,UT1_,UT2_]:=(*This function draws the reachable set given T and the max/min thrust values.*)
+ParametricPlot[{{xphaseshift[T,ts1,ts2,0,UT1,UT2],zphaseshift[T,ts1,ts2,0,UT1,UT2] },{-xphaseshift[T,ts1,ts2,0,UT1,UT2],zphaseshift[T,ts1,ts2,0,UT1,UT2] }},{ts1,0,T},{ts2,0,T},AxesLabel->{"\<\!\(\*OverscriptBox[\(x\), \(^\)]\)\>","\<\!\(\*OverscriptBox[\(z\), \(^\)]\)\>"},PlotRange->All,PlotStyle->Blue,Exclusions->None,LabelStyle->{Black},PerformanceGoal->pg,ImageSize->{400,400}];
+
+### [Input] (init)
+optimumvalues[T_,pg_,UT1_,UT2_]:=(*This function draws the optimum values given T and the max/min thrust values.*)
+Show[
+ParametricPlot[{{xphaseshift[T,tR,0,0,UT1,UT2],zphaseshift[T,tR,0,0,UT1,UT2] },{-xphaseshift[T,tR,0,0,UT1,UT2],zphaseshift[T,tR,0,0,UT1,UT2] }},{tR,0,(*Min[T,(π)/(2)]*)T},AxesLabel->{"\<\!\(\*OverscriptBox[\(x\), \(^\)]\)\>","\<\!\(\*OverscriptBox[\(z\), \(^\)]\)\>"},PlotStyle->Directive[Thick,Blue],PerformanceGoal->pg],
+ParametricPlot[{{xphaseshift[T,tR,T,0,UT1,UT2],zphaseshift[T,tR,T,0,UT1,UT2] },{-xphaseshift[T,tR,T,0,UT1,UT2],zphaseshift[T,tR,T,0,UT1,UT2] }},{tR,0,T},PlotStyle->Directive[Thick,Green],PerformanceGoal->pg],
+ParametricPlot[{xphaseshift[T,0,tR,0,UT1,UT2],zphaseshift[T,0,tR,0,UT1,UT2] },{tR,0,T},PlotStyle->Directive[Thick,Magenta],PerformanceGoal->pg],
+ParametricPlot[{{xphaseshift[T,T,tR,0,UT1,UT2],zphaseshift[T,T,tR,0,UT1,UT2] },{-xphaseshift[T,T,tR,0,UT1,UT2],zphaseshift[T,T,tR,0,UT1,UT2] }},{tR, 0(*Max[0,T-(π)/(2)]*),T},PlotStyle->Directive[Thick,Brown],PerformanceGoal->pg],
+If[T>π/2,ParametricPlot[{{xphaseshift[T,tR,tR-(π)/(2),0,UT1,UT2],zphaseshift[T,tR,tR-(π)/(2),0,UT1,UT2] },{-xphaseshift[T,tR,tR-(π)/(2),0,UT1,UT2],zphaseshift[T,tR,tR-(π)/(2),0,UT1,UT2] }},{tR,(π)/(2),T},PlotStyle->Directive[Thick,Red],PerformanceGoal->pg],nothing]
+]
+
+### [Input] (init)
+tRtTControl[Dynamic[pt_],T_]:=(*This function draws tT Vs. tR at given T *)
+LocatorPane[Dynamic[pt,(pt = {Max[0,Min[T,Re[#[[1]]]]],Max[0,Min[T,Re[#[[2]]]]]})&],
+Plot[0,{tR,0,(*Min[T,(π)/(2)]*)T},
+AxesLabel->{Subscript["\<\!\(\*OverscriptBox[\(t\), \(^\)]\)\>", "\<R\>"],Subscript["\<\!\(\*OverscriptBox[\(t\), \(^\)]\)\>", "\<T\>"]},PlotStyle->Directive[Thick,Blue],AspectRatio->1,PlotRange->{{-.1,1.01T},{-.1,1.01T}},Prolog->{EdgeStyle->None,LightBlue,Rectangle[{0,0},{T,T}]},LabelStyle->{Black},
+Epilog->{Thick,
+Brown, Line[{{T,Max[0,(*Min[T,T-(π)/(2)]*)0]},{T,T}}],
+ Green, Line[{{0,T},{T,T}}],
+Magenta, Line[{{0,0},{0,T}}],
+Red,If[T>(π)/(2),Line[{{(π)/(2),0},{T,T-(π)/(2)}}],{Blue,Point[{0,0}]}]
+},ImageSize->1.125{125,125}]
+]
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{pg,path,xd,zd ,umax,umin},
+(*parameter checking*)
+If[t>T,t=T];If[tRtT[[1]]>T,tRtT[[1]]=T];If[tRtT[[2]]>T,tRtT[[2]]=T];  
+If[tRtT[[1]]<0,tRtT[[1]]=0];If[tRtT[[2]]<0,tRtT[[2]]=0];
+umin=r1[[1]];
+umax=r1[[2]];
+If[tfold!=T \[Or]r1old!=r1,
+tfold=ControlActive[-1,T]  (*forces a redraw*);
+pg =ControlActive["\<Speed\>","\<Quality\>"];
+regionsd=regions[T,pg,umin,umax];
+regionsOpt =optimumvalues[T,pg,umin,umax];
+r1old = r1;
+];
+xd = xphaseshift[t,tRtT[[1]],tRtT[[2]],0,umin,umax];
+zd = zphaseshift[t,tRtT[[1]],tRtT[[2]],0,umin,umax];
+path=ParametricPlot[{xphaseshift[tv,tRtT[[1]],tRtT[[2]],0,umin,umax],zphaseshift[tv,tRtT[[1]],tRtT[[2]],0,umin,umax]},{tv,0,T},PlotStyle->{Dashed,Black,Thick}];
+
+Show[regionsd,If[Optimum,regionsOpt,nothing],path,Graphics[If[Drone,drawdrone[Theta[t,tRtT[[1]],UR1,0],xd,zd,1,Gray],{PointSize[Large],Orange,Point[{xd,zd}]}]],PlotRange->All]],
+{{T,3,Row[{Style["\<\!\(\*OverscriptBox[\(T\), \(^\)]\)\>",Italic], "\< final\>"}]},0.1,10,Appearance->"\<Labeled\>",ImageSize->80},
+{{t,T,Style["\<\!\(\*OverscriptBox[\(t\), \(^\)]\)\>",Italic]},0,T,T/100,Appearance->"\<Labeled\>",ImageSize->80},
+{{r1,{0.102,2.04},Subscript[Style["\<U\>",Italic],"\<min/max\>"]},0,5,0.1,ControlType->IntervalSlider,Method->"\<Push\>",Appearance->"\<Labeled\>",MinIntervalSize->0.1,ImageSize->50},
+{{Drone,False,"\<drone\>"},{True,False}},
+{{Optimum,False,"\<optimum\>"},{True,False}},
+{regionsd,-1,ControlType->None},
+{regionsOpt,-1,ControlType->None},
+{tfold,-1,ControlType->None},
+{r1old,-1,ControlType->None},
+{{tRtT,{1,0},Row[{Subscript[Style["\<\!\(\*OverscriptBox[\(t\), \(^\)]\)\>",Italic],"\<R\>"],
+Subscript[Style["\<\!\(\*OverscriptBox[\(t\), \(^\)]\)\>",Italic],"\<T\>"],"\<
+control\>"
+}]},(tRtTControl[#1,T]&),ImageSize->10},
+ControlPlacement->Left,SaveDefinitions->True,ContinuousAction->False]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Mohammad Sultan
+
+### [Text]
+Aaron T. Becker
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+Drones (quadcopters or unmanned aerial vehicles) are popular because of their agility and ease of control. The ability to derive the optimal control sequence to reach a given position (or alternately, to escape a current position) is useful for collision avoidance, path planning and evasion. This Demonstration presents analytical equations to calculate the time-limited reachable set, which is the set of all position states reachable by the quadcopter at time T. To make the problem tractable, the simplified two-dimensional model of quadcopter dynamics proposed in [1, 2] is used. A three-dimensional model can be approximated by revolving the two-dimensional plot about the z axis.
+
+### [Text]
+This model is integrated using the set of candidate optimal controllers. The drone state is described by the quadcopter vertical position z, horizontal position x and pitch angle Theta. Specifically, this model assumes that the pitch angular velocity Overscript[Theta, .] can be controlled directly, justifying this assumption because modern quadcopters can reach high angular accelerations, but angular velocity is generally limited by the on-board gyroscopic sensors. This simplification reduces the model order.
+
+### [Text]
+The dynamic model equation assumes gravity g, drone mass m, and two inputs, the thrust Subscript[F, T] and rotation rate Overscript[Omega, _]Subscript[U, R]:
+
+### [Text]
+Overscript[x, ..]=(Subscript[F, T])/(m)sin Theta,
+
+### [Text]
+Overscript[z, ..]=(Subscript[F, T])/(m)cos Theta-g,
+
+### [Text]
+Overscript[Theta, .]=Overscript[Omega, _]Subscript[U, R].
+
+### [Text]
+The system is nondimensionalized by scaling by the maximum rotation rate Overscript[Omega, _]:
+
+### [Text]
+Overscript[t, ^]=Overscript[Omega, _] t,
+
+### [Text]
+Overscript[x, ^]=(Overscript[Omega, _]^2)/(g)x,
+
+### [Text]
+Overscript[z, ^]=(Overscript[Omega, _]^2)/(g)z.
+
+### [Text]
+The nondimensionalized dynamic model equations are then:
+
+### [Text]
+Overscript[x, Overscript[^, ..]]=Subscript[U, T]sin Theta,
+
+### [Text]
+Overscript[z, Overscript[^, ..]]=Subscript[U, T]cos Theta-1,
+
+### [Text]
+Overscript[Theta, .]=Subscript[U, R].
+
+### [Text]
+\<This reduces the model to have just two parameters. The thrust control input is the ratio of force over drone mass\>
+
+### [Text]
+Subscript[U, T]=(Subscript[F, T])/(m), 
+
+### [Text]
+and is bounded:
+
+### [Text]
+Subscript[U, T]∈[Subscript[U, Subscript[T, min]],Subscript[U, Subscript[T, min]]].
+
+### [Text]
+The nondimensionalized rotation control input Subscript[U, R]=(Omega)/(Overscript[Omega, _]) is bounded to Subscript[U, R]=[-1,1].
+
+### [Text]
+However, the candidate optimal control inputs are always either turning at the maximum rate or flying straight: Subscript[U, R]={1,-1,0}, and the optimal thrust inputs are full or minimum Subscript[U, T]∈[Subscript[U, Subscript[T, min]],Subscript[U, Subscript[T, max]]]. To compute the final position of the drone, the pitch is integrated and the accelerations are double-integrated. The optimal control inputs that generate the boundary of the reachable set are drawn in bold colors on both the (Overscript[x, ^],Overscript[z, ^]) plot and the (Subscript[Overscript[t, ^], R],Subscript[Overscript[t, ^], T]) control inputs.
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] R. Ritz, M. Hehn, S. Lupashin and R. D\[CloseCurlyQuote]Andrea, \[OpenCurlyDoubleQuote]Quadrocopter Performance Benchmarking Using Optimal Control,\[CloseCurlyDoubleQuote] in IEEE International Conference on Intelligent Robots and Systems (IROS), San Francisco, CA, Piscataway, NJ: IEEE, 2011 pp. 5179\[Dash]5186. doi:10.1109/IROS.2011.6094775.
+
+### [Text]
+[2] M. Hehn, R. Ritz and R. D'Andrea, "Performance Benchmarking of Quadrotor Systems Using Time-Optimal Control," Autonomous Robots, 33(1\[Dash]2), 2012 pp. 69\[Dash]88. doi:10.1007/s10514-012-9282-3.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+drone
+
+### [Item]
+workspace
+
+### [Item]
+reachable points
+
+### [Item]
+thrust controller
+
+### [Item]
+rotational controller
+
+### [Item]
+switching time
+
+### [Item]
+pursuit-evasion
+
+### [Item]
+isochrone
+
+### [Item]
+Dubins
+
+### [Item]
+optimal control
+
+### [Item]
+quadrotor
+
+### [Item]
+quadcopter
+
+### [Item]
+UAV
+
+### [Item]
+isochron
+
+### [Item]
+reachable
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Quadrotor
+
+### [Text]
+Isochrons for a Dubins Car
+
+### [Text]
+Maximizing Apparent Velocity in a Camera's Frame
+
+### [Text]
+Shortest Path for the Dubins Car
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2019-12-09
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

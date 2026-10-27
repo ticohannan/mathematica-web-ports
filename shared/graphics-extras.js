@@ -15,12 +15,15 @@
 //   arcArrowGraphics(data, opts)  an arc/curve arrow given as { kind, … } (demos/common/arrow-arcs.js results) as data
 // (v0.1.21: the Raw helpers clipped and tspanText were removed; shared/graphics.js Clip, Column text and the
 // ScriptSizeMultipliers / ScriptBaselineShifts directives draw the same elements as data.)
+// v0.1.26: the Graphics option LabelStyle (tick labels, frame and axes labels, plot label) and insetLayout(graphics, pos,
+// unitsPerPx) — the layout and decorations of an Inset of a framed plot, registered with shared/graphics.js when this
+// file loads (graphics.js cannot import this file: it is imported by it).
 // Pure data constructors.
 import {
   Annotation, Line, Disk, Polygon, Text, Style, RGBColor, GrayLevel, White, Black, Opacity, EdgeForm, Directive,
-  AbsoluteThickness, CapForm, FontSize, Italic, Point, Rotate, Column, AbsoluteDashing, textOf,
+  AbsoluteThickness, CapForm, FontSize, Italic, Point, Rotate, Column, AbsoluteDashing, textOf, setInsetLayout,
 } from './graphics.js';
-import { axesPrimitives, framePrimitives } from './svg-frame.js';
+import { axesPrimitives, framePrimitives, frameLayout } from './svg-frame.js';
 
 import { plotUnitsPerPx } from './svg-plot.js';
 /** World units per nominal pixel of a picture with this PlotRange, ImageSize and PlotRangePadding (createPlot's arithmetic). */
@@ -28,8 +31,19 @@ export { plotUnitsPerPx };
 export const pxSize = plotUnitsPerPx;
 
 const GRAY = [0.4, 0.4, 0.4];
+/**
+ * LabelStyle -> spec (v0.1.26) as a list of directives for label texts: a colour, Bold, Italic, FontSize[n] or a number
+ * (the font size), Directive[…], a list of these, or None.
+ */
+export function labelDirectives(ls) {
+  if (ls == null || ls === 'None' || ls?.dir === 'none') return [];
+  if (typeof ls === 'number' || typeof ls === 'string') return [FontSize(ls)];
+  if (Array.isArray(ls)) return ls.flatMap(labelDirectives);
+  if (ls.dir === 'directive') return ls.value.flatMap(labelDirectives);
+  return ls.dir ? [ls] : [];
+}
 /** opts: those of svg-frame.js drawAxes (range, majorStep, minorStep, axesLabel, fontPx, color, labelColor, thicknessPx,
- * axesLabelStyle {italic, color}, …) and unitsPerPx. */
+ * axesLabelStyle {italic, color}, …), unitsPerPx and labelStyle (v0.1.26: directives for the tick labels and labels). */
 export function axesGraphics(opts) {
   const { lines, texts } = axesPrimitives(opts);
   const st = opts.axesLabelStyle ?? {};
@@ -37,7 +51,7 @@ export function axesGraphics(opts) {
   const axis = (a) => Annotation([
     RGBColor(...(opts.color ?? GRAY)), AbsoluteThickness(opts.thicknessPx ?? 0.5), CapForm('Butt'),
     ...lines.filter((l) => l.role.endsWith(a)).map((l) => Line(l.pts)),
-    RGBColor(...(opts.labelColor ?? GRAY)), FontSize(opts.fontPx ?? 11),
+    RGBColor(...(opts.labelColor ?? GRAY)), FontSize(opts.fontPx ?? 11), ...(opts.labelStyle ?? []),
     ...texts.filter((t) => t.role.endsWith(a))
       .map((t) => Text(t.role.startsWith('axes-label') ? Style(t.str, ...labelStyle) : t.str, t.pos, { anchor: t.anchor })),
   ], `axis-${a}`);
@@ -48,7 +62,8 @@ export function axesGraphics(opts) {
 // Mathematica's names and forms: Axes -> True | {True, False}; AxesOrigin -> {x, y}; Ticks / FrameTicks -> Automatic |
 // None | {xspec, yspec} with a spec = Automatic, None, a step (number: major ticks every step, minor every step/5) or
 // a list of positions; AxesLabel -> {x, y}; Frame -> True; FrameLabel -> {bottom, left}; PlotLabel -> text;
-// LabelStyle -> {FontSize, colour…} (directives for tick labels and labels). Text may be strings or Style/Subscript/Row.
+// LabelStyle -> {FontSize, colour…} (v0.1.26: directives for the tick labels, the axes and frame labels and the plot
+// label; frame and axis lines keep their grey). Text may be strings or Style/Subscript/Row.
 const hasDecor = (o) => !!(o && (o.Axes || o.Frame || o.PlotLabel != null || o.PlotLegends || o.ImagePadding));
 // Frame -> True or {bottom, left, top, right} (v0.1.23: sides with False are not drawn)
 const frameSides = (f) => (Array.isArray(f) ? ['bottom', 'left', 'top', 'right'].filter((_, i) => f[i]) : undefined);
@@ -98,6 +113,7 @@ export function plotDecorations(o, { range, plotRange = range, visible, unitsPer
   const below = [], above = [];
   if (!hasDecor(o)) return { below, above };
   const fontPx = 11;
+  const ls = labelDirectives(o.LabelStyle); // v0.1.26: after each label's default directives (none: as before)
   // scale [sx, sy] (v0.1.23, AspectRatio): range and plotRange are in data units, the world is x·sx, y·sy
   const [sx, sy] = scale ?? [1, 1];
   const sc = scale ? { scale } : {};
@@ -105,7 +121,7 @@ export function plotDecorations(o, { range, plotRange = range, visible, unitsPer
     const [ax, ay] = pair(o.Axes);
     const [tx, ty] = o.Ticks ? pair(o.Ticks) : [undefined, undefined];
     const g = axesGraphics({ range, tickRange: plotRange, origin: o.AxesOrigin, unitsPerPx: u, x: tickOpt(tx), y: tickOpt(ty),
-      axesLabel: o.AxesLabel ? pair(o.AxesLabel) : undefined, fontPx, ...sc });
+      axesLabel: o.AxesLabel ? pair(o.AxesLabel) : undefined, fontPx, labelStyle: ls, ...sc });
     below.push(...[ax && g[0], ay && g[1]].filter(Boolean));
   }
   if (o.Frame) {
@@ -113,17 +129,17 @@ export function plotDecorations(o, { range, plotRange = range, visible, unitsPer
     // a plot with a Frame keeps its axes as plain lines inside the frame (v0.1.23, AxesInFrame set by shared/plot.js)
     const { lines, texts } = framePrimitives({ range, unitsPerPx: u, x: tickOpt(tx), y: tickOpt(ty), fontPx, frameSides: frameSides(o.Frame), axes: !!o.AxesInFrame, axesOrigin: o.AxesOrigin, ...sc });
     below.push(Annotation([RGBColor(...GRAY), AbsoluteThickness(0.5), CapForm('Butt'),
-      ...lines.map((l) => Line(l.pts)), FontSize(fontPx),
+      ...lines.map((l) => Line(l.pts)), FontSize(fontPx), ...ls,
       ...texts.map((t) => Text(t.str, t.pos, { anchor: t.anchor }))], 'frame'));
     const [bottom, left] = o.FrameLabel ? pair(o.FrameLabel) : [null, null];
     const [[x0, x1], [y0, y1]] = range;
     if (bottom != null) {
       const b = lines2(bottom), n = b?.head === 'Column' ? b.items.length : 1;
-      above.push(Annotation([GrayLevel(0.2), FontSize(12), Text(b, [((x0 + x1) / 2) * sx, y0 * sy - (31 + 7.5 * (n - 1)) * u])], 'frame-label-bottom'));
+      above.push(Annotation([GrayLevel(0.2), FontSize(12), ...ls, Text(b, [((x0 + x1) / 2) * sx, y0 * sy - (31 + 7.5 * (n - 1)) * u])], 'frame-label-bottom'));
     }
     if (left != null) {
       const at = [x0 * sx - 43 * u, ((y0 + y1) / 2) * sy]; // room for the rotated text box in every engine (Firefox's is the widest)
-      above.push(Annotation([GrayLevel(0.2), FontSize(12), Rotate(Text(lines2(left), at), Math.PI / 2, at)], 'frame-label-left'));
+      above.push(Annotation([GrayLevel(0.2), FontSize(12), ...ls, Rotate(Text(lines2(left), at), Math.PI / 2, at)], 'frame-label-left'));
     }
   }
   const lg = o.PlotLegends;
@@ -150,10 +166,74 @@ export function plotDecorations(o, { range, plotRange = range, visible, unitsPer
   }
   if (o.PlotLabel != null) {
     const [[x0, x1]] = range, top = visible[1][1];
-    above.push(Annotation([Black, FontSize(13), Text(o.PlotLabel, [((x0 + x1) / 2) * sx, top - 15 * u])], 'plot-label'));
+    above.push(Annotation([Black, FontSize(13), ...ls, Text(o.PlotLabel, [((x0 + x1) / 2) * sx, top - 15 * u])], 'plot-label'));
   }
   return { below, above };
 }
+
+/**
+ * The layout of Inset[g, pos] for a Graphics g with frame options or content beyond Lines and Circles (v0.1.26), in the
+ * arithmetic of the Manipulate layer's pictures (shared/manipulate.js: framedPicture for plots — AspectRatio, per-axis
+ * PlotRangePadding, UpdateFrame —, the margin layout for other decorated pictures; a Graphics without decorations: its
+ * PlotRange, unpadded, spans ImageSize px as for plain insets). ImageSize (default 360) is the inset's width in pixels of the
+ * outer picture including the margins for ticks and labels; the centre of that whole box is at pos. Pure. Returns
+ *   { k, centre, unitsPerPx, imageSize, plotRange, scale, clip, background, backgroundColor, below, above, box, frame, toOuter }
+ * k: outer world units per inset world unit (the inset is drawn as pos + k·(q − centre)); unitsPerPx: inset world units
+ * per pixel; plotRange: the inset's whole box in its world (with the margins); scale: [1, sy] for an AspectRatio (data →
+ * inset world) or null; clip / background: the rectangle of PlotRangeClipping / Background ([[x0, x1], [y0, y1]]) or null;
+ * below, above: the decorations as Graphics data in the inset's world; box: the whole inset and frame: the frame (the padded
+ * plot range) in OUTER coordinates [[x0, y0], [x1, y1]]; toOuter(p): a data point of the inset in outer coordinates.
+ */
+export function insetLayout(graphics, pos, outerUnitsPerPx) {
+  const o = graphics.options ?? {};
+  if (!o.PlotRange) throw new Error('graphics: give an inset Graphics a PlotRange');
+  const R = o.PlotRange, [[x0, x1], [y0, y1]] = R;
+  const framed = o.AspectRatio !== undefined || o.UpdateFrame || Array.isArray(o.PlotRangePadding);
+  const margins = decorationMargins(o);
+  let size = o.ImageSize ?? 360;
+  let range, imageSize, frame, scale = null, deco = { below: [], above: [] };
+  if (framed) { // as framedPicture
+    const pad = o.PlotRangePadding ?? 0.02, [px, py] = Array.isArray(pad) ? pad : [pad, pad];
+    const Rp = [[x0 - (x1 - x0) * px, x1 + (x1 - x0) * px], [y0 - (y1 - y0) * py, y1 + (y1 - y0) * py]];
+    const ar = o.AspectRatio;
+    const sy = typeof ar === 'number' ? (ar * (Rp[0][1] - Rp[0][0])) / (Rp[1][1] - Rp[1][0]) : 1;
+    frame = [[Rp[0][0], Rp[0][1]], [Rp[1][0] * sy, Rp[1][1] * sy]];
+    const m = margins ?? {}, extra = legendExtraPx(o);
+    const [mL, mR, mT, mB] = [m.left ?? 0, (m.right ?? 0) - extra, m.top ?? 0, m.bottom ?? 0];
+    if (Array.isArray(size)) size = typeof ar === 'number' ? Math.min(size[0] - mL - mR, (size[1] - mT - mB) / ar) + mL + mR : size[0];
+    imageSize = size + extra;
+    const layout = frameLayout(frame, { imageSize, margins: m });
+    range = layout.plotRange;
+    scale = sy === 1 ? null : [1, sy];
+    deco = plotDecorations(o, { range: Rp, plotRange: Rp, visible: range, unitsPerPx: layout.unitsPerPx, scale: [1, sy] });
+  } else {
+    imageSize = Array.isArray(size) ? size[0] : size;
+    if (margins) { // decorated: the padded plot range with room for the labels (the layer's other pictures)
+      const pad = o.PlotRangePadding ?? 0.02;
+      frame = [[x0 - (x1 - x0) * pad, x1 + (x1 - x0) * pad], [y0 - (y1 - y0) * pad, y1 + (y1 - y0) * pad]];
+      const layout = frameLayout(frame, { imageSize, margins });
+      range = layout.plotRange;
+      deco = plotDecorations(o, { range: frame, plotRange: R, visible: range, unitsPerPx: layout.unitsPerPx });
+    } else { // no decorations: the PlotRange spans ImageSize px (as plain insets)
+      const pad = o.PlotRangePadding ?? 0;
+      frame = [[x0 - (x1 - x0) * pad, x1 + (x1 - x0) * pad], [y0 - (y1 - y0) * pad, y1 + (y1 - y0) * pad]];
+      range = frame;
+    }
+  }
+  const [[X0, X1], [Y0, Y1]] = range;
+  const unitsPerPx = (X1 - X0) / imageSize;
+  const k = outerUnitsPerPx / unitsPerPx, centre = [(X0 + X1) / 2, (Y0 + Y1) / 2];
+  const out = ([x, y]) => [pos[0] + k * (x - centre[0]), pos[1] + k * (y - centre[1])];
+  const sy = scale ? scale[1] : 1;
+  return {
+    k, centre, unitsPerPx, imageSize, plotRange: range, scale,
+    clip: o.PlotRangeClipping ? frame : null, background: o.Background ? frame : null, backgroundColor: o.Background?.rgb,
+    below: deco.below, above: deco.above,
+    box: [out([X0, Y0]), out([X1, Y1])], frame: [out([frame[0][0], frame[1][0]]), out([frame[0][1], frame[1][1]])],
+    toOuter: ([x, y]) => out([x, y * sy]),
+  };
+}
+setInsetLayout(insetLayout);
 
 export function locatorGlyph(u, { color = GrayLevel(0.25), size = 17 } = {}) {
   const R = (size / 2.4) * u;

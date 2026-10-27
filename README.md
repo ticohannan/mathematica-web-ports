@@ -2,7 +2,7 @@
 
 **Live site:** <https://ticohannan.github.io/mathematica-web-ports/> · **Source:** <https://github.com/ticohannan/mathematica-web-ports>
 
-Twenty-six Mathematica `Manipulate` demonstrations re-implemented as a **static website**:
+Thirty-nine Mathematica `Manipulate` demonstrations re-implemented as a **static website**:
 plain HTML + JavaScript (ES modules, no build step), SVG for 2D, three.js/WebGL for 3D.
 
 | Demo | Folder | Rendering | Interaction |
@@ -39,6 +39,13 @@ plain HTML + JavaScript (ES modules, no build step), SVG for 2D, three.js/WebGL 
 | Shortest Distance between Two Line Segments | `demos/segment-distance/` | WebGL 2 | four xy pads, four z sliders, show the two planes, rotate the 3D picture |
 | Distribution of a Swarm of Robots in a Circular Workplace under Gravity | `demos/swarm-circle/` | SVG | β and h sliders, show particles, show values |
 | Steering Multiple Radio Control (RC) Cars with One Joystick | `demos/steering-rc-cars/` | SVG | n, radius, mode (setup / running), robot (RC car, cell, particle), range, offset; drag cars and heading handles; a joystick locator drives all cars in real time |
+| Visibility Region of a Polygon | `demos/visibility-region/` | SVG | drag the blue reference point; step slider through the vertices sorted by angle (sweep ray, active edge, J list and the region built so far) |
+| Moving Two Particles with Shared Control Inputs Using Wall Friction | `demos/wall-friction/` | SVG | drag the two start squares and the two goal circles; progress and ϵ sliders; show the moves or the configuration space on the right |
+| Reachable Set for a Drone | `demos/drone-reachable-set/` | SVG | drag the switching times (t̂R, t̂T) in their pad; T̂ final and t sliders, U min/max interval slider, drone and optimum checkboxes |
+| 3D Reachability Set for a Dubins Car | `demos/dubins-reachability-3d/` | WebGL 2 | dimension 2D / 3D, r and t sliders, path type (six), switching-times interval slider, path progress; rotate the 3D set |
+| Probabilistic Models for Robot Motion | `demos/probabilistic-motion/` | SVG | mode (velocity or odometry model, density or samples), θ, v, ω sliders, noise sliders α₁–α₆ |
+| The Homicidal Chauffeur Problem | `demos/homicidal-chauffeur/` | SVG | r_min and speed-ratio sliders, mode (setup / running); drag the car, its heading and the pedestrian; when running, the pedestrian follows the locator and the car chases it in real time |
+| Maximizing Apparent Velocity in a Camera's Frame | `demos/camera-apparent-velocity/` | WebGL 2 | camera x, y, z sliders, sphere radius r, show sphere / 2D view / drone, animate; rotate the 3D picture |
 
 The apps came in groups: the first three (motion planning, rotations, Euler angles); seven more from the
 seven-link PRM to robot singularities, added in v0.1.12 as further proofs of concept (developed first in a separate,
@@ -46,8 +53,8 @@ unpublished repository and added here in one commit); ten, from two-link kinemat
 v0.1.15 as "batch A" (designed together, with common modules in `demos/common/`); six 3D apps from
 Denavit-Hartenberg parameters to the PRM in 3D, added in v0.1.16 as "batch B" (sharing the DH-family modules moved
 from robot singularities to `demos/common/`); and new demonstrations ported on the shared layer with the app
-generator: five from the Graham scan to the swarm in a circle in v0.1.23, and the RC cars steered with one joystick
-in v0.1.24.
+generator: five from the Graham scan to the swarm in a circle in v0.1.23, the RC cars steered with one joystick
+in v0.1.24, and seven from the visibility region to the apparent velocity in a camera's frame in v0.1.26.
 
 ## Where the code runs
 

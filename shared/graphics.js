@@ -20,15 +20,25 @@
 // Additions with no Wolfram Language counterpart (needed for tests, accessibility and speed):
 //   Annotation(g, id, attrs)   — Mathematica's Annotation[expr, data]: `id` becomes the element's data-testid, and
 //                                attrs (an object) further attributes, e.g. { 'data-color': 'green' }.
-//   ImageRaster(image, [[x0, y0], [x1, y1]]) draws an RGBA image {width, height, data} with ROW 1 AT THE TOP (the order
-//                                of ArrayPlot and Image; Mathematica's Raster puts row 1 at the bottom, hence the other
-//                                name); the encoded picture is cached per image object, so an unchanged image is not
-//                                re-encoded on every redraw.
+//   ImageRaster(image, [[x0, y0], [x1, y1]], { smooth }) draws an RGBA image {width, height, data} with ROW 1 AT THE TOP
+//                                (the order of ArrayPlot and Image; Mathematica's Raster puts row 1 at the bottom, hence
+//                                the other name); the encoded picture is cached per image object, so an unchanged image
+//                                is not re-encoded on every redraw. Cells are drawn as sharp squares; { smooth: true }
+//                                (v0.1.26, DensityPlot) lets the browser interpolate between them.
+//   FilledPolygons(polys)       (v0.1.26) polygons filled as ONE shape (one SVG <path>, nonzero rule): no seams between
+//                                adjacent polygons, Opacity applied once to the whole shape, holes as loops of the
+//                                opposite orientation — the faces of RegionPlot and ParametricPlot regions.
 //   Raw(draw)                  — a migration aid: an older SVG drawing helper used inside Graphics data.
 //   Clip(g, range, id)          — PlotRangeClipping for one part of a picture.
 //   ArrayPlot(m, {DataRange, ColorRules, ColorFunction}) — a matrix as coloured cells (an ImageRaster, made once per matrix).
 //   Cases(g, head | pred), annotations(g), annotation(g, id) — read a picture's primitives (pure; for tests and models
 //                                that return their picture as Graphics data).
+//
+// v0.1.26: BSplineCurve(pts, { SplineDegree, SplineClosed }) (also inside Arrow: the head at the end, along the
+// curve's tangent); Inset of any Graphics, a framed plot of shared/plot.js included (its frame, ticks and labels drawn as
+// the Manipulate layer draws them for a picture: shared/graphics-extras.js registers that part with setInsetLayout);
+// Texture(image) with Polygon(pts, { VertexTextureCoordinates }) (an image on a polygon, also used by the 3D renderer),
+// images as RGBA data or Rasterize(expr, { RasterSize, ImageSize, Background }), ImageReflect, imageCanvas (browser).
 //
 // Sizes follow svg-plot.js: Thickness[t] and PointSize[d] are fractions of the plot width; AbsoluteThickness,
 // AbsolutePointSize, AbsoluteDashing and font sizes are pixels at the picture's ImageSize.
@@ -36,7 +46,7 @@
 // The data constructors are pure (usable in Node tests); render() needs the DOM.
 
 import { NAMED, blend, css } from './mma-colors.js';
-import { svgNode, arcPoints } from './svg-plot.js';
+import { svgNode, arcPoints, createPlot } from './svg-plot.js';
 
 // ---- colours -------------------------------------------------------------------------------------------------------
 const color = (rgb) => Object.freeze({ dir: 'color', rgb: Object.freeze([...rgb]) });
@@ -111,7 +121,8 @@ export const Bold = directive('fontWeight', 'bold');
 // ---- primitives ----------------------------------------------------------------------------------------------------
 const prim = (head, props) => Object.freeze({ head, ...props });
 export const Line = (pts) => prim('Line', { pts });
-export const Polygon = (pts) => prim('Polygon', { pts });
+/** Polygon[{p1, p2, …}]; (v0.1.26) Polygon[pts, VertexTextureCoordinates -> {{s1, t1}, …}] for a Texture (see Texture). */
+export const Polygon = (pts, opts) => prim('Polygon', opts?.VertexTextureCoordinates ? { pts, vtc: opts.VertexTextureCoordinates } : { pts });
 /** Rectangle[{x0, y0}, {x1, y1}, RoundingRadius -> r]. */
 export const Rectangle = (a, b, { RoundingRadius = 0 } = {}) => prim('Rectangle', { a, b, r: RoundingRadius });
 /** Disk[c, r]; Disk[c, {rx, ry}] is an ellipse; Disk[c, r, {a0, a1}] the sector from angle a0 to a1 (v0.1.24). */
@@ -124,9 +135,71 @@ export function sectorPoints(c, r, [a0, a1], f = (p) => p) {
 /** Circle[c, r] or the arc Circle[c, r, {a0, a1}]. */
 export const Circle = (c, r, angles = null) => prim('Circle', { c, r, angles });
 /** Point[p] or Point[{p1, p2, …}]. */
-export const Point = (p) => prim('Point', { pts: Array.isArray(p[0]) ? p : [p] });
-/** Arrow[{p1, …, pn}]: the line and a filled head at pn (Arrowheads sets the head size). */
-export const Arrow = (pts) => prim('Arrow', { pts });
+export const Point = (p) => prim('Point', { pts: p.length === 0 ? [] : Array.isArray(p[0]) ? p : [p] }); // Point[{}] draws nothing (v0.1.26)
+/**
+ * Arrow[{p1, …, pn}]: the line and a filled head at pn (Arrowheads sets the head size). Arrow[BSplineCurve[…]] (v0.1.26):
+ * the curve sampled finely (bsplinePoints), so the head sits at the curve's end along its tangent; `curve` keeps the
+ * BSplineCurve.
+ */
+export const Arrow = (pts) => (pts?.head === 'BSplineCurve'
+  ? prim('Arrow', { pts: bsplinePoints(pts.pts, { SplineDegree: pts.degree, SplineClosed: pts.closed }), curve: pts })
+  : prim('Arrow', { pts }));
+/**
+ * BSplineCurve[{p1, …, pn}, SplineDegree -> d, SplineClosed -> c] (v0.1.26): a 2D curve drawn like a Line. Mathematica's
+ * default knots: an open curve is clamped and uniform (it starts at p1 and ends at pn, tangent to the first and last legs
+ * of the control polygon); a closed one is periodic and uniform. An open curve's degree is at most n − 1 (two points: a
+ * line).
+ */
+export const BSplineCurve = (pts, { SplineDegree = 3, SplineClosed = false } = {}) => prim('BSplineCurve', { pts, degree: SplineDegree, closed: !!SplineClosed });
+/**
+ * The points of a BSplineCurve, sampled with `perSpan` points per knot span (pure). Open: the first and last points are
+ * exactly p1 and pn; closed: the last point repeats the first.
+ */
+export function bsplinePoints(pts, { SplineDegree = 3, SplineClosed = false } = {}, perSpan = 24) {
+  const n = pts.length;
+  if (n < 2) return pts.map((p) => [...p]);
+  let cps, knots, d, t0, t1;
+  if (SplineClosed) { // periodic: the control points repeated cyclically, integer knots, parameter d … n + d
+    d = Math.max(1, Math.min(SplineDegree, n));
+    cps = Array.from({ length: n + d }, (_, i) => pts[i % n]);
+    knots = Array.from({ length: n + 2 * d + 1 }, (_, i) => i);
+    t0 = d; t1 = n + d;
+  } else { // clamped: d + 1 knots at each end, uniform inside
+    d = Math.max(1, Math.min(SplineDegree, n - 1));
+    const spans = n - d;
+    cps = pts;
+    knots = [...Array(d + 1).fill(0), ...Array.from({ length: spans - 1 }, (_, i) => (i + 1) / spans), ...Array(d + 1).fill(1)];
+    t0 = 0; t1 = 1;
+  }
+  // de Boor's algorithm in the span [knots[s], knots[s + 1]]
+  const at = (t, s) => {
+    const q = Array.from({ length: d + 1 }, (_, j) => [...cps[s - d + j]]);
+    for (let r = 1; r <= d; r++) {
+      for (let j = d; j >= r; j--) {
+        const i = s - d + j, den = knots[i + d + 1 - r] - knots[i], a = den > 0 ? (t - knots[i]) / den : 0;
+        q[j] = [(1 - a) * q[j - 1][0] + a * q[j][0], (1 - a) * q[j - 1][1] + a * q[j][1]];
+      }
+    }
+    return q[d];
+  };
+  const out = [];
+  for (let s = d; s < knots.length - d - 1; s++) {
+    if (!(knots[s + 1] > knots[s]) || knots[s] < t0 || knots[s + 1] > t1) continue;
+    for (let k = 0; k < perSpan; k++) out.push(at(knots[s] + ((knots[s + 1] - knots[s]) * k) / perSpan, s));
+  }
+  if (SplineClosed) out.push([...out[0]]);
+  else { out[0] = [...pts[0]]; out.push([...pts[n - 1]]); }
+  return out;
+}
+/**
+ * FilledPolygons[{poly1, poly2, …}] (v0.1.26; no Wolfram Language head of this name): the polygons filled as ONE shape —
+ * one SVG <path> with the nonzero rule, so a point is painted where the polygons wind around it (a hole is a loop of the
+ * opposite orientation inside another). Adjacent polygons show no seams and Opacity applies once to the whole shape (where
+ * two polygons of the same orientation overlap the colour is not darker). shared/plot.js draws the faces of RegionPlot
+ * and ParametricPlot regions with it (Mathematica: one Polygon of thousands of cells in a GraphicsComplex). An EdgeForm in
+ * effect outlines every polygon.
+ */
+export const FilledPolygons = (polys) => prim('FilledPolygons', { pts: polys });
 /** Text[expr, pos]: expr a string, number, Style[…] or Subscript[…]; anchor 'middle' (default) | 'start' | 'end'. */
 export const Text = (expr, pos, offset = null) => {
   // Text[expr, pos, {ox, oy}]: Mathematica's offset; {-1, 0} puts the left end at pos, {0, 1} the top, … (horizontal
@@ -164,9 +237,12 @@ export function bounds(g) {
   const add = (q) => {
     if (Array.isArray(q)) { q.forEach(add); return; }
     if (!q || !q.head) return;
-    if (['Line', 'Polygon', 'Point', 'Arrow'].includes(q.head)) pts.push(...flatPts(q.pts));
+    if (['Line', 'Polygon', 'Point', 'Arrow', 'BSplineCurve', 'FilledPolygons'].includes(q.head)) pts.push(...flatPts(q.pts)); // a BSplineCurve: its control points
     else if (q.head === 'Rectangle') pts.push(q.a, q.b);
-    else if (q.head === 'Disk' || q.head === 'Circle') pts.push([q.c[0] - q.r, q.c[1] - q.r], [q.c[0] + q.r, q.c[1] + q.r]);
+    else if (q.head === 'Disk' || q.head === 'Circle') { // also Disk[c, {rx, ry}] (v0.1.26: was NaN)
+      const [rx, ry] = Array.isArray(q.r) ? q.r : [q.r, q.r];
+      pts.push([q.c[0] - rx, q.c[1] - ry], [q.c[0] + rx, q.c[1] + ry]);
+    }
     else if (q.head === 'Annotation') add(q.g);
     else throw new Error(`graphics: give Rotate a centre point for ${q.head}`);
   };
@@ -177,14 +253,27 @@ export function bounds(g) {
 }
 const boxCentre = (g) => { const [[a, b], [c, d]] = bounds(g); return [(a + c) / 2, (b + d) / 2]; };
 /** A point list, or a list of point lists (several lines/polygons), flattened to points. */
-const isMulti = (pts) => Array.isArray(pts[0]?.[0]);
+const isMulti = (pts) => Array.isArray(pts[0]) && (pts[0].length === 0 || Array.isArray(pts[0][0])); // an empty first run too (v0.1.26)
 const flatPts = (pts) => (isMulti(pts) ? pts.flat() : pts);
 /** Translate[g, {dx, dy}]. */
 export const Translate = (g, v) => prim('Translate', { g, v });
-/** Inset[Graphics[…, PlotRange, ImageSize], pos]: a small picture of its own (e.g. a locator icon) centred at pos. */
+/**
+ * Inset[Graphics[…, PlotRange, ImageSize], pos]: a picture of its own centred at pos; ImageSize is its width in pixels of
+ * the outer picture. A small icon of Lines and Circles (e.g. a locator icon) is drawn as before v0.1.26: its PlotRange
+ * spans ImageSize px and it uses the outer picture's directives. Any other Graphics (v0.1.26) — e.g. a framed plot of
+ * shared/plot.js with FrameLabel, FrameTicks, AspectRatio, Epilog, LabelStyle — is drawn as the Manipulate layer draws a
+ * picture: ImageSize is then the width INCLUDING frame ticks and labels (as in Mathematica), the whole box centred at
+ * pos, its contents starting from the default style, Thickness and PointSize fractions of its own width, PlotRangeClipping
+ * and Background as for a picture; the option testid becomes the data-testid of the inset's group.
+ */
 export const Inset = (graphics, pos) => prim('Inset', { graphics, pos });
-/** An RGBA image {width, height, data} (row 1 at the TOP, as ArrayPlot and Image) over [[x0, y0], [x1, y1]]. */
-export const ImageRaster = (image, [[x0, y0], [x1, y1]]) => prim('ImageRaster', { image, box: [[x0, y0], [x1, y1]] });
+/**
+ * An RGBA image {width, height, data} (row 1 at the TOP, as ArrayPlot and Image) over [[x0, y0], [x1, y1]]; options
+ * { smooth: true } (v0.1.26): drawn with the browser's interpolation between the cells instead of sharp squares.
+ */
+export const ImageRaster = (image, [[x0, y0], [x1, y1]], { smooth = false } = {}) => prim('ImageRaster', smooth
+  ? { image, box: [[x0, y0], [x1, y1]], smooth: true }
+  : { image, box: [[x0, y0], [x1, y1]] });
 /**
  * Raw(draw): MIGRATION AID, no Wolfram Language counterpart — draw(plot, group) appends SVG itself and returns the node.
  * Lets a picture written as data reuse an older drawing helper until that helper is rewritten as data.
@@ -228,6 +317,109 @@ export function ArrayPlot(m, { DataRange, ColorRules = [], ColorFunction } = {})
 /** Annotation[g, id, attrs]: data-testid and further attributes for the element drawn for g. */
 export const Annotation = (g, id, attrs = {}) => prim('Annotation', { g, id, attrs });
 
+// ---- textures (v0.1.26) --------------------------------------------------------------------------------------------
+// Texture[image] puts an image on the polygons that follow it and have VertexTextureCoordinates — here and in 3D
+// (shared/graphics3d.js Texture, drawn by shared/graphics3d-three.js). An image is either an RGBA image
+// {width, height, data} (row 1 at the TOP, as ImageRaster and ArrayPlot) or a Rasterize description (pixels made when the
+// picture is drawn, with the browser's fonts). Texture coordinates {s, t} run from {0, 0} at the image's bottom-left to
+// {1, 1} at its top-right corner, as in Mathematica.
+/**
+ * Texture[image] (v0.1.26): a directive — the following Polygons with VertexTextureCoordinates show the image instead of
+ * their fill colour (polygons without them are drawn as before); Opacity multiplies the image's own alpha; EdgeForm still
+ * outlines the polygon. In SVG the image is placed by the affine map of three vertices and their texture coordinates
+ * (exact for triangles and parallelograms) and clipped to the polygon; texture coordinates outside 0…1 do not repeat it.
+ */
+export const Texture = (image) => directive('texture', image);
+/**
+ * Rasterize[expr, RasterSize -> n, ImageSize -> w, Background -> c] (v0.1.26) as data: an image description whose
+ * pixels are made when it is drawn (imageCanvas, browser). expr: a string or a text expression (Style with a colour,
+ * FontSize, FontFamily, Italic, Bold; Row, Subscript … as their plain text). The image is the text's box — its advance
+ * width × the font's line height (ascent + descent) — RasterSize pixels wide (default 3 px per point of the box at
+ * FontSize, default 12); Background: White (Mathematica's default), None (transparent) or an RGBColor; ImageSize (the
+ * size the image is shown at) is kept, a Texture does not use it.
+ */
+export const Rasterize = (expr, { RasterSize, ImageSize, Background = White } = {}) => Object.freeze({ head: 'Rasterize', expr, RasterSize, ImageSize, Background, reflected: false });
+/**
+ * ImageReflect[image] (v0.1.26): the image upside down (its rows in reverse order: Mathematica's default reflection, top
+ * to bottom). An RGBA image gives a new RGBA image; a Rasterize description is drawn reflected (twice: upright again).
+ */
+export function ImageReflect(image) {
+  if (image?.head === 'Rasterize') return Object.freeze({ ...image, reflected: !image.reflected });
+  const { width, height } = image, row = 4 * width;
+  const data = ArrayBuffer.isView(image.data) ? image.data : Uint8ClampedArray.from(image.data);
+  const out = new Uint8ClampedArray(data.length);
+  for (let i = 0; i < height; i++) out.set(data.subarray((height - 1 - i) * row, (height - i) * row), i * row);
+  return { width, height, data: out };
+}
+/**
+ * The affine map of a textured polygon (pure, v0.1.26): the SVG matrix [a, b, c, d, e, f] that takes the image's unit
+ * square (x right, y down: row 1 at y = 0) to world coordinates, so that the point with texture coordinates {s, t} = {x, 1 − y}
+ * lands where the polygon's vertices put it. Taken from the first three vertices whose texture coordinates span a
+ * triangle; null if none do.
+ */
+export function textureMatrix(pts, vtc) {
+  const n = Math.min(pts.length, vtc.length);
+  for (let i = 0; i + 2 < n; i++) for (let j = i + 1; j + 1 < n; j++) for (let k = j + 1; k < n; k++) {
+    const [s0, t0] = vtc[i], [s1, t1] = vtc[j], [s2, t2] = vtc[k];
+    const det = (s1 - s0) * (t2 - t0) - (s2 - s0) * (t1 - t0);
+    if (Math.abs(det) < 1e-12) continue;
+    // A = [P1 − P0, P2 − P0] · [T1 − T0, T2 − T0]⁻¹ (2 × 2): world = P0 + A·(T − T0)
+    const [x0, y0] = pts[i], [x1, y1] = pts[j], [x2, y2] = pts[k];
+    const inv = [[(t2 - t0) / det, -(s2 - s0) / det], [-(t1 - t0) / det, (s1 - s0) / det]];
+    const A = [
+      [(x1 - x0) * inv[0][0] + (x2 - x0) * inv[1][0], (x1 - x0) * inv[0][1] + (x2 - x0) * inv[1][1]],
+      [(y1 - y0) * inv[0][0] + (y2 - y0) * inv[1][0], (y1 - y0) * inv[0][1] + (y2 - y0) * inv[1][1]],
+    ];
+    // local (x, y) ↦ texture (x, 1 − y) ↦ world: x A₀ − y A₁ + P0 + A·((0, 1) − T0)
+    return [A[0][0], A[1][0], -A[0][1], -A[1][1], x0 + A[0][0] * -s0 + A[0][1] * (1 - t0), y0 + A[1][0] * -s0 + A[1][1] * (1 - t0)];
+  }
+  return null;
+}
+
+/** The style of a text expression's Style wrappers (colour, font) and its plain text. Pure. */
+function textStyleOf(expr) {
+  let s = DEFAULT_STYLE, e = expr;
+  while (e && e.head === 'Style') { s = e.ds.reduce(applyDirective, s); e = e.expr; }
+  return { style: s, text: textOf(e) };
+}
+const canvases = new WeakMap(); // image object → its canvas (made once)
+/**
+ * The pixels of an image as a canvas (browser; v0.1.26; one canvas per image object): an RGBA image {width, height,
+ * data} (row 1 at the top), or a Rasterize description (its text drawn with the browser's fonts, see Rasterize).
+ */
+export function imageCanvas(image) {
+  let canvas = canvases.get(image);
+  if (canvas) return canvas;
+  canvas = document.createElement('canvas');
+  if (image.head !== 'Rasterize') {
+    canvas.width = Math.max(1, image.width); canvas.height = Math.max(1, image.height);
+    if (image.width && image.height) canvas.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(image.data), image.width, image.height), 0, 0);
+  } else {
+    const { style, text } = textStyleOf(image.expr);
+    const F = 100; // measured at 100 px, drawn scaled to the raster
+    const font = `${style.fontSlant === 'italic' ? 'italic ' : ''}${style.fontWeight === 'bold' ? 'bold ' : ''}${F}px ${style.fontFamily ?? 'sans-serif'}`;
+    const ctx0 = canvas.getContext('2d');
+    ctx0.font = font;
+    const m = ctx0.measureText(text);
+    const ascent = m.fontBoundingBoxAscent ?? 0.93 * F, descent = m.fontBoundingBoxDescent ?? 0.24 * F;
+    const boxW = Math.max(1, m.width), boxH = ascent + descent;
+    const W = Math.max(1, Math.round(image.RasterSize ?? (3 * boxW * style.fontSize) / F));
+    canvas.width = W; canvas.height = Math.max(1, Math.round((W * boxH) / boxW));
+    const ctx = canvas.getContext('2d'); // (resizing reset the state)
+    if (image.reflected) { ctx.translate(0, canvas.height); ctx.scale(1, -1); }
+    if (image.Background && image.Background.rgb) { ctx.fillStyle = css(image.Background.rgb); ctx.fillRect(0, 0, W, canvas.height); }
+    ctx.scale(W / boxW, canvas.height / boxH);
+    ctx.font = font;
+    ctx.fillStyle = css(style.color);
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText(text, 0, ascent);
+  }
+  canvases.set(image, canvas);
+  return canvas;
+}
+const imageHrefs = new WeakMap();
+const imageHref = (image) => { let h = imageHrefs.get(image); if (!h) { h = imageCanvas(image).toDataURL('image/png'); imageHrefs.set(image, h); } return h; };
+
 /**
  * Ellipsoid[c, Σ] in 2D (v0.1.23): the ellipse {x : (x − c)·Σ⁻¹·(x − c) ≤ 1} of a symmetric positive (semi)definite
  * 2 × 2 matrix Σ — a rotated Disk (filled and edged with the style in effect, as Mathematica's Ellipsoid).
@@ -260,7 +452,10 @@ export function scaleGraphics(g, [sx, sy]) {
   const R = (r, k) => (Array.isArray(r) ? [r[0] * k[0], r[1] * k[1]] : [r * k[0], r * k[1]]);
   function mapPrim(q, f, k) {
     switch (q.head) {
-      case 'Line': case 'Polygon': case 'Arrow': return prim(q.head, { ...q, pts: P(q.pts, f) });
+      case 'Line': case 'Polygon': return prim(q.head, { ...q, pts: P(q.pts, f) });
+      case 'Arrow': return prim('Arrow', q.curve ? { ...q, pts: P(q.pts, f), curve: mapPrim(q.curve, f, k) } : { ...q, pts: P(q.pts, f) });
+      case 'BSplineCurve': return prim('BSplineCurve', { ...q, pts: q.pts.map(f) }); // affine maps commute with the spline
+      case 'FilledPolygons': return prim('FilledPolygons', { pts: q.pts.map((poly) => poly.map(f)) });
       case 'Point': return prim('Point', { pts: q.pts.map(f) });
       case 'Disk': case 'Circle': {
         if (q.head === 'Disk' && q.angles) return prim('Polygon', { pts: sectorPoints(q.c, q.r, q.angles, f) });
@@ -430,18 +625,26 @@ export const annotation = (graphics, id) => annotations(graphics).find((a) => a.
 const deg = (a) => (a * 180) / Math.PI;
 const rasterCache = new WeakMap(); // image object → { href, nodes: Map(box key → <image>) } (encoded once)
 
-function rasterNode(image, box) {
+function rasterNode(image, box, smooth = false) {
   let entry = rasterCache.get(image);
   if (!entry) { entry = { href: encode(image), nodes: new Map() }; rasterCache.set(image, entry); }
-  const key = JSON.stringify(box);
+  const key = smooth ? `${JSON.stringify(box)} smooth` : JSON.stringify(box);
   let node = entry.nodes.get(key);
   if (node && !node.isConnected) { // reuse the decoded element from the previous redraw
-    for (const a of [...node.attributes]) if (a.name.startsWith('data-') && a.name !== 'data-width' && a.name !== 'data-height') node.removeAttribute(a.name);
+    for (const a of [...node.attributes]) if (a.name.startsWith('data-') && !['data-width', 'data-height', 'data-smooth'].includes(a.name)) node.removeAttribute(a.name);
     return node;
   }
-  node = imageNode(entry.href, image, box);
+  node = smooth ? smoothImageNode(entry.href, image, box) : imageNode(entry.href, image, box);
   if (!entry.nodes.has(key)) entry.nodes.set(key, node);
   return node;
+}
+// ImageRaster with { smooth: true } (v0.1.26): the same element without the pixelated rendering (the browser interpolates)
+function smoothImageNode(href, image, [[x0, y0], [x1, y1]]) {
+  const w = x1 - x0, h = y1 - y0;
+  return svgNode('image', {
+    href, x: x0, y: -(y0 + h), width: w, height: h, preserveAspectRatio: 'none', transform: 'scale(1,-1)',
+    'data-width': image.width, 'data-height': image.height, 'data-smooth': 'true',
+  });
 }
 
 function encode(image) {
@@ -476,6 +679,80 @@ export function render(plot, g, graphics, style = DEFAULT_STYLE) {
 }
 
 const fillOf = (st) => (st.face === undefined ? st.color : st.face);
+// SVG path data of closed polygons (7 significant digits: the faces of a region plot can have thousands of vertices)
+const num7 = (v) => String(+v.toPrecision(7));
+function pathData(polys) {
+  let d = '';
+  for (const q of polys) {
+    if (q.length < 3) continue;
+    d += `M${num7(q[0][0])},${num7(q[0][1])}`;
+    for (let i = 1; i < q.length; i++) d += `L${num7(q[i][0])},${num7(q[i][1])}`;
+    d += 'Z';
+  }
+  return d;
+}
+
+// ---- Inset of any Graphics (v0.1.26) ---------------------------------------------------------------------------------
+// The layout and decorations (frame, ticks, labels) of an Inset come from shared/graphics-extras.js, which imports this
+// file and so registers its function here when it loads (the Manipulate layer always loads it).
+let insetLayout = null;
+/**
+ * setInsetLayout(f): f(graphics, pos, unitsPerPx) → { k, centre, unitsPerPx, imageSize, plotRange, scale, clip, background,
+ * backgroundColor, below, above } — graphics-extras.js insetLayout (see there).
+ */
+export function setInsetLayout(f) { insetLayout = f; }
+// Before v0.1.26 an Inset could only hold Lines and Circles and had no frame options; such insets are drawn exactly as then.
+const FRAME_KEYS = ['AspectRatio', 'UpdateFrame', 'Axes', 'Frame', 'PlotLegends', 'ImagePadding', 'Background', 'PlotRangeClipping'];
+function plainInset({ list, options = {} }) {
+  if (FRAME_KEYS.some((k) => options[k] !== undefined && options[k] !== false) || options.PlotLabel != null || Array.isArray(options.PlotRangePadding)) return false;
+  let plain = true;
+  walk(Array.isArray(list) ? list : [list], (q) => { if (q.head !== 'Line' && !(q.head === 'Circle' && !q.angles)) plain = false; });
+  return plain;
+}
+let insetClips = 0; // clipPath ids of insets (unique in the page; each clipPath lives inside its inset's group)
+// Texture on a Polygon (v0.1.26): the image placed by textureMatrix, in a group clipped to the polygon (the clipPath
+// lives inside the group, so a redraw removes it), the outline of an EdgeForm on top.
+let textureClips = 0;
+function texturedPolygon(plot, g, p, st) {
+  const grp = plot.group(g, { 'data-texture': 'true' });
+  const m = textureMatrix(p.pts, p.vtc);
+  if (m) {
+    const id = `texture-clip-${++textureClips}`;
+    const cp = svgNode('clipPath', { id, clipPathUnits: 'userSpaceOnUse' });
+    cp.append(svgNode('polygon', { points: p.pts.map((q) => `${q[0]},${q[1]}`).join(' ') }));
+    grp.append(cp);
+    const clipped = plot.group(grp, { 'clip-path': `url(#${id})` });
+    clipped.append(svgNode('image', {
+      href: imageHref(st.texture), x: 0, y: 0, width: 1, height: 1, preserveAspectRatio: 'none',
+      transform: `matrix(${m.join(' ')})`, opacity: st.opacity,
+    }));
+  }
+  if (st.edge) plot.polygon(grp, p.pts, edgePaint(st));
+  return grp;
+}
+function drawInsetPicture(plot, g, p) {
+  if (!insetLayout) throw new Error('graphics: this Inset needs shared/graphics-extras.js (the Manipulate layer loads it)');
+  const L = insetLayout(p.graphics, p.pos, plot.unitsPerPx);
+  const outer = plot.group(g, { transform: `translate(${p.pos[0]},${p.pos[1]})`, 'data-testid': p.graphics.options?.testid });
+  const inner = plot.group(outer, { transform: `scale(${L.k}) translate(${-L.centre[0]},${-L.centre[1]})` });
+  // inside, a picture with the inset's own pixels and plot range: shared/svg-plot.js createPlot's drawing methods (on a
+  // detached element; the svg is the outer one, for clip paths and cached parts)
+  const sub = { ...createPlot(document.createElement('div'), { plotRange: L.plotRange, imageSize: L.imageSize, padding: 0 }), svg: plot.svg };
+  const drawAll = (into, list) => walk(Array.isArray(list) ? list : [list], (q, s) => draw(sub, into, q, s), DEFAULT_STYLE);
+  if (L.background) { const [[x0, x1], [y0, y1]] = L.background; sub.rect(inner, [x0, y0], [x1, y1], { fill: L.backgroundColor }); }
+  drawAll(inner, L.below);
+  let content = inner;
+  if (L.clip) { // PlotRangeClipping
+    const id = `inset-clip-${++insetClips}`, [[x0, x1], [y0, y1]] = L.clip;
+    const cp = svgNode('clipPath', { id, clipPathUnits: 'userSpaceOnUse' });
+    cp.append(svgNode('rect', { x: x0, y: y0, width: x1 - x0, height: y1 - y0 }));
+    inner.append(cp);
+    content = sub.group(inner, { 'clip-path': `url(#${id})` });
+  }
+  drawAll(content, L.scale ? scaleGraphics(p.graphics.list, L.scale) : p.graphics.list);
+  drawAll(inner, L.above);
+  return outer;
+}
 function edgePaint(st) {
   return st.edge ? { stroke: st.edge.color, thickness: st.edge.thickness, strokeOpacity: st.edge.opacity, dash: st.edge.dash } : {};
 }
@@ -544,12 +821,15 @@ function draw(plot, g, p, st) {
   switch (p.head) {
     case 'Line': {
       const paint = { stroke: st.color, thickness: st.thickness, dash: st.dash, cap: st.cap, opacity };
+      // v0.1.26: Line[{}] and Line[{{}, {}}] draw nothing, as in Mathematica
+      if (!p.pts.length || p.pts.every((q) => Array.isArray(q) && q.length === 0)) return plot.group(g);
       if (!isMulti(p.pts)) return plot.line(g, p.pts, paint);
       const grp = plot.group(g); // Line[{{p1, p2}, {p3, p4}}]: several lines
-      for (const q of p.pts) plot.line(grp, q, paint);
+      for (const q of p.pts) if (q.length) plot.line(grp, q, paint);
       return grp;
     }
     case 'Polygon': {
+      if (st.texture && p.vtc && !isMulti(p.pts)) return texturedPolygon(plot, g, p, st); // v0.1.26
       const paint = { fill: fillOf(st), fillOpacity: opacity, ...edgePaint(st) };
       if (!isMulti(p.pts)) return plot.polygon(g, p.pts, paint);
       const grp = plot.group(g); // Polygon[{poly1, poly2, …}]: several polygons
@@ -596,8 +876,9 @@ function draw(plot, g, p, st) {
       return faded(grp);
     }
     case 'Arrow': {
+      if (p.pts.length < 2) return plot.group(g); // Arrow[{p}] / Arrow[{}]: nothing, as in Mathematica (v0.1.26)
       const grp = plot.group(g);
-      plot.line(grp, p.pts, { stroke: st.color, thickness: st.thickness, dash: st.dash, opacity });
+      plot.line(grp, p.pts, { stroke: st.color, thickness: st.thickness, dash: st.dash, cap: st.cap, opacity }); // CapForm as for Line (v0.1.26)
       const n = p.pts.length;
       const [tx, ty] = p.pts[n - 1], [px, py] = p.pts[n - 2];
       const len = Math.hypot(tx - px, ty - py) || 1;
@@ -649,13 +930,14 @@ function draw(plot, g, p, st) {
       return grp;
     }
     case 'Inset': {
+      if (!plainInset(p.graphics)) return drawInsetPicture(plot, g, p); // v0.1.26: framed plots and any other content
       // a Graphics with its own PlotRange and ImageSize (px), centred at pos: world = pos + k·(inner − centre)
       const { list, options } = p.graphics;
       const [[x0, x1], [y0, y1]] = options.PlotRange;
       const size = Array.isArray(options.ImageSize) ? options.ImageSize[0] : options.ImageSize;
       const k = (size * plot.unitsPerPx) / (x1 - x0); // ImageSize sets the width; the inset keeps its aspect ratio
       const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
-      const outer = plot.group(g, { transform: `translate(${p.pos[0]},${p.pos[1]})` });
+      const outer = plot.group(g, { transform: `translate(${p.pos[0]},${p.pos[1]})`, 'data-testid': options.testid });
       const inner = plot.group(outer, { transform: `scale(${k}) translate(${-cx},${-cy})` });
       // inside, absolute sizes must stay absolute: draw with a plot whose pixels are 1/k as large
       const sub = { ...plot, unitsPerPx: plot.unitsPerPx / k, strokeWidth: (t) => plot.strokeWidth(t) / k };
@@ -663,7 +945,17 @@ function draw(plot, g, p, st) {
       return outer;
     }
     case 'ImageRaster':
-      return g.appendChild(rasterNode(p.image, p.box));
+      return g.appendChild(rasterNode(p.image, p.box, !!p.smooth));
+    case 'BSplineCurve': // v0.1.26: drawn like a Line through the finely sampled curve
+      return plot.line(g, bsplinePoints(p.pts, { SplineDegree: p.degree, SplineClosed: p.closed }), { stroke: st.color, thickness: st.thickness, dash: st.dash, cap: st.cap, opacity });
+    case 'FilledPolygons': { // v0.1.26: one <path>, nonzero rule (seamless faces of region plots)
+      const f = fillOf(st), e = st.edge;
+      return g.appendChild(svgNode('path', {
+        d: pathData(p.pts), 'fill-rule': 'nonzero', fill: f ? css(f) : 'none', 'fill-opacity': opacity,
+        stroke: e ? css(e.color) : undefined, 'stroke-width': e ? plot.strokeWidth(e.thickness) : undefined, 'stroke-opacity': e?.opacity,
+        'stroke-linejoin': e ? 'round' : undefined,
+      }));
+    }
     case 'Clip': {
       const [[x0, x1], [y0, y1]] = p.range;
       const rect = { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
@@ -695,7 +987,8 @@ function draw(plot, g, p, st) {
   }
 }
 
-// Inset content: lines and circles drawn with the inner pixel size (strokes in absolute px of the outer picture).
+// Plain Inset content (as before v0.1.26): lines and circles drawn with the inner pixel size (strokes in absolute px of
+// the outer picture).
 function drawInset(sub, g, p, st) {
   if (p.head === 'Line') {
     const segs = Array.isArray(p.pts[0][0]) ? p.pts : [p.pts];

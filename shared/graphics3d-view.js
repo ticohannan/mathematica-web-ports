@@ -164,6 +164,9 @@ export function View3D(o = {}) {
         boxKey = key;
       }
       viewer.render();
+      // v0.1.26: the 3D text labels are placed now, not only at the next animation frame (a body that evaluates every
+      // frame — settle — rebuilt them before they were ever shown)
+      viewer.labelRenderer?.render(viewer.scene, viewer.camera);
     },
     /** "Initial settings": with resetView, the view returns to the initial ViewPoint (refitted at the next draw) */
     reset() { if (o.resetView && viewer) { viewer.resetView(); boxKey = null; } },
