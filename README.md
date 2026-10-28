@@ -2,7 +2,7 @@
 
 **Live site:** <https://ticohannan.github.io/mathematica-web-ports/> · **Source:** <https://github.com/ticohannan/mathematica-web-ports>
 
-Thirty-nine Mathematica `Manipulate` demonstrations re-implemented as a **static website**:
+Forty Mathematica `Manipulate` demonstrations re-implemented as a **static website**:
 plain HTML + JavaScript (ES modules, no build step), SVG for 2D, three.js/WebGL for 3D.
 
 | Demo | Folder | Rendering | Interaction |
@@ -46,6 +46,7 @@ plain HTML + JavaScript (ES modules, no build step), SVG for 2D, three.js/WebGL 
 | Probabilistic Models for Robot Motion | `demos/probabilistic-motion/` | SVG | mode (velocity or odometry model, density or samples), θ, v, ω sliders, noise sliders α₁–α₆ |
 | The Homicidal Chauffeur Problem | `demos/homicidal-chauffeur/` | SVG | r_min and speed-ratio sliders, mode (setup / running); drag the car, its heading and the pedestrian; when running, the pedestrian follows the locator and the car chases it in real time |
 | Maximizing Apparent Velocity in a Camera's Frame | `demos/camera-apparent-velocity/` | WebGL 2 | camera x, y, z sliders, sphere radius r, show sphere / 2D view / drone, animate; rotate the 3D picture |
+| Packing Spheres into a Thin Cylinder | `demos/packing-spheres-into-a-thin-cylinder/` | SVG + WebGL 2 | tube radius / sphere radius, stacking plane angle, sphere opacity and spheres sliders; rotate the 3D picture |
 
 The apps came in groups: the first three (motion planning, rotations, Euler angles); seven more from the
 seven-link PRM to robot singularities, added in v0.1.12 as further proofs of concept (developed first in a separate,
@@ -54,7 +55,8 @@ v0.1.15 as "batch A" (designed together, with common modules in `demos/common/`)
 Denavit-Hartenberg parameters to the PRM in 3D, added in v0.1.16 as "batch B" (sharing the DH-family modules moved
 from robot singularities to `demos/common/`); and new demonstrations ported on the shared layer with the app
 generator: five from the Graham scan to the swarm in a circle in v0.1.23, the RC cars steered with one joystick
-in v0.1.24, and seven from the visibility region to the apparent velocity in a camera's frame in v0.1.26.
+in v0.1.24, seven from the visibility region to the apparent velocity in a camera's frame in v0.1.26, and spheres packed into a
+thin cylinder in v0.1.27.
 
 ## Where the code runs
 

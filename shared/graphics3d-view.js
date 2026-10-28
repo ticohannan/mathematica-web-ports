@@ -34,7 +34,9 @@
 //   frameColor ([0.55, 0.55, 0.55]), frameLabelColor ([0.33, 0.33, 0.33]), tickClass / axisLabelClass (CSS classes of
 //   the labels), tickLabelOffset / axisLabelOffset (0.06 / 0.14 of the box side),
 //   draw(viewer, graphics, ctx) (escape hatch: draw the content yourself; called instead of the primitive drawing),
-//   onCreate(viewer) (after the viewer is made: extra lights, materials, objects that stay).
+//   onCreate(viewer) (after the viewer is made: extra lights, materials, objects that stay); SphericalRegion (default
+//   true here; false, v0.1.27, Mathematica's default: the box's corners fit the image, graphics3d-three.js fitViewer); Epilog (v0.1.27: text over
+//   the image at scaled or named positions, see epilogItems; epilogTestid, default 'epilog').
 // Parts: each top-level Group3D of the graphic is drawn into its own group, runs of other content into one group each
 // (graphics3d.js groupsOf); a Group3D with a key keeps its last drawing while the key is the same. The groups are
 // children of the scene (or of the BoxRatios group); a frame group comes after a BoxRatios group, before plain groups.
@@ -45,6 +47,33 @@ import { THREE, createViewer, inkFraction, fatLine, label, requireWebGL2, webgl2
 import { addMathematicaLighting } from './mma-lighting.js';
 import { flatten, primitiveBounds, groupsOf, clipPlaneData, boxRatioTransform, niceTicks, frameData, imageWidth } from './graphics3d.js';
 import { addPrims, disposeGroup, fitViewer, VIEWPOINT } from './graphics3d-three.js';
+import { htmlOf } from './graphics.js';
+
+// ---- Epilog (v0.1.27): 2D text over the 3D image, as Graphics3D[…, Epilog -> {…}] -------------------------------------
+// Items: Text[expr, pos] or Inset[Text[expr], pos] of shared/graphics.js (a list of them, nested lists flattened;
+// directives are ignored), pos in the image's scaled coordinates {0…1, 0…1} (as Mathematica's Epilog of a Graphics3D)
+// or named {Left | Center | Right, Bottom | Center | Top}. The text is centred on pos (Mathematica's default Inset
+// alignment); Style[…, n] sets its size in px, Style's colour, Bold and Italic apply; "\n" starts a new line (a trailing
+// "\n" adds an empty line, which Mathematica's originals use to lift a caption off the bottom edge; a line break inside a
+// styled run is not supported: give such text as several Text items).
+const NAMED = { Left: 0, Center: 0.5, Right: 1, Bottom: 0, Top: 1 };
+export function epilogItems(epilog) {
+  const out = [];
+  const add = (x) => {
+    if (Array.isArray(x)) { x.forEach(add); return; }
+    if (!x || !x.head) return;
+    if (x.head === 'Inset' && x.graphics?.head === 'Text') out.push({ expr: x.graphics.expr, pos: x.pos });
+    else if (x.head === 'Text') out.push({ expr: x.expr, pos: x.pos });
+  };
+  add(epilog);
+  return out.map(({ expr, pos = [0.5, 0.5] }) => {
+    const scaled = pos.map((v) => (typeof v === 'string' ? NAMED[v] ?? 0.5 : v));
+    let fontPx = null;
+    for (let e = expr; e && e.head === 'Style'; e = e.expr) for (const d of e.ds) if (d.dir === 'fontSize' && fontPx == null) fontPx = d.value;
+    return { html: htmlOf(expr), scaled, fontPx };
+  });
+}
+
 
 const boxKeyOf = (box, digits = 6) => box.map(([a, b]) => `${a.toFixed(digits)},${b.toFixed(digits)}`).join(';');
 const diagonal = (box) => Math.hypot(...box.map(([a, b]) => b - a));
@@ -58,7 +87,7 @@ export function clipPlanes(box, options) {
 export { requireWebGL2, webgl2Available };
 
 export function View3D(o = {}) {
-  let viewer = null, container = null, dataGroup = null, frameGroup = null, webgl = true;
+  let viewer = null, container = null, dataGroup = null, frameGroup = null, webgl = true, epilogEl = null;
   let boxKey = null, clip = null, clipKey = null, box = null, frameKey = null;
   const slots = []; // content groups: { group, key }
 
@@ -83,6 +112,29 @@ export function View3D(o = {}) {
     return slots[i];
   };
 
+  function drawEpilog(op) {
+    const items = op.Epilog == null ? [] : epilogItems(op.Epilog);
+    if (!items.length && !epilogEl) return;
+    const canvas = viewer.renderer.domElement;
+    // the overlay covers the canvas (which can be narrower than its container) and follows it when the window is resized
+    if (!epilogEl) {
+      epilogEl = document.createElement('div');
+      epilogEl.setAttribute('data-testid', o.epilogTestid ?? 'epilog');
+      Object.assign(epilogEl.style, { position: 'absolute', left: '0', top: '0', pointerEvents: 'none' });
+      canvas.parentElement.append(epilogEl);
+      const fit = () => Object.assign(epilogEl.style, { left: `${canvas.offsetLeft}px`, top: `${canvas.offsetTop}px`, width: `${canvas.clientWidth}px`, height: `${canvas.clientHeight}px` });
+      if (typeof ResizeObserver !== 'undefined') new ResizeObserver(fit).observe(canvas);
+      epilogEl.fit = fit;
+    }
+    epilogEl.fit();
+    epilogEl.replaceChildren(...items.map(({ html, scaled, fontPx }) => {
+      const d = document.createElement('div');
+      Object.assign(d.style, { position: 'absolute', left: `${scaled[0] * 100}%`, top: `${(1 - scaled[1]) * 100}%`,
+        transform: 'translate(-50%, -50%)', textAlign: 'center', whiteSpace: 'nowrap', fontSize: fontPx ? `${fontPx}px` : '' });
+      d.innerHTML = html.split('\n').map((line) => `<div style="line-height:1.2;min-height:1.2em">${line}</div>`).join('');
+      return d;
+    }));
+  }
   function drawPrims(group, prims, ctx) {
     const base = { viewer, clip, box, size: ctx.size, thickPx: o.thickPx ?? 3, thinPx: o.thinPx ?? 1 };
     if (!ctx.pointLength) { addPrims(group, prims, base); return; }
@@ -160,13 +212,14 @@ export function View3D(o = {}) {
       const key = boxKeyOf(worldBox, o.refitDigits ?? 6);
       if (key !== boxKey && (!explicit || boxKey === null)) {
         // a fixed ViewAngle with a fixed PlotRange: the camera createViewer made stays (no SphericalRegion fit)
-        if (!(explicit && op.ViewAngle !== undefined)) fitViewer(viewer, { box: worldBox, zoom: o.zoom ?? 1, viewPoint: op.ViewPoint ?? VIEWPOINT, viewAngle: op.ViewAngle });
+        if (!(explicit && op.ViewAngle !== undefined)) fitViewer(viewer, { box: worldBox, zoom: o.zoom ?? 1, viewPoint: op.ViewPoint ?? VIEWPOINT, viewAngle: op.ViewAngle, SphericalRegion: op.SphericalRegion });
         boxKey = key;
       }
       viewer.render();
       // v0.1.26: the 3D text labels are placed now, not only at the next animation frame (a body that evaluates every
       // frame — settle — rebuilt them before they were ever shown)
       viewer.labelRenderer?.render(viewer.scene, viewer.camera);
+      drawEpilog(op);
     },
     /** "Initial settings": with resetView, the view returns to the initial ViewPoint (refitted at the next draw) */
     reset() { if (o.resetView && viewer) { viewer.resetView(); boxKey = null; } },

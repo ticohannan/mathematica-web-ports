@@ -1,0 +1,69 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstration by Aaron T. Becker and Li Huang
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Packing Spheres into a Thin Cylinder</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <script type="importmap">{ "imports": { "three": "../../vendor/three/three.module.js", "three/addons/": "../../vendor/three/addons/" } }</script>
+  <script src="../../shared/requirements.js" data-needs-webgl2></script>
+  <style>
+    /* Column[{plot, Graphics3D}] with ImageSize 600: the two pictures one above the other, 600 px wide at most */
+    .ps-pictures { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 620px; }
+    .ps-pictures .graphic { max-width: none; min-width: 0; width: 100%; flex: 0 0 auto; }
+    /* Grid of Controls: two rows of two sliders */
+    .manipulate.placement-top .controls .ctl-row { display: flex; flex-wrap: wrap; gap: 6px 24px; }
+    .manipulate.placement-top .controls .ctl-row > * { flex: 1 1 240px; max-width: 300px; }
+    [data-testid="epilog"] { font-family: system-ui, "Segoe UI", Helvetica, Arial, sans-serif; color: #000; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Packing Spheres into a Thin Cylinder</div>
+    <h1 class="demo-title">Packing Spheres into a Thin Cylinder</h1>
+
+    <section class="manipulate" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="ps-pictures">
+        <div class="graphic" id="graphic" data-testid="graphic">
+          <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser with WebGL 2.</div></noscript>
+        </div>
+        <div class="graphic" id="graphic2" data-testid="graphic2"></div>
+      </div>
+    </section>
+
+    <p class="caption">The densest packing of spheres with radius <i>r</i> in a cylinder of radius <i>R</i>, where <i>R</i> ≥ <i>r</i>, is a challenging problem. This Demonstration provides the optimal packing for small ratios of <i>R</i>/<i>r</i> and upper bounds that show dense packings up to <i>R</i>/<i>r</i> = 3.</p>
+
+    <details class="details" data-testid="details">
+      <summary>Details</summary>
+      <p>When <i>R</i> = <i>r</i>, the spheres are packed in a straight line. The polygonal line joining the centers zigzags as the tube radius <i>R</i> increases until <i>R</i> = ½(2 + √3)<i>r</i>, at which point the spheres are stacked in two columns. As <i>R</i> increases, these columns twist into a helix until <i>R</i> = 2<i>r</i>. Next, the spheres are arranged in parallel sets of two, each set oriented 90° from the previous. These compress, briefly shift to a more dense packing of sets of three, then revert to sets of two until they form four columns of spheres. These columns twist, then switch back to sets of three, briefly interrupted by arrangements of sets of five, and then the sets of three twist until they end forming sets of hexagons at <i>R</i> = 3<i>r</i>.</p>
+      <p>For analytical results derived from numerical optimization up to <i>R</i>/<i>r</i> = 2.873, see [1], which identified 40 densest arrangements in this range. This Demonstration only shows eight of these structures, which are thus upper bounds for the minimum density.</p>
+      <p>Varying the opacity of the spheres lets you see the sphere-sphere contacts and sphere-cylinder contacts. Sphere-sphere contacts are drawn in blue, and sphere-cylinder contacts in black. This Demonstration only includes structures where each sphere is in contact with the cylinder, so that there are no internal spheres. Structures above <i>R</i>/<i>r</i> &gt; 2.71486 include internal spheres, while those below do not.</p>
+      <p>The structure forms regular crystalline structures that are highlighted in the plot and have alternating repeating layers. These layers are:</p>
+      <p>two at a time at <i>R</i>/<i>r</i> = 2,<br>
+      three at a time at <i>R</i>/<i>r</i> = 2/√3 + 1 ≈ 2.1547,<br>
+      four at a time at <i>R</i>/<i>r</i> = 1 + √2 ≈ 2.41421,<br>
+      five at a time at <i>R</i>/<i>r</i> = 1 + √(2 + 2/√5) ≈ 2.7013,<br>
+      six at a time at <i>R</i>/<i>r</i> = 3.</p>
+      <p><b>Reference</b><br>[1] A. Mughal, H. K. Chan, D. Weaire, and S. Hutzler, "Dense Packings of Spheres in Cylinders I: Simulations." <a href="https://arxiv.org/abs/1203.3373">arxiv.org/abs/1203.3373</a>.</p>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. All computation runs in your browser.</p>
+    <div class="credits" data-testid="credits">
+      Adapted from <a href="https://demonstrations.wolfram.com/PackingSpheresIntoAThinCylinder/">"Packing Spheres into a Thin Cylinder"</a>
+      by Aaron T. Becker and Li Huang, Wolfram Demonstrations Project, licensed
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+      This JavaScript translation by Tico Hannan (© 2026; produced with an AI code-generation tool) is released under the
+      same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

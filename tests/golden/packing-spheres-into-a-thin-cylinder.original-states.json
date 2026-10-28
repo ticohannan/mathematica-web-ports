@@ -1,0 +1,26 @@
+{
+ "source": "PackingSpheresIntoAThinCylinder.nb",
+ "note": "Manipulate states saved in the ORIGINAL notebook, computed by the original Mathematica code: states[0] = the live state of the output cell, specs = the initial settings (the Manipulate's stored \"Variables\"), snapshots = the Settings stored with each snapshot cell. Extracted with tools/extract_state.py --snapshots. Golden parity fixture (CC BY-NC-SA 3.0, as the original).",
+ "format": "Numbers: a JSON integer is an exact Wolfram integer (|x| <= 2^53 - 1; larger ones are {\"wl\": digits}); a JSON number written with a decimal point or an exponent is a machine real (the shortest text that reads back as the identical double); any other exact number (Rational, rational multiple of Pi, arbitrary-precision real, an unevaluated Sin[...], Infinity) is {\"wl\": a Wolfram-readable form (not necessarily InputForm: compare exact values by value), \"n\": its double} - \"n\" is the correctly rounded double for a Rational or rational multiple of Pi, Python's double evaluation otherwise, and absent for Infinity. Symbols are {\"sym\": name}, other expressions {\"head\": name, \"args\": [...]}; variable names without context and $$, Greek letters as Unicode. packedTypes maps the JSON pointer of a decoded packed array that was stored with a narrower element type (CompressedData tag b) to that type. snapshots[\"k\"] belongs to the picture docs/original-snapshots/<dir>-k.png (cells in file order).",
+ "specs": {
+  "NumSpheres": 8,
+  "R": 1,
+  "SphereOpacity": 0.6,
+  "θ": 0.0
+ },
+ "states": [
+  {"NumSpheres":8,"R":1,"SphereOpacity":0.6,"θ":0.0}
+ ],
+ "snapshots": {
+  "1": {"R":1,"θ":0.0,"SphereOpacity":0.6,"NumSpheres":8},
+  "2": {"R":2.3609999999999998,"θ":0,"SphereOpacity":0.6,"NumSpheres":17},
+  "3": {"R":2.708,"θ":0,"SphereOpacity":0.6,"NumSpheres":17},
+  "4": {"R":1.924,"θ":0,"SphereOpacity":0.024,"NumSpheres":17}
+ },
+ "snapshotCellIds": {
+  "1": 847036161,
+  "2": 929678674,
+  "3": 18458346,
+  "4": 991776054
+ }
+}

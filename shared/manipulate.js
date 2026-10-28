@@ -104,7 +104,7 @@ export const Button = (label, action, options = {}) => Object.freeze({ marker: '
 
 const isPoint = (x) => Array.isArray(x) && x.length === 2 && x.every((v) => typeof v === 'number');
 /** A text expression (Style, Subscript, Superscript, or a Row of strings and text expressions) — not a control spec. */
-const isTextExpr = (x) => !!x && typeof x === 'object' && !Array.isArray(x) && (['Style', 'Subscript', 'Superscript'].includes(x.head)
+const isTextExpr = (x) => !!x && typeof x === 'object' && !Array.isArray(x) && (['Style', 'Subscript', 'Superscript', 'Fraction'].includes(x.head)
   || (x.head === 'Row' && Array.isArray(x.items) && x.items.length > 0 && x.items.every((i) => typeof i === 'string' || typeof i === 'number' || isTextExpr(i))));
 const isNone = (x) => x && x.dir === 'none';
 const isBound = (x) => typeof x === 'number' || typeof x === 'function';

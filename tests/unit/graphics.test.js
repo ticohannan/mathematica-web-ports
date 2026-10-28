@@ -237,3 +237,16 @@ describe('graphics v0.1.26: Texture, Rasterize, ImageReflect, textureMatrix', ()
     expect(G.textureMatrix([[0, 0], [1, 0], [0, 1]], [[0, 0], [1, 1], [2, 2]])).toBe(null);
   });
 });
+
+describe('graphics v0.1.27: Fraction (FractionBox) in labels', () => {
+  it('Fraction: plain text "num/den", stacked HTML', async () => {
+    const G = await import('../../shared/graphics.js');
+    const f = G.Fraction('tube radius', 'sphere radius');
+    expect(G.textOf(f)).toBe('tube radius/sphere radius');
+    const h = G.htmlOf(f);
+    expect(h).toContain('flex-direction:column');
+    expect(h).toContain('<span>tube radius</span>');
+    expect(h).toContain('border-top:1px solid currentColor">sphere radius</span>');
+    expect(G.htmlOf(G.Fraction(G.Style('R', G.Italic), 'r'))).toContain('<i>R</i>');
+  });
+});

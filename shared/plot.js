@@ -72,7 +72,10 @@ export function ColorData(scheme, i) {
   if (i === 'ColorList') return COLOR_DATA_97.map((c) => RGBColor(...c));
   return RGBColor(...COLOR_DATA_97[(i - 1) % 10]);
 }
-/** Placed[labels, {sx, sy}]: a legend inside the plot, centred at scaled coordinates. */
+/**
+ * Placed[labels, {sx, sy}]: a legend inside the plot, centred at scaled coordinates of the plot range. Placed[labels,
+ * {{sx, sy}, {ax, ay}}] (v0.1.27, Mathematica's form): the legend's own scaled point {ax, ay} at {sx, sy}.
+ */
 export const Placed = (labels, position) => Object.freeze({ placed: true, labels, position });
 
 const GOLDEN = 2 / (1 + Math.sqrt(5));
@@ -151,7 +154,8 @@ const styleList = (PlotStyle, n) => {
   if (Array.isArray(PlotStyle) && PlotStyle.length) return Array.from({ length: n }, (_, i) => PlotStyle[i % PlotStyle.length]);
   return Array(n).fill(PlotStyle);
 };
-const asList = (s) => (s == null ? [] : Array.isArray(s) ? s : [s]);
+// 'Automatic' in a PlotStyle list = that curve's default style (v0.1.27, PlotStyle -> {Automatic, Dotted})
+const asList = (s) => (s == null || s === 'Automatic' ? [] : Array.isArray(s) ? s.filter((d) => d !== 'Automatic') : [s]);
 /** The directives of curve i: default colour and thickness, then the user's style. */
 const curveStyle = (i, user) => [RGBColor(...COLOR_DATA_97[i % 10]), AbsoluteThickness(1.6), ...asList(user)];
 /** The resolved style of a list of directives (colour, dash, thickness in px) — for legends and fillings. */
@@ -188,7 +192,11 @@ const clampTo = (v, [lo, hi]) => Math.min(hi, Math.max(lo, v));
 
 /** The Graphics options of a plot: frame, axes, legend, size; `items` = legend entries. */
 function plotOptions(opts, range, items, aspect) {
-  const { PlotRange, PlotRangePadding, auto } = range;
+  const { PlotRange, auto } = range;
+  // PlotRangePadding (v0.1.27: the option was ignored by Plot, ListPlot and ParametricPlot): a number or {px, py}, fractions
+  // of the ranges; default as Mathematica (Scaled[0.02] for automatic ranges, none for explicit ones)
+  const up = opts.PlotRangePadding;
+  const PlotRangePadding = up == null ? range.PlotRangePadding : Array.isArray(up) ? up : [up, up];
   const frame = opts.Frame && opts.Frame !== 'False';
   const o = {
     PlotRange, PlotRangePadding, AutoRange: auto, UpdateFrame: true, PlotRangeClipping: opts.PlotRangeClipping ?? true,

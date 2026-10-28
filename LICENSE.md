@@ -2,7 +2,7 @@
 
 ## Summary
 
-The thirty-nine web applications in `demos/` are **adaptations** (JavaScript / SVG / WebGL translations)
+The forty web applications in `demos/` are **adaptations** (JavaScript / SVG / WebGL translations)
 of Wolfram Demonstrations Project content, which is licensed under the
 **Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported licence (CC BY-NC-SA 3.0)**,
 <https://creativecommons.org/licenses/by-nc-sa/3.0/>
@@ -30,7 +30,7 @@ Licence texts: [`LICENSES/CC-BY-NC-SA-3.0.txt`](LICENSES/CC-BY-NC-SA-3.0.txt) an
 
 | Path | Licence | Why |
 |------|---------|-----|
-| `demos/**` (all thirty-nine apps, incl. `teapot-data.js` and `demos/common/`) | CC BY-NC-SA 3.0 | adaptations of the Demonstrations |
+| `demos/**` (all forty apps, incl. `teapot-data.js` and `demos/common/`) | CC BY-NC-SA 3.0 | adaptations of the Demonstrations |
 | `demos/common/two-link.js`, `demos/common/arrow-arcs.js`, `demos/common/dial-control.js` (common to the batch A apps; owner two-link-kinematics) | CC BY-NC-SA 3.0 | derived from the Initialization and Manipulate code of "Forward and Inverse Kinematics for Two-Link Arm", "Distance Norms in Robot Workspace and Phase Space", "Robot Motion with Obstacles", "Breadth-First Search Robot Motion Planning", "Configuration Space for Four-Bar Linkage", "Measuring Distance and Orientation Using Camera and Lasers", "Manipulability Ellipsoid of a Robot Arm" and "Chart for a Torus" (authors in each file's header) |
 | `tests/unit/two-link.test.js`, `tests/unit/arrow-arcs.test.js`, `tests/unit/dial-control.test.js`, `tests/e2e/dial-control.spec.js`, `tests/e2e/fixtures/dial-control.html` | CC BY-NC-SA 3.0 | test the three common modules above against the originals' definitions |
 | `demos/two-link-kinematics/**`, `tests/unit/two-link-kinematics.test.js`, `tests/golden/two-link-kinematics.golden.test.js`, `tests/golden/two-link-kinematics.original-states.json`, `tests/e2e/two-link-kinematics.spec.js`, `docs/original-source/two-link-kinematics.txt`, `docs/original-snapshots/two-link-kinematics-*.png`, `docs/checklists/two-link-kinematics.md` | CC BY-NC-SA 3.0 | the port of "Forward and Inverse Kinematics for Two-Link Arm" (Aaron T. Becker and Lillian Lin), its tests, the states and pictures extracted from its notebook and its manual checks |
@@ -69,6 +69,7 @@ Licence texts: [`LICENSES/CC-BY-NC-SA-3.0.txt`](LICENSES/CC-BY-NC-SA-3.0.txt) an
 | `demos/probabilistic-motion/**`, `tests/unit/probabilistic-motion.test.js`, `tests/e2e/probabilistic-motion.spec.js`, `tests/golden/probabilistic-motion.original-states.json`, `docs/checklists/probabilistic-motion.md`, `docs/original-source/probabilistic-motion.txt`, `docs/original-snapshots/probabilistic-motion-*.png` | CC BY-NC-SA 3.0 | the port of "Probabilistic Models for Robot Motion" (Aaron T. Becker and Renuka Pakeetharan), its tests and the states, texts and pictures taken from its original |
 | `demos/homicidal-chauffeur/**`, `tests/unit/homicidal-chauffeur.test.js`, `tests/e2e/homicidal-chauffeur.spec.js`, `tests/golden/homicidal-chauffeur.original-states.json`, `docs/checklists/homicidal-chauffeur.md`, `docs/original-source/homicidal-chauffeur.txt`, `docs/original-snapshots/homicidal-chauffeur-*.png` | CC BY-NC-SA 3.0 | the port of "The Homicidal Chauffeur Problem" (Aaron T. Becker and Javier Garcia), its tests and the states, texts and pictures taken from its original |
 | `demos/camera-apparent-velocity/**`, `tests/unit/camera-apparent-velocity.test.js`, `tests/e2e/camera-apparent-velocity.spec.js`, `tests/golden/camera-apparent-velocity.original-states.json`, `docs/checklists/camera-apparent-velocity.md`, `docs/original-source/camera-apparent-velocity.txt`, `docs/original-snapshots/camera-apparent-velocity-*.png` | CC BY-NC-SA 3.0 | the port of "Maximizing Apparent Velocity in a Camera's Frame" (Mohammad Sultan and Aaron T. Becker), its tests and the states, texts and pictures taken from its original |
+| `demos/packing-spheres-into-a-thin-cylinder/**`, `tests/unit/packing-spheres-into-a-thin-cylinder.test.js`, `tests/e2e/packing-spheres-into-a-thin-cylinder.spec.js`, `tests/golden/packing-spheres-into-a-thin-cylinder.original-states.json`, `tests/golden/packing-spheres-into-a-thin-cylinder.saved-plot.json`, `docs/checklists/packing-spheres-into-a-thin-cylinder.md`, `docs/original-source/packing-spheres-into-a-thin-cylinder.txt`, `docs/original-snapshots/packing-spheres-into-a-thin-cylinder-*.png` | CC BY-NC-SA 3.0 | the port of "Packing Spheres into a Thin Cylinder" (Aaron T. Becker and Li Huang), its tests and the states, texts, plot data and pictures taken from its original |
 | `index.html`, `README.md`, `LICENSE.md` | CC BY-NC-SA 3.0 | describe and present the adaptations |
 | `docs/original-source/**`, `docs/original-snapshots/**`, `docs/MANUAL_TEST_CHECKLIST.md`, `docs/checklists/**` | CC BY-NC-SA 3.0 | readable copies of / pictures from / derived from the originals |
 | `demos/distance-norms/**`, `tests/unit/distance-norms.test.js`, `tests/golden/distance-norms.golden.test.js`, `tests/golden/distance-norms.original-states.json`, `tests/e2e/distance-norms.spec.js`, `docs/original-source/distance-norms.txt`, `docs/original-snapshots/distance-norms-*.png`, `docs/checklists/distance-norms.md` (batch A) | CC BY-NC-SA 3.0 | the "Distance Norms in Robot Workspace and Phase Space" port, its tests and the data and pictures taken from its original |
@@ -126,8 +127,9 @@ Licence texts: [`LICENSES/CC-BY-NC-SA-3.0.txt`](LICENSES/CC-BY-NC-SA-3.0.txt) an
 | `demos/probabilistic-motion/` | "Probabilistic Models for Robot Motion" — <https://demonstrations.wolfram.com/ProbabilisticModelsForRobotMotion/> (published 2016-01-12) | Aaron T. Becker and Renuka Pakeetharan |
 | `demos/homicidal-chauffeur/` | "The Homicidal Chauffeur Problem" — <https://demonstrations.wolfram.com/TheHomicidalChauffeurProblem/> (published 2018-01-22) | Aaron T. Becker and Javier Garcia |
 | `demos/camera-apparent-velocity/` | "Maximizing Apparent Velocity in a Camera's Frame" — <https://demonstrations.wolfram.com/MaximizingApparentVelocityInACamerasFrame/> (published 2018-11-07) | Mohammad Sultan and Aaron T. Becker |
+| `demos/packing-spheres-into-a-thin-cylinder/` | "Packing Spheres into a Thin Cylinder" — <https://demonstrations.wolfram.com/PackingSpheresIntoAThinCylinder/> (published 2016-05-04) | Aaron T. Becker and Li Huang |
 
-All thirty-nine were published by the Wolfram Demonstrations Project under CC BY-NC-SA 3.0.
+All forty were published by the Wolfram Demonstrations Project under CC BY-NC-SA 3.0.
 
 ### What was changed (adaptation notice)
 

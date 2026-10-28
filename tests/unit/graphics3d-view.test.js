@@ -112,3 +112,16 @@ describe('ticks and the box frame', () => {
     expect(imageWidth([[0, 1], [0, 1], [0, 1]], { viewPoint: [3, 4, 0], viewAngle: Math.PI / 2, imageSize: 300 })).toBeCloseTo(10, 12);
   });
 });
+
+describe('View3D v0.1.27: Epilog items', () => {
+  it('Text and Inset[Text] at named or scaled positions; Style sets the size; directives are skipped', async () => {
+    const { epilogItems } = await import('../../shared/graphics3d-view.js');
+    const G = await import('../../shared/graphics.js');
+    const items = epilogItems([G.Black, G.Inset(G.Text(G.Style('compression ratio = 1\n', 20)), ['Center', 'Bottom']), [G.Text(G.Style('a', G.Italic), [0.1, 0.9])]]);
+    expect(items).toEqual([
+      { html: 'compression ratio = 1\n', scaled: [0.5, 0], fontPx: 20 },
+      { html: '<i>a</i>', scaled: [0.1, 0.9], fontPx: null },
+    ]);
+    expect(epilogItems(G.Text('x', ['Right', 'Top']))[0].scaled).toEqual([1, 1]);
+  });
+});

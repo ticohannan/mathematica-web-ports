@@ -82,6 +82,11 @@ pictures side by side: `graphics: [{ id: 'graphic', … }, { id: 'graphic2', …
 picture. 3D: see the generated `--3d` app (`Graphics3D` data drawn by `shared/graphics3d-view.js`; primitives
 `Sphere`, `Cylinder`, `Cone`, `Tube`, `Cuboid`, `Polygon`, `Line`, `Arrow`, `InfinitePlane`, `InfiniteLine`, `Text`).
 `Ellipsoid[c, Σ]` in 2D draws the ellipse of a 2 × 2 matrix; `Hue[h]` is available. `Disk[c, r, {a0, a1}]` draws a sector; `Opacity` fades points and text too.
+A 3D picture's `Epilog -> Inset[Text[Style[…, 20]], {Center, Bottom}]` is written the same way in the Graphics3D's
+options (`Epilog: Inset(Text(Style(…, 20)), ['Center', 'Bottom'])`, v0.1.27); `View3D({ SphericalRegion: false })` fits
+a long thin object to the image as Mathematica does. A typeset label `"\!\(\*FractionBox[a, b]\)"` is
+`Fraction('a', 'b')`; text built with `StringForm["… `` …", x]` is `StringForm('… `` …', x)`, which writes numbers as
+Mathematica does (`ToString`: 0.238794, 1.).
 `BSplineCurve[pts]` (`SplineDegree`, `SplineClosed`; Mathematica's clamped default knots) is drawn like a `Line`, and
 `Arrow[BSplineCurve[pts]]` puts the head at the curve's end along its tangent. `Inset[g, pos]` takes any Graphics, a
 plot of the next section included: `Inset(RegionPlot(…, { Epilog, FrameLabel, ImageSize: 230 }), [1.38, 0.45])` draws the

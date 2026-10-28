@@ -45,6 +45,7 @@ it is verified:
 | Probabilistic Models for Robot Motion | [`demos/probabilistic-motion/DESIGN.md`](../demos/probabilistic-motion/DESIGN.md) | `demos/probabilistic-motion/` |
 | The Homicidal Chauffeur Problem | [`demos/homicidal-chauffeur/DESIGN.md`](../demos/homicidal-chauffeur/DESIGN.md) | `demos/homicidal-chauffeur/` |
 | Maximizing Apparent Velocity in a Camera's Frame | [`demos/camera-apparent-velocity/DESIGN.md`](../demos/camera-apparent-velocity/DESIGN.md) | `demos/camera-apparent-velocity/` |
+| Packing Spheres into a Thin Cylinder | [`demos/packing-spheres-into-a-thin-cylinder/DESIGN.md`](../demos/packing-spheres-into-a-thin-cylinder/DESIGN.md) | `demos/packing-spheres-into-a-thin-cylinder/` |
 
 The originals came without design documents. Version 0.1.6 added best-effort design documents
 reconstructed from the original notebooks (their code, captions and details text) and from the

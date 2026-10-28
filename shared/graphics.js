@@ -513,6 +513,11 @@ export const Row = (items, opts = {}) => Object.freeze({ head: 'Row', items, opt
  * 1.2 em below the last; the first moved up by 0.6 em per extra line).
  */
 export const Column = (items) => Object.freeze({ head: 'Column', items });
+/**
+ * Fraction[num, den] (v0.1.27): a built-up fraction in a label, Mathematica's FractionBox (e.g. the control label
+ * "tube radius" over "sphere radius"); its plain text is "num/den".
+ */
+export const Fraction = (num, den) => Object.freeze({ head: 'Fraction', num, den });
 
 /** Plain text of a text expression (for labels and accessibility): Subscript['θ', 1] → "θ1". */
 export function textOf(e, { sep = '' } = {}) {
@@ -522,6 +527,7 @@ export function textOf(e, { sep = '' } = {}) {
   if (e.head === 'Subscript' || e.head === 'Superscript') return textOf(e.a, { sep }) + sep + textOf(e.b, { sep });
   if (e.head === 'Row') return e.items.map((x) => textOf(x, { sep })).join('');
   if (e.head === 'Column') return e.items.map((x) => textOf(x, { sep })).join('\n');
+  if (e.head === 'Fraction') return `${textOf(e.num, { sep })}/${textOf(e.den, { sep })}`;
   return '';
 }
 
@@ -534,6 +540,10 @@ export function htmlOf(e) {
   if (e.head === 'Superscript') return `${htmlOf(e.a)}<sup>${htmlOf(e.b)}</sup>`;
   if (e.head === 'Row') return e.items.map(htmlOf).join('');
   if (e.head === 'Column') return e.items.map(htmlOf).join('<br>');
+  if (e.head === 'Fraction') {
+    return '<span class="frac" style="display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.15">'
+      + `<span>${htmlOf(e.num)}</span><span style="border-top:1px solid currentColor">${htmlOf(e.den)}</span></span>`;
+  }
   if (e.head === 'Style') {
     let h = htmlOf(e.expr);
     for (const d of e.ds) {

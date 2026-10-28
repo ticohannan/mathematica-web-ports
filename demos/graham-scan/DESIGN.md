@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.26 |
+| Code version: | 0.1.27 |
 | Document revision | 2 (2026-10-25) |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Graham Scan to Find the Convex Hull of a Set of Points in 2D", contributed by Aaron T. Becker, Yitong Lu and Daniel Biediger, published 2020-11-25 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/GrahamScanToFindTheConvexHullOfASetOfPointsIn2D/> Source as text: [`docs/original-source/graham-scan.txt`](../../docs/original-source/graham-scan.txt); snapshots `docs/original-snapshots/graham-scan-1…5.png`; saved states `tests/golden/graham-scan.original-states.json` |
@@ -133,6 +133,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 3 | v0.1.24 | 2026-10-26 | version number; the shared code gained a clock for bodies that read the time, Locator variables that change between one point and a list, sector disks and Opacity on points and text (v0.1.24); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.23) |
 | 4 | v0.1.25 | 2026-10-26 | version number; the shared code gained one page clock (`shared/clock.js`: slider animations and app animations read it, tests fix it), tolerant `Equal`/`Unequal` in `shared/wl.js` and exact slider texts from saved states (v0.1.25); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.24) |
 | 5 | v0.1.26 | 2026-10-27 | version number; the shared code gained region and density plots (`RegionPlot`, two-parameter `ParametricPlot`, `DensityPlot`), `BSplineCurve`, decorated insets, textures on polygons, `settleInterval` for bodies that pause between evaluations, typeset control headings and fixes found by the seven new ports (v0.1.26); no change to this app's code, behaviour or picture (DOM parity with v0.1.25, except that a `Line` with no points is now an empty group instead of an empty polyline: nothing is drawn either way) |
+| 6 | v0.1.27 | 2026-10-28 | version number; the shared code gained spans with a step, a cyclic `Riffle`, `EvenQ`/`OddQ`, `ArcCos`/`ArcSin`, `DeleteCases`, `ToString` and `StringForm` (`shared/wl.js`), legend labels that are pictures and Mathematica's `Placed[…, {pos, align}]` form, `Automatic` in PlotStyle lists, `Fraction` labels, 3D `Line` with several polylines, and View3D's `Epilog` and `SphericalRegion: false` (v0.1.27); no change to this app's code, behaviour or picture (DOM parity with v0.1.26) |
 
 ## 10. Improvements to consider (not implemented)
 

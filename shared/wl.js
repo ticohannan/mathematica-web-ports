@@ -18,15 +18,18 @@
 //           Rest, Part, Join, Append, Prepend, Reverse, RotateLeft, RotateRight, Select, Position, Count, MemberQ,
 //           FreeQ, DeleteDuplicates, Union, Intersection, Complement, Tally, Ordering, Accumulate, Differences, Fold, FoldList,
 //           Nest, NestList, NestWhile, FixedPoint, Total, Mean, Median, Max, Min, Sort, SortBy, MinimalBy,
-//           MaximalBy, MapThread, MapIndexed, Riffle, Thread, Outer, Tuples, Length, Dimensions
+//           MaximalBy, MapThread, MapIndexed, Riffle, Thread, Outer, Tuples, Length, Dimensions, DeleteCases, span
+//           (list[[m ;; n ;; s]] = Take[list, {m, n, s}])
 // Vectors   Dot, Cross, Norm, Normalize, EuclideanDistance, Det, Inverse, IdentityMatrix, RotationMatrix,
 //           RotationTransform, TranslationTransform, AngleVector, VectorAngle, Nearest
 // Numbers   Pi, E, Degree, Infinity, ArcTan, Mod, Quotient, Round, Floor, Ceiling, IntegerPart, FractionalPart, Sign,
-//           Abs, Sqrt, Clip, Rescale, Chop, Boole, UnitStep, Sin, Cos, Tan, Exp, Log, Power, Min/Max of numbers
+//           Abs, Sqrt, Clip, Rescale, Chop, Boole, UnitStep, Sin, Cos, Tan, ArcCos, ArcSin, Exp, Log, Power, EvenQ, OddQ,
+//           Min/Max of numbers
 // Statistics Erf, Binomial, NormalDistribution, UniformDistribution, TriangularDistribution, PDF, CDF, Mean / Variance /
 //           StandardDeviation (of a distribution or a list), RandomVariate (v0.1.23)
 // Compare   Equal, Unequal, Less, Greater, LessEqual, GreaterEqual with Mathematica's tolerance for machine reals
 //           (numbers equal in all but their last seven bits, ≈ 2⁻⁴⁶ relative; lists element by element) (v0.1.25)
+// Text      ToString (Mathematica's text of a number), StringForm (v0.1.27)
 // Caching   cacheLast() — recompute only when the arguments change (the originals' "…Old" variables)
 // Random    RandomReal, RandomInteger, RandomChoice, RandomSample (optional last argument: a shared/random.js source,
 //           e.g. Manipulate's ctx.rng or createRng({ seed }), for reproducible draws)
@@ -44,6 +47,10 @@ export const Log = (a, b) => (b === undefined ? Math.log(a) : Math.log(b) / Math
 export const Power = (a, b) => a ** b;
 /** ArcTan[y/x] or ArcTan[x, y] (Mathematica's argument order: x first; ArcTan[0, 0] is 0 here, Indeterminate there). */
 export const ArcTan = (x, y) => (y === undefined ? Math.atan(x) : Math.atan2(y + 0, x + 0)); // + 0: Mathematica has no −0 (ArcTan[−1, −0.] = π), v0.1.26
+/** ArcCos[x], ArcSin[x] (v0.1.27): real results for −1 ≤ x ≤ 1, NaN outside (Mathematica gives a complex number). */
+export const ArcCos = (x) => Math.acos(x), ArcSin = (x) => Math.asin(x);
+/** EvenQ[n], OddQ[n] (v0.1.27): True only for integers, as Mathematica (EvenQ[2.] is False there too: not an Integer). */
+export const EvenQ = (n) => Number.isInteger(n) && n % 2 === 0, OddQ = (n) => Number.isInteger(n) && Math.abs(n % 2) === 1;
 /** Mod[m, n] with the sign of n (also for reals); Mod[m, n, d] gives a result in [d, d + n). */
 export const Mod = (m, n, d = 0) => m - n * Math.floor((m - d) / n);
 export const Quotient = (m, n) => Math.floor(m / n);
@@ -134,7 +141,16 @@ export const Last = (list) => Part(list, -1);
 export const Most = (list) => list.slice(0, -1);
 export const Rest = (list) => list.slice(1);
 /** Take[list, n], Take[list, -n], Take[list, {m, n}] */
-export const Take = (list, n) => (isArr(n) ? list.slice(idx(list, n[0]), idx(list, n[1]) + 1) : n >= 0 ? list.slice(0, n) : list.slice(n));
+export const Take = (list, n) => (isArr(n) ? (n.length > 2 ? span(list, ...n) : list.slice(idx(list, n[0]), idx(list, n[1]) + 1))
+  : n >= 0 ? list.slice(0, n) : list.slice(n));
+/** list[[m ;; n ;; s]] — Take[list, {m, n, s}] (v0.1.27): every s-th element from m to n (1-based, negative from the end; s < 0 runs backwards). */
+export function span(list, m = 1, n = -1, s = 1) {
+  if (!s) fail('a span step must not be 0');
+  const a = idx(list, m), b = idx(list, n), out = [];
+  if (s > 0) for (let k = a; k <= b; k += s) out.push(list[k]);
+  else for (let k = a; k >= b; k += s) out.push(list[k]);
+  return out;
+}
 /** Drop[list, n], Drop[list, -n], Drop[list, {m, n}] */
 export const Drop = (list, n) => (isArr(n) ? [...list.slice(0, idx(list, n[0])), ...list.slice(idx(list, n[1]) + 1)]
   : n >= 0 ? list.slice(n) : list.slice(0, n));
@@ -154,7 +170,11 @@ export function Partition(list, n, d = n) {
 export const Flatten = (list, n = Infinity) => list.flat(n);
 export const Transpose = (m) => (m.length ? m[0].map((_, j) => m.map((row) => row[j])) : []);
 /** Riffle[list, x] (x between the elements), Riffle[list, ys] (ys of length n − 1 between, or n: also after the last). */
-export const Riffle = (list, x) => list.flatMap((v, i) => (isArr(x) ? (i < x.length ? [v, x[i]] : [v]) : i < list.length - 1 ? [v, x] : [v]));
+// Riffle[list, {x1, x2, …}]: as many xs as elements (the last element followed by one too), one fewer (between the
+// elements), or fewer still: used cyclically between the elements (v0.1.27, as Mathematica; was: only the first ones)
+export const Riffle = (list, x) => list.flatMap((v, i) => (!isArr(x) ? (i < list.length - 1 ? [v, x] : [v])
+  : x.length >= list.length - 1 ? (i < x.length ? [v, x[i]] : [v])
+    : x.length && i < list.length - 1 ? [v, x[i % x.length]] : [v]));
 
 // ---- selecting and counting ----------------------------------------------------------------------------------------
 const test = (p) => (typeof p === 'function' ? (x) => p(x) : (x) => sameQ(x, p)); // one argument, as Mathematica's #
@@ -163,6 +183,8 @@ export const Select = (list, p, n = Infinity) => { const out = []; for (const x 
 /** Position[list, value or predicate] at level 1: [[i1], [i2], …] (1-based, as Mathematica). */
 export const Position = (list, p) => list.flatMap((x, i) => (test(p)(x) ? [[i + 1]] : []));
 export const Count = (list, p) => list.filter(test(p)).length;
+/** DeleteCases[list, value or predicate] at level 1 (v0.1.27); DeleteCases(list, null) removes Null (null and undefined). */
+export const DeleteCases = (list, p) => list.filter(p == null ? (x) => x != null : (x) => !test(p)(x));
 export const MemberQ = (list, p) => list.some(test(p));
 export const FreeQ = (list, p) => !MemberQ(list, p);
 export const DeleteDuplicates = (list) => list.filter((x, i) => list.findIndex((y) => sameQ(x, y)) === i);
@@ -459,3 +481,27 @@ export const Less = (a, b) => mLess(a, b);
 export const Greater = (a, b) => mGreater(a, b);
 export const LessEqual = (a, b) => mLessEq(a, b);
 export const GreaterEqual = (a, b) => mGreaterEq(a, b);
+
+// ---- text ----------------------------------------------------------------------------------------------------------
+/**
+ * ToString[x] (v0.1.27): a number as Mathematica displays it (StandardForm; ToString's two-line OutputForm of
+ * exponents is not reproduced) — an integer as is ("17"); a machine real with
+ * six significant digits and no trailing zeros ("0.238794", "2.5"), a whole machine real with a point ("1.") when
+ * { real: true } says it is one (a JavaScript number does not know), very large or small ones as "1.5×10^-7"; strings
+ * unchanged; lists as {a, b}.
+ */
+export function ToString(x, { real = false } = {}) {
+  if (typeof x === 'string') return x;
+  if (isArr(x)) return `{${x.map((v) => ToString(v, { real })).join(', ')}}`;
+  if (typeof x !== 'number') return String(x);
+  if (Number.isNaN(x)) return 'Indeterminate';
+  if (!Number.isFinite(x)) return x > 0 ? 'Infinity' : '-Infinity';
+  if (Number.isInteger(x) && !real && Math.abs(x) < 1e21) return String(x);
+  if (x === 0) return '0.';
+  const e = Math.floor(Math.log10(Math.abs(Number(x.toPrecision(6)))));
+  if (e >= 6 || e < -5) { const m = Number((x / 10 ** e).toPrecision(6)); return `${String(m)}${Number.isInteger(m) ? '.' : ''}×10^${e}`; }
+  const s = String(Number(x.toPrecision(6)));
+  return /[.e]/.test(s) ? s : `${s}.`;
+}
+/** StringForm["… `` …", e1, e2, …] (v0.1.27): the template with each `` replaced by the ToString of the next argument. */
+export const StringForm = (template, ...xs) => { let i = 0; return template.replace(/``/g, () => ToString(xs[i++])); };

@@ -22,6 +22,7 @@
 import {
   Annotation, Line, Disk, Polygon, Text, Style, RGBColor, GrayLevel, White, Black, Opacity, EdgeForm, Directive,
   AbsoluteThickness, CapForm, FontSize, Italic, Point, Rotate, Column, AbsoluteDashing, textOf, setInsetLayout,
+  Graphics, Inset, bounds,
 } from './graphics.js';
 import { axesPrimitives, framePrimitives, frameLayout } from './svg-frame.js';
 
@@ -72,7 +73,18 @@ const lines2 = (t) => (typeof t === 'string' && t.includes('\n') ? Column(t.spli
 // PlotLegends (v0.1.23): { items: [{ label, color, dash, thicknessPx, filled }], position: 'right' | [sx, sy] (Placed,
 // scaled coordinates inside the plot) } — made by shared/plot.js from PlotStyle; drawn as data
 const LEGEND = { rowPx: 18, swatchPx: 22, gapPx: 6, fontPx: 12 };
-const legendWidthPx = (lg) => LEGEND.swatchPx + LEGEND.gapPx + 6.6 * Math.max(0, ...lg.items.map((it) => Math.max(...textOf(it.label).split('\n').map((x) => x.length)))) + 8;
+// a legend label may be a small picture (PlotLegends -> {Graphics[…, ImageSize -> 15], …}, v0.1.27): drawn as an icon
+const isPicture = (l) => !!l && l.head === 'Graphics';
+const iconPx = (l) => { const s = l.options?.ImageSize; return Array.isArray(s) ? s[0] : typeof s === 'number' ? s : 15; };
+const labelPx = (l) => (isPicture(l) ? iconPx(l) : 6.6 * Math.max(...textOf(l).split('\n').map((x) => x.length)));
+const legendWidthPx = (lg) => LEGEND.swatchPx + LEGEND.gapPx + Math.max(0, ...lg.items.map((it) => labelPx(it.label))) + 8;
+/** The picture of a legend label as an Inset's Graphics: Mathematica's automatic PlotRange (the bounds, 2 % padding). */
+function iconGraphics(l) {
+  if (l.options?.PlotRange) return Graphics(l.list, { ...l.options, ImageSize: iconPx(l) });
+  const [[x0, y0], [x1, y1]] = bounds(l.list);
+  const s = Math.max(x1 - x0, y1 - y0) || 1, px = s * 0.02, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+  return Graphics(l.list, { ...l.options, ImageSize: iconPx(l), PlotRange: [[cx - s / 2 - px, cx + s / 2 + px], [cy - s / 2 - px, cy + s / 2 + px]] });
+}
 const legendOutside = (lg) => lg && lg.items?.length && !Array.isArray(lg.position);
 /** px a legend outside the plot adds to the image (Mathematica puts it beside the ImageSize, not inside). */
 export const legendExtraPx = (o) => (legendOutside(o?.PlotLegends) ? legendWidthPx(o.PlotLegends) + 10 : 0);
@@ -145,12 +157,15 @@ export function plotDecorations(o, { range, plotRange = range, visible, unitsPer
   const lg = o.PlotLegends;
   if (lg && lg.items?.length) {
     const nLines = (it) => textOf(it.label).split('\n').length;
-    const rows = lg.items.map((it) => 0.4 + 0.75 * nLines(it)); // a two-line label takes 1.9 rows
+    // a two-line label takes 1.9 rows; a picture label its height plus 3 px
+    const rows = lg.items.map((it) => (isPicture(it.label) ? Math.max(1.15, (iconPx(it.label) + 3) / LEGEND.rowPx) : 0.4 + 0.75 * nLines(it)));
     const w = legendWidthPx(lg) * u, h = rows.reduce((a, b) => a + b, 0) * LEGEND.rowPx * u;
     const [[x0, x1], [y0, y1]] = range;
     // outside: left edge 12 px right of the plot, centred vertically; Placed {a, b}: centred there (scaled coordinates)
+    // Placed {{x, y}, {ax, ay}} (v0.1.27, Mathematica's form): the legend's own scaled point {ax, ay} at {x, y}
+    const [at, al] = Array.isArray(lg.position?.[0]) ? lg.position : [lg.position, [0.5, 0.5]];
     const [cx, cy] = Array.isArray(lg.position)
-      ? [(x0 + lg.position[0] * (x1 - x0)) * sx, (y0 + lg.position[1] * (y1 - y0)) * sy]
+      ? [(x0 + at[0] * (x1 - x0)) * sx - (al[0] - 0.5) * w, (y0 + at[1] * (y1 - y0)) * sy - (al[1] - 0.5) * h]
       : [x1 * sx + 12 * u + w / 2, ((y0 + y1) / 2) * sy];
     const left = cx - w / 2, top = cy + h / 2;
     above.push(Annotation(lg.items.map((it, i) => {
@@ -160,7 +175,8 @@ export function plotDecorations(o, { range, plotRange = range, visible, unitsPer
       return Annotation([
         it.filled ? [RGBColor(...it.color), Opacity(0.2), Polygon([[left, y - 5 * u], [left + sw, y - 5 * u], [left + sw, y + 5 * u], [left, y + 5 * u]])] : null,
         [...style, Line([[left, y], [left + sw, y]])],
-        [Black, FontSize(LEGEND.fontPx), Text(lines2(it.label), [left + sw + LEGEND.gapPx * u, y], { anchor: 'start' })],
+        isPicture(it.label) ? Inset(iconGraphics(it.label), [left + sw + (LEGEND.gapPx + iconPx(it.label) / 2) * u, y])
+          : [Black, FontSize(LEGEND.fontPx), Text(lines2(it.label), [left + sw + LEGEND.gapPx * u, y], { anchor: 'start' })],
       ].filter(Boolean), `legend-${i + 1}`);
     }), 'legend', { style: 'white-space:pre' }));
   }

@@ -44,3 +44,31 @@ describe('graphics-extras: plot decorations from Graphics options', () => {
     expect(Cases(annotation(d.above, 'frame-label-left').g, 'Rotate')[0].angle).toBeCloseTo(Math.PI / 2, 15);
   });
 });
+
+describe('graphics-extras v0.1.27: legend labels that are pictures', () => {
+  it('a Graphics label is drawn as an Inset icon of its ImageSize, with an automatic PlotRange from its bounds', async () => {
+    const G = await import('../../shared/graphics.js');
+    const icon = G.Graphics([G.Circle([0, 0], 0.25), G.Red, G.Disk([0, 0], 0.15)], { ImageSize: 15 });
+    const lg = { items: [{ label: icon, color: [0, 0, 1], thicknessPx: 1.6 }, { label: 'text', color: [1, 0, 0], thicknessPx: 1.6 }], position: [0.1, 0.5] };
+    const { above } = plotDecorations({ PlotLegends: lg }, { range: R, visible: V, unitsPerPx: u });
+    const insets = Cases(annotation(above, 'legend-1').g, 'Inset');
+    expect(insets).toHaveLength(1);
+    expect(insets[0].graphics.options.ImageSize).toBe(15);
+    const [[x0, x1], [y0, y1]] = insets[0].graphics.options.PlotRange;
+    expect(x1 - x0).toBeCloseTo(0.5 * 1.04, 12); // the circle's diameter + 2 % on each side
+    expect((y0 + y1) / 2).toBeCloseTo(0, 12);
+    expect(Cases(annotation(above, 'legend-2').g, 'Inset')).toHaveLength(0); // a text label as before
+    expect(Cases(annotation(above, 'legend-2').g, 'Text')).toHaveLength(1);
+  });
+});
+
+describe('graphics-extras v0.1.27: Placed {{x, y}, {ax, ay}}', () => {
+  it("the legend's own point {ax, ay} lands at {x, y}; {x, y} alone centres it as before", async () => {
+    const lg = (position) => ({ items: [{ label: 'a', color: [0, 0, 1], thicknessPx: 1.6 }], position });
+    const line = (position) => Cases(annotation(plotDecorations({ PlotLegends: lg(position) }, { range: R, visible: V, unitsPerPx: u }).above, 'legend-1').g, 'Line')[0].pts;
+    const centred = line([0.5, 0.5]), left = line([[0.5, 0.5], [0, 0.5]]);
+    expect(left[0][1]).toBeCloseTo(centred[0][1], 12); // same height
+    expect(left[0][0]).toBeCloseTo(0, 12); // the swatch starts at the legend's left edge: x = −2 + 0.5·4 = 0
+    expect(centred[0][0]).toBeLessThan(0);
+  });
+});

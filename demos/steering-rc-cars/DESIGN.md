@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.26 |
+| Code version: | 0.1.27 |
 | Document revision | 3 (2026-10-26) |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Steering Multiple Radio Control (RC) Cars with One Joystick", contributed by Aaron T. Becker and Javier Garcia, published 2018-03-14 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/SteeringMultipleRadioControlRCCarsWithOneJoystick/> Source as text: [`docs/original-source/steering-rc-cars.txt`](../../docs/original-source/steering-rc-cars.txt); snapshots `docs/original-snapshots/steering-rc-cars-1…5.png`; saved states `tests/golden/steering-rc-cars.original-states.json` (`states[0]` the live state, `specs` the Manipulate's initial values, `snapshots` the five snapshots' settings) |
@@ -185,6 +185,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 2 | v0.1.24 | 2026-10-26 | the port: the original's controls, three robot pictures, collision disks, setup locators and real-time running mode in simple mode; opening state from the notebook |
 | 3 | v0.1.25 | 2026-10-26 | `model.js` compares with `Unequal` of `shared/wl.js` (the same tolerant function as before, now under its Mathematica name); exact slider values from saved states shown as in Mathematica (N-SR-02, I-SR-03 done); the review screenshots set the snapshots' exact values; no change to behaviour or picture |
 | 4 | v0.1.26 | 2026-10-27 | version number; the shared code gained region and density plots (`RegionPlot`, two-parameter `ParametricPlot`, `DensityPlot`), `BSplineCurve`, decorated insets, textures on polygons, `settleInterval` for bodies that pause between evaluations, typeset control headings and fixes found by the seven new ports (v0.1.26); no change to this app's code, behaviour or picture (DOM parity with v0.1.25, except that a `Line` with no points is now an empty group instead of an empty polyline: nothing is drawn either way) |
+| 5 | v0.1.27 | 2026-10-28 | version number; the shared code gained spans with a step, a cyclic `Riffle`, `EvenQ`/`OddQ`, `ArcCos`/`ArcSin`, `DeleteCases`, `ToString` and `StringForm` (`shared/wl.js`), legend labels that are pictures and Mathematica's `Placed[…, {pos, align}]` form, `Automatic` in PlotStyle lists, `Fraction` labels, 3D `Line` with several polylines, and View3D's `Epilog` and `SphericalRegion: false` (v0.1.27); no change to this app's code, behaviour or picture (DOM parity with v0.1.26) |
 
 ## 10. Improvements to consider (not implemented)
 

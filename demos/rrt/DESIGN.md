@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.26 |
+| Code version: | 0.1.27 |
 | Document revision | 3 (2026-10-18) — harness run 2 evaluated (15.0.1 numerics model, K-RT-02/06 resolved, P-RT-01 proposed) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Rapidly Exploring Random Tree (RRT) and RRT*", contributed by Aaron T. Becker and Li Huang, published 2018-01-16 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/RapidlyExploringRandomTreeRRTAndRRT/>. Readable source: [`docs/original-source/rrt.txt`](../../docs/original-source/rrt.txt); snapshots: `docs/original-snapshots/rrt-1.png` … `rrt-6.png` (pictures 7 and 8 of the extraction are the Wolfram logo placeholder, not snapshots); saved states (COMMON-DECISIONS §1): [`tests/golden/rrt.original-states.json`](../../tests/golden/rrt.original-states.json), written by `python3 tools/extract_state.py --snapshots`, with `states[0]` = the live output-cell state, `snapshots[1…6]` = the six snapshot cells' `"Settings"` (raw notebook lines 3360, 4786, 9538, 16507, 21317, 24564) and `specs` = the initial settings (see §6, *Golden data*) |
@@ -279,6 +279,7 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 | 10 | v0.1.24 | 2026-10-26 | version number; the shared code gained a clock for bodies that read the time, Locator variables that change between one point and a list, sector disks and Opacity on points and text (v0.1.24); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.23) |
 | 11 | v0.1.25 | 2026-10-26 | version number; the shared code gained one page clock (`shared/clock.js`: slider animations and app animations read it, tests fix it), tolerant `Equal`/`Unequal` in `shared/wl.js` and exact slider texts from saved states (v0.1.25); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.24) |
 | 12 | v0.1.26 | 2026-10-27 | version number; the shared code gained region and density plots (`RegionPlot`, two-parameter `ParametricPlot`, `DensityPlot`), `BSplineCurve`, decorated insets, textures on polygons, `settleInterval` for bodies that pause between evaluations, typeset control headings and fixes found by the seven new ports (v0.1.26); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.25) |
+| 13 | v0.1.27 | 2026-10-28 | version number; the shared code gained spans with a step, a cyclic `Riffle`, `EvenQ`/`OddQ`, `ArcCos`/`ArcSin`, `DeleteCases`, `ToString` and `StringForm` (`shared/wl.js`), legend labels that are pictures and Mathematica's `Placed[…, {pos, align}]` form, `Automatic` in PlotStyle lists, `Fraction` labels, 3D `Line` with several polylines, and View3D's `Epilog` and `SphericalRegion: false` (v0.1.27); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.26) |
 
 ## 10. Improvements to consider (not implemented)
 

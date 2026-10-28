@@ -59,8 +59,13 @@ export const Texture = (image) => ({ directive: 'texture', value: image });
 const isPoint = (p) => Array.isArray(p) && typeof p[0] === 'number';
 /** Sphere[c, r] or Sphere[{c1, c2, ...}, r] */
 export const Sphere = (c, r = 1) => ({ prim: 'sphere', centers: isPoint(c) ? [c] : c, radius: r });
-/** Line[{p1, p2, ...}] (one polyline) */
-export const Line = (points) => ({ prim: 'line', points });
+/**
+ * Line[{p1, p2, ...}] (one polyline); Line[{{p1, p2, …}, {q1, q2, …}, …}] (several, v0.1.27): a list of polylines, runs
+ * with fewer than two points left out (Mathematica draws nothing for them).
+ */
+export const Line = (points) => (Array.isArray(points[0]) && Array.isArray(points[0][0])
+  ? points.filter((q) => q.length >= 2).map((q) => ({ prim: 'line', points: q }))
+  : { prim: 'line', points });
 /** Cylinder[{p1, p2}, r] */
 export const Cylinder = ([p1, p2], r = 1) => ({ prim: 'cylinder', p1, p2, radius: r });
 /** Cuboid[p, q]: the box between two opposite corners p, q (any order), stored as given in {min: p, max: q} */

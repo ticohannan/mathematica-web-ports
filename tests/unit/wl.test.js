@@ -234,3 +234,47 @@ describe('wl.js: Det of a 2 × 2 by its expansion (v0.1.26)', () => {
     expect(W.Det([[2, 0, 0], [0, 3, 0], [0, 0, 4]])).toBe(24); // larger matrices by elimination, as before
   });
 });
+
+describe('wl v0.1.27: spans, Riffle, EvenQ/OddQ, ArcCos/ArcSin, DeleteCases, ToString, StringForm', () => {
+  it('span / Take[list, {m, n, s}]: every s-th element from m to n, negative positions from the end, backwards', () => {
+    const c = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+    expect(W.span(c, 1, -1, 4)).toEqual([1, 5, 9]); // c[[1;;-1;;4]]
+    expect(W.span(c, 4, -1, 4)).toEqual([4, 8]);
+    expect(W.Take(c, [2, -1, 3])).toEqual([2, 5, 8]);
+    expect(W.span(c, -1, 1, -3)).toEqual([9, 6, 3]); // c[[-1;;1;;-3]]
+    expect(W.Take(c, [2, 4])).toEqual([2, 3, 4]); // unchanged
+    expect(() => W.span(c, 1, -1, 0)).toThrow(/step/);
+  });
+  it('Riffle: equal lengths, one fewer, and (as Mathematica) a shorter list used cyclically', () => {
+    expect(W.Riffle([1, 5, 9], [4, 8])).toEqual([1, 4, 5, 8, 9]);
+    expect(W.Riffle(['a', 'b'], ['x', 'y'])).toEqual(['a', 'x', 'b', 'y']);
+    expect(W.Riffle(['a', 'b', 'c', 'd', 'e'], ['x', 'y'])).toEqual(['a', 'x', 'b', 'y', 'c', 'x', 'd', 'y', 'e']);
+    expect(W.Riffle(['a', 'b', 'c'], 'x')).toEqual(['a', 'x', 'b', 'x', 'c']);
+  });
+  it('EvenQ, OddQ only for integers; ArcCos, ArcSin', () => {
+    expect([W.EvenQ(0), W.EvenQ(4), W.EvenQ(3), W.EvenQ(2.5), W.OddQ(-3), W.OddQ(2)]).toEqual([true, true, false, false, true, false]);
+    expect(W.ArcCos(0)).toBe(Math.PI / 2);
+    expect(W.ArcSin(1)).toBe(Math.PI / 2);
+    expect(Number.isNaN(W.ArcCos(2))).toBe(true);
+  });
+  it('DeleteCases: a value, a predicate, Null (null and undefined)', () => {
+    expect(W.DeleteCases([1, 2, 3, 2], 2)).toEqual([1, 3]);
+    expect(W.DeleteCases([1, null, 2, undefined], null)).toEqual([1, 2]);
+    expect(W.DeleteCases([1, 2, 3, 4], (x) => x > 2)).toEqual([1, 2]);
+    expect(W.DeleteCases([[1, 2], [3]], [3])).toEqual([[1, 2]]);
+  });
+  it('ToString: integers as they are, machine reals with six significant digits, "1." for a whole real', () => {
+    expect(W.ToString(17)).toBe('17');
+    expect(W.ToString(0.2387941683)).toBe('0.238794');
+    expect(W.ToString(2.5)).toBe('2.5');
+    expect(W.ToString(1, { real: true })).toBe('1.');
+    expect(W.ToString(-123456.7)).toBe('-123457.');
+    expect(W.ToString(1.5e-7)).toBe('1.5×10^-7');
+    expect(W.ToString([1, 0.5])).toBe('{1, 0.5}');
+    expect(W.ToString('text')).toBe('text');
+  });
+  it("StringForm: each `` replaced by the next argument's text", () => {
+    expect(W.StringForm('compression ratio = ``\n', 0.17297716833)).toBe('compression ratio = 0.172977\n');
+    expect(W.StringForm('move `` of ``', 2, 7)).toBe('move 2 of 7');
+  });
+});

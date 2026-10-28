@@ -32,7 +32,11 @@ import { imageCanvas } from './graphics.js';
 /** Mathematica's default ViewPoint */
 export const VIEWPOINT = [1.3, -2.4, 2];
 
-export function fitViewer(viewer, { box, zoom = 1, viewPoint = VIEWPOINT, viewAngle }) {
+// SphericalRegion: true (the default here, as every port so far was made with it): the view angle shows the box's
+// bounding sphere from any direction, so rotating never changes the scale. false (v0.1.27, Mathematica's own default):
+// the view angle is the smallest that shows the box's eight corners from the current direction (× 1.02), so a long
+// thin box fills the image as Mathematica draws it.
+export function fitViewer(viewer, { box, zoom = 1, viewPoint = VIEWPOINT, viewAngle, SphericalRegion = true }) {
   const vpLen = Math.hypot(...viewPoint);
   const c = new THREE.Vector3(...box.map(([a, b]) => (a + b) / 2));
   const longest = Math.max(...box.map(([a, b]) => b - a));
@@ -43,7 +47,19 @@ export function fitViewer(viewer, { box, zoom = 1, viewPoint = VIEWPOINT, viewAn
   const dist = vpLen * longest;
   viewer.controls.target.copy(c);
   viewer.camera.position.copy(c.clone().add(dir.multiplyScalar(dist)));
-  const half = viewAngle !== undefined ? viewAngle / 2 : Math.atan(Math.tan(Math.asin(Math.min(0.99, radius / dist)) * 1.04) / zoom);
+  let half = viewAngle !== undefined ? viewAngle / 2 : Math.atan(Math.tan(Math.asin(Math.min(0.99, radius / dist)) * 1.04) / zoom);
+  if (viewAngle === undefined && SphericalRegion === false) {
+    viewer.controls.update();
+    viewer.camera.updateMatrixWorld();
+    const aspect = viewer.camera.aspect || 1;
+    let t = 0;
+    for (const x of box[0]) for (const y of box[1]) for (const z of box[2]) {
+      const v = new THREE.Vector3(x, y, z).applyMatrix4(viewer.camera.matrixWorldInverse);
+      const depth = -v.z;
+      if (depth > 0) t = Math.max(t, Math.abs(v.y) / depth, Math.abs(v.x) / (depth * aspect));
+    }
+    if (t > 0) half = Math.atan((t * 1.02) / zoom);
+  }
   viewer.camera.fov = (2 * half * 180) / Math.PI;
   viewer.camera.near = dist / 100;
   viewer.camera.far = dist * 10;

@@ -121,3 +121,13 @@ describe('graphics3d v0.1.26: Texture and Polygon with VertexTextureCoordinates'
     expect(turned.textureCoordinates).toEqual([[0, 0], [1, 0], [0, 1]]);
   });
 });
+
+describe('graphics3d v0.1.27: Line with several polylines', () => {
+  it('Line[{{…}, {…}}] is a list of lines; runs with fewer than two points are left out; one polyline as before', async () => {
+    const G = await import('../../shared/graphics3d.js');
+    const a = [0, 0, 0], b = [1, 0, 0], c = [1, 1, 0];
+    expect(G.Line([a, b, c])).toEqual({ prim: 'line', points: [a, b, c] });
+    expect(G.Line([[a, b], [c], [b, c, a]])).toEqual([{ prim: 'line', points: [a, b] }, { prim: 'line', points: [b, c, a] }]);
+    expect(G.flatten(G.Graphics3D([G.Red, G.Line([[a, b], [b, c]])])).map((p) => p.type)).toEqual(['line', 'line']);
+  });
+});

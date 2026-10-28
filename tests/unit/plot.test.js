@@ -117,3 +117,21 @@ describe('ListPlot, ParametricPlot, Show, ColorData', () => {
     expect(ColorData(97, 'ColorList').length).toBe(10);
   });
 });
+
+describe('plot v0.1.27: Automatic in a PlotStyle list', () => {
+  it('PlotStyle -> {Automatic, Dashed}: the first curve keeps its default style, the second is dashed', () => {
+    const g = Plot((x) => [x, 2 * x], [0, 1], { PlotStyle: ['Automatic', Dashed] });
+    const lines = Cases(g.list, 'Line');
+    expect(lines.length).toBeGreaterThan(1);
+    expect(JSON.stringify(g.list)).not.toContain('"Automatic"');
+    expect(g.options.PlotLegends).toBeUndefined();
+  });
+});
+
+describe('plot v0.1.27: PlotRangePadding', () => {
+  it('an explicit range has no padding unless the option gives it (a number or {px, py})', () => {
+    expect(Plot((x) => x, [0, 1], { PlotRange: [[0, 1], [0, 1]] }).options.PlotRangePadding).toEqual([0, 0]);
+    expect(Plot((x) => x, [0, 1], { PlotRange: [[0, 1], [0, 1]], PlotRangePadding: [0.02, 0.03] }).options.PlotRangePadding).toEqual([0.02, 0.03]);
+    expect(Plot((x) => x, [0, 1], { PlotRangePadding: 0.1 }).options.PlotRangePadding).toEqual([0.1, 0.1]);
+  });
+});

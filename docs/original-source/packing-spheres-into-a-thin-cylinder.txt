@@ -1,0 +1,308 @@
+# Readable source extracted from the definition notebook (Wolfram Demonstrations Project, CC BY-NC-SA 3.0). Extracted 2026-10-28 with tools/nbextract.py; cached outputs skipped.
+
+### [Title]
+Packing Spheres into a Thin Cylinder
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+The densest packing of spheres with radius r in a cylinder of radius R, where R>=r, is a challenging problem. This Demonstration provides the optimal packing for small ratios of R/r and upper bounds that show dense packings up to R/r=3.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+tubeSphereStackParamsFAST[W_,r_]:= (*Wn = W/r*)Module[{Wn = W/r,Alpha,z,e,numsides,IsTwist=False,Ang2=0,z2=0},
+(*Function that takes as input W, the width of the cylinder and r the radius of the spheres, and returns 
+Alpha: plane angle between successive spheres (from center of cylinder), e: the edge length (distance between sphere centers), 
+z: the displacement along cylinder axis
+numsides: number of sphere at each level
+IsTwist (true if every other set of two numsides is twisted at an angle other than Alpha
+Ang2, the angle the twisted levels are offset
+z2 the offset distance between twisted levels *)
+{z,numsides}=\[Piecewise]<<Grid:{Sqrt[(4 r-W) W]/2,1}Wn<= 2+Sqrt[3](*1 at a time*)  | {(1)/(4r) (4 Sqrt[(-2+W)^2] W-Sqrt[(-2+W)^2] W^2-2 Sqrt[W] Sqrt[(-4+W) (-8+(-4+W) W)]+W^(3/2) Sqrt[(-4+W) (-8+(-4+W) W)])/(2 Sqrt[-(-4+W) (-2+W)^2 W]),2}Wn < 4(* 2, twisted zigzag*) | {(1)/(4r)Sqrt[4 r^2- ((W-2r)^2)/(2)],2}Wn<=2((2)/(Sqrt[3])+1)  (*2 at a time*) | {(1)/(6r)Sqrt[4 r^2- ((W)/(2)-r)^2],3}Wn<=(2)/(7) (7+Sqrt[70])(*3 at a time*) | {(1)/(4r)Sqrt[4 r^2- ((W-2r)^2)/(2)],2}Wn<=2+Sqrt[6](*back 2 at a time*) | {(1)/(8r)(Sqrt[4-(-4+W) W]+Sqrt[4-(-4+W) W+8 Sqrt[2] Sqrt[(-4+W) W]])/(2 Sqrt[2]),4}Wn<= 2(1+Sqrt[2])(*2 at a time, twisted*) | {(1)/(8r)Sqrt[4 r^2+(1)/(4) (-2+Sqrt[2]) (-2 r+W)^2],4}Wn<=(2)/(79) (79+Sqrt[1106 (2+9 Sqrt[2])])(*4 at a time*) | {(1)/(6r)Sqrt[4 r^2- ((W)/(2)-r)^2],3}Wn<=2+Sqrt[8+(8)/(Sqrt[5])](*back to 3 at a time*) | {(1)/(10r)Sqrt[4+(1)/(32) (-5+Sqrt[5]) (-2+W)^2],5}Wn<= 2+16 Sqrt[(2 (155-9 Sqrt[5]))/(5905)](*5 at a time*) | {(1)/(6r)Sqrt[4 r^2- ((W)/(2)-r)^2],3}Wn<=2 (1+Sqrt[3])(*back to 3 at a time*) | {(1)/(12r)((1)/(4) Sqrt[-(-6+W) (2+W)]+(1)/(4) Sqrt[-52+4 W-W^2+16 Sqrt[3] Sqrt[4-4 W+W^2]]),6}Wn<= 6(* 3 at at time,twisted*) | {1/8,4}True (*4 at a time, no compression*)>>;
+If[ 2+Sqrt[3]<Wn &&Wn < 4, (*1 zig zag*)
+IsTwist=True;
+z2=Sqrt[4r^2-(W-2r)^2];
+Ang2=ArcTan[-(Sqrt[W] Sqrt[(-4+W) (-8+(-4+W) W)])/(2 Sqrt[(-2+W)^2]),2 Sqrt[1-(3)/((-2+W)^2)]]];
+If[2+Sqrt[6]<Wn&&Wn < 2(1+Sqrt[2]),(*2 zigzag*)
+IsTwist=True;
+z2=Sqrt[4r^2-(1)/(2)(W-2r)^2];
+Ang2=ArcTan[-(-4+(-4+Wn) Wn+4 Sqrt[2] Sqrt[(-4+Wn) Wn]+Sqrt[4-(-4+Wn) Wn] Sqrt[4-(-4+Wn) Wn+8 Sqrt[2] Sqrt[(-4+Wn) Wn]])/(4 (-2+Wn)),(-4+(-4+Wn) Wn+4 Sqrt[2] Sqrt[(-4+Wn) Wn]-Sqrt[4-(-4+Wn) Wn] Sqrt[4-(-4+Wn) Wn+8 Sqrt[2] Sqrt[(-4+Wn) Wn]])/(4 (-2+Wn))]];
+If[2 (1+Sqrt[3])<Wn,(*3 zigzag*)
+IsTwist=True;
+z2=Sqrt[4 r^2- ((Wn)/(2)-r)^2];
+Ang2=ArcCos[(-4-4 Wn+Wn^2+(1)/(8) (Sqrt[-(-6+Wn) (2+Wn)]+Sqrt[-52+16 Sqrt[3] Sqrt[(-2+Wn)^2]-(-4+Wn) Wn])^2)/((-2+Wn)^2)]];
+Alpha = π/numsides;
+e = ((W)/(2) - r)*2 Sin[(π)/(numsides)];
+{Alpha,e,z,numsides,IsTwist,Ang2,z2}];
+sphereToSphereContacts[W_,r_,c_]:= (*Wn = W/r*)Module[{Wn = W/r},
+(*Function that takes as input W and r, and returns 
+Alpha:  plane angle between successive spheres (from center of cylinder), e: the edge length (distance between sphere centers), z: the displacement along cylinder axis
+numsides: number of sphere at each level*)
+\[Piecewise]<<Grid:cWn<= 2+Sqrt[3](*1 at a time*)  | {c,c[[1;;-1;;2]],c[[2;;-1;;2]]}Wn <= 4(* 1, zig zag*) | {c[[1;;-1;;2]],c[[2;;-1;;2]],
+Riffle[c[[1;;-1;;4]],c[[4;;-1;;4]]],
+Riffle[c[[2;;-1;;4]],c[[3;;-1;;4]]]}Wn<=2((2)/(Sqrt[3])+1) (*2 at a time*) | {c[[1;;-1;;3]],c[[2;;-1;;3]],c[[3;;-1;;3]],Riffle[c[[1;;-1;;6]],c[[6;;-1;;6]]],
+Riffle[c[[2;;-1;;6]],c[[4;;-1;;6]]],
+Riffle[c[[3;;-1;;6]],c[[5;;-1;;6]]]
+}Wn<=(2)/(7) (7+Sqrt[70])(*3 at a time*) | {c[[1;;-1;;2]],c[[2;;-1;;2]],
+Riffle[c[[1;;-1;;4]],c[[4;;-1;;4]]],
+Riffle[c[[2;;-1;;4]],c[[3;;-1;;4]]]}Wn<=2+Sqrt[6](*back 2 at a time*) | (*FIX*){c
+,Riffle[c[[1;;-1;;4]],c[[4;;-1;;4]]]
+,Riffle[c[[2;;-1;;4]],c[[7;;-1;;4]]]
+,Riffle[c[[1;;-1;;8]],c[[7;;-1;;8]]]
+,Riffle[c[[2;;-1;;8]],c[[8;;-1;;8]]]
+,Riffle[c[[3;;-1;;8]],c[[5;;-1;;8]]]
+,Riffle[c[[4;;-1;;8]],c[[6;;-1;;8]]]
+(*,Riffle[c[[3;;-1;;4]],c[[5;;-1;;4]]]*)}Wn<=2(1+Sqrt[2])(*2 at a time, zigzag*) | {c[[1;;-1;;4]],c[[2;;-1;;4]],c[[3;;-1;;4]],c[[4;;-1;;4]]
+,Riffle[c[[1;;-1;;8]],c[[8;;-1;;8]]]
+,Riffle[c[[2;;-1;;8]],c[[5;;-1;;8]]]
+,Riffle[c[[3;;-1;;8]],c[[6;;-1;;8]]]
+,Riffle[c[[4;;-1;;8]],c[[7;;-1;;8]]]}Wn<=(2)/(79) (79+Sqrt[1106 (2+9 Sqrt[2])])(*4 at a time*) | {c[[1;;-1;;3]],c[[2;;-1;;3]],c[[3;;-1;;3]],Riffle[c[[1;;-1;;6]],c[[6;;-1;;6]]],
+Riffle[c[[2;;-1;;6]],c[[4;;-1;;6]]],
+Riffle[c[[3;;-1;;6]],c[[5;;-1;;6]]]
+}Wn<=2+Sqrt[8+(8)/(Sqrt[5])](*back to 3 at a time*) | {c[[1;;-1;;5]],c[[2;;-1;;5]],c[[3;;-1;;5]]
+,c[[4;;-1;;5]],c[[5;;-1;;5]]
+,Riffle[c[[1;;-1;;10]],c[[10;;-1;;10]]],
+Riffle[c[[2;;-1;;10]],c[[6;;-1;;10]]],
+Riffle[c[[3;;-1;;10]],c[[7;;-1;;10]]],Riffle[c[[4;;-1;;10]],c[[8;;-1;;10]]],
+Riffle[c[[5;;-1;;10]],c[[9;;-1;;10]]]
+}Wn<= 2+16 Sqrt[(2 (155-9 Sqrt[5]))/(5905)](*5 at a time*) | {c[[1;;-1;;3]],c[[2;;-1;;3]],c[[3;;-1;;3]],Riffle[c[[1;;-1;;6]],c[[6;;-1;;6]]],
+Riffle[c[[2;;-1;;6]],c[[4;;-1;;6]]],
+Riffle[c[[3;;-1;;6]],c[[5;;-1;;6]]]
+}Wn<=2 (1+Sqrt[3])(*back to 3 at a time*) | Join[DeleteCases[Table[
+If[Mod[i,12]==1,{c[[i]],c[[i+5]]},
+If[Mod[i,12]==2,{c[[i]],c[[i+7]]},
+If[Mod[i,12]==4,{c[[i]],c[[i+7]]},
+If[Mod[i,12]==8,{c[[i]],c[[i+7]]},
+If[Mod[i,12]==10,{c[[i]],c[[i+7]]}]]]]],
+ {i,1,Length[c]-7}],Null],{c,
+c[[1;;-1;;6]],c[[2;;-1;;6]],c[[3;;-1;;6]],
+c[[4;;-1;;6]],c[[5;;-1;;6]],c[[6;;-1;;6]]
+}]Wn<= 6(* 3 at a time, zigzag*) | {c[[1;;-1;;2]],c[[2;;-1;;2]]}True (*4 at a time, no compression*)>>];
+
+r=1;
+BestCompressionPlot =Plot[Evaluate[W=2R;{
+(*1*)(If[W<2+Sqrt[3],Sqrt[(4 r-W) W],r])/(2 r),
+(*2*)If[W<4r,1,Max[Re[(1)/(4r)Sqrt[4 r^2- ((W-2r)^2)/(2)]],1/4]],
+(*3*)If[W<2((2)/(Sqrt[3])r+r),1,Max[Re[(1)/(6r)Sqrt[4 r^2- ((W)/(2)-r)^2]],1/6]],
+(*4*)If[W<2r(1+Sqrt[2]),1,Max[Re[(1)/(8r)Sqrt[4 r^2+(1)/(4) (-2+Sqrt[2]) (-2 r+W)^2]],1/8]],
+(*5*)If[W<2+Sqrt[8+(8)/(Sqrt[5])],1,Max[Re[(1)/(10r)Sqrt[4+(1)/(32) (-5+Sqrt[5]) (-2+W)^2]],1/10]],
+(*twisted*)If[W<2r+Sqrt[3 r^2],\[ImaginaryI],
+If[W<4r,(1)/(4r) (4 Sqrt[(-2+W)^2] W-Sqrt[(-2+W)^2] W^2-2 Sqrt[W] Sqrt[(-4+W) (-8+(-4+W) W)]+W^(3/2) Sqrt[(-4+W) (-8+(-4+W) W)])/(2 Sqrt[-(-4+W) (-2+W)^2 W]),\[ImaginaryI](*Sqrt[2]/4*)]],
+(*2 twisted zigzag*)
+If[W<(2+Sqrt[6])r,\[ImaginaryI],If[W<2(1+Sqrt[2])r, (1)/(8r)((Sqrt[4-(-4+W) W]+Sqrt[4-(-4+W) W+8 Sqrt[2] Sqrt[(-4+W) W]])/(2 Sqrt[2])),\[ImaginaryI](*(1)/(4 2^(1/4))*)]],
+(*3 twisted zigzag*)
+If[W<2 (1+Sqrt[3])r,\[ImaginaryI],If[W<6r, (1)/(12r)((1)/(4) Sqrt[-(-6+W) (2+W)]+(1)/(4) Sqrt[-52+4 W-W^2+16 Sqrt[3] Sqrt[4-4 W+W^2]]),\[ImaginaryI](*(1)/(6) Sqrt[-1+Sqrt[3]]*)]]
+
+}],{R,r,3r},PlotStyle->{Automatic,Automatic, Automatic,Automatic,Automatic,Dotted,Dotted,Dotted},
+PlotLegends->Placed[{
+Graphics[{Circle[{0,0},.25],EdgeForm[Thin],Red,Disk[{0,0},.15]},ImageSize->15],
+Graphics[{Circle[{0,0},.25],EdgeForm[Thin],Red,Disk[{.1,0},.1],Disk[{-.1,0},.1]},ImageSize->15],
+Graphics[{Circle[{0,0},.25],EdgeForm[Thin],Red,
+Table[Disk[.125{Cos[i 2π/3 ],Sin[i 2π/3]},.1],{i,1,3}]
+},ImageSize->15],
+Graphics[{Circle[{0,0},.25],EdgeForm[Thin],Red,
+Table[Disk[.15{Cos[i π/2 ],Sin[i π/2]},.09],{i,1,4}]
+},ImageSize->15],
+Graphics[{Circle[{0,0},.25],EdgeForm[Thin],Red,
+Table[Disk[.15{Cos[i π 2/5 ],Sin[i π 2/5]},.09],{i,1,5}]
+},ImageSize->15]
+},{.08,.51}],AxesLabel->{Row[{Style["\<R\>",Italic],"\< / \>",Style["\<r\>",Italic]}],"\<compression ratio\>"},ImageSize->{600,160},AspectRatio->1/4];
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{w = 2 R,t = .3,len =2 r NumSpheres,centers,contact1f,contact2s,contact2f, Alpha,e,z,numsides,endC,IsTwist,Ang2,z2},
+{Alpha, e, z, numsides,IsTwist,Ang2,z2}=tubeSphereStackParamsFAST[w,r];
+centers =Flatten[Table[Table[If[IsTwist,
+If[numsides ==2,
+{r+2z i numsides+j z2,
+((w)/(2)-r)Cos[Alpha 2j+(Ang2+2Alpha) i+Theta],
+((w)/(2)-r)Sin[Alpha 2j+(Ang2+2Alpha) i+Theta]},
+{r+2z i numsides+If[EvenQ[j],0,1]z2,
+((w)/(2)-r)Cos[Alpha 2 j+(2π- Ang2) i+Theta],
+((w)/(2)-r)Sin[Alpha 2 j+(2π-Ang2) i+Theta]}
+]
+,{r+2z i numsides,
+((w)/(2)-r)Cos[Alpha( 2j+If[EvenQ[i],0,1])+Theta],
+((w)/(2)-r)Sin[Alpha(2j+If[EvenQ[i],0,1])+Theta]}],{j,0,numsides-1}],{i,0,Ceiling[(NumSpheres)/(numsides)]-1}],1];
+
+Column[{Show[{BestCompressionPlot,Graphics[{Black,Thin,Line[{{1,z},{w/2r,z},{w/2r,0}}],PointSize[Large],Point[{(w)/(2r),z}]}]}],
+Graphics3D[{
+{Blue, Thick,Line[sphereToSphereContacts[w,r,centers]]},
+(*sphere-tube contact lines*)
+If[w>2r,{Black, Thick,Table[Line[{centers[[i]],{centers[[i,1]],(w/2)/(w/2-r)centers[[i,2]],(w/2)/(w/2-r)centers[[i,3]]}}],{i,Length[centers]}]}],
+endC =Last[centers][[1]]+ r;
+(*spheres*){Opacity[SphereOpacity],Red,Table[Sphere[centers[[i]]],{i,Length[centers]}]},
+(*cylinder*){LightBlue,Opacity[0.3],Cylinder[{{0,0,0},{2r+endC (*len*),0,0}},w/2]},
+(*Pushing rod*){<<GraphicsBox>>,Opacity[0.2],Cylinder[{{- 2r,0,0},{0,0,0}},(w)/(2)],Cylinder[{{endC,0,0},{2r+endC,0,0}},(w)/(2)]} 
+},
+Boxed->False,ImageSize->{600,250},
+
+Epilog->Inset[Text[Style[StringForm["\<compression ratio = ``
+\>",z],20]],{Center,Bottom}]]
+}]
+], 
+Grid[{{Control@{{R,r,"\<\!\(\*FractionBox[\(tube\\ radius\), \(sphere\\ radius\)]\)\>"},r,(*2 (1+Sqrt[3]) r*)3r,.01,ImageSize->Small,Appearance->"\<Labeled\>"},
+Control@{{Theta,0.,"\<stacking plane angle\>"},0,3.14159,0.001,ImageSize->Small,Appearance->"\<Labeled\>"}},
+{Control@{{SphereOpacity,.6,"\<sphere opacity\>"},0,1,0.01,ImageSize->Small,Appearance->"\<Labeled\>"},
+Control@{{NumSpheres,8, "\<spheres\>"}, 8,32,1,ImageSize->Small,Appearance->"\<Labeled\>"}}}],SaveDefinitions->True
+]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Aaron T. Becker
+
+### [Text]
+Li Huang
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+When R=r, the spheres are packed in a straight line. The polygonal line joining the centers zigzags as the tube radius R increases until R=1/2 (2+Sqrt[3])r, at which point the spheres are stacked in two columns. As R increases, these columns twist into a helix until R=2r. Next, the spheres are arranged in parallel sets of two, each set oriented 90° from the previous. These compress, briefly shift to a more dense packing of sets of three, then revert to sets of two until they form four columns of spheres. These columns twist, then switch back to sets of three, briefly interrupted by arrangements of sets of five, and then the sets of three twist until they end forming sets of hexagons at R=3r.
+
+### [Text]
+For analytical results derived from numerical optimization up to R/r=2.873, see[1], which identified 40 densest arrangements in this range. This Demonstration only shows eight of these structures, which are thus upper bounds for the minimum density.
+
+### [Text]
+Varying the opacity of the spheres lets you see the sphere-sphere contacts and sphere-cylinder contacts. Sphere-sphere contacts are drawn in blue, and sphere-cylinder contacts in black. This Demonstration only includes structures where each sphere is in contact with the cylinder, so that there are no internal spheres. Structures above R/r>2.71486 include internal spheres, while those below do not.
+
+### [Text]
+\<The structure forms regular crystalline structures that are highlighted in the plot and have alternating repeating layers. These layers are:\>
+
+### [Text]
+two at a time at R/r=2,
+
+### [Text]
+three at a time at R/r=(2)/(Sqrt[3])+1\[TildeTilde]2.1547,
+
+### [Text]
+four at a time at R/r=1+Sqrt[2]\[TildeTilde]2.41421,
+
+### [Text]
+five at a time at R/r=1+Sqrt[2+(2)/(Sqrt[5])]\[TildeTilde]2.7013,
+
+### [Text]
+six at a time at R/r=3.
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] A. Mughal, H. K. Chan, D. Weaire, and S. Hutzler, "Dense Packings of Spheres in Cylinders I: Simulations." arxiv.org/abs/1203.3373.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+sphere packing
+
+### [Item]
+circle packing
+
+### [Item]
+sphere
+
+### [Item]
+ball
+
+### [Item]
+ball packing
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Sphere Packing
+
+### [Text]
+Random Close Packing
+
+### [Text]
+Hexagonal Close Packing
+
+### [Text]
+Sphere
+
+### [Text]
+Spheres on a Cylinder
+
+### [Text]
+Sphere Packing
+
+### [Text]
+Circles Packed in a Circle
+
+### [Text]
+Stacking Cannonballs
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2016-05-04
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

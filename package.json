@@ -1,8 +1,8 @@
 {
   "name": "mathematica-web-ports",
-  "version": "0.1.26",
+  "version": "0.1.27",
   "private": true,
-  "description": "Browser ports of thirty-nine Wolfram Demonstrations (robot motion planning, rotations, Euler angles, probabilistic roadmaps, car paths, p-norm unit balls, art gallery, robot singularities, two-link kinematics, robot motion with obstacles, breadth-first search planning, distance norms, Dubins car paths and isochrons, RRT and RRT*, camera and lasers, Minkowski sums, four-bar linkage, Denavit-Hartenberg parameters, torus chart, manipulability ellipsoid, arm configurations, manipulator workspaces, PRM in 3D, Graham scan, sensor fusion, ensemble control, segment distance, swarm in a circle, steering RC cars with one joystick, visibility region, wall friction, drone reachable set, 3D Dubins reachability, probabilistic robot motion, the homicidal chauffeur, apparent velocity in a camera frame). Static site: all computation runs in the browser.",
+  "description": "Browser ports of forty Wolfram Demonstrations (robot motion planning, rotations, Euler angles, probabilistic roadmaps, car paths, p-norm unit balls, art gallery, robot singularities, two-link kinematics, robot motion with obstacles, breadth-first search planning, distance norms, Dubins car paths and isochrons, RRT and RRT*, camera and lasers, Minkowski sums, four-bar linkage, Denavit-Hartenberg parameters, torus chart, manipulability ellipsoid, arm configurations, manipulator workspaces, PRM in 3D, Graham scan, sensor fusion, ensemble control, segment distance, swarm in a circle, steering RC cars with one joystick, visibility region, wall friction, drone reachable set, 3D Dubins reachability, probabilistic robot motion, the homicidal chauffeur, apparent velocity in a camera frame, packing spheres into a thin cylinder). Static site: all computation runs in the browser.",
   "author": "Tico Hannan",
   "license": "SEE LICENSE IN LICENSE.md",
   "repository": {
