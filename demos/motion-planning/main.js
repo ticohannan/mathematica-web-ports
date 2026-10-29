@@ -46,14 +46,15 @@ let restart = null; // F-MP-07: progress restarts — true/false decided by a ro
 let prevLocators = null;
 
 // The Manipulate body: computeScene (planner.js) and the progress s, reset to 1 when a locator moves (each move,
-// even one held at its range limit, gives a new point) or a robot-sides button is pressed.
-// PORT DEVIATION (D-MP-01): s is clamped to the new path length.
+// even one held at its range limit, gives a new point) or a robot-sides button is pressed. Otherwise s is kept as it is
+// (F-09, v0.1.28, as the original: after boundary 4 → 3 → 5 → 4 the robot is back at the goal); where s is used it is
+// clamped to the path (the drawing, the slider's position; D-MP-01).
 function body(st) {
   scene = computed([...LOCATORS.map((k) => st[k]), st.n, st.x], () => computeScene(st));
   const moved = restart ?? (prevLocators !== null && LOCATORS.some((k, i) => st[k] !== prevLocators[i]));
   restart = null;
   prevLocators = LOCATORS.map((k) => st[k]);
-  return { state: { ...st, s: moved ? 1 : Math.min(st.s, Math.max(1, scene.discretePath.length)) }, view: scene };
+  return { state: moved ? { ...st, s: 1 } : st, view: scene };
 }
 
 // Graphics[{…}] of the original, in its order
@@ -81,8 +82,8 @@ function draw(sc, st) {
         : [LightBlue, Thickness(0.003), Annotation(Polygon(sc.robotStartPoly), 'robot-start', THIN), !inside && sc.path.length && [
           Opacity(1), Darker(Green), Annotation(Line(lineList(sc.discretePath).slice(0, Math.max(0, sIdx))), 'path-traveled'),
           Orange, Opacity(0.5), EdgeForm(Directive(Thin, Opacity(0.5))), Annotation(Polygon(regularPolygon(atS, st.n)), 'robot-moving', THIN),
-          // Opacity(1): the point stays opaque as drawn up to v0.1.23 (D-MP-07; the original fades it with the Opacity[0.5] above)
-          Opacity(1), Red, PointSize(0.01), Annotation(Point(atS), 'progress-point')]],
+          // the point keeps the Opacity[0.5] above, as in the original (F-03, v0.1.28; drawn opaque up to v0.1.27, D-MP-07)
+          Red, PointSize(0.01), Annotation(Point(atS), 'progress-point')]],
     ],
     [Orange, Thickness(0.003), Opacity(0.25), Annotation(Line(sc.linesStarttoObstacles), 'lines-start')],
     [Purple, Thickness(0.003), Opacity(0.25), Annotation(Line(sc.linesEndtoObstacles), 'lines-end')],
@@ -145,7 +146,8 @@ const M = Manipulate({
     // {{s, 1, ""}, 1, Length@discretePath, 1}: disabled while start or goal is invalid (D-MP-03); the slider's own
     // value grid (steps: null; its max attribute is the path length); the track is at most 120 px wide (D-MP-05, index.html)
     [['s', 1, 'progress'], 1, () => Math.max(1, scene?.discretePath.length ?? 0), 1,
-      { Enabled: () => !scene || scene.discretePath.length > 0, animSeconds: 8, steps: null }],
+      // pauseWhenHidden: closing the ⊕ panel pauses the animation, opening it resumes (F-02, v0.1.28, as the original)
+      { Enabled: () => !scene || scene.discretePath.length > 0, animSeconds: 8, steps: null, pauseWhenHidden: true }],
     ...LOCATORS.map((k) => [[k, DEFAULTS[k]], ...LOCATOR_RANGES[k], Locator]),
   ],
   // a press away from every locator moves none (D-MP-04); arrow keys 0.05, Shift 0.25 (A-MP-04)

@@ -47,8 +47,12 @@ Open each demo and use its controls.
 
 ### M-GEN-04  Keyboard only
 **Steps** — without the mouse: in each demo press Tab repeatedly through all controls; change sliders with the arrow
-keys; press setter buttons and buttons with Enter or Space; move a focused locator with the arrow keys.
-**Record** — for each demo: every control reachable (yes/no, which not), focus outline visible (yes/no).
+keys; press setter buttons and buttons with Enter or Space; move a focused locator with the arrow keys. In Safari
+first turn on Settings → Advanced → "Press Tab to highlight each item" (or press Option-Tab instead of Tab): by
+default Safari's Tab key skips buttons, sliders and checkboxes and reaches only links and elements with their own tab
+order, such as the locators.
+**Record** — for each demo: every control reachable (yes/no, which not), focus outline visible (yes/no); in Safari,
+whether the setting or Option-Tab was used.
 **Expected** — every control reachable; focus outline visible.
 
 ### M-GEN-05  Responsiveness / load
@@ -195,12 +199,16 @@ Dynamics, no evaluation).
 **Do** —
 1. Drag **progress** slowly from left to right (about 10 s); watch the orange robot, especially at the path's corners.
 2. Click the + right of **progress**; press ▶ and watch 10 s; press pause; press the step buttons a few times.
+3. Press ▶ again; after about 3 s click the + to close the panel and wait 5 s; click the + to open it again.
 **Record** — Do 1: the orange robot follows the path (yes/no), the travelled part turns solid green (yes/no), at the
 far right it covers the green end robot (yes/no), it ever overlaps an obstacle (yes/no, where); Do 2: play and steps
-work (yes/no).
+work (yes/no); Do 3: the robot stands still while the panel is closed (yes/no), it moves on by itself when the panel
+opens and the button shows pause (yes/no).
 **Save** — File > Close, Don't Save.
 **Port** — the same steps. Expected: the orange robot travels along the path without touching any obstacle; the
-travelled part turns solid green; at the far right it covers the green end robot.
+travelled part turns solid green; at the far right it covers the green end robot; Do 3 (since v0.1.28, F-02): the
+robot stands still while the panel is closed and goes on when it opens, the button still showing pause, as in the
+original (Ryan Hembree, T-2, 2026-10-28).
 **Expected / what it decides** — the same in both.
 
 ### M-MP-09  Invalid start / end

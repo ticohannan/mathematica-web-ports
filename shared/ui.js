@@ -17,6 +17,9 @@
 //   plus     true (default): the ⊕ button `plus-<name>` with the animation panel `anim-<name>` (play, step
 //            back/forward) of a Manipulate control with Appearance -> "Labeled"; false: neither (a plain Slider,
 //            ControlType -> Slider, or a Manipulate slider without the panel).
+//   pauseWhenHidden  (v0.1.28) true: a playing animation stands still while the ⊕ panel is closed and goes on when it
+//            is opened again (the play button keeps showing pause), as Mathematica's panel behaves (seen in
+//            motion-planning, F-02); default false, the behaviour every other app was built with.
 //   steps    undefined (default): user input snaps to min + round((v − min)/step)·step, rounded to 10 decimals.
 //            'mma': Mathematica's discrete slider {min, max, step}: the positions are k = 0 … n with the value
 //            min + k·step in machine arithmetic (k·0.05 for k = 3 is 0.15000000000000002) and the right end giving
@@ -234,12 +237,18 @@ export class Controls {
         set(Number(v), true, mma && /^-?\d+$/.test(lit) ? Number(lit) : null);
       });
     }
-    const stepBy = (dir) => (grid ? setIndex(grid.indexOf(value) + dir) : set(value + dir * (step || (max - min) / 100)));
+    // a stored value outside the range (kept by the app while the range is shorter, motion-planning F-09) steps and plays
+    // from the position shown, the nearer end (v0.1.28; values inside the range are unchanged)
+    const shown = () => clamp(value, Math.min(min, max), Math.max(min, max));
+    const stepBy = (dir) => (grid ? setIndex(grid.indexOf(value) + dir) : set(shown() + dir * (step || (max - min) / 100)));
     let animPos = 0; // continuous position; the displayed value snaps to the step
     const snapped = (x) => (grid ? grid.valueAt(grid.indexOf(x)) : snapTo(x, min, step));
     // v0.1.25: driven by the page clock (shared/clock.js animate), so that tests can fix and step the time
     const tick = (t, dt) => {
       if (!playing) return false;
+      // pauseWhenHidden (v0.1.28): with the ⊕ panel closed the animation stands still and goes on when it is opened
+      // again, still playing (Mathematica does not update a Dynamic that is not displayed; motion-planning F-02)
+      if (opts.pauseWhenHidden && panel?.hidden) return true;
       animPos += ((max - min) * dt) / animSeconds;
       if (animPos > max) animPos = min + (animPos - max); // loop like Manipulate's default animator
       if (snapped(animPos) !== value) set(animPos);
@@ -256,7 +265,7 @@ export class Controls {
         playing = !playing;
         playBtn.textContent = playing ? '❚❚' : '▶';
         playBtn.setAttribute('aria-pressed', String(playing));
-        animPos = value;
+        animPos = shown();
         stopAnim?.(); stopAnim = playing ? animate(tick) : null;
       });
     }
@@ -281,9 +290,11 @@ export class Controls {
       },
       setEnabled: (b) => {
         enabled = b;
+        // a playing animation stops when the slider is disabled: before v0.1.28 the click came after `disabled` was set
+        // and did nothing, so the animation went on (found with motion-planning F-09)
+        if (!b && playing) playBtn.click();
         for (const n of [range, field, playBtn, backBtn, fwdBtn]) if (n && n.tagName !== 'SPAN') n.disabled = !b;
         row.classList.toggle('is-disabled', !b);
-        if (!b && playing) playBtn.click();
       },
       stop: () => { if (playing) playBtn.click(); },
       isMoved: () => moved,

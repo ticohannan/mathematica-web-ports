@@ -10,7 +10,10 @@
   <link rel="stylesheet" href="../../shared/style.css">
   <script src="../../shared/requirements.js"></script>
   <style>
-    .locator { cursor: grab; }
+    /* F-11 (v0.1.28): no browser focus outline on the locator group (Chrome drew it about 5 world units wide in the scaled
+       SVG, covering the picture); the focused locator's ring turns blue instead, as svg-plot's locators (shared/style.css) */
+    .locator { cursor: grab; outline: none; }
+    .locator:focus-visible .ring { stroke: var(--focus); stroke-width: 2px; }
     .locator.dragging { cursor: grabbing; }
     .locator .ring { fill: #ffffff; fill-opacity: 0.55; stroke: #3c3c3c; }
     .locator .hair { stroke: #3c3c3c; }

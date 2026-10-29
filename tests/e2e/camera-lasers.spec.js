@@ -161,6 +161,20 @@ test.describe('camera and lasers', () => {
     expect(rows).toBe((await getView(page)).gridCounts[0]);
   });
 
+  test('without pauseWhenHidden a closed ⊕ panel keeps the animation running (the default, v0.1.28)', async ({ page }) => {
+    await openDemo(page, URL);
+    const T = 3.8e9;
+    const frames = () => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+    await page.evaluate((t) => window.__demo.setClock(t), T);
+    await page.getByTestId('plus-lambda').click();
+    await page.getByTestId('play-lambda').click();
+    await frames();
+    await page.getByTestId('plus-lambda').click(); // close the panel: this app has no pauseWhenHidden
+    await page.evaluate((t) => window.__demo.setClock(t), T + 1);
+    await expect.poll(async () => (await getState(page)).lambda).toBeCloseTo(0.82, 12);
+    await page.evaluate(() => window.__demo.setClock(null));
+  });
+
   test('the four snapshot settings load through the automation hook', async ({ page }, testInfo) => {
     await openDemo(page, URL);
     const expected = [[-0.2, 0.2], [-0.0776, 0.0776], [-0.0455, 0.0652], [-0.1108, 0.00005]];
