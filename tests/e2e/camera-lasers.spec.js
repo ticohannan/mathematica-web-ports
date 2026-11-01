@@ -175,6 +175,13 @@ test.describe('camera and lasers', () => {
     await page.evaluate(() => window.__demo.setClock(null));
   });
 
+  test('the short ⊕ panel without the fullPanel option: step back, play, step forward only (v0.1.30)', async ({ page }) => {
+    await openDemo(page, URL);
+    await page.getByTestId('plus-lambda').click();
+    const ids = await page.getByTestId('anim-lambda').evaluate((n) => [...n.children].map((c) => c.dataset.testid));
+    expect(ids).toEqual(['stepback-lambda', 'play-lambda', 'stepfwd-lambda']);
+  });
+
   test('the four snapshot settings load through the automation hook', async ({ page }, testInfo) => {
     await openDemo(page, URL);
     const expected = [[-0.2, 0.2], [-0.0776, 0.0776], [-0.0455, 0.0652], [-0.1108, 0.00005]];

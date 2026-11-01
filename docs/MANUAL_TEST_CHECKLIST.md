@@ -201,16 +201,19 @@ Dynamics, no evaluation).
 1. Drag **progress** slowly from left to right (about 10 s); watch the orange robot, especially at the path's corners.
 2. Click the + right of **progress**; press ▶ and watch 10 s; press pause; press the step buttons a few times.
 3. Press ▶ again; after about 3 s click the + to close the panel and wait 5 s; click the + to open it again.
+4. With the panel open: type 10 in the panel's value field and press Enter; press ▶, then the direction button (→)
+   once, twice and a third time, watching the robot each time; press ⇈ once and time one loop; press ⇊ once.
 **Record** — Do 1: the orange robot follows the path (yes/no), the travelled part turns solid green (yes/no), at the
 far right it covers the green end robot (yes/no), it ever overlaps an obstacle (yes/no, where); Do 2: play and steps
 work (yes/no); Do 3: the robot stands still while the panel is closed (yes/no), it moves on by itself when the panel
-opens and the button shows pause (yes/no).
+opens and the button shows pause (yes/no). Do 4: what each direction press does (→ / ← / ↔ or other), the loop time after ⇈, what ⇊ restores.
 **Save** — File > Close, Don't Save.
 **Port** — the same steps. Expected: the orange robot travels along the path without touching any obstacle; the
 travelled part turns solid green; at the far right it covers the green end robot; Do 3 (since v0.1.28, F-02): the
 robot stands still while the panel is closed and goes on when it opens, the button still showing pause, as in the
 original (Ryan Hembree, T-2, 2026-10-28). Since v0.1.29 one sweep from start to goal takes about 5 s, as in the
-original (F-12; Ryan Hembree, T-2c).
+original (F-12; Ryan Hembree, T-2c). Do 4 (since v0.1.30): the field moves the robot to
+step 10; the direction button cycles forward → backward → forward and back; ⇈ makes a loop about 4 s, ⇊ about 5 s again.
 **Expected / what it decides** — the same in both.
 
 ### M-MP-09  Invalid start / end

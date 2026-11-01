@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.29 |
+| Code version: | 0.1.30 |
 | Document revision | 2 (2026-10-25) |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Graham Scan to Find the Convex Hull of a Set of Points in 2D", contributed by Aaron T. Becker, Yitong Lu and Daniel Biediger, published 2020-11-25 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/GrahamScanToFindTheConvexHullOfASetOfPointsIn2D/> Source as text: [`docs/original-source/graham-scan.txt`](../../docs/original-source/graham-scan.txt); snapshots `docs/original-snapshots/graham-scan-1…5.png`; saved states `tests/golden/graham-scan.original-states.json` |
@@ -136,6 +136,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 6 | v0.1.27 | 2026-10-28 | version number; the shared code gained spans with a step, a cyclic `Riffle`, `EvenQ`/`OddQ`, `ArcCos`/`ArcSin`, `DeleteCases`, `ToString` and `StringForm` (`shared/wl.js`), legend labels that are pictures and Mathematica's `Placed[…, {pos, align}]` form, `Automatic` in PlotStyle lists, `Fraction` labels, 3D `Line` with several polylines, and View3D's `Epilog` and `SphericalRegion: false` (v0.1.27); no change to this app's code, behaviour or picture (DOM parity with v0.1.26) |
 | 7 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default; motion planning, PA2 fix F-02) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (DOM parity with v0.1.27) |
 | 8 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (DOM parity with v0.1.28) |
+| 9 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

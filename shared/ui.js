@@ -20,6 +20,12 @@
 //   pauseWhenHidden  (v0.1.28) true: a playing animation stands still while the ⊕ panel is closed and goes on when it
 //            is opened again (the play button keeps showing pause), as Mathematica's panel behaves (seen in
 //            motion-planning, F-02); default false, the behaviour every other app was built with.
+//   fullPanel  (v0.1.30) true: the ⊕ panel as Mathematica's full animation panel — a value field `panelvalue-<name>`,
+//            step back, play/pause, step forward, faster `faster-<name>` (⇈) and slower `slower-<name>` (⇊), and the
+//            direction button `direction-<name>`, which cycles forward → backward → forward-and-back (→ ← ↔, Mathematica's
+//            AnimationDirection). One faster/slower press multiplies/divides the speed by 1.25 (measured in
+//            motion-planning's original: 5 s → about 4 s per sweep, T-2c). Default false: the short panel every other
+//            app was built with.
 //   steps    undefined (default): user input snaps to min + round((v − min)/step)·step, rounded to 10 decimals.
 //            'mma': Mathematica's discrete slider {min, max, step}: the positions are k = 0 … n with the value
 //            min + k·step in machine arithmetic (k·0.05 for k = 3 is 0.15000000000000002) and the right end giving
@@ -173,16 +179,27 @@ export class Controls {
     if (grid) range.setAttribute('aria-valuetext', show(value));
     const showField = (v) => {
       if (grid) range.setAttribute('aria-valuetext', show(v));
+      if (panelField && document.activeElement !== panelField) panelField.value = show(v);
       if (!field) return;
       if (labeled === 'text') field.textContent = show(v);
       else field.value = textual ? show(v) : fmt(v, step);
     };
     let playBtn = null, backBtn = null, fwdBtn = null, panel = null, plus = null;
+    let panelField = null, fasterBtn = null, slowerBtn = null, dirBtn = null; // fullPanel (v0.1.30)
+    let speed = 1, direction = 'forward', bounce = 1; // fullPanel: speed factor; 'forward' | 'backward' | 'forwardbackward'
     if (withPlus) {
       playBtn = el('button', { type: 'button', class: 'ctl-btn', 'data-testid': `play-${name}`, title: 'Play / pause animation' }, '▶');
       backBtn = el('button', { type: 'button', class: 'ctl-btn', 'data-testid': `stepback-${name}`, title: 'Step back' }, '−');
       fwdBtn = el('button', { type: 'button', class: 'ctl-btn', 'data-testid': `stepfwd-${name}`, title: 'Step forward' }, '+');
-      panel = el('div', { class: 'ctl-anim', hidden: true, 'data-testid': `anim-${name}` }, backBtn, playBtn, fwdBtn);
+      if (opts.fullPanel) { // v0.1.30: Mathematica's full panel (file header)
+        panelField = el('input', { type: 'text', class: 'ctl-field', inputmode: 'decimal', autocomplete: 'off', spellcheck: 'false',
+          value: show(value), 'data-testid': `panelvalue-${name}`, 'aria-label': `${label || name} value` });
+        fasterBtn = el('button', { type: 'button', class: 'ctl-btn', 'data-testid': `faster-${name}`, title: 'Faster' }, '⇈');
+        slowerBtn = el('button', { type: 'button', class: 'ctl-btn', 'data-testid': `slower-${name}`, title: 'Slower' }, '⇊');
+        dirBtn = el('button', { type: 'button', class: 'ctl-btn', 'data-testid': `direction-${name}`, title: 'Direction: forward', 'data-direction': 'forward' }, '→');
+      }
+      panel = el('div', { class: 'ctl-anim', hidden: true, 'data-testid': `anim-${name}` },
+        ...(panelField ? [panelField] : []), backBtn, playBtn, fwdBtn, ...(fasterBtn ? [fasterBtn, slowerBtn, dirBtn] : []));
       plus = el('button', {
         type: 'button', class: 'ctl-plus', 'data-testid': `plus-${name}`, title: 'Show animation controls', 'aria-expanded': 'false',
       }, '⊕');
@@ -249,8 +266,18 @@ export class Controls {
       // pauseWhenHidden (v0.1.28): with the ⊕ panel closed the animation stands still and goes on when it is opened
       // again, still playing (Mathematica does not update a Dynamic that is not displayed; motion-planning F-02)
       if (opts.pauseWhenHidden && panel?.hidden) return true;
-      animPos += ((max - min) * dt) / animSeconds;
-      if (animPos > max) animPos = min + (animPos - max); // loop like Manipulate's default animator
+      const d = ((max - min) * dt * speed) / animSeconds;
+      if (direction === 'backward') {
+        animPos -= d;
+        if (animPos < min) animPos = max - (min - animPos); // loops back to the end (v0.1.30, fullPanel)
+      } else if (direction === 'forwardbackward') {
+        animPos += bounce * d; // there and back (v0.1.30, fullPanel)
+        if (animPos > max) { animPos = max - (animPos - max); bounce = -1; }
+        if (animPos < min) { animPos = min + (min - animPos); bounce = 1; }
+      } else {
+        animPos += d;
+        if (animPos > max) animPos = min + (animPos - max); // loop like Manipulate's default animator
+      }
       if (snapped(animPos) !== value) set(animPos);
       return true;
     };
@@ -260,6 +287,25 @@ export class Controls {
         plus.setAttribute('aria-expanded', String(!panel.hidden));
       });
       backBtn.addEventListener('click', () => stepBy(-1));
+      if (opts.fullPanel) {
+        fasterBtn.addEventListener('click', () => { speed *= 1.25; });
+        slowerBtn.addEventListener('click', () => { speed /= 1.25; });
+        const DIRS = [['forward', '→'], ['backward', '←'], ['forwardbackward', '↔']];
+        dirBtn.addEventListener('click', () => {
+          const i = (DIRS.findIndex(([d]) => d === direction) + 1) % DIRS.length;
+          [direction] = DIRS[i];
+          bounce = direction === 'backward' ? -1 : 1;
+          dirBtn.textContent = DIRS[i][1];
+          dirBtn.dataset.direction = direction;
+          dirBtn.title = `Direction: ${direction === 'forwardbackward' ? 'forward and back' : direction}`;
+        });
+        panelField.addEventListener('change', () => {
+          const v = parse ? parse(panelField.value) : Number(panelField.value.trim().replace(/[−–]/g, '-'));
+          if (v == null || !Number.isFinite(Number(v)) || panelField.value.trim() === '') { panelField.value = show(value); return; }
+          if (grid) setIndex(grid.indexOf(Number(v))); else set(Number(v));
+          panelField.value = show(value);
+        });
+      }
       fwdBtn.addEventListener('click', () => stepBy(+1));
       playBtn.addEventListener('click', () => {
         playing = !playing;
@@ -293,7 +339,7 @@ export class Controls {
         // a playing animation stops when the slider is disabled: before v0.1.28 the click came after `disabled` was set
         // and did nothing, so the animation went on (found with motion-planning F-09)
         if (!b && playing) playBtn.click();
-        for (const n of [range, field, playBtn, backBtn, fwdBtn]) if (n && n.tagName !== 'SPAN') n.disabled = !b;
+        for (const n of [range, field, playBtn, backBtn, fwdBtn, panelField, fasterBtn, slowerBtn, dirBtn]) if (n && n.tagName !== 'SPAN') n.disabled = !b;
         row.classList.toggle('is-disabled', !b);
       },
       stop: () => { if (playing) playBtn.click(); },

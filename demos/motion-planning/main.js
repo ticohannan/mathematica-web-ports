@@ -147,8 +147,9 @@ const M = Manipulate({
     // value grid (steps: null; its max attribute is the path length); the track is at most 120 px wide (D-MP-05, index.html)
     [['s', 1, 'progress'], 1, () => Math.max(1, scene?.discretePath.length ?? 0), 1,
       // pauseWhenHidden: closing the ⊕ panel pauses the animation, opening it resumes (F-02, v0.1.28, as the original);
-      // animSeconds 5: one sweep in 5 s whatever the path length, as the original (F-12, v0.1.29; Ryan Hembree T-2/T-2c)
-      { Enabled: () => !scene || scene.discretePath.length > 0, animSeconds: 5, steps: null, pauseWhenHidden: true }],
+      // animSeconds 5: one sweep in 5 s whatever the path length, as the original (F-12, v0.1.29; Ryan Hembree T-2/T-2c);
+      // fullPanel: the original's full panel — value field, faster/slower, direction (I-MP-09 → P-MP-08, v0.1.30)
+      { Enabled: () => !scene || scene.discretePath.length > 0, animSeconds: 5, steps: null, pauseWhenHidden: true, fullPanel: true }],
     ...LOCATORS.map((k) => [[k, DEFAULTS[k]], ...LOCATOR_RANGES[k], Locator]),
   ],
   // presses are handled by the page below (a press away from every locator moves the nearest, F-08); arrow keys 0.05,

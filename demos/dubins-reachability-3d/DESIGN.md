@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.29 |
+| Code version: | 0.1.30 |
 | Document revision | 2 (2026-10-27) |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "3D Reachability Set for a Dubins Car", contributed by Mohammad Sultan and Aaron T. Becker, published 2020-12-16 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/3DReachabilitySetForADubinsCar/> Source as text: [`docs/original-source/dubins-reachability-3d.txt`](../../docs/original-source/dubins-reachability-3d.txt); snapshots `docs/original-snapshots/dubins-reachability-3d-1…4.png`; saved states `tests/golden/dubins-reachability-3d.original-states.json` (`states[0]` the live state, `specs` the Manipulate's initial values — the same here —, `snapshots` the four snapshots' settings; each also stores the computed plot `plotReach`) |
@@ -240,6 +240,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 3 | v0.1.27 | 2026-10-28 | version number; the shared code gained spans with a step, a cyclic `Riffle`, `EvenQ`/`OddQ`, `ArcCos`/`ArcSin`, `DeleteCases`, `ToString` and `StringForm` (`shared/wl.js`), legend labels that are pictures and Mathematica's `Placed[…, {pos, align}]` form, `Automatic` in PlotStyle lists, `Fraction` labels, 3D `Line` with several polylines, and View3D's `Epilog` and `SphericalRegion: false` (v0.1.27); no change to this app's code, behaviour or picture (DOM parity with v0.1.26) |
 | 4 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default; motion planning, PA2 fix F-02) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (DOM parity with v0.1.27) |
 | 5 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (DOM parity with v0.1.28) |
+| 6 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

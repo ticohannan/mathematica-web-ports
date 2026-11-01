@@ -345,6 +345,76 @@ test.describe('Motion planning demo', () => {
     expect((await state(page)).o2).toEqual(o2);
   });
 
+  test('I-MP-09: the ⊕ panel is the full panel of the original: value field, step, play, faster, slower, direction (P-MP-08)', async ({ page }) => {
+    await openDemo(page, URL);
+    await page.getByTestId('plus-s').click();
+    const ids = await page.getByTestId('anim-s').evaluate((n) => [...n.children].map((c) => c.dataset.testid));
+    expect(ids).toEqual(['panelvalue-s', 'stepback-s', 'play-s', 'stepfwd-s', 'faster-s', 'slower-s', 'direction-s']);
+    await expect(page.getByTestId('panelvalue-s')).toHaveValue('1');
+    await page.getByTestId('panelvalue-s').fill('10');
+    await page.getByTestId('panelvalue-s').press('Enter');
+    expect((await state(page)).s).toBe(10);
+    await page.getByTestId('stepfwd-s').click();
+    await expect(page.getByTestId('panelvalue-s')).toHaveValue('11'); // the field follows the slider
+    await page.getByTestId('panelvalue-s').fill('x');
+    await page.getByTestId('panelvalue-s').press('Enter');
+    await expect(page.getByTestId('panelvalue-s')).toHaveValue('11'); // a bad entry is rejected
+  });
+
+  test('I-MP-09: the direction button plays backward, then forward and back; faster makes a sweep take 4 s (P-MP-08)', async ({ page }) => {
+    await openDemo(page, URL);
+    const len = (await scene(page)).discretePath.length;
+    const T = 3.8e9;
+    const frames = () => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+    const at = async (dt) => { await page.evaluate((t) => window.__demo.setClock(t), T + dt); await frames(); return (await state(page)).s; };
+    await page.getByTestId('plus-s').click();
+    await page.evaluate((n) => window.__demo.setState({ s: n }), len);
+    await page.getByTestId('direction-s').click(); // → becomes ← (backward)
+    await expect(page.getByTestId('direction-s')).toHaveText('←');
+    await page.evaluate((t) => window.__demo.setClock(t), T);
+    await page.getByTestId('play-s').click();
+    await frames();
+    const s1 = await at(2.5); // half a sweep back from the end
+    expect(s1).toBeGreaterThan(len * 0.4);
+    expect(s1).toBeLessThan(len * 0.6);
+    await page.getByTestId('play-s').click();
+    await page.getByTestId('direction-s').click(); // ↔ forward and back
+    await expect(page.getByTestId('direction-s')).toHaveText('↔');
+    await page.getByTestId('direction-s').click(); // back to →
+    await expect(page.getByTestId('direction-s')).toHaveText('→');
+    // faster once: a sweep from the start takes 4 s instead of 5
+    await page.evaluate(() => window.__demo.setState({ s: 1 }));
+    await page.getByTestId('faster-s').click();
+    await page.evaluate((t) => window.__demo.setClock(t), T + 10);
+    await page.getByTestId('play-s').click();
+    await frames();
+    expect(await at(10 + 3.85)).toBeLessThan(len);
+    await page.evaluate((t) => window.__demo.setClock(t), T + 14);
+    await expect.poll(async () => (await state(page)).s).toBe(len);
+    await page.getByTestId('play-s').click();
+    await page.evaluate(() => window.__demo.setClock(null));
+  });
+
+  test('I-MP-09: forward and back turns at the end instead of jumping to the start (P-MP-08)', async ({ page }) => {
+    await openDemo(page, URL);
+    const len = (await scene(page)).discretePath.length;
+    const T = 3.8e9;
+    const frames = () => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+    await page.getByTestId('plus-s').click();
+    await page.getByTestId('direction-s').click();
+    await page.getByTestId('direction-s').click(); // ↔
+    await page.evaluate((t) => window.__demo.setClock(t), T);
+    await page.getByTestId('play-s').click();
+    await frames();
+    await page.evaluate((t) => window.__demo.setClock(t), T + 6); // 1 s past the end: on the way back
+    await frames();
+    const s = (await state(page)).s;
+    expect(s).toBeLessThan(len);
+    expect(s).toBeGreaterThan(len * 0.7);
+    await page.getByTestId('play-s').click();
+    await page.evaluate(() => window.__demo.setClock(null));
+  });
+
   test('F-03: the red progress point is half transparent, as the original draws it (P-MP-05)', async ({ page }) => {
     await openDemo(page, URL);
     await page.evaluate(() => window.__demo.setState({ s: 10 }));
