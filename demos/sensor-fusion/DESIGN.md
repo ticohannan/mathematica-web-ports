@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.28 |
+| Code version: | 0.1.29 |
 | Document revision | 2 (2026-10-25) |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Sensor Fusion with Normally Distributed Noise", contributed by Aaron Becker, published 2015-06-04 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/SensorFusionWithNormallyDistributedNoise/> Source as text: [`docs/original-source/sensor-fusion.txt`](../../docs/original-source/sensor-fusion.txt); snapshots `docs/original-snapshots/sensor-fusion-1…4.png`; saved states `tests/golden/sensor-fusion.original-states.json` |
@@ -136,6 +136,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 5 | v0.1.26 | 2026-10-27 | version number; the shared code gained region and density plots (`RegionPlot`, two-parameter `ParametricPlot`, `DensityPlot`), `BSplineCurve`, decorated insets, textures on polygons, `settleInterval` for bodies that pause between evaluations, typeset control headings and fixes found by the seven new ports (v0.1.26); no change to this app's code, behaviour or picture (DOM parity with v0.1.25) |
 | 6 | v0.1.27 | 2026-10-28 | version number; the shared code gained spans with a step, a cyclic `Riffle`, `EvenQ`/`OddQ`, `ArcCos`/`ArcSin`, `DeleteCases`, `ToString` and `StringForm` (`shared/wl.js`), legend labels that are pictures and Mathematica's `Placed[…, {pos, align}]` form, `Automatic` in PlotStyle lists, `Fraction` labels, 3D `Line` with several polylines, and View3D's `Epilog` and `SphericalRegion: false` (v0.1.27); no change to this app's code, behaviour or picture (DOM parity with v0.1.26) |
 | 7 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default; motion planning, PA2 fix F-02) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (DOM parity with v0.1.27) |
+| 8 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (DOM parity with v0.1.28) |
 
 ## 10. Improvements to consider (not implemented)
 

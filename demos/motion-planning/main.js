@@ -146,12 +146,13 @@ const M = Manipulate({
     // {{s, 1, ""}, 1, Length@discretePath, 1}: disabled while start or goal is invalid (D-MP-03); the slider's own
     // value grid (steps: null; its max attribute is the path length); the track is at most 120 px wide (D-MP-05, index.html)
     [['s', 1, 'progress'], 1, () => Math.max(1, scene?.discretePath.length ?? 0), 1,
-      // pauseWhenHidden: closing the ⊕ panel pauses the animation, opening it resumes (F-02, v0.1.28, as the original)
-      { Enabled: () => !scene || scene.discretePath.length > 0, animSeconds: 8, steps: null, pauseWhenHidden: true }],
+      // pauseWhenHidden: closing the ⊕ panel pauses the animation, opening it resumes (F-02, v0.1.28, as the original);
+      // animSeconds 5: one sweep in 5 s whatever the path length, as the original (F-12, v0.1.29; Ryan Hembree T-2/T-2c)
+      { Enabled: () => !scene || scene.discretePath.length > 0, animSeconds: 5, steps: null, pauseWhenHidden: true }],
     ...LOCATORS.map((k) => [[k, DEFAULTS[k]], ...LOCATOR_RANGES[k], Locator]),
   ],
-  // a press away from every locator moves none (D-MP-04); arrow keys 0.05, Shift 0.25 (A-MP-04)
-  // pointer: false — presses are handled on the glyphs below; arrow keys move the glyph at once, the scene follows on the
+  // presses are handled by the page below (a press away from every locator moves the nearest, F-08); arrow keys 0.05,
+  // Shift 0.25 (A-MP-04). pointer: false — arrow keys move the glyph at once, the scene follows on the
   // next frame with progress restarted (as before)
   locators: {
     pickAnywhere: false, pointer: false, throttle: 'frame', onPlace: (n, m) => { m.state.s = 1; }, keyStep: 0.05,
@@ -178,24 +179,40 @@ const M = Manipulate({
   },
 });
 
-// The port's locator dragging (D-MP-04), kept instead of the layer's LocatorPane picking: a press on a locator's glyph
-// grabs it without focusing it, its centre follows the pointer (screen → world through the SVG's own matrix), the
-// scene is evaluated once per animation frame; a press elsewhere moves none.
+// The port's locator dragging. A press on a locator's glyph grabs it without focusing it; a press anywhere else in the
+// picture makes the NEAREST locator jump to the press point and drags it on (Mathematica's LocatorPane, "directs any click
+// to the nearest locator"; checked in the original by Ryan Hembree, T-1/T-1b 2026-10-28/31: eight of eight presses moved
+// the nearest locator; F-08, P-MP-07, v0.1.28 → v0.1.29; ties: the first in r1, r2, o1 … o4 — not checked in the
+// original). The centre follows the pointer (screen → world through the SVG's own matrix, clamped to the locator's
+// range); the scene is evaluated once per animation frame; every move restarts progress (F-MP-07).
 function svgPoint(m, x, y) { const pt = m.plot.svg.createSVGPoint(); pt.x = x; pt.y = y; return pt; }
-for (const k of LOCATORS) {
-  const g = M.plot.svg.querySelector(`[data-testid="locator-${k}"]`);
-  let dragging = false, frame = 0;
-  g.addEventListener('pointerdown', (e) => { dragging = true; g.setPointerCapture(e.pointerId); g.classList.add('dragging'); e.preventDefault(); });
-  g.addEventListener('pointermove', (e) => {
-    if (!dragging) return;
-    const p = svgPoint(M, e.clientX, e.clientY).matrixTransform(M.plot.world.getScreenCTM().inverse());
-    M.state[k] = clampTo(k, [p.x, p.y]);
-    M.state.s = 1; // F-MP-07; the glyph follows at once, the scene on the next frame
-    g.setAttribute('transform', `translate(${M.state[k][0]},${M.state[k][1]})`);
-    if (!frame) frame = requestAnimationFrame(() => { frame = 0; M.moveLocator(k, M.state[k]); });
-  });
-  const end = () => { dragging = false; g.classList.remove('dragging'); };
-  g.addEventListener('pointerup', end);
-  g.addEventListener('pointercancel', end);
-}
+const toWorld = (e) => { const p = svgPoint(M, e.clientX, e.clientY).matrixTransform(M.plot.world.getScreenCTM().inverse()); return [p.x, p.y]; };
+const glyph = (k) => M.plot.svg.querySelector(`[data-testid="locator-${k}"]`);
+let dragging = null, frame = 0; // the locator being dragged
+const moveTo = (k, p) => {
+  M.state[k] = clampTo(k, p);
+  M.state.s = 1; // F-MP-07; the glyph follows at once, the scene on the next frame
+  glyph(k).setAttribute('transform', `translate(${M.state[k][0]},${M.state[k][1]})`);
+  if (!frame) frame = requestAnimationFrame(() => { frame = 0; M.moveLocator(dragging ?? k, M.state[dragging ?? k]); });
+};
+const startDrag = (k, e) => {
+  dragging = k;
+  M.plot.svg.setPointerCapture(e.pointerId);
+  glyph(k).classList.add('dragging');
+  e.preventDefault();
+};
+M.plot.svg.addEventListener('pointerdown', (e) => {
+  if (e.button !== 0) return;
+  const hit = LOCATORS.find((k) => glyph(k).contains(e.target));
+  if (hit) return startDrag(hit, e); // grabbed where it is, no jump
+  const p = toWorld(e); // empty space: the nearest locator jumps here (LocatorPane)
+  let best = null, bestD = Infinity;
+  for (const k of LOCATORS) { const d = Math.hypot(M.state[k][0] - p[0], M.state[k][1] - p[1]); if (d < bestD) { best = k; bestD = d; } }
+  startDrag(best, e);
+  moveTo(best, p);
+});
+M.plot.svg.addEventListener('pointermove', (e) => { if (dragging) moveTo(dragging, toWorld(e)); });
+const endDrag = () => { if (dragging) glyph(dragging).classList.remove('dragging'); dragging = null; };
+M.plot.svg.addEventListener('pointerup', endDrag);
+M.plot.svg.addEventListener('pointercancel', endDrag);
 showReadout.addEventListener('change', () => { readout.hidden = !showReadout.checked; updateReadout(M.state, M.view); });

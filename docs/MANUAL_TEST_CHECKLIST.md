@@ -160,8 +160,9 @@ Dynamics, no evaluation).
 **Record** — Do 1: where obstacles and robots stop (estimate the coordinates); Do 2: does a locator move to the click
 point in the ORIGINAL (yes/no, which one)?
 **Save** — File > Close, Don't Save.
-**Port** — the same steps. Expected: obstacles stop at ±3.75, robots at −4.25 / +4.15; in the port clicking empty
-space moves no locator (D-MP-04).
+**Port** — the same steps. Expected: obstacles stop at ±3.75, robots at −4.25 / +4.15; since v0.1.29 a click on
+empty space moves the nearest locator to the click point, as in the original (F-08; Ryan Hembree, T-1/T-1b), and a
+press-drag from empty space drags it.
 **Expected / what it decides** — Do 2 decides whether D-MP-04 must change (LocatorPane picking, as in the seven
 newer apps).
 
@@ -208,7 +209,8 @@ opens and the button shows pause (yes/no).
 **Port** — the same steps. Expected: the orange robot travels along the path without touching any obstacle; the
 travelled part turns solid green; at the far right it covers the green end robot; Do 3 (since v0.1.28, F-02): the
 robot stands still while the panel is closed and goes on when it opens, the button still showing pause, as in the
-original (Ryan Hembree, T-2, 2026-10-28).
+original (Ryan Hembree, T-2, 2026-10-28). Since v0.1.29 one sweep from start to goal takes about 5 s, as in the
+original (F-12; Ryan Hembree, T-2c).
 **Expected / what it decides** — the same in both.
 
 ### M-MP-09  Invalid start / end

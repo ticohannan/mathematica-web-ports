@@ -289,6 +289,62 @@ test.describe('Motion planning demo', () => {
     await expect(page.getByTestId('play-s')).toHaveAttribute('aria-pressed', 'false');
   });
 
+  test('F-12: one animation sweep takes 5 s, on a short and on a long path, as the original (P-MP-06)', async ({ page }) => {
+    await openDemo(page, URL);
+    const T = 3.8e9;
+    const frames = () => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+    // the original's default scene, a short and a long path (Ryan Hembree T-2c: 5 s per loop in all three)
+    // (the long goal is moved into the bottom-right corner: Ryan's "about (3.5, 3.8)" lies outside the shrunk boundary)
+    for (const extra of [{}, { r1: [-1, -3] }, { r2: [2.9, -2.9] }]) {
+      await page.evaluate((p) => window.__demo.setState({ r1: [-2, 2.75], r2: [0.5, -3], ...p, s: 1 }), extra);
+      const len = (await scene(page)).discretePath.length;
+      expect(len).toBeGreaterThan(2);
+      await page.evaluate((t) => window.__demo.setClock(t), T);
+      await page.getByTestId('plus-s').click();
+      await page.getByTestId('play-s').click();
+      await frames();
+      await page.evaluate((t) => window.__demo.setClock(t), T + 4.85);
+      await frames();
+      expect((await state(page)).s).toBeLessThan(len); // not yet at the end at 4.85 s
+      await page.evaluate((t) => window.__demo.setClock(t), T + 5.0);
+      await expect.poll(async () => (await state(page)).s).toBe(len); // at the goal at 5 s
+      await page.getByTestId('play-s').click();
+      await page.getByTestId('plus-s').click();
+      await page.evaluate(() => window.__demo.setClock(null));
+    }
+  });
+
+  test('F-08: a press on empty space makes the nearest locator jump there, as the original (P-MP-07)', async ({ page }) => {
+    await openDemo(page, URL);
+    // Ryan Hembree T-1b (original): every press moved the nearest locator; the two cases of PA2_FIX_HANDOFF
+    for (const [at, name] of [[[3, -2], 'o4'], [[1.5, -3.5], 'r2'], [[-3.5, -3.5], 'o3'], [[3.5, 3.5], 'o1'], [[0, 0.75], 'o2'], [[-3.5, 1.5], 'r1']]) {
+      await page.getByTestId('reset').click();
+      await page.evaluate(() => window.__demo.setState({ s: 10 }));
+      const before = await state(page);
+      const c = await page.evaluate((p) => window.__demo.worldToClient(p), at);
+      await page.mouse.click(c.x, c.y);
+      await expect.poll(async () => (await state(page))[name][0]).toBeCloseTo(at[0], 1);
+      const st = await state(page);
+      expect(st[name][1]).toBeCloseTo(at[1], 1);
+      for (const k of ['r1', 'r2', 'o1', 'o2', 'o3', 'o4']) if (k !== name) expect(st[k], `${k} stays`).toEqual(before[k]);
+      expect(st.s).toBe(1); // a move restarts progress (F-MP-07)
+    }
+  });
+
+  test('F-08: a press-drag from empty space drags the picked locator; a press on a glyph grabs it without a jump (P-MP-07)', async ({ page }) => {
+    await openDemo(page, URL);
+    const a = await page.evaluate(() => window.__demo.worldToClient([3, -2])); // nearest: o4 at (2, −1)
+    const b = await page.evaluate(() => window.__demo.worldToClient([3, 0.5]));
+    await page.mouse.move(a.x, a.y); await page.mouse.down(); await page.mouse.move(b.x, b.y, { steps: 6 }); await page.mouse.up();
+    await expect.poll(async () => (await state(page)).o4[1]).toBeCloseTo(0.5, 1);
+    expect((await state(page)).o4[0]).toBeCloseTo(3, 1);
+    // a press near (not at) a glyph's centre grabs it where it is: a press and release without moving changes nothing
+    const g = await page.evaluate(() => window.__demo.locatorClientPoint('o2'));
+    const o2 = (await state(page)).o2;
+    await page.mouse.click(g.x + 3, g.y + 2);
+    expect((await state(page)).o2).toEqual(o2);
+  });
+
   test('F-03: the red progress point is half transparent, as the original draws it (P-MP-05)', async ({ page }) => {
     await openDemo(page, URL);
     await page.evaluate(() => window.__demo.setState({ s: 10 }));
