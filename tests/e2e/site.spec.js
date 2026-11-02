@@ -31,7 +31,9 @@ for (const p of APPS) {
     await expect(credits).toContainText(p.title);
     await expect(credits).toContainText('Adapted from');
     await expect(credits.locator('a[href="https://creativecommons.org/licenses/by-nc-sa/3.0/"]')).toHaveCount(1);
-    await expect(credits.locator(`a[href="https://demonstrations.wolfram.com/${p.slug}/"]`)).toHaveCount(1);
+    // a published Demonstration links to its page; another original (a lecture notebook, v0.1.31) is named instead
+    if (p.slug) await expect(credits.locator(`a[href="https://demonstrations.wolfram.com/${p.slug}/"]`)).toHaveCount(1);
+    else await expect(credits).toContainText(p.source);
     await expect(credits).toContainText('Not affiliated with or endorsed');
   });
 }

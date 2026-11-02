@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.30 |
+| Code version: | 0.1.31 |
 | Document revision | 1 (2026-10-17) — first implementation |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Isochrons for a Dubins Car", contributed by Aaron T. Becker and Shiva Shahrokhi, published 2017-12-18 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/IsochronsForADubinsCar/>. Readable source: [`docs/original-source/dubins-isochrons.txt`](../../docs/original-source/dubins-isochrons.txt); snapshots: `docs/original-snapshots/dubins-isochrons-1.png` … `dubins-isochrons-5.png` (pictures 6 and 7 of the extraction are the Wolfram icon, not snapshots); golden fixture (COMMON-DECISIONS §1): `tests/golden/dubins-isochrons.original-states.json` with `states[0]` = the live output-cell state including the original's cached `ParametricPlot` output `plotReach` (raw definition notebook line 1111), `specs` = the initial settings (stored `"Variables"`, raw line 3792, equal to the live state; the output cell `"Specifications"`, line 5286, also hold the cached plot), `snapshots[1…5]` = the `"Settings"` of the five snapshot cells with their own cached plots (lines 7853, 10287, 17941, 25604, 33224; 2–4 hold the "≤" region meshes) |
@@ -276,6 +276,7 @@ Template: see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md).
 | 14 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default; motion planning, PA2 fix F-02) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.27) |
 | 15 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.28) |
 | 16 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
+| 17 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

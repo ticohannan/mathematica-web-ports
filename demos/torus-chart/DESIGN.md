@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.30 |
+| Code version: | 0.1.31 |
 | Document revision | 1 (2026-10-18) — first implementation |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Chart for a Torus", contributed by Aaron T. Becker and Haoran Zhao, published 2016-05-02 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ChartForATorus/>. Readable source: [`docs/original-source/torus-chart.txt`](../../docs/original-source/torus-chart.txt); snapshots: `docs/original-snapshots/torus-chart-1.png` … `-4.png` (files 5 and 6 of the extraction are 96 × 100 placeholder icons); golden data: `tests/golden/torus-chart.original-states.json` (COMMON-DECISIONS §1: `states[0]` = the live state, `snapshots[1…4]` = the snapshot cells' Settings, raw notebook lines 2311, 6086, 9212, 12067, `specs` = the initial settings; λ read from the raw notebook by `tools/extract_state.py --snapshots`, N-TC-01) |
@@ -252,6 +252,7 @@ Open proposals (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
 | 14 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default; motion planning, PA2 fix F-02) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.27) |
 | 15 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.28) |
 | 16 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
+| 17 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

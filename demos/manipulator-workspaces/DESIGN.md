@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.30 |
+| Code version: | 0.1.31 |
 | Document revision | 1 (2026-10-18) — first implementation |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Robot Manipulator Workspaces", contributed by Aaron T. Becker, Benedict Isichei, Muhammad Sultan and Maruthi S. Chemudupati, published 2017-12-13 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/RobotManipulatorWorkspaces/>. Readable source: [`docs/original-source/manipulator-workspaces.txt`](../../docs/original-source/manipulator-workspaces.txt); snapshots: `docs/original-snapshots/manipulator-workspaces-1.png` … `-8.png` (the notebook's snapshot cells 9 and 10 are empty); golden data: `tests/golden/manipulator-workspaces.original-states.json` (written with `tools/extract_state.py --snapshots` from the raw notebook, COMMON-DECISIONS §1: `states[0]` = the live output-cell state, `snapshots[1…8]` = the snapshot cells' Settings — each with its robot, ranges and the original's `workspace3D`, raw notebook lines 8885, 11436, 13864, 15630, 17367, 19228, 21886, 24150 — and `specs` = the initial settings) |
@@ -261,6 +261,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 13 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default; motion planning, PA2 fix F-02) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.27) |
 | 14 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.28) |
 | 15 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
+| 16 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

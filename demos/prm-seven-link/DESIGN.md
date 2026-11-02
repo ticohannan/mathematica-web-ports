@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.30 |
+| Code version: | 0.1.31 |
 | Document revision | 6 (2026-10-17) — §11 Errors in the original (R-C); checklist items as operator procedures (R-B) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Probabilistic Roadmap Method with Seven-Link Articulated Robot", contributed by Aaron T. Becker and Yitong Lu, published April 29, 2020 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ProbabilisticRoadmapMethodWithSevenLinkArticulatedRobot/>. Readable source: [`docs/original-source/prm-seven-link.txt`](../../docs/original-source/prm-seven-link.txt); snapshots: `docs/original-snapshots/prm-seven-link-*.png` |
@@ -205,6 +205,7 @@ No open proposal (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)).
 | 19 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default; motion planning, PA2 fix F-02) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.27); O-SL-04 recorded (Ryan Hembree's T-6: the robot turns red while pushing and returns to its colour after the release; 14 beeps), K-SL-02 reopened in part |
 | 20 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.28) |
 | 21 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
+| 22 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

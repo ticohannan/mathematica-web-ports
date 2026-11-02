@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.30 |
+| Code version: | 0.1.31 |
 | Document revision | 21 (2026-11-01) — P-MP-08 the original's full ⊕ panel (I-MP-09); 20 (2026-11-01) — P-MP-06/07 implemented after Ryan Hembree's T-2c/T-1b; his comparison and exploration on v0.1.28 recorded; I-MP-09; 19 (2026-10-29) — PA2 fixes from Ryan Hembree's checks of the original (P-MP-02…05); earlier: 6 (2026-10-17) polygon helpers, §11, operator procedures |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Motion Planning for Robot Path around Obstacles" by Shreyas Poyrekar, Aaron T. Becker and Arifa Sultana (CC BY-NC-SA 3.0); author notebook made with Mathematica 10.2. Readable source: [`docs/original-source/motion-planning.txt`](../../docs/original-source/motion-planning.txt) |
@@ -312,6 +312,7 @@ No open proposal (P-MP-02…08 implemented in v0.1.28–v0.1.30). Template for a
 | 19 | v0.1.28 | 2026-10-29 | PA2 fixes from Ryan Hembree's checks of the original (owner approval 2026-10-29): P-MP-02 Tab focus on a locator without the browser outline (K-MP-06 fixed, A-MP-04); P-MP-03 closing the ⊕ panel pauses the animation (F-MP-05, D-MP-05; shared slider option `pauseWhenHidden`); P-MP-04 progress kept through a no-path state (D-MP-01 rewritten); P-MP-05 progress point half transparent as in the original (D-MP-07 resolved; pixel parity re-recorded for this app); D-MP-04 and D-MP-05 record T-1/T-2, P-MP-06/07 wait for T-2c/T-1b; E-MP-06 wording (T-5); PA1 item 29 confirmed (T-3, §7) |
 | 20 | v0.1.29 | 2026-11-01 | PA2 fixes after Ryan Hembree's T-2c and T-1b: P-MP-06 one animation sweep in 5 s (F-MP-05, D-MP-05); P-MP-07 a press on empty space moves the nearest locator and a press-drag drags it (F-MP-06, D-MP-04 narrowed to the glyph look); his comparison with the original on macOS (K-MP-05: the original's lines depend on the platform) and random exploration (§7: the flagged scenes C1, C4, D1 are inherited) recorded; I-MP-09 (the original's reverse and speed buttons) added to §10, to consider after the bug fixes |
 | 21 | v0.1.30 | 2026-11-01 | P-MP-08 (owner approval 2026-11-01, Ryan Hembree's suggestion): the ⊕ panel is the original's full panel — value field, faster/slower, direction (→ ← ↔) — through the new shared slider option `fullPanel`; F-MP-05, D-MP-05 (approximations listed), I-MP-09 implemented |
+| 22 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

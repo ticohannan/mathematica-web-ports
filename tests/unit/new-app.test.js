@@ -53,6 +53,24 @@ describe('tools/new-app.mjs', () => {
     expect(fs.existsSync(path.join(tmp, 'demos/wave-demo'))).toBe(false);
     expect(fs.existsSync(path.join(tmp, 'docs/checklists/wave-demo.md'))).toBe(false);
   });
+  it('--source: an original that is not a published Demonstration (a lecture notebook) is named, with no Wolfram link (v0.1.31)', () => {
+    const before = REG.map(read);
+    run('note-demo', '--title', 'Note Demo', '--source', 'ECE 0000 Lecture 1 notebook', '--authors', 'Ann Author');
+    expect(read('tests/e2e/apps.js')).toContain(`source: "ECE 0000 Lecture 1 notebook", title: "Note Demo"`);
+    expect(read('LICENSE.md')).toContain('| `demos/note-demo/` | "Note Demo" — ECE 0000 Lecture 1 notebook | Ann Author |');
+    const html = read('demos/note-demo/index.html');
+    expect(html).toContain('Adapted from "Note Demo" by Ann Author, ECE 0000 Lecture 1 notebook');
+    expect(html).toContain('href="https://creativecommons.org/licenses/by-nc-sa/3.0/"');
+    expect(html).not.toContain('demonstrations.wolfram.com');
+    expect(html).toContain('SPDX-FileCopyrightText: Original (ECE 0000 Lecture 1 notebook) by Ann Author');
+    expect(read('demos/note-demo/DESIGN.md')).toContain('| Original | "Note Demo" by Ann Author: ECE 0000 Lecture 1 notebook');
+    expect(read('docs/checklists/note-demo.md')).toContain('_internal\\originals\\note-demo.nb');
+    run('--remove', 'note-demo');
+    expect(REG.map(read)).toEqual(before);
+    expect(fail('x-demo', '--title', 'X', '--slug', 'X', '--source', 'Y', '--authors', 'A')).toContain('not both');
+    expect(fail('y-demo', '--title', 'Y', '--authors', 'A')).toContain('--source');
+    expect(fail('z-demo', '--title', 'Z', '--source', 'a | b', '--authors', 'A')).toContain('may not contain');
+  });
   it('--3d writes a Graphics3D app with View3D and the WebGL 2 start-up check; a second new app joins the same section', () => {
     const indexBefore = read('index.html');
     run('ball-demo', '--title', 'Ball Demo', '--slug', 'BallDemo', '--authors', 'C. Coder', '--3d');

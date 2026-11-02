@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.30 |
+| Code version: | 0.1.31 |
 | Document revision | 3 (2026-10-18) — harness run 2 evaluated (K-FB-02/03 resolved, P-FB-01/02 proposed) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Configuration Space for Four-Bar Linkage", contributed by Aaron T. Becker and Shiva Shahrokhi, published 2018-01-11 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ConfigurationSpaceForFourBarLinkage/>. Readable source: `docs/original-source/four-bar-linkage.txt`; snapshots: `docs/original-snapshots/four-bar-linkage-1.png` … `-4.png` (the extraction's pictures 5 and 6 are the Wolfram logo); golden data (`tests/golden/four-bar-linkage.original-states.json`, COMMON-DECISIONS §1): the live state, the Settings of the four snapshot cells (raw notebook lines 4030, 6009, 7933, 9769, each with `pvals`, `plot`, `pnear`, `p`, `spacing`, `links`) and the initial settings |
@@ -353,6 +353,7 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 | 14 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default; motion planning, PA2 fix F-02) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.27) |
 | 15 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.28) |
 | 16 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
+| 17 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

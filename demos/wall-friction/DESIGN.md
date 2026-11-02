@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.30 |
+| Code version: | 0.1.31 |
 | Document revision | 2 (2026-10-27) |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Moving Two Particles with Shared Control Inputs Using Wall Friction", contributed by Shiva Shahrokhi and Aaron T. Becker, published 2015-11-23 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/MovingTwoParticlesWithSharedControlInputsUsingWallFriction/> Source as text: [`docs/original-source/wall-friction.txt`](../../docs/original-source/wall-friction.txt); snapshots `docs/original-snapshots/wall-friction-1…4.png`; saved states `tests/golden/wall-friction.original-states.json` (`states[0]` the live state, `specs` the Manipulate's initial values, `snapshots` the four snapshots' settings) |
@@ -209,6 +209,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 4 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default; motion planning, PA2 fix F-02) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (DOM parity with v0.1.27) |
 | 5 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (DOM parity with v0.1.28) |
 | 6 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
+| 7 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

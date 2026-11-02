@@ -40,6 +40,13 @@ describe('graphics: directives apply to later primitives in the same list and in
     expect(Thin).toEqual(AbsoluteThickness(0.25));
     expect(Thick).toEqual(AbsoluteThickness(2));
   });
+  it('Rotate of a centred Text without a centre turns about the text position; with an offset it still needs a centre (v0.1.31)', () => {
+    const r = Rotate(Text('x cos θ + y sin θ = ρ', [1.2, 3.4]), 0.5);
+    expect(r.about).toEqual([1.2, 3.4]);
+    expect(Rotate(Annotation(Text('t', [-1, 2]), 'eq'), 1).about).toEqual([-1, 2]);
+    expect(() => Rotate(Text('t', [0, 0], [-1, 0]), 1)).toThrow(/centre point for Text with an offset/);
+    expect(Rotate(Text('t', [0, 0], [-1, 0]), 1, [5, 5]).about).toEqual([5, 5]);
+  });
   it('primitives inside Rotate and Annotation are reached; false and null entries are skipped', () => {
     const s = styles([false, null, Rotate([Line([[0, 0], [1, 0]])], 1), Annotation(Disk([0, 0], 1), 'x')]);
     expect(s.map(([h]) => h)).toEqual(['Rotate', 'Annotation']);
@@ -75,7 +82,7 @@ describe('graphics: Rotate and bounds', () => {
   });
   it('bounds covers several lines, points and annotated primitives; other heads need an explicit centre', () => {
     expect(bounds([Line([[[0, 0], [1, 1]], [[3, -1], [2, 2]]]), Annotation(Point([[-1, 0], [0, 5]]), 'p')])).toEqual([[-1, -1], [3, 5]]);
-    expect(() => Rotate(Text('a', [0, 0]), 1)).toThrow(/give Rotate a centre point for Text/);
+    expect(() => Rotate(Text('a', [0, 0], [1, 0]), 1)).toThrow(/give Rotate a centre point for Text/); // a centred Text is fine since v0.1.31
   });
 });
 

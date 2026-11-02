@@ -46,6 +46,7 @@ it is verified:
 | The Homicidal Chauffeur Problem | [`demos/homicidal-chauffeur/DESIGN.md`](../demos/homicidal-chauffeur/DESIGN.md) | `demos/homicidal-chauffeur/` |
 | Maximizing Apparent Velocity in a Camera's Frame | [`demos/camera-apparent-velocity/DESIGN.md`](../demos/camera-apparent-velocity/DESIGN.md) | `demos/camera-apparent-velocity/` |
 | Packing Spheres into a Thin Cylinder | [`demos/packing-spheres-into-a-thin-cylinder/DESIGN.md`](../demos/packing-spheres-into-a-thin-cylinder/DESIGN.md) | `demos/packing-spheres-into-a-thin-cylinder/` |
+| Line Parameterization | [`demos/line-parameterization/DESIGN.md`](../demos/line-parameterization/DESIGN.md) | `demos/line-parameterization/` |
 
 The originals came without design documents. Version 0.1.6 added best-effort design documents
 reconstructed from the original notebooks (their code, captions and details text) and from the

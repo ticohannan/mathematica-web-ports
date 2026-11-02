@@ -5,6 +5,9 @@
 //
 //   npm run new-app -- <dir> --title "Title of the Demonstration" --slug WolframSlug --authors "A. Author; B. Author"
 //                       [--3d] [--prefix XX] [--published 2017-12-14] [--root <repository folder>] [--dry-run]
+//   An original that is not a published Demonstration (a lecture or course notebook, v0.1.31): --source "<what it is>"
+//   instead of --slug, e.g. --source "ECE 6311 Lecture 18 notebook"; the credits name it and link to no Wolfram page
+//   (the licence stays CC BY-NC-SA 3.0, the norm of the author's Demonstrations).
 //   npm run new-app -- --remove <dir>        undo: delete the generated files and the registrations
 //
 // Writes demos/<dir>/{index.html, main.js, model.js, DESIGN.md}, tests/unit/<dir>.test.js and tests/e2e/<dir>.spec.js
@@ -63,14 +66,16 @@ if (flag('remove')) {
 }
 
 // ---------------------------------------------------------------------------------------------------- options
-const VALUED = new Set(['--title', '--slug', '--authors', '--prefix', '--published', '--root']); // options followed by a value
+const VALUED = new Set(['--title', '--slug', '--source', '--authors', '--prefix', '--published', '--root']); // options followed by a value
 const dir = args.find((a, i) => !a.startsWith('--') && (i === 0 || !VALUED.has(args[i - 1])));
 if (!dir || !/^[a-z][a-z0-9-]*$/.test(dir)) die('give the app folder name first, e.g. npm run new-app -- my-demo --title "…" --slug … --authors "…"');
 const title = opt('title') ?? die('--title "…" (the Demonstration\'s title)');
-const slug = opt('slug') ?? die('--slug WolframSlug (the last part of https://demonstrations.wolfram.com/<slug>/)');
+const source = opt('source'); // v0.1.31: an original that is not a published Demonstration
+const slug = opt('slug') ?? (source ? null : die('--slug WolframSlug (the last part of https://demonstrations.wolfram.com/<slug>/), or --source "<what the original is>"'));
+if (slug && source) die('give --slug (a Demonstration) or --source (another original), not both');
 const authors = (opt('authors') ?? die('--authors "A. Author; B. Author" (as on the Demonstration page)')).split(';').map((s) => s.trim()).filter(Boolean);
-if (/[|\n\r]/.test(title) || authors.some((a) => /[|\n\r]/.test(a))) die('the title and the authors may not contain "|" or line breaks (they go into Markdown tables)');
-if (!/^[A-Za-z0-9_-]+$/.test(slug)) die(`--slug must be the Demonstration's URL name (letters, digits, - and _), got "${slug}"`);
+if (/[|\n\r]/.test(title) || /[|\n\r]/.test(source ?? '') || authors.some((a) => /[|\n\r]/.test(a))) die('the title, the source and the authors may not contain "|" or line breaks (they go into Markdown tables)');
+if (slug && !/^[A-Za-z0-9_-]+$/.test(slug)) die(`--slug must be the Demonstration's URL name (letters, digits, - and _), got "${slug}"`);
 const is3D = flag('3d');
 const published = opt('published');
 if (fs.existsSync(rel(`demos/${dir}`))) die(`demos/${dir} exists already`);
@@ -83,19 +88,22 @@ if (!/^[A-Z][A-Z0-9]$/.test(prefix)) die(`--prefix must be two capitals/digits (
 if (used.has(prefix)) die(`prefix ${prefix} is used by another app`);
 const P = prefix;
 const authorText = authors.length === 1 ? authors[0] : `${authors.slice(0, -1).join(', ')} and ${authors[authors.length - 1]}`;
-const url = `https://demonstrations.wolfram.com/${slug}/`;
-const ccHeader = (c = '//') => `${c} SPDX-FileCopyrightText: ${new Date().getFullYear()} Tico Hannan\n${c} SPDX-FileCopyrightText: Original Wolfram Demonstration by ${authorText}\n${c} SPDX-License-Identifier: CC-BY-NC-SA-3.0`;
+const url = slug ? `https://demonstrations.wolfram.com/${slug}/` : null;
+const ORIGINAL = slug ? 'Original Wolfram Demonstration' : `Original (${source})`;
+const ccHeader = (c = '//') => `${c} SPDX-FileCopyrightText: ${new Date().getFullYear()} Tico Hannan\n${c} SPDX-FileCopyrightText: ${ORIGINAL} by ${authorText}\n${c} SPDX-License-Identifier: CC-BY-NC-SA-3.0`;
 
 // ---------------------------------------------------------------------------------------------------- the app
-const credits = `Adapted from <a href="${url}">"${esc(title)}"</a>
-      by ${esc(authorText)}, Wolfram Demonstrations Project${published ? ` (published ${published})` : ''}, licensed
-      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+const credits = (url ? `Adapted from <a href="${url}">"${esc(title)}"</a>
+      by ${esc(authorText)}, Wolfram Demonstrations Project${published ? ` (published ${published})` : ''}, licensed`
+  : `Adapted from "${esc(title)}" by ${esc(authorText)}, ${esc(source)} (not a published Demonstration; licensed as the
+      author's Demonstrations,`) + `
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>${url ? '' : ')'}.
       This JavaScript translation by Tico Hannan (© ${new Date().getFullYear()}; produced with an AI code-generation tool) is released under the
       same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
       Not affiliated with or endorsed by the original authors or Wolfram Research.`;
 write(`demos/${dir}/index.html`, `<!doctype html>
 <!-- SPDX-FileCopyrightText: ${new Date().getFullYear()} Tico Hannan
-     SPDX-FileCopyrightText: Original Wolfram Demonstration by ${authorText}
+     SPDX-FileCopyrightText: ${ORIGINAL} by ${authorText}
      SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
 <!-- generated by tools/new-app.mjs; replace the caption, the details and the port note with the Demonstration's own -->
 <html lang="en">
@@ -128,7 +136,7 @@ ${is3D ? '  <script type="importmap">{ "imports": { "three": "../../vendor/three
       <p>The Demonstration's details go here.</p>
     </details>
 
-    <p class="port-note">Browser port of a Wolfram Demonstration. All computation runs in your browser.</p>
+    <p class="port-note">Browser port of ${url ? 'a Wolfram Demonstration' : 'a Mathematica notebook'}. All computation runs in your browser.</p>
     <div class="credits" data-testid="credits">
       ${credits}
     </div>
@@ -316,7 +324,7 @@ write(`demos/${dir}/DESIGN.md`, `# Design document: ${title}
 | Code version: | ${VERSION} |
 | Document revision | 1 (${TODAY}) — generated by \`tools/new-app.mjs\` |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
-| Original | Wolfram Demonstrations Project, "${title}", contributed by ${authorText}${published ? `, published ${published}` : ''} (CC BY-NC-SA 3.0). <${url}> |
+| Original | ${url ? `Wolfram Demonstrations Project, "${title}", contributed by ${authorText}${published ? `, published ${published}` : ''} (CC BY-NC-SA 3.0). <${url}>` : `"${title}" by ${authorText}: ${source} (not a published Demonstration; CC BY-NC-SA 3.0, as the author's Demonstrations)`} |
 | Port files | \`model.js\` (one evaluation of the Manipulate body; pure), \`main.js\` (the Manipulate on \`shared/manipulate.js\`), \`index.html\` |
 | Role in the project | new demonstration |
 
@@ -399,7 +407,7 @@ text; Status: open, kept or corrected in vX.Y.Z (the tests check these words).
 `);
 
 // ---------------------------------------------------------------------------------------------------- checklist
-const nb = `_internal\\originals\\${slug}.nb`;
+const nb = `_internal\\originals\\${slug ?? dir}.nb`;
 write(`docs/checklists/${dir}.md`, `# Manual checks — ${title} (\`demos/${dir}/\`)
 
 Each item compares the original in Mathematica with the port, as an operator procedure (owner rule R-B); the general
@@ -472,7 +480,7 @@ function edit(file, fn) {
   written.push(file);
   if (!DRY) fs.writeFileSync(rel(file), after);
 }
-edit('tests/e2e/apps.js', (s) => s.replace(/\n\];\s*$/, () => `\n  { dir: '${dir}', prefix: '${P}', spec: '${dir}.spec.js', url: '/demos/${dir}/', slug: '${slug}', title: ${JSON.stringify(title)}, authors: ${JSON.stringify(authors)}, webgl: ${is3D}, notice: true },\n];\n`));
+edit('tests/e2e/apps.js', (s) => s.replace(/\n\];\s*$/, () => `\n  { dir: '${dir}', prefix: '${P}', spec: '${dir}.spec.js', url: '/demos/${dir}/', ${slug ? `slug: '${slug}'` : `source: ${JSON.stringify(source)}`}, title: ${JSON.stringify(title)}, authors: ${JSON.stringify(authors)}, webgl: ${is3D}, notice: true },\n];\n`));
 edit('index.html', (s) => {
   const card = `      <article class="card">
         <h2><a href="demos/${dir}/index.html" data-testid="demo-link-${dir}">${esc(title)}</a></h2>
@@ -497,7 +505,7 @@ edit('docs/DESIGN_PROCESS.md', (s) => appendAfterLast(s, /^\| .* \| \[`demos\/[a
 edit('LICENSE.md', (s) => {
   const files = `| \`demos/${dir}/**\`, \`tests/unit/${dir}.test.js\`, \`tests/e2e/${dir}.spec.js\`, \`docs/checklists/${dir}.md\` | CC BY-NC-SA 3.0 | the port of "${title}" (${authorText}), its tests and its manual checklist |`;
   const t = s.replace(/\n(\| `index\.html`, `README\.md`, `LICENSE\.md` \|)/, (_, row) => `\n${files}\n${row}`);
-  return appendAfterLast(t, /^\| `demos\/[a-z0-9-]+\/` \| "/, `| \`demos/${dir}/\` | "${title}" — <${url}>${published ? ` (published ${published})` : ''} | ${authorText} |`);
+  return appendAfterLast(t, /^\| `demos\/[a-z0-9-]+\/` \| "/, `| \`demos/${dir}/\` | "${title}" — ${url ? `<${url}>` : source}${published ? ` (published ${published})` : ''} | ${authorText} |`);
 });
 
 if (!DRY) {

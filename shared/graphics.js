@@ -227,7 +227,8 @@ export function cachedGraphics() {
 /**
  * Rotate[g, θ, {x, y}] (radians, counter-clockwise, about the point). Without the point, as in Mathematica, about the
  * centre of g's bounding box (Line, Polygon, Point, Arrow, Rectangle, Disk, Circle and lists of them; give the point
- * for anything else).
+ * for anything else). v0.1.31: a centred Text (no offset) turns about its own position, the centre of its box, as
+ * `Rotate[Text[expr, pos], θ]` does in Mathematica (an equation written along a line; line-parameterization).
  */
 export const Rotate = (g, angle, about) => prim('Rotate', { g, angle, about: about ?? boxCentre(g) });
 
@@ -244,7 +245,8 @@ export function bounds(g) {
       pts.push([q.c[0] - rx, q.c[1] - ry], [q.c[0] + rx, q.c[1] + ry]);
     }
     else if (q.head === 'Annotation') add(q.g);
-    else throw new Error(`graphics: give Rotate a centre point for ${q.head}`);
+    else if (q.head === 'Text' && q.anchor === 'middle' && !q.baseline) pts.push(q.pos); // its box is centred on pos (v0.1.31)
+    else throw new Error(`graphics: give Rotate a centre point for ${q.head}${q.head === 'Text' ? ' with an offset' : ''}`);
   };
   add(g);
   if (!pts.length) throw new Error('graphics: Rotate of nothing needs a centre point');

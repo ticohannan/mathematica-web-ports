@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.30 |
+| Code version: | 0.1.31 |
 | Document revision | 2 (2026-10-18) — `matrixRank` imported from `demos/common/svd3.js` (DH-family move) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Forward and Inverse Kinematics for Two-Link Arm", contributed by Aaron T. Becker and Lillian Lin, published 2016-06-20 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ForwardAndInverseKinematicsForTwoLinkArm/>. Readable source: [`docs/original-source/two-link-kinematics.txt`](../../docs/original-source/two-link-kinematics.txt); saved states: `tests/golden/two-link-kinematics.original-states.json` (`states[0]` = the output cell's saved state, `snapshots[1…4]` = the four snapshot cells' `Settings`, raw notebook lines 3580, 5050, 6589, 8110; `specs` = the initial settings (stored `"Variables"`); exact values kept as `{"wl": …}` next to their double); snapshots: `docs/original-snapshots/two-link-kinematics-1…4.png` (the notebook's snapshot cells 5 and 6 are the Wolfram icon placeholder, N-TK-06) |
@@ -351,6 +351,7 @@ Template: see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md).
 | 14 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default; motion planning, PA2 fix F-02) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.27) |
 | 15 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.28) |
 | 16 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
+| 17 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

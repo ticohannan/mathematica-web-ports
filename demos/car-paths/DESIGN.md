@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.30 |
+| Code version: | 0.1.31 |
 | Document revision | 5 (2026-10-17) — §11 Errors in the original (R-C); checklist items as operator procedures (R-B) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Shortest Path for Forward and Reverse Motion of a Car", contributed by Francesco Bernardini and Aaron T. Becker, published January 4, 2023 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ShortestPathForForwardAndReverseMotionOfACar/>. Readable source: [`docs/original-source/car-paths.txt`](../../docs/original-source/car-paths.txt); snapshots: `docs/original-snapshots/car-paths-*.png` |
@@ -243,6 +243,7 @@ Open proposal (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
 | 18 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default; motion planning, PA2 fix F-02) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.27) |
 | 19 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.28) |
 | 20 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
+| 21 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

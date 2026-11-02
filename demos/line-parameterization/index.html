@@ -1,0 +1,54 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original (ECE 6311 Lecture 18 notebook) by Aaron T. Becker
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Line Parameterization</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <script src="../../shared/requirements.js"></script>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Line Parameterization</div>
+    <h1 class="demo-title">Line Parameterization</h1>
+
+    <section class="manipulate" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="graphic" id="graphic" data-testid="graphic">
+        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser.</div></noscript>
+      </div>
+    </section>
+
+    <p class="caption">Every straight line in the plane can be written as <i>x</i>&nbsp;cos&nbsp;θ + <i>y</i>&nbsp;sin&nbsp;θ = ρ:
+      ρ ≥ 0 is its distance from the origin and θ the direction of its normal. Set ρ with the slider and θ with the dial.
+      <span class="port-text">(This caption is the port's: the lecture notebook has none.)</span></p>
+
+    <details class="details" data-testid="details">
+      <summary>Details</summary>
+      <p>The blue arrow is the normal from the origin to the line, of length ρ; the red arc is the angle θ from the
+        <i>x</i> axis, from 0 to 2π; the small square marks the right angle at the foot point, where the line (purple)
+        meets the normal. Lines through the origin (ρ = 0) have two parameters, θ and θ + π; every other line exactly one.
+        This normal form is the parameterization of lines used, for example, by the Hough transform.</p>
+      <p>Port notes: the dial snaps to multiples of π/32 and shows angles from −π to π, while the picture measures θ from
+        0 to 2π, as in the original (see the design document, E-LP-01).</p>
+    </details>
+
+    <p class="port-note">Browser port of a Mathematica notebook. All computation runs in your browser.</p>
+    <div class="credits" data-testid="credits">
+      Adapted from "Line Parameterization" by Aaron T. Becker, ECE 6311 Lecture 18 notebook (not a published Demonstration; licensed as the
+      author's Demonstrations,
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>).
+      This JavaScript translation by Tico Hannan (© 2026; produced with an AI code-generation tool) is released under the
+      same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

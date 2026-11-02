@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.30 |
+| Code version: | 0.1.31 |
 | Document revision | 1 (2026-10-17) — first implementation |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Breadth-First Search Robot Motion Planning", contributed by Aaron T. Becker, Benedict Isichei and Praveen Reddy Padala, published 2017-12-12 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/BreadthFirstSearchRobotMotionPlanning/>. Readable source: `docs/original-source/bfs-motion-planning.txt`; snapshots: `docs/original-snapshots/bfs-motion-planning-1.png` … `-4.png` (the extraction's pictures 5 and 6 are the Wolfram logo); stored output cell (initial settings = stored `"Variables"`, Body, Specifications, Initialization): raw definition notebook lines 2373, 2749, 2949, 3336; fixture `tests/golden/bfs-motion-planning.original-states.json` (`states[0]` live state; `snapshots[1…4]` the snapshot Settings, raw lines 4456, 5720, 7383, 13618; `specs` the initial settings) |
@@ -265,6 +265,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 14 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default; motion planning, PA2 fix F-02) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.27) |
 | 15 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.28) |
 | 16 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
+| 17 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

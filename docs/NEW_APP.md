@@ -14,7 +14,9 @@ in [DESIGN_PROCESS.md](DESIGN_PROCESS.md).
 npm run new-app -- my-demo --title "Title of the Demonstration" --slug WolframSlug --authors "A. Author; B. Author"
 ```
 
-Add `--3d` for a three-dimensional picture. The command writes a small working app (a point you drag on a circle, or a
+Add `--3d` for a three-dimensional picture. For an original that is not a published Demonstration (a lecture or
+course notebook the author gave you), give `--source "ECE 6311 Lecture 18 notebook"` instead of `--slug`: the credits
+name it and link to no Wolfram page. The command writes a small working app (a point you drag on a circle, or a
 3D scene), registers it on the landing page, in the browser-test app list, `LICENSE.md`, the README and
 `docs/DESIGN_PROCESS.md`, and all tests pass at once (`npm test`, `npm run test:e2e`). `--dry-run` lists what it would
 write; `npm run new-app -- --remove my-demo` takes it out again (only an app the generator made).
