@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.31 |
+| Code version: | 0.1.32 |
 | Document revision | 21 (2026-11-01) — P-MP-08 the original's full ⊕ panel (I-MP-09); 20 (2026-11-01) — P-MP-06/07 implemented after Ryan Hembree's T-2c/T-1b; his comparison and exploration on v0.1.28 recorded; I-MP-09; 19 (2026-10-29) — PA2 fixes from Ryan Hembree's checks of the original (P-MP-02…05); earlier: 6 (2026-10-17) polygon helpers, §11, operator procedures |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Motion Planning for Robot Path around Obstacles" by Shreyas Poyrekar, Aaron T. Becker and Arifa Sultana (CC BY-NC-SA 3.0); author notebook made with Mathematica 10.2. Readable source: [`docs/original-source/motion-planning.txt`](../../docs/original-source/motion-planning.txt) |
@@ -116,6 +116,7 @@ Columns: **Why** = the reason the feature exists; **Since** = first code version
 | A-MP-07 | Credit footer: original title, authors, licence, adaptation notice, links to this document and LICENSE.md | required by the CC BY-NC-SA 3.0 licence | v0.1.1 | e2e "attribution on" |
 | A-MP-08 | Standalone bundle: `npm run bundle -- motion-planning` writes this app alone, with exactly the files it loads, a root page, README and licence texts, to `dist/motion-planning/` (§6.1) | owner rule R-A: anyone can take this one app and host it elsewhere | v0.1.15 | e2e "bundle: motion-planning runs from its own folder"; unit "bundle contents listed in DESIGN.md match the collector" |
 | A-MP-09 | Start-up notice (DEC-22): `shared/requirements.js` (without `data-needs-webgl2`: a 2D/SVG app; watchdog: the page counts as started when `window.__demo.ready` is set) and a `<noscript>` notice in the picture; a clear message when the browser lacks JavaScript modules or the page does not start | a clear message instead of an empty or dead page; the last apps without it (owner decision 2026-10-23, DEC-37) | v0.1.21 | e2e "start-up notice when" |
+| A-MP-10 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | owner request 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
 
 ## 5. UI inventory
 
@@ -313,6 +314,7 @@ No open proposal (P-MP-02…08 implemented in v0.1.28–v0.1.30). Template for a
 | 20 | v0.1.29 | 2026-11-01 | PA2 fixes after Ryan Hembree's T-2c and T-1b: P-MP-06 one animation sweep in 5 s (F-MP-05, D-MP-05); P-MP-07 a press on empty space moves the nearest locator and a press-drag drags it (F-MP-06, D-MP-04 narrowed to the glyph look); his comparison with the original on macOS (K-MP-05: the original's lines depend on the platform) and random exploration (§7: the flagged scenes C1, C4, D1 are inherited) recorded; I-MP-09 (the original's reverse and speed buttons) added to §10, to consider after the bug fixes |
 | 21 | v0.1.30 | 2026-11-01 | P-MP-08 (owner approval 2026-11-01, Ryan Hembree's suggestion): the ⊕ panel is the original's full panel — value field, faster/slower, direction (→ ← ↔) — through the new shared slider option `fullPanel`; F-MP-05, D-MP-05 (approximations listed), I-MP-09 implemented |
 | 22 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
+| 23 | v0.1.32 | 2026-11-05 | A-MP-10: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

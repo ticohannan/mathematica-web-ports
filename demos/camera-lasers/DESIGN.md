@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.31 |
+| Code version: | 0.1.32 |
 | Document revision | 1 (2026-10-17) — first implementation |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Measuring Distance and Orientation Using Camera and Lasers", contributed by Shiva Shahrokhi and Aaron T. Becker, published 2016-06-29 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/MeasuringDistanceAndOrientationUsingCameraAndLasers/>. Readable source: [`docs/original-source/camera-lasers.txt`](../../docs/original-source/camera-lasers.txt); snapshots: `docs/original-snapshots/camera-lasers-1.png` … `camera-lasers-4.png` (pictures 5 and 6 of the extraction are the Wolfram logo placeholder); saved states (COMMON-DECISIONS §1): [`tests/golden/camera-lasers.original-states.json`](../../tests/golden/camera-lasers.original-states.json), written by `python3 tools/extract_state.py --snapshots`, with `states[0]` = the live output-cell state, `snapshots[1…4]` = the four snapshot cells' `"Settings"` (raw notebook lines 3870, 5398, 7079, 8753) and `specs`, exact values kept as `{"wl":"-1/5"}` |
@@ -84,6 +84,7 @@ lens distortion, 3D views.
 | A-CL-06 | Credit footer: original title, authors, licence, adaptation notice | required by CC BY-NC-SA 3.0 | v0.1.15 | e2e "attribution on" |
 | A-CL-07 | Start-up notice (watchdog, `<noscript>`) when the page cannot start (DEC-22) | a clear message instead of an empty page | v0.1.15 | e2e "start-up notice when" |
 | A-CL-08 | standalone bundle (owner rule R-A): `npm run bundle -- camera-lasers` builds `dist/camera-lasers/` with exactly the files the app imports, the licences, a generated README and a root `index.html` (§6, "Building and deploying this app alone") | anyone can host this one app elsewhere without the rest of the site (owner rule R-A, 2026-10-17) | v0.1.15 | e2e "bundle: camera-lasers runs from its own folder" |
+| A-CL-09 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | owner request 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
 
 ## 5. UI inventory
 
@@ -265,6 +266,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 15 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.28) |
 | 16 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
 | 17 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
+| 18 | v0.1.32 | 2026-11-05 | A-CL-09: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.31 |
+| Code version: | 0.1.32 |
 | Document revision | 1 (2026-10-18) — first implementation |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Manipulability Ellipsoid of a Robot Arm", contributed by Aaron T. Becker and Mary Burbage, published 2016-06-24 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ManipulabilityEllipsoidOfARobotArm/>. Readable source: [`docs/original-source/manipulability-ellipsoid.txt`](../../docs/original-source/manipulability-ellipsoid.txt); snapshots: `docs/original-snapshots/manipulability-ellipsoid-1.png` … `-4.png`; golden data: `tests/golden/manipulability-ellipsoid.original-states.json` (COMMON-DECISIONS §1, written by `tools/extract_state.py --snapshots`: `states[0]` = output-cell state, raw notebook line 1715; `snapshots[1…4]` = the snapshot cells' Settings, raw lines 5000, 7841, 10766, 14286; `specs` = the stored Specifications) |
@@ -83,6 +83,7 @@ lengths, numeric display of the singular values or of J, a continuous (unsnapped
 | A-ME-05 | Credit footer: original title, authors, licence, adaptation notice | required by CC BY-NC-SA 3.0 | v0.1.16 | e2e "attribution on" |
 | A-ME-06 | Start-up notice (watchdog, `<noscript>`) and WebGL 2 notice when the page cannot start (DEC-22) | a clear message instead of an empty page | v0.1.16 | e2e "start-up notice when"; e2e "WebGL 2 notice on" |
 | A-ME-07 | standalone bundle (owner rule R-A): `npm run bundle -- manipulability-ellipsoid` builds `dist/manipulability-ellipsoid/` with exactly the files the app imports, the licences, a generated README and a root `index.html` (§6, "Building and deploying this app alone") | anyone can host this one app elsewhere without the rest of the site (owner rule R-A, 2026-10-17) | v0.1.16 | e2e "bundle: manipulability-ellipsoid runs from its own folder"; unit "bundle contents listed in DESIGN.md match the collector" |
+| A-ME-08 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | owner request 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
 
 ## 5. UI inventory
 
@@ -296,6 +297,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 15 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.28) |
 | 16 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
 | 17 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
+| 18 | v0.1.32 | 2026-11-05 | A-ME-08: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

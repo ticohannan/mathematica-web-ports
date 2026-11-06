@@ -5,6 +5,7 @@
 # Binary files (never convert line endings)
 *.png binary
 *.jpg binary
+*.webp binary
 *.ico binary
 *.zip binary
 *.nb  binary

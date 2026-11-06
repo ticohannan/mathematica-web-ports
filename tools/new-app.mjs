@@ -54,7 +54,7 @@ if (flag('remove')) {
     const apps = read('tests/e2e/apps.js').split('\n').filter((l) => !l.includes(`dir: '${dir}'`)).join('\n');
     fs.writeFileSync(rel('tests/e2e/apps.js'), apps);
     let idx = read('index.html');
-    idx = idx.replace(new RegExp(`\\n\\s*<article class="card">\\s*<h2><a href="demos/${dir}/index.html"[\\s\\S]*?</article>`), '');
+    idx = idx.replace(new RegExp(`\\n\\s*<article class="card">\\s*(?:<a class="thumb" href="demos/${dir}/index.html"[^\\n]*</a>\\s*)?<h2><a href="demos/${dir}/index.html"[\\s\\S]*?</article>`), '');
     idx = idx.replace(/\n\n    <h2 class="section-title">New demonstrations<\/h2>\n    <div class="cards">\s*<\/div>\n/, '\n');
     fs.writeFileSync(rel('index.html'), idx);
     for (const f of ['README.md', 'docs/DESIGN_PROCESS.md', 'LICENSE.md']) {
@@ -312,6 +312,7 @@ features.push(
   [A(4), 'Breadcrumb link to all demos', 'navigation', 'inventory'],
   [A(5), 'Credits footer (authors, title, source, licence, adaptation notice)', 'required by the licence (CC BY-NC-SA 3.0 §4)', 'e2e "attribution on"'],
   [A(6), 'This app can be bundled and served alone (§6.1)', 'owner rule R-A', `e2e "bundle: ${dir} runs from its own folder"`],
+  [A(7), 'Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card\'s picture links to this app', 'owner request 2026-11-05', 'e2e "every card on the landing page has a thumbnail that loads"'],
 );
 const sliderRows = ctl.flatMap((n, i) => ['slider', 'value', 'plus', 'play', 'stepback', 'stepfwd'].map((k) => [`\`${k}-${n}\``, F(i + 1)]));
 const inventory = [...sliderRows, ...(is3D ? [['`scene-canvas`', `${F(3)}`]] : [['`locator-p`', F(2)]]),
@@ -483,6 +484,7 @@ function edit(file, fn) {
 edit('tests/e2e/apps.js', (s) => s.replace(/\n\];\s*$/, () => `\n  { dir: '${dir}', prefix: '${P}', spec: '${dir}.spec.js', url: '/demos/${dir}/', ${slug ? `slug: '${slug}'` : `source: ${JSON.stringify(source)}`}, title: ${JSON.stringify(title)}, authors: ${JSON.stringify(authors)}, webgl: ${is3D}, notice: true },\n];\n`));
 edit('index.html', (s) => {
   const card = `      <article class="card">
+        <a class="thumb" href="demos/${dir}/index.html" tabindex="-1" aria-hidden="true"><img src="demos/${dir}/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-${dir}"></a>
         <h2><a href="demos/${dir}/index.html" data-testid="demo-link-${dir}">${esc(title)}</a></h2>
         <p>${esc(title)}.</p>
         <span class="tag">${is3D ? '3D' : '2D'}</span><span class="tag">${is3D ? 'WebGL 2' : 'SVG'}</span>
@@ -513,4 +515,4 @@ if (!DRY) {
   catch (e) { console.warn(`new-app: the bundle table of demos/${dir}/DESIGN.md is still empty; run node tools/bundle-app.mjs ${dir} --update-docs\n${e.stderr ?? e.message}`); }
 }
 console.log(`${DRY ? 'would write' : 'wrote'} (prefix ${P}):\n  ${written.join('\n  ')}`);
-if (!DRY) console.log(`\nNext: npm test, then the browser tests:\n  npx playwright test --project=chromium tests/e2e/${dir}.spec.js tests/e2e/site.spec.js tests/e2e/bundle.spec.js\nOpen http://127.0.0.1:8090/demos/${dir}/ after npm run serve. Undo with: npm run new-app -- --remove ${dir}`);
+if (!DRY) console.log(`\nNext: npm test, then the browser tests:\n  npx playwright test --project=chromium tests/e2e/${dir}.spec.js tests/e2e/site.spec.js tests/e2e/bundle.spec.js\nLanding-page thumbnail (once the picture is right): npm run thumbnails -- ${dir}\nOpen http://127.0.0.1:8090/demos/${dir}/ after npm run serve. Undo with: npm run new-app -- --remove ${dir}`);

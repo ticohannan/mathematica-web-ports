@@ -12,6 +12,9 @@
     .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-top: 14px; }
     .card { border: 1px solid var(--line); border-radius: 6px; padding: 14px; background: var(--panel); }
     .card h2 { font-size: 1.05rem; margin: 0 0 6px; }
+    .card .thumb { display: block; margin: -4px -4px 10px; }
+    .card .thumb img { display: block; width: 100%; height: auto; aspect-ratio: 480 / 300; background: #fff; border: 1px solid var(--line); border-radius: 4px; }
+    .card .thumb:hover img { border-color: #888; }
     .card p { margin: 0 0 8px; font-size: 0.9rem; color: var(--muted); }
     .section-title { font-size: 1.1rem; margin: 22px 0 0; }
     .tag { display: inline-block; font-size: 0.72rem; border: 1px solid var(--line); border-radius: 10px; padding: 1px 8px; margin-right: 4px; background: #fff; }
@@ -26,16 +29,19 @@
     <h2 class="section-title">Motion planning and rotations</h2>
     <div class="cards">
       <article class="card">
+        <a class="thumb" href="demos/motion-planning/index.html" tabindex="-1" aria-hidden="true"><img src="demos/motion-planning/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-motion-planning"></a>
         <h2><a href="demos/motion-planning/index.html" data-testid="demo-link-motion">Motion Planning for Robot Path around Obstacles</a></h2>
         <p>Polygonal robot, four polygonal obstacles, Minkowski-sum configuration space, visibility graph and A* shortest path.</p>
         <span class="tag">2D</span><span class="tag">SVG</span><span class="tag">drag locators</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/three-parametrizations/index.html" tabindex="-1" aria-hidden="true"><img src="demos/three-parametrizations/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-three-parametrizations"></a>
         <h2><a href="demos/three-parametrizations/index.html" data-testid="demo-link-three">Three Parametrizations of Rotations</a></h2>
         <p>Euler ZYZ angles, axis/angle and roll-pitch-yaw describing the same rotation of a teapot.</p>
         <span class="tag">3D</span><span class="tag">WebGL</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/euler-angles/index.html" tabindex="-1" aria-hidden="true"><img src="demos/euler-angles/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-euler-angles"></a>
         <h2><a href="demos/euler-angles/index.html" data-testid="demo-link-euler">Euler Angles: Precession, Nutation, and Spin</a></h2>
         <p>A gyroscope with nested gimbals illustrating a 3-2-3 Euler rotation.</p>
         <span class="tag">3D</span><span class="tag">WebGL</span>
@@ -45,36 +51,43 @@
     <h2 class="section-title">Further robotics demonstrations</h2>
     <div class="cards">
       <article class="card">
+        <a class="thumb" href="demos/prm-seven-link/index.html" tabindex="-1" aria-hidden="true"><img src="demos/prm-seven-link/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-prm-seven-link"></a>
         <h2><a href="demos/prm-seven-link/index.html" data-testid="demo-link-prm-seven-link">Probabilistic Roadmap Method with Seven-Link Articulated Robot</a></h2>
         <p>Steer a seven-link arm through obstacles to a goal configuration with as few collisions as possible.</p>
         <span class="tag">2D</span><span class="tag">SVG</span><span class="tag">drag locators</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/car-paths/index.html" tabindex="-1" aria-hidden="true"><img src="demos/car-paths/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-car-paths"></a>
         <h2><a href="demos/car-paths/index.html" data-testid="demo-link-car-paths">Shortest Path for Forward and Reverse Motion of a Car</a></h2>
         <p>Reeds–Shepp and Dubins shortest paths between two car poses with a minimum turning radius.</p>
         <span class="tag">2D</span><span class="tag">SVG</span><span class="tag">drag locators</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/unit-balls/index.html" tabindex="-1" aria-hidden="true"><img src="demos/unit-balls/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-unit-balls"></a>
         <h2><a href="demos/unit-balls/index.html" data-testid="demo-link-unit-balls">Unit Balls for Different p-Norms in 2D and 3D</a></h2>
         <p>The set of points within distance 1 of the origin for p-norms from ¼ to ∞.</p>
         <span class="tag">3D</span><span class="tag">WebGL 2</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/art-gallery/index.html" tabindex="-1" aria-hidden="true"><img src="demos/art-gallery/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-art-gallery"></a>
         <h2><a href="demos/art-gallery/index.html" data-testid="demo-link-art-gallery">Art Gallery Problem</a></h2>
         <p>Visibility regions of up to eight guards in three polygonal galleries.</p>
         <span class="tag">2D</span><span class="tag">SVG</span><span class="tag">drag locators</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/prm/index.html" tabindex="-1" aria-hidden="true"><img src="demos/prm/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-prm"></a>
         <h2><a href="demos/prm/index.html" data-testid="demo-link-prm">Probabilistic Roadmap Method</a></h2>
         <p>Random samples, a roadmap and A* search on a toroidal two-angle configuration space.</p>
         <span class="tag">2D</span><span class="tag">SVG</span><span class="tag">random</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/prm-robot-arm/index.html" tabindex="-1" aria-hidden="true"><img src="demos/prm-robot-arm/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-prm-robot-arm"></a>
         <h2><a href="demos/prm-robot-arm/index.html" data-testid="demo-link-prm-robot-arm">Probabilistic Roadmap Method for Robot Arm</a></h2>
         <p>A PRM for a two-link spatial arm avoiding two spheres; configuration space and 3D workspace.</p>
         <span class="tag">2D + 3D</span><span class="tag">SVG + WebGL 2</span><span class="tag">random</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/robot-singularities/index.html" tabindex="-1" aria-hidden="true"><img src="demos/robot-singularities/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-robot-singularities"></a>
         <h2><a href="demos/robot-singularities/index.html" data-testid="demo-link-robot-singularities">Robot Singularities in Three-Link Manipulators</a></h2>
         <p>Singular configurations and the manipulability ellipsoid of sixteen three-joint robot types.</p>
         <span class="tag">3D</span><span class="tag">WebGL 2</span>
@@ -84,51 +97,61 @@
     <h2 class="section-title">Further robotics demonstrations — batch A</h2>
     <div class="cards">
       <article class="card">
+        <a class="thumb" href="demos/two-link-kinematics/index.html" tabindex="-1" aria-hidden="true"><img src="demos/two-link-kinematics/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-two-link-kinematics"></a>
         <h2><a href="demos/two-link-kinematics/index.html" data-testid="demo-link-two-link-kinematics">Forward and Inverse Kinematics for Two-Link Arm</a></h2>
         <p>Joint angles, inverse kinematics with elbow up or down, the Jacobian, the manipulability ellipse and joint velocities of a two-link arm.</p>
         <span class="tag">2D</span><span class="tag">SVG</span><span class="tag">drag locators</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/robot-motion-obstacles/index.html" tabindex="-1" aria-hidden="true"><img src="demos/robot-motion-obstacles/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-robot-motion-obstacles"></a>
         <h2><a href="demos/robot-motion-obstacles/index.html" data-testid="demo-link-robot-motion-obstacles">Robot Motion with Obstacles</a></h2>
         <p>A two-link arm and two obstacles; the configurations that collide, as a grid on the torus of the two joint angles.</p>
         <span class="tag">2D</span><span class="tag">SVG</span><span class="tag">drag locators</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/bfs-motion-planning/index.html" tabindex="-1" aria-hidden="true"><img src="demos/bfs-motion-planning/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-bfs-motion-planning"></a>
         <h2><a href="demos/bfs-motion-planning/index.html" data-testid="demo-link-bfs-motion-planning">Breadth-First Search Robot Motion Planning</a></h2>
         <p>The same arm: a grid search from a start to a goal configuration, the cost map and the shortest path, and the arm moving along it.</p>
         <span class="tag">2D</span><span class="tag">SVG</span><span class="tag">drag locators</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/distance-norms/index.html" tabindex="-1" aria-hidden="true"><img src="demos/distance-norms/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-distance-norms"></a>
         <h2><a href="demos/distance-norms/index.html" data-testid="demo-link-distance-norms">Distance Norms in Robot Workspace and Phase Space</a></h2>
         <p>Points within distance d of a two-link arm for the L1, L2, L3 and L∞ norms, measured in the workspace or in joint space.</p>
         <span class="tag">2D</span><span class="tag">SVG</span><span class="tag">dials</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/rrt/index.html" tabindex="-1" aria-hidden="true"><img src="demos/rrt/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-rrt"></a>
         <h2><a href="demos/rrt/index.html" data-testid="demo-link-rrt">Rapidly Exploring Random Tree (RRT) and RRT*</a></h2>
         <p>Grow a random tree, an RRT or an RRT* among obstacles until a path reaches the goal disk.</p>
         <span class="tag">2D</span><span class="tag">SVG</span><span class="tag">random</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/camera-lasers/index.html" tabindex="-1" aria-hidden="true"><img src="demos/camera-lasers/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-camera-lasers"></a>
         <h2><a href="demos/camera-lasers/index.html" data-testid="demo-link-camera-lasers">Measuring Distance and Orientation Using Camera and Lasers</a></h2>
         <p>A pinhole camera and two lasers measure the distance and the angle of an object: top view and camera image.</p>
         <span class="tag">2D</span><span class="tag">SVG</span><span class="tag">drag locator + dial</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/dubins-path/index.html" tabindex="-1" aria-hidden="true"><img src="demos/dubins-path/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-dubins-path"></a>
         <h2><a href="demos/dubins-path/index.html" data-testid="demo-link-dubins-path">Shortest Path for the Dubins Car</a></h2>
         <p>The six Dubins words between a fixed start and a goal pose, the shortest one drawn thick, a car driving along it.</p>
         <span class="tag">2D</span><span class="tag">SVG</span><span class="tag">drag locators</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/dubins-isochrons/index.html" tabindex="-1" aria-hidden="true"><img src="demos/dubins-isochrons/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-dubins-isochrons"></a>
         <h2><a href="demos/dubins-isochrons/index.html" data-testid="demo-link-dubins-isochrons">Isochrons for a Dubins Car</a></h2>
         <p>The positions a Dubins car can reach at time t (isochrons) or within time t, and the RS, LS, RL, LR paths to them.</p>
         <span class="tag">2D</span><span class="tag">SVG</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/minkowski-sum/index.html" tabindex="-1" aria-hidden="true"><img src="demos/minkowski-sum/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-minkowski-sum"></a>
         <h2><a href="demos/minkowski-sum/index.html" data-testid="demo-link-minkowski-sum">Minkowski Sum of Convex Robot and Obstacle</a></h2>
         <p>Convex hulls, sorted edge normals and the Minkowski sum of a robot and an obstacle; the robot slides around it.</p>
         <span class="tag">2D</span><span class="tag">SVG</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/four-bar-linkage/index.html" tabindex="-1" aria-hidden="true"><img src="demos/four-bar-linkage/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-four-bar-linkage"></a>
         <h2><a href="demos/four-bar-linkage/index.html" data-testid="demo-link-four-bar-linkage">Configuration Space for Four-Bar Linkage</a></h2>
         <p>The configuration-space curve of a four-bar linkage; drag along it and watch the linkage move.</p>
         <span class="tag">2D</span><span class="tag">SVG</span>
@@ -138,31 +161,37 @@
     <h2 class="section-title">Further robotics demonstrations — batch B (3D)</h2>
     <div class="cards">
       <article class="card">
+        <a class="thumb" href="demos/dh-parameters/index.html" tabindex="-1" aria-hidden="true"><img src="demos/dh-parameters/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-dh-parameters"></a>
         <h2><a href="demos/dh-parameters/index.html" data-testid="demo-link-dh-parameters">Denavit-Hartenberg Parameters for a Three-Link Robot</a></h2>
         <p>All four DH parameters of three revolute or prismatic joints on sliders; the frames, links and gripper follow.</p>
         <span class="tag">3D</span><span class="tag">WebGL</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/torus-chart/index.html" tabindex="-1" aria-hidden="true"><img src="demos/torus-chart/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-torus-chart"></a>
         <h2><a href="demos/torus-chart/index.html" data-testid="demo-link-torus-chart">Chart for a Torus</a></h2>
         <p>A torus morphs into a cylinder and a square; two dials set a point (θ, ϕ) and show where the chart tears.</p>
         <span class="tag">3D</span><span class="tag">WebGL 2</span><span class="tag">dials</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/manipulability-ellipsoid/index.html" tabindex="-1" aria-hidden="true"><img src="demos/manipulability-ellipsoid/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-manipulability-ellipsoid"></a>
         <h2><a href="demos/manipulability-ellipsoid/index.html" data-testid="demo-link-manipulability-ellipsoid">Manipulability Ellipsoid of a Robot Arm</a></h2>
         <p>Three dials set an elbow arm in steps of π/32; the manipulability μ and the velocity ellipsoid collapse at singular poses.</p>
         <span class="tag">3D</span><span class="tag">WebGL 2</span><span class="tag">dials</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/arm-configurations/index.html" tabindex="-1" aria-hidden="true"><img src="demos/arm-configurations/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-arm-configurations"></a>
         <h2><a href="demos/arm-configurations/index.html" data-testid="demo-link-arm-configurations">Common Robot Arm Configurations</a></h2>
         <p>Nine serial robot arms from their DH tables (planar elbow to CNC); move each joint, open the gripper and read H.</p>
         <span class="tag">3D</span><span class="tag">WebGL 2</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/manipulator-workspaces/index.html" tabindex="-1" aria-hidden="true"><img src="demos/manipulator-workspaces/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-manipulator-workspaces"></a>
         <h2><a href="demos/manipulator-workspaces/index.html" data-testid="demo-link-manipulator-workspaces">Robot Manipulator Workspaces</a></h2>
         <p>Fourteen three-joint robots; range sliders for each joint and the workspace as nine translucent parametric surfaces.</p>
         <span class="tag">3D</span><span class="tag">WebGL 2</span><span class="tag">interval sliders</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/prm-3d/index.html" tabindex="-1" aria-hidden="true"><img src="demos/prm-3d/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-prm-3d"></a>
         <h2><a href="demos/prm-3d/index.html" data-testid="demo-link-prm-3d">Probabilistic Roadmap Method in 3D</a></h2>
         <p>A probabilistic roadmap for a three-joint arm among two movable spheres: the robot in 3D and its samples, roadmap, path and obstacle volumes in the 3D phase space.</p>
         <span class="tag">3D</span><span class="tag">WebGL 2</span><span class="tag">PRM</span>
@@ -172,76 +201,91 @@
     <h2 class="section-title">New demonstrations</h2>
     <div class="cards">
       <article class="card">
+        <a class="thumb" href="demos/line-parameterization/index.html" tabindex="-1" aria-hidden="true"><img src="demos/line-parameterization/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-line-parameterization"></a>
         <h2><a href="demos/line-parameterization/index.html" data-testid="demo-link-line-parameterization">Line Parameterization</a></h2>
         <p>The normal form of a line, <i>x</i>&nbsp;cos&nbsp;θ + <i>y</i>&nbsp;sin&nbsp;θ = ρ: set the distance ρ and the normal's direction θ (from a lecture notebook).</p>
         <span class="tag">2D</span><span class="tag">SVG</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/packing-spheres-into-a-thin-cylinder/index.html" tabindex="-1" aria-hidden="true"><img src="demos/packing-spheres-into-a-thin-cylinder/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-packing-spheres-into-a-thin-cylinder"></a>
         <h2><a href="demos/packing-spheres-into-a-thin-cylinder/index.html" data-testid="demo-link-packing-spheres-into-a-thin-cylinder">Packing Spheres into a Thin Cylinder</a></h2>
         <p>Identical spheres pushed into a tube: the densest of eight known arrangements for each tube radius, their compression ratios in a plot, and the packing in 3D with its contacts.</p>
         <span class="tag">3D</span><span class="tag">WebGL 2</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/camera-apparent-velocity/index.html" tabindex="-1" aria-hidden="true"><img src="demos/camera-apparent-velocity/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-camera-apparent-velocity"></a>
         <h2><a href="demos/camera-apparent-velocity/index.html" data-testid="demo-link-camera-apparent-velocity">Maximizing Apparent Velocity in a Camera's Frame</a></h2>
         <p>A drone that can move a distance r from its start: the point on the sphere that moves fastest in the camera's image, in 3D and in the camera's 2D view.</p>
         <span class="tag">3D</span><span class="tag">WebGL 2</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/homicidal-chauffeur/index.html" tabindex="-1" aria-hidden="true"><img src="demos/homicidal-chauffeur/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-homicidal-chauffeur"></a>
         <h2><a href="demos/homicidal-chauffeur/index.html" data-testid="demo-link-homicidal-chauffeur">The Homicidal Chauffeur Problem</a></h2>
         <p>A car with a minimum turning radius chases a slower but nimble pedestrian. Set up the start, then steer the pedestrian in real time and escape as long as you can.</p>
         <span class="tag">2D</span><span class="tag">SVG</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/probabilistic-motion/index.html" tabindex="-1" aria-hidden="true"><img src="demos/probabilistic-motion/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-probabilistic-motion"></a>
         <h2><a href="demos/probabilistic-motion/index.html" data-testid="demo-link-probabilistic-motion">Probabilistic Models for Robot Motion</a></h2>
         <p>Four probabilistic motion models of a mobile robot (velocity and odometry, density and samples): change the command and the noise parameters and see where it may end up.</p>
         <span class="tag">2D</span><span class="tag">SVG</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/dubins-reachability-3d/index.html" tabindex="-1" aria-hidden="true"><img src="demos/dubins-reachability-3d/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-dubins-reachability-3d"></a>
         <h2><a href="demos/dubins-reachability-3d/index.html" data-testid="demo-link-dubins-reachability-3d">3D Reachability Set for a Dubins Car</a></h2>
         <p>The set of positions and headings a Dubins car can reach in time t, bounded by six surfaces of optimal paths; a 2D projection with an animated car or the full 3D set.</p>
         <span class="tag">3D</span><span class="tag">WebGL 2</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/drone-reachable-set/index.html" tabindex="-1" aria-hidden="true"><img src="demos/drone-reachable-set/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-drone-reachable-set"></a>
         <h2><a href="demos/drone-reachable-set/index.html" data-testid="demo-link-drone-reachable-set">Reachable Set for a Drone</a></h2>
         <p>All positions a drone can reach in time T̂ for given thrust limits, and the path of one drone set by two switching times in a locator pad.</p>
         <span class="tag">2D</span><span class="tag">SVG</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/wall-friction/index.html" tabindex="-1" aria-hidden="true"><img src="demos/wall-friction/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-wall-friction"></a>
         <h2><a href="demos/wall-friction/index.html" data-testid="demo-link-wall-friction">Moving Two Particles with Shared Control Inputs Using Wall Friction</a></h2>
         <p>Two particles get the same control input; friction at the walls breaks the symmetry. Drag starts and goals, play the shortest plan, or see it in configuration space.</p>
         <span class="tag">2D</span><span class="tag">SVG</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/visibility-region/index.html" tabindex="-1" aria-hidden="true"><img src="demos/visibility-region/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-visibility-region"></a>
         <h2><a href="demos/visibility-region/index.html" data-testid="demo-link-visibility-region">Visibility Region of a Polygon</a></h2>
         <p>Drag a point inside a polygon and see the region visible from it; step through the angular sweep that builds the region vertex by vertex.</p>
         <span class="tag">2D</span><span class="tag">SVG</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/steering-rc-cars/index.html" tabindex="-1" aria-hidden="true"><img src="demos/steering-rc-cars/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-steering-rc-cars"></a>
         <h2><a href="demos/steering-rc-cars/index.html" data-testid="demo-link-steering-rc-cars">Steering Multiple Radio Control (RC) Cars with One Joystick</a></h2>
         <p>One joystick steers n cars at once: each drives the same path turned by its heading. Gray disks show where two cars can collide; drive car 1 around them in real time.</p>
         <span class="tag">2D</span><span class="tag">SVG</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/swarm-circle/index.html" tabindex="-1" aria-hidden="true"><img src="demos/swarm-circle/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-swarm-circle"></a>
         <h2><a href="demos/swarm-circle/index.html" data-testid="demo-link-swarm-circle">Distribution of a Swarm of Robots in a Circular Workplace under Gravity</a></h2>
         <p>A swarm under gravity fills a circular segment of a disk workspace: its mean, covariance ellipse and four plots of the statistics against the gravity direction.</p>
         <span class="tag">2D</span><span class="tag">SVG</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/segment-distance/index.html" tabindex="-1" aria-hidden="true"><img src="demos/segment-distance/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-segment-distance"></a>
         <h2><a href="demos/segment-distance/index.html" data-testid="demo-link-segment-distance">Shortest Distance between Two Line Segments</a></h2>
         <p>The shortest distance between two segments in 3D, with the closest points, perpendicular marks, the parallel and overlapping cases and the two planes.</p>
         <span class="tag">3D</span><span class="tag">WebGL 2</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/ensemble-control/index.html" tabindex="-1" aria-hidden="true"><img src="demos/ensemble-control/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-ensemble-control"></a>
         <h2><a href="demos/ensemble-control/index.html" data-testid="demo-link-ensemble-control">Ensemble Control of Robots with Unicycle Kinematics</a></h2>
         <p>Many unicycle robots get the same forward command; turn them all by random amounts and steer the swarm towards its goals, with the mean squared error plot.</p>
         <span class="tag">2D</span><span class="tag">SVG</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/sensor-fusion/index.html" tabindex="-1" aria-hidden="true"><img src="demos/sensor-fusion/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-sensor-fusion"></a>
         <h2><a href="demos/sensor-fusion/index.html" data-testid="demo-link-sensor-fusion">Sensor Fusion with Normally Distributed Noise</a></h2>
         <p>Up to four noisy measurements as normal densities and their fused (Kalman) estimate; drag the measurements along the axis and change their variances.</p>
         <span class="tag">2D</span><span class="tag">SVG</span>
       </article>
       <article class="card">
+        <a class="thumb" href="demos/graham-scan/index.html" tabindex="-1" aria-hidden="true"><img src="demos/graham-scan/thumbnail.webp" alt="" width="480" height="300" loading="lazy" data-testid="thumb-graham-scan"></a>
         <h2><a href="demos/graham-scan/index.html" data-testid="demo-link-graham-scan">Graham Scan to Find the Convex Hull of a Set of Points in 2D</a></h2>
         <p>Step through the Graham scan: points sorted by angle around the lowest one, the hull stack and the edges a right turn drops; drag the points or make new ones.</p>
         <span class="tag">2D</span><span class="tag">SVG</span>

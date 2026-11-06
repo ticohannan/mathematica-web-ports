@@ -140,7 +140,8 @@ short guide for Mathematica users (Manipulate, Graphics and list functions side 
 
 ```
 index.html                 landing page
-demos/<demo>/              index.html, main.js (page/rendering), pure model file, DESIGN.md
+demos/<demo>/              index.html, main.js (page/rendering), pure model file, DESIGN.md, thumbnail.webp
+                           (its landing-page picture, generated: npm run thumbnails [-- <dir> …])
 demos/common/              code shared by several apps (derived from the originals; owner and users in each file)
 shared/                    mma.js (Mathematica semantics), mma-exact.js (bit-exact Det/Norm/ArcTan),
                            linalg.js, ui.js (Manipulate-style controls), three-helpers.js, style.css;
@@ -154,7 +155,7 @@ tests/golden/              fixtures extracted from the ORIGINAL notebooks (saved
 tests/e2e/                 Playwright browser tests
 tests/support/             independent reference implementation used as a test oracle
 tools/                     serve.mjs (local server), bundle-app.mjs (one app as its own folder, see above), explore-motion.mjs, compare-with-original.mjs (+ wolfram/,
-                           lib/, data/), notebook extraction scripts, publish-tested.mjs; run-harness.mjs and
+                           lib/, data/), notebook extraction scripts, publish-tested.mjs, make-thumbnails.mjs; run-harness.mjs and
                            harness/ (Mathematica harness: wolfram/manipulate-harness.wls runs an original's stored
                            Manipulate code headless for scripted control changes; scenario extractor and checkers)
 tests/harness/             Mathematica-harness scenario files (inputs; results become tests/golden/<dir>.harness.json)

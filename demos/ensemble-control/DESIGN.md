@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.31 |
+| Code version: | 0.1.32 |
 | Document revision | 2 (2026-10-25) |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Ensemble Control of Robots with Unicycle Kinematics", contributed by Aaron Becker, published 2014-10-03 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/EnsembleControlOfRobotsWithUnicycleKinematics/> Source as text: [`docs/original-source/ensemble-control.txt`](../../docs/original-source/ensemble-control.txt); snapshots `docs/original-snapshots/ensemble-control-1…4.png`; saved states `tests/golden/ensemble-control.original-states.json` |
@@ -52,6 +52,7 @@ Out of scope: anything the original does not do; port additions are the A- featu
 | A-EC-05 | Credits footer (authors, title, source, licence, adaptation notice) | required by the licence (CC BY-NC-SA 3.0 §4) | v0.1.23 | e2e "attribution on" |
 | A-EC-06 | This app can be bundled and served alone (§6.1) | owner rule R-A | v0.1.23 | e2e "bundle: ensemble-control runs from its own folder" |
 | A-EC-07 | `?seed=N` in the address makes new robots and turns reproducible (seeded random source) | repeatable examples and tests | v0.1.23 | e2e "the number of robots slider makes n new robots"; unit "a new n (nold ≠ n)" |
+| A-EC-08 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | owner request 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
 
 ## 5. UI inventory
 
@@ -148,6 +149,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 8 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (DOM parity with v0.1.28) |
 | 9 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
 | 10 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
+| 11 | v0.1.32 | 2026-11-05 | A-EC-08: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

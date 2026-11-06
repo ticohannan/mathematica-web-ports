@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.31 |
+| Code version: | 0.1.32 |
 | Document revision | 2 (2026-10-27) |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "3D Reachability Set for a Dubins Car", contributed by Mohammad Sultan and Aaron T. Becker, published 2020-12-16 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/3DReachabilitySetForADubinsCar/> Source as text: [`docs/original-source/dubins-reachability-3d.txt`](../../docs/original-source/dubins-reachability-3d.txt); snapshots `docs/original-snapshots/dubins-reachability-3d-1…4.png`; saved states `tests/golden/dubins-reachability-3d.original-states.json` (`states[0]` the live state, `specs` the Manipulate's initial values — the same here —, `snapshots` the four snapshots' settings; each also stores the computed plot `plotReach`) |
@@ -60,6 +60,7 @@ state. Out of scope: anything the original does not do; port additions are the A
 | A-D3-04 | Breadcrumb link to all demos | navigation | v0.1.25 | inventory |
 | A-D3-05 | Credits footer (authors, title, source, licence, adaptation notice) | required by the licence (CC BY-NC-SA 3.0 §4) | v0.1.25 | e2e "attribution on" |
 | A-D3-06 | This app can be bundled and served alone (§6.1) | owner rule R-A | v0.1.25 | e2e "bundle: dubins-reachability-3d runs from its own folder" |
+| A-D3-07 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | owner request 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
 
 ## 5. UI inventory
 
@@ -242,6 +243,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 5 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (DOM parity with v0.1.28) |
 | 6 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
 | 7 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
+| 8 | v0.1.32 | 2026-11-05 | A-D3-07: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

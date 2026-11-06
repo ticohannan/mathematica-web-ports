@@ -29,6 +29,10 @@ Then edit three files:
 | `demos/my-demo/main.js` | one `Manipulate({ body, controls, graphics })` call | the control specs and options of `Manipulate` |
 | `demos/my-demo/DESIGN.md` | what the app does and how each feature is checked (the tests read it) | — |
 
+When the picture is right, `npm run thumbnails -- my-demo` makes the app's landing-page thumbnail
+(`demos/my-demo/thumbnail.webp`, a screenshot of its graphics at the initial settings); the landing-page browser test
+fails until it exists. Run it again whenever the initial picture changes.
+
 `index.html` (title, caption, credits) needs only text changes; the unit test (`tests/unit/my-demo.test.js`) and the
 browser test (`tests/e2e/my-demo.spec.js`) are starting points.
 

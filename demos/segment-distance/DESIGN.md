@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.31 |
+| Code version: | 0.1.32 |
 | Document revision | 2 (2026-10-25) |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Shortest Distance between Two Line Segments", contributed by Aaron T. Becker, Victor M. Baez and Nikhil Navkar, published 2023-05-26 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ShortestDistanceBetweenTwoLineSegments/> Source as text: [`docs/original-source/segment-distance.txt`](../../docs/original-source/segment-distance.txt); snapshots `docs/original-snapshots/segment-distance-1…4.png`; saved states `tests/golden/segment-distance.original-states.json` |
@@ -53,6 +53,7 @@ not do; port additions are the A- features.
 | A-SD-05 | Credits footer (authors, title, source, licence, adaptation notice) | required by the licence (CC BY-NC-SA 3.0 §4) | v0.1.23 | e2e "attribution on" |
 | A-SD-06 | This app can be bundled and served alone (§6.1) | owner rule R-A | v0.1.23 | e2e "bundle: segment-distance runs from its own folder" |
 | A-SD-07 | Hidden number fields of the 2D sliders (`value-…-x`, `value-…-y`, layer default; hidden by the page as Appearance -> Tiny has none) | the layer's 2D slider | v0.1.23 | e2e "has the controls of the original" |
+| A-SD-08 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | owner request 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
 
 ## 5. UI inventory
 
@@ -157,6 +158,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 8 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (DOM parity with v0.1.28) |
 | 9 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
 | 10 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
+| 11 | v0.1.32 | 2026-11-05 | A-SD-08: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.31 |
+| Code version: | 0.1.32 |
 | Document revision | 3 (2026-10-26) |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Steering Multiple Radio Control (RC) Cars with One Joystick", contributed by Aaron T. Becker and Javier Garcia, published 2018-03-14 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/SteeringMultipleRadioControlRCCarsWithOneJoystick/> Source as text: [`docs/original-source/steering-rc-cars.txt`](../../docs/original-source/steering-rc-cars.txt); snapshots `docs/original-snapshots/steering-rc-cars-1…5.png`; saved states `tests/golden/steering-rc-cars.original-states.json` (`states[0]` the live state, `specs` the Manipulate's initial values, `snapshots` the five snapshots' settings) |
@@ -61,6 +61,7 @@ A- features.
 | A-SR-05 | Credits footer (authors, title, source, licence, adaptation notice) | required by the licence (CC BY-NC-SA 3.0 §4) | v0.1.24 | e2e "attribution on" |
 | A-SR-06 | This app can be bundled and served alone (§6.1) | owner rule R-A | v0.1.24 | e2e "bundle: steering-rc-cars runs from its own folder" |
 | A-SR-07 | `?seed=N` in the address makes new random robots reproducible (seeded random source) | repeatable examples and tests | v0.1.24 | e2e "the n slider makes new random cars (seeded)"; unit "a new n (n ≠ nold, setup)" |
+| A-SR-08 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | owner request 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
 
 ## 5. UI inventory
 
@@ -190,6 +191,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 7 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (DOM parity with v0.1.28) |
 | 8 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
 | 9 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
+| 10 | v0.1.32 | 2026-11-05 | A-SR-08: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

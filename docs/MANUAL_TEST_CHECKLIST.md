@@ -30,7 +30,8 @@ published site `https://ticohannan.github.io/mathematica-web-ports/`); the apps 
 "All demos" (top left) to come back.
 **Record** — the number of cards in each group; any card that does not open its demo or a page that looks broken.
 **Expected** — twenty-six cards in four groups (three, then seven "further robotics demonstrations", then ten in "batch A", then six in "batch B (3D)"); each link opens its
-demo; no broken page.
+demo; no broken page. Since v0.1.32 every card shows a picture of its app above the title; clicking the picture opens
+the same demo.
 
 ### M-GEN-02  Error console
 **Steps** — press F12, open the Console tab; open each of the twenty-six demos (`demos/<dir>/`) and use every control once

@@ -16,6 +16,19 @@ test('landing page links to all demos and they load', async ({ page }) => {
   }
 });
 
+// v0.1.32: every card shows its app's picture, demos/<dir>/thumbnail.webp (made by `npm run thumbnails`), linking to the app
+test('every card on the landing page has a thumbnail that loads', async ({ page }) => {
+  await page.goto('/index.html');
+  await expect(page.locator('.card .thumb img')).toHaveCount(APPS.length);
+  for (const p of APPS) {
+    const img = page.getByTestId(`thumb-${p.dir}`);
+    await expect(img, `no thumbnail on the card of ${p.dir}`).toHaveAttribute('src', `demos/${p.dir}/thumbnail.webp`);
+    await expect(img.locator('xpath=..')).toHaveAttribute('href', `demos/${p.dir}/index.html`);
+    await img.scrollIntoViewIfNeeded(); // loading="lazy"
+    await expect.poll(() => img.evaluate((e) => e.complete && e.naturalWidth), `demos/${p.dir}/thumbnail.webp (run: npm run thumbnails -- ${p.dir})`).toBe(480);
+  }
+});
+
 test('private folders are not served by the local server', async ({ page }) => {
   const res = await page.request.get('/_internal/RULES_AND_GUIDANCE.md');
   expect(res.status()).toBe(403);

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.31 |
+| Code version: | 0.1.32 |
 | Document revision | 2 (2026-10-27) |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Moving Two Particles with Shared Control Inputs Using Wall Friction", contributed by Shiva Shahrokhi and Aaron T. Becker, published 2015-11-23 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/MovingTwoParticlesWithSharedControlInputsUsingWallFriction/> Source as text: [`docs/original-source/wall-friction.txt`](../../docs/original-source/wall-friction.txt); snapshots `docs/original-snapshots/wall-friction-1…4.png`; saved states `tests/golden/wall-friction.original-states.json` (`states[0]` the live state, `specs` the Manipulate's initial values, `snapshots` the four snapshots' settings) |
@@ -67,6 +67,7 @@ is ported as it is: where it never ends (E-WF-02) the port gives up (D-WF-02).
 | A-WF-06 | This app can be bundled and served alone (§6.1) | owner rule R-A | v0.1.26 | e2e "bundle: wall-friction runs from its own folder" |
 | A-WF-07 | The invisible locators take the keyboard focus and move by 0.05 per arrow key (the layer's locator pane; K-WF-01) | use without a mouse | v0.1.26 | e2e "an invisible locator takes the keyboard focus and moves 0.05 per arrow key" |
 | A-WF-08 | A search that has not ended after 300 expansions is given up and the picture shows `$Aborted` until a point moves (D-WF-02) | the page never hangs | v0.1.26 | e2e "aligned points whose spacing must grow"; unit "aligned pairs whose spacing must grow" |
+| A-WF-09 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | owner request 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
 
 ## 5. UI inventory
 
@@ -210,6 +211,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 5 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (DOM parity with v0.1.28) |
 | 6 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
 | 7 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
+| 8 | v0.1.32 | 2026-11-05 | A-WF-09: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

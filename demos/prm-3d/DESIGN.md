@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.31 |
+| Code version: | 0.1.32 |
 | Document revision | 1 (2026-10-18) — first implementation |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Probabilistic Roadmap Method in 3D", contributed by Aaron T. Becker and Yitong Lu, published 2020-02-26 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ProbabilisticRoadmapMethodIn3D/>. Readable source: [`docs/original-source/prm-3d.txt`](../../docs/original-source/prm-3d.txt); snapshots: `docs/original-snapshots/prm-3d-1.png` … `-5.png` (files 6 and 7 of the extraction are 96 × 100 placeholder icons); golden data: `tests/golden/prm-3d.original-states.json` (written with `tools/extract_state.py --snapshots` from the raw notebook, COMMON-DECISIONS §1: `states[0]` = the live state, `snapshots[1…5]` = the five snapshot cells' Settings — complete states with samples, roadmaps and, in 3 and 4, the RegionPlot3D volumes; raw notebook lines 10908, 12996, 16776, 21566, 24913 — and `specs` = the initial settings, equal to the live state up to the option form of `freeConfigSpacea/b`; Greek names and exact 1/2 kept, N-P3-01) |
@@ -93,6 +93,7 @@ C-obstacle surfaces, animation of "progress", other planners.
 | A-P3-06 | Start-up notice (watchdog, `<noscript>`) and WebGL 2 notice (DEC-22; both pictures are 3D, so the page needs WebGL 2) | a clear message instead of an empty page | v0.1.16 | e2e "start-up notice when"; e2e "WebGL 2 notice on" |
 | A-P3-07 | Both views redraw after a WebGL context loss and restore | robustness | v0.1.16 | e2e "the views redraw after a WebGL context loss" |
 | A-P3-08 | standalone bundle (owner rule R-A): `npm run bundle -- prm-3d` builds `dist/prm-3d/` with exactly the files the app imports, the licences, a generated README and a root `index.html` (§6, "Building and deploying this app alone") | anyone can host this one app elsewhere without the rest of the site (owner rule R-A, 2026-10-17) | v0.1.16 | e2e "bundle: prm-3d runs from its own folder" |
+| A-P3-09 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | owner request 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
 
 ## 5. UI inventory
 
@@ -308,6 +309,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 15 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.28) |
 | 16 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
 | 17 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
+| 18 | v0.1.32 | 2026-11-05 | A-P3-09: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

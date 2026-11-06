@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.31 |
+| Code version: | 0.1.32 |
 | Document revision | 1 (2026-10-18) — first implementation |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Robot Manipulator Workspaces", contributed by Aaron T. Becker, Benedict Isichei, Muhammad Sultan and Maruthi S. Chemudupati, published 2017-12-13 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/RobotManipulatorWorkspaces/>. Readable source: [`docs/original-source/manipulator-workspaces.txt`](../../docs/original-source/manipulator-workspaces.txt); snapshots: `docs/original-snapshots/manipulator-workspaces-1.png` … `-8.png` (the notebook's snapshot cells 9 and 10 are empty); golden data: `tests/golden/manipulator-workspaces.original-states.json` (written with `tools/extract_state.py --snapshots` from the raw notebook, COMMON-DECISIONS §1: `states[0]` = the live output-cell state, `snapshots[1…8]` = the snapshot cells' Settings — each with its robot, ranges and the original's `workspace3D`, raw notebook lines 8885, 11436, 13864, 15630, 17367, 19228, 21886, 24150 — and `specs` = the initial settings) |
@@ -81,6 +81,7 @@ spherical wrists of Robot Singularities, inverse kinematics.
 | A-MW-06 | Start-up notice (watchdog, `<noscript>`) and WebGL 2 notice when the page cannot start (DEC-22) | a clear message instead of an empty page | v0.1.16 | e2e "start-up notice when"; e2e "WebGL 2 notice on" |
 | A-MW-07 | The view redraws itself after a WebGL context loss and restore (shared viewer) | robustness | v0.1.16 | e2e "the view redraws after a WebGL context loss" |
 | A-MW-08 | standalone bundle (owner rule R-A): `npm run bundle -- manipulator-workspaces` builds `dist/manipulator-workspaces/` with exactly the files the app imports, the licences, a generated README and a root `index.html` (§6, "Building and deploying this app alone") | anyone can host this one app elsewhere without the rest of the site (owner rule R-A, 2026-10-17) | v0.1.16 | e2e "bundle: manipulator-workspaces runs from its own folder" |
+| A-MW-09 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | owner request 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
 
 ## 5. UI inventory
 
@@ -262,6 +263,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 14 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.28) |
 | 15 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
 | 16 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
+| 17 | v0.1.32 | 2026-11-05 | A-MW-09: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

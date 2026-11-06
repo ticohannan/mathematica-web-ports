@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.31 |
+| Code version: | 0.1.32 |
 | Document revision | 2 (2026-10-26) |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "The Homicidal Chauffeur Problem", contributed by Aaron T. Becker and Javier Garcia, published 2018-01-22 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/TheHomicidalChauffeurProblem/> Source as text: [`docs/original-source/homicidal-chauffeur.txt`](../../docs/original-source/homicidal-chauffeur.txt); snapshots `docs/original-snapshots/homicidal-chauffeur-1…5.png`; saved states `tests/golden/homicidal-chauffeur.original-states.json` (`states[0]` the live state, `specs` the Manipulate's initial values — the same state here, `snapshots` the five snapshots' settings) |
@@ -58,6 +58,7 @@ A- features.
 | A-HC-04 | Breadcrumb link to all demos | navigation | v0.1.25 | inventory |
 | A-HC-05 | Credits footer (authors, title, source, licence, adaptation notice) | required by the licence (CC BY-NC-SA 3.0 §4) | v0.1.25 | e2e "attribution on" |
 | A-HC-06 | This app can be bundled and served alone (§6.1) | owner rule R-A | v0.1.25 | e2e "bundle: homicidal-chauffeur runs from its own folder" |
+| A-HC-07 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | owner request 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
 
 ## 5. UI inventory
 
@@ -199,6 +200,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 5 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (DOM parity with v0.1.28) |
 | 6 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
 | 7 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
+| 8 | v0.1.32 | 2026-11-05 | A-HC-07: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

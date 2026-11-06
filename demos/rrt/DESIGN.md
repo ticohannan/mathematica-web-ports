@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.31 |
+| Code version: | 0.1.32 |
 | Document revision | 3 (2026-10-18) — harness run 2 evaluated (15.0.1 numerics model, K-RT-02/06 resolved, P-RT-01 proposed) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Rapidly Exploring Random Tree (RRT) and RRT*", contributed by Aaron T. Becker and Li Huang, published 2018-01-16 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/RapidlyExploringRandomTreeRRTAndRRT/>. Readable source: [`docs/original-source/rrt.txt`](../../docs/original-source/rrt.txt); snapshots: `docs/original-snapshots/rrt-1.png` … `rrt-6.png` (pictures 7 and 8 of the extraction are the Wolfram logo placeholder, not snapshots); saved states (COMMON-DECISIONS §1): [`tests/golden/rrt.original-states.json`](../../tests/golden/rrt.original-states.json), written by `python3 tools/extract_state.py --snapshots`, with `states[0]` = the live output-cell state, `snapshots[1…6]` = the six snapshot cells' `"Settings"` (raw notebook lines 3360, 4786, 9538, 16507, 21317, 24564) and `specs` = the initial settings (see §6, *Golden data*) |
@@ -91,6 +91,7 @@ obstacle editor, saving/loading trees in the UI, path smoothing, a real-time ani
 | A-RT-06 | Start-up notice (watchdog, `<noscript>`) when the page cannot start (DEC-22) | a clear message instead of an empty page | v0.1.15 | e2e "start-up notice when" |
 | A-RT-07 | URL parameter `?seed=N` (whole number): reproducible trees (default: unseeded, like the original) | reproducible runs for testing and teaching | v0.1.15 | e2e "?seed=N gives reproducible trees (port addition)"; e2e "pressing 10 grows the tree to 11 nodes (seeded)" |
 | A-RT-08 | standalone bundle (owner rule R-A): `npm run bundle -- rrt` builds `dist/rrt/` with exactly the files the app imports, the licences, a generated README and a root `index.html` (§6, "Building and deploying this app alone") | anyone can host this one app elsewhere without the rest of the site (owner rule R-A, 2026-10-17) | v0.1.15 | e2e "bundle: rrt runs from its own folder" |
+| A-RT-09 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | owner request 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
 
 ## 5. UI inventory
 
@@ -284,6 +285,7 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 | 15 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.28) |
 | 16 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
 | 17 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
+| 18 | v0.1.32 | 2026-11-05 | A-RT-09: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 
