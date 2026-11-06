@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.32 |
+| Code version: | 0.1.33 |
 | Document revision | 3 (2026-10-18) — harness run 2 evaluated (15.0.1 numerics model, K-RT-02/06 resolved, P-RT-01 proposed) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Rapidly Exploring Random Tree (RRT) and RRT*", contributed by Aaron T. Becker and Li Huang, published 2018-01-16 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/RapidlyExploringRandomTreeRRTAndRRT/>. Readable source: [`docs/original-source/rrt.txt`](../../docs/original-source/rrt.txt); snapshots: `docs/original-snapshots/rrt-1.png` … `rrt-6.png` (pictures 7 and 8 of the extraction are the Wolfram logo placeholder, not snapshots); saved states (COMMON-DECISIONS §1): [`tests/golden/rrt.original-states.json`](../../tests/golden/rrt.original-states.json), written by `python3 tools/extract_state.py --snapshots`, with `states[0]` = the live output-cell state, `snapshots[1…6]` = the six snapshot cells' `"Settings"` (raw notebook lines 3360, 4786, 9538, 16507, 21317, 24564) and `specs` = the initial settings (see §6, *Golden data*) |
@@ -286,6 +286,7 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 | 16 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
 | 17 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
 | 18 | v0.1.32 | 2026-11-05 | A-RT-09: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
+| 19 | v0.1.33 | 2026-11-06 | version number (v0.1.33: four new apps; opt-in shared additions S-1 … S-7, unused by this app, and the locators of a Locator list made after the first evaluation); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

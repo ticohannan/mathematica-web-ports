@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.32 |
+| Code version: | 0.1.33 |
 | Document revision | 2 (2026-10-25) |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Ensemble Control of Robots with Unicycle Kinematics", contributed by Aaron Becker, published 2014-10-03 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/EnsembleControlOfRobotsWithUnicycleKinematics/> Source as text: [`docs/original-source/ensemble-control.txt`](../../docs/original-source/ensemble-control.txt); snapshots `docs/original-snapshots/ensemble-control-1…4.png`; saved states `tests/golden/ensemble-control.original-states.json` |
@@ -150,6 +150,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 9 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
 | 10 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
 | 11 | v0.1.32 | 2026-11-05 | A-EC-08: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
+| 12 | v0.1.33 | 2026-11-06 | version number (v0.1.33: four new apps; opt-in shared additions S-1 … S-7, unused by this app, and the locators of a Locator list made after the first evaluation); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

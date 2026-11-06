@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.32 |
+| Code version: | 0.1.33 |
 | Document revision | 1 (2026-10-17) — first implementation |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Measuring Distance and Orientation Using Camera and Lasers", contributed by Shiva Shahrokhi and Aaron T. Becker, published 2016-06-29 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/MeasuringDistanceAndOrientationUsingCameraAndLasers/>. Readable source: [`docs/original-source/camera-lasers.txt`](../../docs/original-source/camera-lasers.txt); snapshots: `docs/original-snapshots/camera-lasers-1.png` … `camera-lasers-4.png` (pictures 5 and 6 of the extraction are the Wolfram logo placeholder); saved states (COMMON-DECISIONS §1): [`tests/golden/camera-lasers.original-states.json`](../../tests/golden/camera-lasers.original-states.json), written by `python3 tools/extract_state.py --snapshots`, with `states[0]` = the live output-cell state, `snapshots[1…4]` = the four snapshot cells' `"Settings"` (raw notebook lines 3870, 5398, 7079, 8753) and `specs`, exact values kept as `{"wl":"-1/5"}` |
@@ -267,6 +267,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 16 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
 | 17 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
 | 18 | v0.1.32 | 2026-11-05 | A-CL-09: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
+| 19 | v0.1.33 | 2026-11-06 | version number (v0.1.33: four new apps; opt-in shared additions S-1 … S-7, unused by this app, and the locators of a Locator list made after the first evaluation); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

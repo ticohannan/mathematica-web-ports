@@ -2,7 +2,7 @@
 
 **Live site:** <https://ticohannan.github.io/mathematica-web-ports/> · **Source:** <https://github.com/ticohannan/mathematica-web-ports>
 
-Forty Mathematica `Manipulate` demonstrations re-implemented as a **static website**:
+Forty-four Mathematica `Manipulate` demonstrations (and one lecture notebook) re-implemented as a **static website**:
 plain HTML + JavaScript (ES modules, no build step), SVG for 2D, three.js/WebGL for 3D.
 
 | Demo | Folder | Rendering | Interaction |
@@ -48,6 +48,10 @@ plain HTML + JavaScript (ES modules, no build step), SVG for 2D, three.js/WebGL 
 | Maximizing Apparent Velocity in a Camera's Frame | `demos/camera-apparent-velocity/` | WebGL 2 | camera x, y, z sliders, sphere radius r, show sphere / 2D view / drone, animate; rotate the 3D picture |
 | Packing Spheres into a Thin Cylinder | `demos/packing-spheres-into-a-thin-cylinder/` | SVG + WebGL 2 | tube radius / sphere radius, stacking plane angle, sphere opacity and spheres sliders; rotate the 3D picture |
 | Line Parameterization | `demos/line-parameterization/` | SVG | ρ slider and θ dial (multiples of π/32); the line x cos θ + y sin θ = ρ (a lecture notebook, not a Demonstration) |
+| Lowpass Filter Design by Pole Placement | `demos/lowpass-filter-design/` | SVG | type setter bar, number of poles n and real part α sliders; in "manual", drag poles and Alt/⌘-click to add or delete them |
+| Synthesis with Even and Odd Functions | `demos/even-odd-synthesis/` | SVG | signal setter, time offset T slider; the signal and its even and odd parts |
+| Time Shifting and Time Scaling in Signal Processing | `demos/time-shifting-scaling/` | SVG | signal setter bar, b, a and T sliders (b and T coupled), display checkboxes for x, y, z, w |
+| Defects in an Optical Fiber | `demos/optical-fiber-defects/` | SVG | defect height and width, two light angles; drag the two light sources |
 
 The apps came in groups: the first three (motion planning, rotations, Euler angles); seven more from the
 seven-link PRM to robot singularities, added in v0.1.12 as further proofs of concept (developed first in a separate,

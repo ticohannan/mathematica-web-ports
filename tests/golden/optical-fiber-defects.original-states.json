@@ -1,0 +1,27 @@
+{
+ "source": "DefectsInAnOpticalFiber.nb",
+ "note": "Manipulate states saved in the ORIGINAL notebook, computed by the original Mathematica code: states[0] = the live state of the output cell, specs = the initial settings (the Manipulate's stored \"Variables\"), snapshots = the Settings stored with each snapshot cell. Extracted with tools/extract_state.py --snapshots. Golden parity fixture (CC BY-NC-SA 3.0, as the original).",
+ "format": "Numbers: a JSON integer is an exact Wolfram integer (|x| <= 2^53 - 1; larger ones are {\"wl\": digits}); a JSON number written with a decimal point or an exponent is a machine real (the shortest text that reads back as the identical double); any other exact number (Rational, rational multiple of Pi, arbitrary-precision real, an unevaluated Sin[...], Infinity) is {\"wl\": a Wolfram-readable form (not necessarily InputForm: compare exact values by value), \"n\": its double} - \"n\" is the correctly rounded double for a Rational or rational multiple of Pi, Python's double evaluation otherwise, and absent for Infinity. Symbols are {\"sym\": name}, other expressions {\"head\": name, \"args\": [...]}; variable names without context and $$, Greek letters as Unicode. packedTypes maps the JSON pointer of a decoded packed array that was stored with a narrower element type (CompressedData tag b) to that type. snapshots[\"k\"] belongs to the picture docs/original-snapshots/<dir>-k.png (cells in file order).",
+ "specs": {
+  "h": 0.405,
+  "p": [[-1.8,{"wl":"1/2","n":0.5}],[-3.8,{"wl":"1/2","n":0.5}]],
+  "w": 0.78,
+  "θ1": {"wl":"-Pi/16","n":-0.19634954084936207},
+  "θ2": {"wl":"-Pi/16","n":-0.19634954084936207}
+ },
+ "states": [
+  {"h":0.405,"p":[[-1.8,{"wl":"1/2","n":0.5}],[-3.8,{"wl":"1/2","n":0.5}]],"w":0.78,"θ1":{"wl":"-Pi/16","n":-0.19634954084936207},"θ2":{"wl":"-Pi/16","n":-0.19634954084936207}}
+ ],
+ "snapshots": {
+  "1": {"h":0.405,"w":0.78,"θ1":{"wl":"-Pi/16","n":-0.19634954084936207},"θ2":{"wl":"-Pi/16","n":-0.19634954084936207},"p":[[-1.8,{"wl":"1/2","n":0.5}],[-3.8,{"wl":"1/2","n":0.5}]]},
+  "2": {"h":0.405,"w":0.78,"θ1":-0.5152211951887262,"θ2":-0.5403539364174441,"p":[[-4.73,1.5],[-4.9,0.18000000000000016]]},
+  "3": {"h":0.405,"w":0.78,"θ1":-0.5152211951887262,"θ2":-0.7916813487046279,"p":[[-4.25,0.6099999999999999],[-4.695,0.16000000000000014]]},
+  "4": {"h":0.405,"w":0.78,"θ1":-0.6157521601035993,"θ2":-0.6031857894892401,"p":[[-4.285,0.6800000000000002],[-4.680000000000001,0.3999999999999999]]}
+ },
+ "snapshotCellIds": {
+  "1": 485338474,
+  "2": 2022198718,
+  "3": 1017656004,
+  "4": 1184694520
+ }
+}

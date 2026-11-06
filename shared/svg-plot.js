@@ -78,7 +78,7 @@ export function createPlot(container, opts) {
     'stroke-opacity': st.strokeOpacity ?? st.opacity,
     'stroke-width': st.stroke === undefined ? undefined : strokeWidth(st.thickness),
     'stroke-dasharray': st.dash ? st.dash.map((d) => d * unitsPerPx).join(' ') : undefined,
-    'stroke-linejoin': 'round', 'stroke-linecap': st.cap ?? 'round',
+    'stroke-linejoin': st.join ?? 'round', 'stroke-linecap': st.cap ?? 'round',
     'data-testid': st.testid,
   });
   const ptsAttr = (pts) => pts.map((p) => `${p[0]},${p[1]}`).join(' ');
@@ -181,9 +181,12 @@ export const darkLocatorGlyph = (plot) => locatorGlyph(plot, { color: [0, 0, 0],
  *   throttle: 'raf' (default: at most one onMove per animation frame, with the latest position) | 'none'
  *   pointer (default true): false = no pointer picking on the picture at all (keyboard moves stay)
  *   testid(name) (default `locator-${name}`): the data-testid of each locator
+ *   autoCreate (v0.1.33, Mathematica's LocatorAutoCreate -> True): { add([x, y]), remove(name) } — an Alt-click (⌘-click on
+ *     a Mac) within hitPx of a locator calls remove(name), elsewhere add(point); the caller changes its list of points
+ *     (and setNames follows). Without it Alt/⌘-clicks are ordinary presses.
  * Returns { redraw(), nodes, dragging() }.
  */
-export function addLocators(plot, { names, get, onMove, onStart, onEnd, appearance, hitPx = 12, keyStep = 0.05, throttle = 'raf', pickAnywhere = false, describe = (n) => `${n} locator; arrow keys move it`, layerName = 'locators', pointer = true, testid = (n) => `locator-${n}` }) {
+export function addLocators(plot, { names, get, onMove, onStart, onEnd, appearance, hitPx = 12, keyStep = 0.05, throttle = 'raf', pickAnywhere = false, describe = (n) => `${n} locator; arrow keys move it`, layerName = 'locators', pointer = true, testid = (n) => `locator-${n}`, autoCreate = null }) {
   const g = plot.layer(layerName);
   const nodes = {};
   names = [...names]; // setNames (v0.1.23) changes the list
@@ -223,6 +226,11 @@ export function addLocators(plot, { names, get, onMove, onStart, onEnd, appearan
     if (e.button !== 0) return;
     const p = plot.clientToWorld(e.clientX, e.clientY);
     const [n, d] = nearestTo(p);
+    if (autoCreate && (e.altKey || e.metaKey)) { // LocatorAutoCreate: Alt/⌘-click deletes the locator under it, else adds one
+      e.preventDefault();
+      if (n && d <= hitPx * plot.displayScale()) autoCreate.remove(n); else autoCreate.add(p);
+      return;
+    }
     if (!n) return;
     const grabbed = d <= hitPx * plot.displayScale();
     if (!grabbed && !pickAnywhere) return;

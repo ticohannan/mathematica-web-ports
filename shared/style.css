@@ -90,6 +90,8 @@ svg.svg-plot .locator:focus-visible .locator-glyph circle, svg.svg-plot .locator
 .ctl-button { font: inherit; font-size: 0.85rem; border: 1px solid var(--line); background: var(--btn); border-radius: 4px; padding: 4px 10px; cursor: pointer; }
 .ctl-button:active { background: var(--btn-on); }
 .ctl-check { display: flex; align-items: center; gap: 6px; }
+.ctl-checkbar { display: flex; flex-direction: row; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 4px 14px; }
+.ctl-checkbar-item { display: inline-flex; align-items: center; gap: 4px; }
 /* a port-addition checkbox beside "Initial settings" (prm-seven-link's "mute beep") */
 .panel-tools .ctl-check { flex-direction: row; gap: 4px; align-self: center; }
 .ctl-popup { font: inherit; font-size: 0.85rem; padding: 2px 4px; }

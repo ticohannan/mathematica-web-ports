@@ -1,0 +1,26 @@
+{
+ "source": "LowpassFilterDesignByPolePlacement.nb",
+ "note": "Manipulate states saved in the ORIGINAL notebook, computed by the original Mathematica code: states[0] = the live state of the output cell, specs = the initial settings (the Manipulate's stored \"Variables\"), snapshots = the Settings stored with each snapshot cell. Extracted with tools/extract_state.py --snapshots. Golden parity fixture (CC BY-NC-SA 3.0, as the original).",
+ "format": "Numbers: a JSON integer is an exact Wolfram integer (|x| <= 2^53 - 1; larger ones are {\"wl\": digits}); a JSON number written with a decimal point or an exponent is a machine real (the shortest text that reads back as the identical double); any other exact number (Rational, rational multiple of Pi, arbitrary-precision real, an unevaluated Sin[...], Infinity) is {\"wl\": a Wolfram-readable form (not necessarily InputForm: compare exact values by value), \"n\": its double} - \"n\" is the correctly rounded double for a Rational or rational multiple of Pi, Python's double evaluation otherwise, and absent for Infinity. Symbols are {\"sym\": name}, other expressions {\"head\": name, \"args\": [...]}; variable names without context and $$, Greek letters as Unicode. packedTypes maps the JSON pointer of a decoded packed array that was stored with a narrower element type (CompressedData tag b) to that type. snapshots[\"k\"] belongs to the picture docs/original-snapshots/<dir>-k.png (cells in file order).",
+ "specs": {
+  "n": 3,
+  "p": [[-1,-1],[-1,0],[-1,1]],
+  "type": "vertical line",
+  "α": -1
+ },
+ "states": [
+  {"n":3,"p":[[-1,-1],[-1,0],[-1,1]],"type":"vertical line","α":-1}
+ ],
+ "snapshots": {
+  "1": {"type":["vertical line","triangle","Butterworth","elliptical","manual"],"n":3,"α":-1,"p":[[-1,-1],[-1,0],[-1,1]]},
+  "2": {"type":"triangle","n":16,"α":-1,"p":[[-0.050000000000000044,-1],[-0.17666666666666664,{"wl":"-13/15","n":-0.8666666666666667}],[-0.30333333333333345,{"wl":"-11/15","n":-0.7333333333333333}],[-0.43000000000000005,{"wl":"-3/5","n":-0.6}],[-0.5566666666666666,{"wl":"-7/15","n":-0.4666666666666667}],[-0.6833333333333333,{"wl":"-1/3","n":-0.3333333333333333}],[-0.81,{"wl":"-1/5","n":-0.2}],[-0.9366666666666666,{"wl":"-1/15","n":-0.06666666666666667}],[-0.9366666666666666,{"wl":"1/15","n":0.06666666666666667}],[-0.81,{"wl":"1/5","n":0.2}],[-0.6833333333333333,{"wl":"1/3","n":0.3333333333333333}],[-0.5566666666666666,{"wl":"7/15","n":0.4666666666666667}],[-0.43000000000000005,{"wl":"3/5","n":0.6}],[-0.30333333333333345,{"wl":"11/15","n":0.7333333333333333}],[-0.17666666666666664,{"wl":"13/15","n":0.8666666666666667}],[-0.050000000000000044,1]]},
+  "3": {"type":"elliptical","n":12,"α":-0.053780000000000036,"p":[[-0.007019698617594378,{"wl":"Cos[Pi/24]","n":0.9914448613738104}],[-0.02058071499259454,{"wl":"Cos[Pi/8]","n":0.9238795325112867}],[-0.03273918965208902,{"wl":"Cos[5*Pi/24]","n":0.7933533402912352}],[-0.042666542640862656,{"wl":"Sin[5*Pi/24]","n":0.6087614290087207}],[-0.04968624125845703,{"wl":"Sin[Pi/8]","n":0.3826834323650898}],[-0.05331990464468356,{"wl":"Sin[Pi/24]","n":0.1305261922200516}],[-0.05331990464468356,{"wl":"-(Sin[Pi/24])","n":-0.1305261922200516}],[-0.04968624125845703,{"wl":"-(Sin[Pi/8])","n":-0.3826834323650898}],[-0.042666542640862656,{"wl":"-(Sin[5*Pi/24])","n":-0.6087614290087207}],[-0.03273918965208902,{"wl":"-(Cos[5*Pi/24])","n":-0.7933533402912352}],[-0.02058071499259454,{"wl":"-(Cos[Pi/8])","n":-0.9238795325112867}],[-0.007019698617594378,{"wl":"-(Cos[Pi/24])","n":-0.9914448613738104}]]},
+  "4": {"type":"manual","n":6,"α":-0.9659258262890683,"p":[[-0.29100000000000015,0.48],[-0.7071067811865476,0.7071067811865476],[-0.9659258262890683,0.25881904510252074],[-0.5450000000000002,-0.2500000000000001],[-0.32899999999999996,-1.0150000000000001],[-0.383,-0.4700000000000001]]}
+ },
+ "snapshotCellIds": {
+  "1": 376085447,
+  "2": 1565327277,
+  "3": 1780868789,
+  "4": 1582148484
+ }
+}

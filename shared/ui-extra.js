@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Tico Hannan
 // SPDX-License-Identifier: MIT
-// shared/ui-extra.js — further Manipulate-style controls (Button, Checkbox, PopupMenu, vertical
+// shared/ui-extra.js — further Manipulate-style controls (Button, Checkbox, CheckboxBar (v0.1.33), PopupMenu, vertical
 // slider, Setter used as radio row) for the second set of ports. Kept separate from shared/ui.js so
 // that file stays unchanged for the first three apps. Every element gets a stable data-testid.
 import { el, fmt } from './ui.js';
@@ -24,6 +24,39 @@ export function addCheckbox(controls, { name, label, value = false, onChange, pa
   const row = el('label', { class: 'ctl ctl-check', 'data-testid': `ctl-${name}` }, input, el('span', {}, label));
   (parent ?? controls.root).append(row);
   const api = { row, get: () => input.checked, set: (v) => { input.checked = !!v; }, setEnabled: (on) => { input.disabled = !on; row.classList.toggle('is-disabled', !on); } };
+  controls.controls.set(name, api);
+  return api;
+}
+
+/**
+ * CheckboxBar {{x, {v1, …}, "label"}, {v1 -> "label1", …}, ControlType -> CheckboxBar} (v0.1.33): one checkbox per choice;
+ * the value is the list of the checked values: a newly checked value is appended, an unchecked one removed (the order
+ * in which they were checked, as Mathematica's CheckboxBar is believed to keep it; set(v) takes v's order). data-testid "checkbar-<name>-<i>" (i from 1);
+ * an option's html (typeset label) replaces its text.
+ */
+export function addCheckboxBar(controls, { name, label = '', options, value = [], onChange, parent }) {
+  const boxes = options.map((o, i) => {
+    const input = el('input', { type: 'checkbox', 'data-testid': `checkbar-${name}-${i + 1}` });
+    const span = el('span', {}, o.label ?? String(o.value));
+    if (o.html && o.html !== o.label) span.innerHTML = o.html;
+    return { input, item: el('label', { class: 'ctl-checkbar-item' }, input, span), value: o.value };
+  });
+  let order = [];
+  const get = () => [...order];
+  const set = (v) => {
+    const on = Array.isArray(v) ? v : [];
+    order = on.filter((x) => boxes.some((b) => b.value === x));
+    boxes.forEach((b) => { b.input.checked = on.some((x) => x === b.value); });
+  };
+  set(value);
+  boxes.forEach((b) => b.input.addEventListener('change', () => {
+    order = b.input.checked ? [...order.filter((x) => x !== b.value), b.value] : order.filter((x) => x !== b.value);
+    onChange?.(get());
+  }));
+  const row = el('div', { class: 'ctl ctl-checkbar', role: 'group', 'aria-label': label || name, 'data-testid': `ctl-${name}` },
+    label ? el('span', { class: 'ctl-label' }, label) : null, ...boxes.map((b) => b.item));
+  (parent ?? controls.root).append(row);
+  const api = { row, get, set, setEnabled: (on) => { boxes.forEach((b) => { b.input.disabled = !on; }); row.classList.toggle('is-disabled', !on); } };
   controls.controls.set(name, api);
   return api;
 }

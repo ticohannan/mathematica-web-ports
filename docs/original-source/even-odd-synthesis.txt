@@ -1,0 +1,153 @@
+
+### [Title]
+Synthesis with Even and Odd Functions
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+A signal x(t) has even symmetry if x(t)=x(-t), which means the signal is symmetric about the vertical axis. A signal x(t) has odd symmetry if x(t)=-x(-t), which means the signal to the left of the vertical axis is the inverted mirror image of the signal to the right of the vertical axis. This Demonstration shows that any arbitrary signal x(t) can be synthesized by adding an even and an odd signal. Slide the time offset T to change the input signal to x(t-T).
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+δ[t_]:=DiracDelta[t] ;
+u[t_]:=UnitStep[t];
+r[t_]:=t UnitStep[t];
+rect[t_]:=HeavisidePi[t];
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[Module[{X,imsz ={500}},
+X[t_,τ_]:=\[Piecewise]<<Grid:u[t-τ]signal=="\<Step\>" | 1/5(r[t-τ]-r[t-τ-5])signal=="\<RampUp\>" | Cos[t-τ]signal=="\<Cos\>" | Sin[t-τ]signal=="\<Sin\>" | 1/4rect[(t-τ)/3]+3/4rect[(t-τ)]signal=="\<TopHat\>" | 1/4(u[t-τ]+u[t-τ-1]+u[t-τ-2]+u[t-τ-3]-4u[t-τ-4])signal=="\<StairStep\>" | 1/2(r[t-τ]-2r[t-τ-2]+r[t-τ-4])signal=="\<Triangle\>" | rect[t-τ]True>>;
+GraphicsColumn[{
+Plot[X[t,τ],{t,-10,10},
+ImageSize->imsz,AspectRatio->1/3,PlotRange->{{-10,10},{-1,1}},ExclusionsStyle->Dashed,
+Prolog->{Text["\<input signal\>",{-8,1/2}]},
+Epilog->{PointSize->Large,Point[{τ,0}],Text["\<T\>",{τ,0.1}]}]
+, 
+Plot[{
+X[t,τ],
+1/2(X[t,τ]+X[-t,τ]),
+1/2(X[t,τ]-X[-t,τ])
+}
+,{t,-10,10},Filling->{1->{1},2-> Axis,3-> Axis},AspectRatio->1/3,PlotStyle->{Thin,Automatic,Automatic},PlotLegends->Placed[{"\<\>",Row[{"\<even: \>",TraditionalForm[Subscript[x, even][t-T]]}],Row[{"\<odd: \>",TraditionalForm[Subscript[x, odd][t-T]]}]},{.1,.9}],
+PlotRange->{{-10,10},{-1,1}}]
+}]],Grid[{{Control@{{signal,"\<StairStep\>"},{"\<Step\>","\<RampUp\>","\<Cos\>","\<Sin\>","\<TopHat\>","\<StairStep\>","\<Triangle\>"},ControlType->Setter},
+Control@{{τ,0,Style["\<T\>",Italic]},-10,10,0.1,ImageSize->180,Appearance->"\<Labeled\>"}}
+}],SaveDefinitions->True]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Item]
+Aaron T. Becker
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+Details, references or citation information
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+even function
+
+### [Item]
+odd function
+
+### [Item]
+function decomposition
+
+### [Item]
+Fourier
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Even and Odd Functions
+
+### [Text]
+Even Function
+
+### [Text]
+Odd Function
+
+### [Text]
+Fourier Series
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2016-08-08
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

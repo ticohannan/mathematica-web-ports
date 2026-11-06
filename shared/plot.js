@@ -24,9 +24,17 @@
 // 'Large'), Axes, AxesOrigin (default: 0 when inside the range, else the nearer end), Ticks, AxesLabel, Frame (True or
 // {bottom, left, top, right}; the axes stay as plain lines inside), FrameTicks, FrameLabel, PlotLabel, ImagePadding
 // ({{left, right}, {bottom, top}} px), PlotRangeClipping (default True: curves and Epilog clipped to the plot range),
-// Background, LabelStyle (v0.1.26); ListPlot: Joined (true, or a list per data set), PlotMarkers are not supported.
-// Not supported by the curve and list plots: Exclusions (jumps are joined unless the function gives a non-number there),
-// Mesh, ColorFunction.
+// Background, LabelStyle (v0.1.26); ListPlot: Joined (true, or a list per data set), PlotMarkers (v0.1.33: [g, size] —
+// a Graphics of Lines (and Circles) drawn centred on each point, size a fraction of the image width as Mathematica's
+// {g, s}; other marker forms are not supported), InterpolationOrder (v0.1.33: 0 draws a joined list as steps, each y held
+// from its x to the next x, as Mathematica's ListLinePlot[…, InterpolationOrder -> 0]; 1, the default, straight lines; a
+// Filling still follows straight lines, and PlotMarkers are drawn on unjoined data sets only).
+// Exclusions (v0.1.33, Plot only): a list of x values where the curves jump (Mathematica finds these symbolically; the
+// port's caller gives them): each curve is broken there, evaluated just left and right of the point; ExclusionsStyle (a
+// directive or list, e.g. Dashed) then joins the two sides with a vertical line drawn with it — black and about 1 px
+// unless it says otherwise, not in the curve's colour (as the snapshots of lowpass-filter-design show) — no line where a
+// curve does not jump. Without Exclusions a jump is joined unless the function gives a non-number there.
+// Not supported by the curve and list plots: Mesh, ColorFunction.
 //
 // v0.1.26 — regions and densities (Mathematica 10+ defaults; the same options as above unless said otherwise):
 //   RegionPlot((x, y) => x * x + y * y < 1, [-1, 1], [-1, 1])     RegionPlot[x^2 + y^2 < 1, {x, -1, 1}, {y, -1, 1}]
@@ -56,8 +64,8 @@
 // Test id density-raster.
 
 import {
-  Graphics, RGBColor, Opacity, AbsoluteThickness, AbsolutePointSize, PointSize, Line, Polygon, Point, applyDirective, DEFAULT_STYLE,
-  Annotation, EdgeForm, Darker, FilledPolygons, ImageRaster,
+  Graphics, RGBColor, Black, Opacity, AbsoluteThickness, AbsolutePointSize, PointSize, Line, Polygon, Point, applyDirective, DEFAULT_STYLE,
+  Annotation, EdgeForm, Darker, FilledPolygons, ImageRaster, Inset, bounds,
 } from './graphics.js';
 
 /** ColorData[97] — Mathematica's default plot colours (the first 10, then repeated). */
@@ -228,7 +236,8 @@ const baseline = (t, R, origin) => (t === 'Axis' ? origin : t === 'Bottom' ? R[1
 export function Plot(f, [a, b], opts = {}) {
   const fs = Array.isArray(f) ? f : null;
   const g = fs ? (x) => fs.map((h) => h(x)) : f;
-  const { xs, ys } = sample(g, [a, b], opts);
+  const sampled = sample(g, [a, b], opts);
+  const { xs, ys, jumps } = excludeAt(g, sampled, [a, b], opts.Exclusions);
   const n = ys.length;
   const styles = styleList(opts.PlotStyle, n).map((s, i) => curveStyle(i, s));
   const range = resolveRange(opts.PlotRange, ys.flatMap((y) => xs.map((x, i) => [x, y[i]])), [a, b]);
@@ -256,7 +265,39 @@ export function Plot(f, [a, b], opts = {}) {
     const runs = segments(xs, y);
     if (runs.length) prims.push([...styles[k], Line(runs.length === 1 ? runs[0] : runs)]);
   });
+  // ExclusionsStyle: the jumps joined by vertical lines in that style (black, 1 px by default), after the curves
+  const exStyle = opts.ExclusionsStyle == null || isNone(opts.ExclusionsStyle) ? null : asList(opts.ExclusionsStyle);
+  if (exStyle) {
+    ys.forEach((y, k) => {
+      // a jump: the two sides differ by more than 10⁻⁶ of the curve's range (a continuous curve differs by ~ε × slope)
+      const fy = y.filter(finite), tol = 1e-6 * (fy.length ? Math.max(...fy) - Math.min(...fy) || 1 : 1);
+      const segs = jumps.filter((j) => finite(j.left[k]) && finite(j.right[k]) && Math.abs(j.left[k] - j.right[k]) > tol)
+        .map((j) => [[j.x, j.left[k]], [j.x, j.right[k]]]);
+      if (segs.length) prims.push([Black, AbsoluteThickness(1), ...exStyle, Line(segs.length === 1 ? segs[0] : segs)]);
+    });
+  }
   return Graphics([...asList(opts.Prolog), ...prims, ...asList(opts.Epilog)], o);
+}
+
+/**
+ * Exclusions (v0.1.33): the sampled curves broken at each given x inside (a, b): samples within ε of it removed, then
+ * the left limit (x − ε), a gap (NaN) at x and the right limit (x + ε) inserted. Returns { xs, ys, jumps: [{ x, left,
+ * right }] } (left and right: the values of every curve). Pure.
+ */
+export function excludeAt(g, { xs, ys }, [a, b], Exclusions) {
+  const ex = [...new Set((Array.isArray(Exclusions) ? Exclusions : []).filter((x) => finite(x) && x > a && x < b))].sort((p, q) => p - q);
+  if (!ex.length) return { xs, ys, jumps: [] };
+  const eps = (b - a) * 1e-9, n = ys.length;
+  const ev = (x) => { const v = g(x); return Array.isArray(v) ? v : [v]; };
+  const pts = xs.map((x, i) => [x, ys.map((y) => y[i])]).filter(([x]) => ex.every((e) => Math.abs(x - e) > 2 * eps));
+  const jumps = [];
+  for (const x of ex) {
+    const left = ev(x - eps), right = ev(x + eps);
+    jumps.push({ x, left, right });
+    pts.push([x - eps, left], [x, Array(n).fill(NaN)], [x + eps, right]);
+  }
+  pts.sort((p, q) => p[0] - q[0]);
+  return { xs: pts.map((p) => p[0]), ys: Array.from({ length: n }, (_, k) => pts.map((p) => p[1][k])), jumps };
 }
 
 /**
@@ -302,16 +343,32 @@ export function ListPlot(data, opts = {}) {
       prims.push([RGBColor(...c), Opacity(0.5), AbsoluteThickness(1), Line(sets[k].filter((p) => finite(p[1])).map(([x, y]) => [[x, y0], [x, y]]))]);
     }
   }
+  const markers = opts.PlotMarkers ? markerInsets(opts.PlotMarkers, o.ImageSize) : null;
   sets.forEach((pts, k) => {
     if (joined(k)) {
-      const runs = segments(pts.map((p) => p[0]), pts.map((p) => p[1]));
+      const runs = segments(pts.map((p) => p[0]), pts.map((p) => p[1])).map((r) => (opts.InterpolationOrder === 0 ? steps(r) : r));
       if (runs.length) prims.push([...styles[k], Line(runs.length === 1 ? runs[0] : runs)]);
     } else {
       const ok = pts.filter((p) => finite(p[0]) && finite(p[1]));
-      if (ok.length) prims.push([...styles[k], opts.PointSize != null ? PointSize(opts.PointSize) : AbsolutePointSize(opts.PointPx ?? 4.5), Point(ok)]);
+      if (ok.length && markers) prims.push([...styles[k], ...ok.map(markers)]);
+      else if (ok.length) prims.push([...styles[k], opts.PointSize != null ? PointSize(opts.PointSize) : AbsolutePointSize(opts.PointPx ?? 4.5), Point(ok)]);
     }
   });
   return Graphics([...asList(opts.Prolog), ...prims, ...asList(opts.Epilog)], o);
+}
+/** InterpolationOrder -> 0 (v0.1.33): a run of points as steps, y[i] held from x[i] to x[i + 1]. Pure. */
+export const steps = (run) => run.flatMap((p, i) => (i + 1 < run.length ? [p, [run[i + 1][0], p[1]]] : [p]));
+/**
+ * PlotMarkers -> {g, s} (v0.1.33): (point) → Inset of the marker Graphics g (its own PlotRange: the bounds of its Lines
+ * and Circles, or its PlotRange option) at the point, s × the image width px wide.
+ */
+function markerInsets([g, s], imageSize) {
+  const width = Array.isArray(imageSize) ? imageSize[0] : imageSize;
+  const list = g.head === 'Graphics' ? g.list : g;
+  let R = g.options?.PlotRange;
+  if (!R) { const [[x0, y0], [x1, y1]] = bounds(list); const h = Math.max(x1 - x0, y1 - y0) / 2, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2; R = [[cx - h, cx + h], [cy - h, cy + h]]; }
+  const mg = Graphics(list, { PlotRange: R, ImageSize: s * width });
+  return (p) => Inset(mg, p);
 }
 /** ListLinePlot[data, opts] = ListPlot with Joined -> True. */
 export const ListLinePlot = (data, opts = {}) => ListPlot(data, { Joined: true, ...opts });

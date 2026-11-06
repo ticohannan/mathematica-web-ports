@@ -2,7 +2,7 @@
 
 ## Summary
 
-The forty-one web applications in `demos/` are **adaptations** (JavaScript / SVG / WebGL translations)
+The forty-five web applications in `demos/` are **adaptations** (JavaScript / SVG / WebGL translations)
 of Wolfram Demonstrations Project content (one, line-parameterization, of a lecture notebook by a Demonstrations author, licensed alike), which is licensed under the
 **Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported licence (CC BY-NC-SA 3.0)**,
 <https://creativecommons.org/licenses/by-nc-sa/3.0/>
@@ -30,7 +30,7 @@ Licence texts: [`LICENSES/CC-BY-NC-SA-3.0.txt`](LICENSES/CC-BY-NC-SA-3.0.txt) an
 
 | Path | Licence | Why |
 |------|---------|-----|
-| `demos/**` (all forty-one apps, incl. `teapot-data.js` and `demos/common/`) | CC BY-NC-SA 3.0 | adaptations of the Demonstrations |
+| `demos/**` (all forty-five apps, incl. `teapot-data.js` and `demos/common/`) | CC BY-NC-SA 3.0 | adaptations of the Demonstrations |
 | `demos/common/two-link.js`, `demos/common/arrow-arcs.js`, `demos/common/dial-control.js` (common to the batch A apps; owner two-link-kinematics) | CC BY-NC-SA 3.0 | derived from the Initialization and Manipulate code of "Forward and Inverse Kinematics for Two-Link Arm", "Distance Norms in Robot Workspace and Phase Space", "Robot Motion with Obstacles", "Breadth-First Search Robot Motion Planning", "Configuration Space for Four-Bar Linkage", "Measuring Distance and Orientation Using Camera and Lasers", "Manipulability Ellipsoid of a Robot Arm" and "Chart for a Torus" (authors in each file's header) |
 | `tests/unit/two-link.test.js`, `tests/unit/arrow-arcs.test.js`, `tests/unit/dial-control.test.js`, `tests/e2e/dial-control.spec.js`, `tests/e2e/fixtures/dial-control.html` | CC BY-NC-SA 3.0 | test the three common modules above against the originals' definitions |
 | `demos/two-link-kinematics/**`, `tests/unit/two-link-kinematics.test.js`, `tests/golden/two-link-kinematics.golden.test.js`, `tests/golden/two-link-kinematics.original-states.json`, `tests/e2e/two-link-kinematics.spec.js`, `docs/original-source/two-link-kinematics.txt`, `docs/original-snapshots/two-link-kinematics-*.png`, `docs/checklists/two-link-kinematics.md` | CC BY-NC-SA 3.0 | the port of "Forward and Inverse Kinematics for Two-Link Arm" (Aaron T. Becker and Lillian Lin), its tests, the states and pictures extracted from its notebook and its manual checks |
@@ -71,6 +71,10 @@ Licence texts: [`LICENSES/CC-BY-NC-SA-3.0.txt`](LICENSES/CC-BY-NC-SA-3.0.txt) an
 | `demos/camera-apparent-velocity/**`, `tests/unit/camera-apparent-velocity.test.js`, `tests/e2e/camera-apparent-velocity.spec.js`, `tests/golden/camera-apparent-velocity.original-states.json`, `docs/checklists/camera-apparent-velocity.md`, `docs/original-source/camera-apparent-velocity.txt`, `docs/original-snapshots/camera-apparent-velocity-*.png` | CC BY-NC-SA 3.0 | the port of "Maximizing Apparent Velocity in a Camera's Frame" (Mohammad Sultan and Aaron T. Becker), its tests and the states, texts and pictures taken from its original |
 | `demos/packing-spheres-into-a-thin-cylinder/**`, `tests/unit/packing-spheres-into-a-thin-cylinder.test.js`, `tests/e2e/packing-spheres-into-a-thin-cylinder.spec.js`, `tests/golden/packing-spheres-into-a-thin-cylinder.original-states.json`, `tests/golden/packing-spheres-into-a-thin-cylinder.saved-plot.json`, `docs/checklists/packing-spheres-into-a-thin-cylinder.md`, `docs/original-source/packing-spheres-into-a-thin-cylinder.txt`, `docs/original-snapshots/packing-spheres-into-a-thin-cylinder-*.png` | CC BY-NC-SA 3.0 | the port of "Packing Spheres into a Thin Cylinder" (Aaron T. Becker and Li Huang), its tests and the states, texts, plot data and pictures taken from its original |
 | `demos/line-parameterization/**`, `tests/unit/line-parameterization.test.js`, `tests/golden/line-parameterization.original-states.json`, `tests/e2e/line-parameterization.spec.js`, `docs/original-source/line-parameterization.txt`, `docs/original-snapshots/line-parameterization-*.png`, `docs/checklists/line-parameterization.md` | CC BY-NC-SA 3.0 | the port of "Line Parameterization" (Aaron T. Becker), its tests and its manual checklist |
+| `demos/lowpass-filter-design/**`, `tests/unit/lowpass-filter-design.test.js`, `tests/e2e/lowpass-filter-design.spec.js`, `docs/checklists/lowpass-filter-design.md` | CC BY-NC-SA 3.0 | the port of "Lowpass Filter Design by Pole Placement" (Aaron T. Becker), its tests and its manual checklist |
+| `demos/even-odd-synthesis/**`, `tests/unit/even-odd-synthesis.test.js`, `tests/e2e/even-odd-synthesis.spec.js`, `docs/checklists/even-odd-synthesis.md` | CC BY-NC-SA 3.0 | the port of "Synthesis with Even and Odd Functions" (Aaron T. Becker), its tests and its manual checklist |
+| `demos/time-shifting-scaling/**`, `tests/unit/time-shifting-scaling.test.js`, `tests/e2e/time-shifting-scaling.spec.js`, `docs/checklists/time-shifting-scaling.md` | CC BY-NC-SA 3.0 | the port of "Time Shifting and Time Scaling in Signal Processing" (Aaron T. Becker and Mable Wan), its tests and its manual checklist |
+| `demos/optical-fiber-defects/**`, `tests/unit/optical-fiber-defects.test.js`, `tests/e2e/optical-fiber-defects.spec.js`, `docs/checklists/optical-fiber-defects.md` | CC BY-NC-SA 3.0 | the port of "Defects in an Optical Fiber" (Aaron T. Becker and Hoang Nguyen), its tests and its manual checklist |
 | `index.html`, `README.md`, `LICENSE.md` | CC BY-NC-SA 3.0 | describe and present the adaptations |
 | `docs/original-source/**`, `docs/original-snapshots/**`, `docs/MANUAL_TEST_CHECKLIST.md`, `docs/checklists/**` | CC BY-NC-SA 3.0 | readable copies of / pictures from / derived from the originals |
 | `demos/distance-norms/**`, `tests/unit/distance-norms.test.js`, `tests/golden/distance-norms.golden.test.js`, `tests/golden/distance-norms.original-states.json`, `tests/e2e/distance-norms.spec.js`, `docs/original-source/distance-norms.txt`, `docs/original-snapshots/distance-norms-*.png`, `docs/checklists/distance-norms.md` (batch A) | CC BY-NC-SA 3.0 | the "Distance Norms in Robot Workspace and Phase Space" port, its tests and the data and pictures taken from its original |
@@ -130,8 +134,12 @@ Licence texts: [`LICENSES/CC-BY-NC-SA-3.0.txt`](LICENSES/CC-BY-NC-SA-3.0.txt) an
 | `demos/camera-apparent-velocity/` | "Maximizing Apparent Velocity in a Camera's Frame" — <https://demonstrations.wolfram.com/MaximizingApparentVelocityInACamerasFrame/> (published 2018-11-07) | Mohammad Sultan and Aaron T. Becker |
 | `demos/packing-spheres-into-a-thin-cylinder/` | "Packing Spheres into a Thin Cylinder" — <https://demonstrations.wolfram.com/PackingSpheresIntoAThinCylinder/> (published 2016-05-04) | Aaron T. Becker and Li Huang |
 | `demos/line-parameterization/` | "Line Parameterization" — ECE 6311 Lecture 18 notebook | Aaron T. Becker |
+| `demos/lowpass-filter-design/` | "Lowpass Filter Design by Pole Placement" — <https://demonstrations.wolfram.com/LowpassFilterDesignByPolePlacement/> (published 2015-12-30) | Aaron T. Becker |
+| `demos/even-odd-synthesis/` | "Synthesis with Even and Odd Functions" — <https://demonstrations.wolfram.com/SynthesisWithEvenAndOddFunctions/> (published 2016-08-08) | Aaron T. Becker |
+| `demos/time-shifting-scaling/` | "Time Shifting and Time Scaling in Signal Processing" — <https://demonstrations.wolfram.com/TimeShiftingAndTimeScalingInSignalProcessing/> (published 2016-06-21) | Aaron T. Becker and Mable Wan |
+| `demos/optical-fiber-defects/` | "Defects in an Optical Fiber" — <https://demonstrations.wolfram.com/DefectsInAnOpticalFiber/> (published 2016-10-27) | Aaron T. Becker and Hoang Nguyen |
 
-Forty were published by the Wolfram Demonstrations Project under CC BY-NC-SA 3.0. The forty-first (line-parameterization) is
+Forty-four were published by the Wolfram Demonstrations Project under CC BY-NC-SA 3.0. One (line-parameterization) is
 adapted from a lecture notebook Aaron T. Becker gave the owner to convert; it is licensed as his Demonstrations, CC BY-NC-SA 3.0,
 until he says otherwise (owner decision 2026-11-02).
 

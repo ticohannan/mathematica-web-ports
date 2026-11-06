@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.32 |
+| Code version: | 0.1.33 |
 | Document revision | 1 (2026-10-17) — first implementation |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Distance Norms in Robot Workspace and Phase Space", contributed by Aaron T. Becker and Benedict Isichei, published 2017-12-13 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/DistanceNormsInRobotWorkspaceAndPhaseSpace/>. Readable source: [`docs/original-source/distance-norms.txt`](../../docs/original-source/distance-norms.txt); saved states: `tests/golden/distance-norms.original-states.json` (`states[0]` = the output cell's saved state, `snapshots[1…6]` = the six snapshot cells' `Settings`, raw notebook lines 2407, 3613, 4818, 6021, 7213, 8429; `specs` = the initial settings; exact values kept as `{"wl": …}`); snapshots: `docs/original-snapshots/distance-norms-1…6.png` (the notebook's snapshot cells 7 and 8 are the Wolfram icon placeholder, N-DN-05) |
@@ -303,6 +303,7 @@ Open proposal (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
 | 16 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
 | 17 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
 | 18 | v0.1.32 | 2026-11-05 | A-DN-08: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
+| 19 | v0.1.33 | 2026-11-06 | version number (v0.1.33: four new apps; opt-in shared additions S-1 … S-7, unused by this app, and the locators of a Locator list made after the first evaluation); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.32 |
+| Code version: | 0.1.33 |
 | Document revision | 21 (2026-11-01) — P-MP-08 the original's full ⊕ panel (I-MP-09); 20 (2026-11-01) — P-MP-06/07 implemented after Ryan Hembree's T-2c/T-1b; his comparison and exploration on v0.1.28 recorded; I-MP-09; 19 (2026-10-29) — PA2 fixes from Ryan Hembree's checks of the original (P-MP-02…05); earlier: 6 (2026-10-17) polygon helpers, §11, operator procedures |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Motion Planning for Robot Path around Obstacles" by Shreyas Poyrekar, Aaron T. Becker and Arifa Sultana (CC BY-NC-SA 3.0); author notebook made with Mathematica 10.2. Readable source: [`docs/original-source/motion-planning.txt`](../../docs/original-source/motion-planning.txt) |
@@ -315,6 +315,7 @@ No open proposal (P-MP-02…08 implemented in v0.1.28–v0.1.30). Template for a
 | 21 | v0.1.30 | 2026-11-01 | P-MP-08 (owner approval 2026-11-01, Ryan Hembree's suggestion): the ⊕ panel is the original's full panel — value field, faster/slower, direction (→ ← ↔) — through the new shared slider option `fullPanel`; F-MP-05, D-MP-05 (approximations listed), I-MP-09 implemented |
 | 22 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
 | 23 | v0.1.32 | 2026-11-05 | A-MP-10: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
+| 24 | v0.1.33 | 2026-11-06 | version number (v0.1.33: four new apps; opt-in shared additions S-1 … S-7, unused by this app, and the locators of a Locator list made after the first evaluation); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

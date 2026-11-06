@@ -46,10 +46,12 @@
 //   {x, xmin, xmax, step} and {x, {v1, v2, …}}     short forms: the initial value is xmin, or v1
 //   [[name, init], xmin, xmax, None] or { ControlType: None }   also hidden; [[p, p0], Locator] a locator with no range
 // opts (Mathematica's option names): Appearance: 'Labeled' shows the value field (default: none, as in Mathematica);
-// Appearance: None on a locator draws no glyph (still draggable); a locator's Appearance may also be Graphics primitives
+// Appearance: None on a locator draws no glyph (still draggable); LocatorAutoCreate: true on a Locator list (v0.1.33):
+// Alt/⌘-click on the picture adds a point, on a locator deletes it; a locator's Appearance may also be Graphics primitives
 // drawn around the point (coordinates relative to it, in picture units), or a function (state, name) → primitives that
 // is evaluated again after every evaluation (a state-dependent locator picture); ControlType: Slider (a plain slider, no ⊕ panel),
-// VerticalSlider, PopupMenu, SetterBar, Checkbox, IntervalSlider; ImageSize: px width of a slider track; Enabled: a
+// VerticalSlider, PopupMenu, SetterBar, Checkbox, IntervalSlider, CheckboxBar (v0.1.33; values as for SetterBar, Rule
+// labels may be typeset); ImageSize: px width of a slider track; Enabled: a
 // boolean or a function of the state; any lower-case key is passed to the shared/ui*.js control unchanged (e.g. plus,
 // format, parse, animSeconds); a locator's picture: k puts it on picture k (several pictures, below). Labels may be
 // strings or Style/Subscript/Superscript/Row expressions.
@@ -75,7 +77,7 @@
 // (shared/ui.js `steps: 'mma'`).
 
 import { Controls } from './ui.js';
-import { addButton, addCheckbox, addPopup, addVerticalSlider, addRow } from './ui-extra.js';
+import { addButton, addCheckbox, addCheckboxBar, addPopup, addVerticalSlider, addRow } from './ui-extra.js';
 import { addIntervalSlider } from './ui-interval.js';
 import { createPlot, addLocators, darkLocatorGlyph, locatorGlyph, svgNode } from './svg-plot.js';
 import { createRng, replayRng } from './random.js';
@@ -97,6 +99,8 @@ export const PopupMenu = Object.freeze({ controlType: 'PopupMenu' });
 export const SetterBar = Object.freeze({ controlType: 'SetterBar' });
 export const Checkbox = Object.freeze({ controlType: 'Checkbox' });
 export const IntervalSlider = Object.freeze({ controlType: 'IntervalSlider' });
+/** ControlType -> CheckboxBar (v0.1.33): the value is the list of the checked values (in the order they were checked). */
+export const CheckboxBar = Object.freeze({ controlType: 'CheckboxBar' });
 /** Control(factory, options): a control built by a factory (Mathematica's Control[{x, …}] with a custom appearance). */
 export const Control = (factory, options = {}) => Object.freeze({ marker: 'Control', factory, options });
 /** Button[label, action] (in the control list): action(state, ctx) changes the state; options { name }. */
@@ -111,7 +115,7 @@ const isBound = (x) => typeof x === 'number' || typeof x === 'function';
 
 /**
  * Parse one Manipulate control spec into a plain description (pure; unit-tested):
- *   { kind: 'slider' | 'vslider' | 'interval' | 'setter' | 'popup' | 'checkbox' | 'locator' | 'slider2D' | 'custom' |
+ *   { kind: 'slider' | 'vslider' | 'interval' | 'setter' | 'popup' | 'checkbox' | 'checkboxbar' | 'locator' | 'slider2D' | 'custom' |
  *     'button' | 'row' | 'hidden' | 'delimiter' | 'heading', name, init, label, min, max, step, values, opts, … }
  */
 export function parseControl(spec) {
@@ -154,6 +158,7 @@ export function parseControl(spec) {
   if (Array.isArray(rest[0])) {
     const values = rest[0].map((v) => (v && v.rule ? { value: v.value, label: v.label } : { value: v, label: String(v) }));
     const boolean = values.length === 2 && ((values[0].value === false && values[1].value === true) || (values[0].value === true && values[1].value === false)); // {False, True} or {True, False}
+    if (type === 'CheckboxBar') return { ...base, kind: 'checkboxbar', values };
     const kind = type === 'PopupMenu' ? 'popup' : type === 'Checkbox' || (boolean && type !== 'SetterBar') ? 'checkbox' : 'setter';
     return { ...base, kind, values };
   }
@@ -527,6 +532,10 @@ export function Manipulate(spec) {
         api = addCheckbox(controls, { name: c.name, label, value: val(c.name), onChange: onInput, parent, ...extra });
         if (!enabled) api.setEnabled(false);
         break;
+      case 'checkboxbar':
+        api = addCheckboxBar(controls, { name: c.name, label, options: c.values.map((o) => ({ value: o.value, label: textOf(o.label), html: htmlOf(o.label) })), value: val(c.name), onChange: onInput, parent, ...extra });
+        if (!enabled) api.setEnabled(false);
+        break;
       case 'slider2D':
         api = controls.slider2D({ name: c.name, label, min: c.min, max: c.max, value: val(c.name), enabled, onInput, ...extra });
         markActive(api.row.querySelector('svg'));
@@ -652,6 +661,7 @@ export function Manipulate(spec) {
   }
   function makeLocators() {
     locatorPanes = [];
+    locs = computeLocs(); // v0.1.33: the first evaluation may have changed a Locator list (lowpass-filter-design: 2 → 3 poles)
     if (!locs.length) return;
     const byPicture = new Map();
     for (const c of locs) { const k = c.opts.picture ?? 0; if (!byPicture.has(k)) byPicture.set(k, []); byPicture.get(k).push(c); }
@@ -661,6 +671,23 @@ export function Manipulate(spec) {
       locatorPanes.push(pane);
     }
   }
+  // LocatorAutoCreate -> True (v0.1.33) on a Locator list of picture k: Alt/⌘-click adds a point at the end of the list
+  // (Mathematica appends) or deletes the one clicked; the body is evaluated again (and syncLocators adds or removes
+  // the locators). A locator at the clicked point keyboard-focusable as the others.
+  const autoCreateOn = (k) => all.find((c) => c.kind === 'locator' && c.opts.LocatorAutoCreate === true && (c.opts.picture ?? 0) === k);
+  const autoCreator = (k) => ({
+    add: (p) => {
+      const c = autoCreateOn(k);
+      setVar(state, c.name, [...(val(c.name) ?? []), clampTo(scales[k] ? fromWorld(k, p) : p, c.min, c.max)]);
+      requestRun();
+    },
+    remove: (n) => {
+      const l = locOf(n);
+      if (!l || l.index === null || !l.opts.LocatorAutoCreate) return;
+      setVar(state, l.variable, val(l.variable).filter((_, i) => i !== l.index));
+      requestRun();
+    },
+  });
   function makePane(k, names) {
     const L = spec.locators ?? {};
     {
@@ -689,6 +716,7 @@ export function Manipulate(spec) {
         onMove: scaled ? (n, p) => onMove(n, fromWorld(k, p)) : onMove,
         pointer: L.pointer ?? true,
         ...(L.testid ? { testid: L.testid } : {}),
+        ...(autoCreateOn(k) ? { autoCreate: autoCreator(k) } : {}),
       });
     }
   }

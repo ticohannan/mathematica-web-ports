@@ -1,0 +1,281 @@
+
+### [Title]
+Defects in an Optical Fiber
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+\<Light can propagate in an optical fiber by total internal reflection (TIR) when the outside medium has a lower refractive index than the core. However, light can still be refracted through the boundary if the angle between the light and boundary is greater than the critical angle. Optical fibers are usually cladded with another material to increase the critical angle and to protect the core. This Demonstration shows the effect of a triangular defect in the core. The origins of two light rays can be set with locators.\>
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+(*The parametric equation of the line containing the points a and b is a+Gamma (b-a), where 0<=Gamma<=1 for points between a and b. The value of Gamma is given by*)
+Gamma[{a_,b_}][p_]:=((a-p).(a-b))/((a-b).(a-b))
+(*for p on the line. For p not on the line, Gamma gives the closest point on the line.*)
+
+### [Input] (init)
+(*Two lines, Subscript[L, 1 ]containing the points a and b with line Subscript[L, 2] containing the points c and d, intersect at a point \[DoubleLongLeftRightArrow] \[LeftBracketingBar]{a-b,c-d}\[RightBracketingBar]!=0. Compute the intersection point:*)
+LineIntersectionPoint[{{a_,b_},{c_,d_}}]:=(Det[{a,b}] (c-d)-Det[{c,d}] (a-b))/(Det[{a-b,c-d}])
+
+### [Input] (init)
+(*Use \[LeftBracketingBar]{a-b,c-d}\[RightBracketingBar]!=0 along with the condition 0<=λ<=1 to determine whether two segments intersect:*)
+SegmentIntersectionQ[{p1:{a_,b_},p2:{c_,d_}}]:=
+If[Det[{a-b,c-d}]==0,False,
+Module[{p=LineIntersectionPoint[{p1,p2}]},0<=Gamma[p1][p]<=1&&0<=Gamma[p2][p]<=1]]
+
+### [Input] (init)
+LineIntersectionPoint[{a_,b_},{c_,d_}]:=(Det[{a,b}] (c-d)-Det[{c,d}] (a-b))/Det[{a-b,c-d}]
+
+### [Input] (init)
+(* test for positive angle sign between two 2D vectors 
+from www.demonstrations.wolfram.com/AnEfficientTestForAPointToBeInAConvexPolygon*)
+angtest[p1:{x1_,y1_},p2:{x2_,y2_}]:=p1.{{0,-1},{1,0}}.p2>0
+
+### [Input] (init)
+(* test if point pt is inside convex polygon poly *)
+testpoint[poly_,pt_]:=
+			(* translate poly such that pt becomes origin *)
+			poly//#-pt&/@#&//
+			(* pt is inside if adjacent vertex vector pair angles are all positive or all negative *)
+			{#,RotateLeft@#}&//Transpose//angtest@@#&/@#&//Equal@@#&
+	
+
+### [Input] (init)
+(*calculate the signed incident angle of a ray (start_Pt, intersection_Pt) and a line segment (s1, s2), where intersection_Pt is between s1 and s2*)
+incidentAng[ray_,seg_]:=
+Module[{ang1,ang2,a=ray[[1]]-ray[[2]],b={-(seg[[2,2]]-seg[[1,2]]),seg[[2,1]]-seg[[1,1]]}},
+ang1 =ArcTan[a[[1]],a[[2]]]-ArcTan[b[[1]],b[[2]]];
+If[ang1>π, ang1 = ang1-2π];
+If[ang1<-π, ang1 = ang1+2π];
+ang2 =ArcTan[a[[1]],a[[2]]]-ArcTan[-b[[1]],-b[[2]]];
+If[ang2>π, ang2 = ang2-2π];
+If[ang2<-π, ang2 = ang2+2π];
+If[Abs[ang1]<Abs[ang2],{ang1,ArcTan[b[[1]],b[[2]]]} ,{ang2,ArcTan[-b[[1]],-b[[2]]]}]
+]
+
+### [Input] (init)
+normAng[seg_]:=ArcTan[-(seg[[2,2]]-seg[[1,2]]),seg[[2,1]]-seg[[1,1]]]
+
+### [Input] (init)
+TraceLaser[pt_,Theta_,pow_,segs_,N1_,N2_]:=Module[
+{incAng,transAng,s1,T,int,MaxRay = 50,sTheta = Sin[Theta],cTheta = Cos[Theta],powReflect = pow,critAng = If[N1>N2,ArcSin[N2/N1],π],normAngle},
+(*0. initialize*)
+incAng = Theta;
+int = pt+MaxRay*{cTheta,sTheta };
+s1 = {pt,int};
+(*1. find minimum t and corresponding angle of incidence*)
+{{
+If[SegmentIntersectionQ[{s1,#}],
+T = LineIntersectionPoint[{s1,#}];
+(*To avoid numerical issues, the next intersection must be at least some distance from the starting point. This function selects the first (shortest distance) interesetion.*)
+ If[0.001<(T[[1]]-pt[[1]])^2+(T[[2]]-pt[[2]])^2<(int[[1]]-pt[[1]])^2+(int[[2]]-pt[[2]])^2,
+(int=T;{incAng,normAngle} =incidentAng[s1,#];
+)]];
+}&/@segs,
+(*2. Draw light line*)
+Opacity[5 pow],Line[{pt,int}],
+(*3. Base case (return if ray escapes region of interest)*)
+If[ int != pt+MaxRay{cTheta,sTheta }&& Norm[int]<(MaxRay)/(2)&& pow> (1)/(100),
+(*4. If a refracted ray, recursively call function*)
+transAng = ArcSin[(N1)/(N2)Sin[incAng]];
+{If[Abs[incAng]<critAng,
+powReflect =pow((N1-N2)/(N1+N2))^2;(*Reflectance for unpolarized light*)
+ TraceLaser[int,Theta-incAng+transAng,pow-powReflect,segs,N2,N1]],
+(*5. For a reflected ray, recursively call function*)
+{Blue,Thickness[0.002],Line[{int,int+.2*{Cos[normAngle],Sin[normAngle]}}],Dashed,Line[{int,int-.2*{Cos[normAngle],Sin[normAngle]}}]},
+ TraceLaser[int,Theta-π-2incAng,powReflect,segs,N1,N2]
+}
+]
+}
+]
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{len = 5,DD=1,edges,Theta={Theta1,Theta2},Nvals},
+edges = {
+{ {-len,0},{-w/2,0}},
+{{-w/2,0},{0,h}},
+{{0,h},{w/2,0}},
+{{w/2,0},{len,0}},
+{ {-len,DD},{len,DD}}
+};
+Graphics[{
+(*Draw fiber*)
+LightGray,Rectangle[{-len,0},{len,DD}],
+(*Draw defect in optical fiber*)
+White,Polygon[{{0,h},{w/2,0},{-w/2,0}}],
+(*Draw light*)
+Red,Thick,CapForm["\<Butt\>"],JoinForm["\<Bevel\>"],
+Table[Nvals = {1,1.5};
+(*determine if laser starts inside or outside the optical fiber*)
+If[DD>p[[n,2]]>0 &&!testpoint[{{-w/2,0},{0,h},{w/2,0}},p[[n]]],Nvals = {1.5,1}];
+TraceLaser[p[[n]],Theta[[n]],1,edges,Nvals[[1]],Nvals[[2]]],{n,1,Length[p]}]
+},ImageSize->Large,PlotRange->{{-len+.1,len},{-2,4}}]],
+Row[{
+Control@{{h,3*.135,"\<defect height\>"},0,1},Spacer@10,
+Control@{{w,3*.260,"\<defect width\>"},1/32,2}}],
+Row[{
+Control@{{Theta1,-4π/64(*π/4*),"\<light angle \!\(\*SubscriptBox[\(Theta\), \(1\)]\)\>"},-π,π},Spacer@10,
+Control@{{Theta2,-4π/64(*π/4*),"\<light angle \!\(\*SubscriptBox[\(Theta\), \(2\)]\)\>"},-π,π}}],
+{{p,{{-1.8,1/2},{-3.8,1/2}}},Locator},SaveDefinitions->True
+]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Item]
+Aaron T. Becker
+
+### [Item]
+Hoang Nguyen
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+This Demonstration has a single optical fiber with index of refraction N =1.5 (approximate value for PMMA Plexiglas) in a vacuum (index of refraction N =1). A light ray is emitted from each locator at a user-specified angle.
+
+### [Text]
+A light ray's angle of incidence Subscript[Theta, a] is measured from the normal to the boundary.
+
+### [Text]
+When a light ray intersects a boundary between two media with different indices of refraction, the light is reflected. If the latter medium has a lower index of refraction or if Subscript[Theta, a] is greater than the critical angle Subscript[Theta, c], the light is refracted as well.
+
+### [Text]
+If the light ray is in a medium with index of refraction Subscript[N, 1] interfacing with a medium of index of refraction Subscript[N, 2], with Subscript[N, 2]<Subscript[N, 1], the critical angle is Subscript[Theta, c]=sin^(-1)((Subscript[N, 2])/(Subscript[N, 1])).
+
+### [Text]
+The refracted light ray has angle sin^(-1)((Subscript[N, 1])/(Subscript[N, 2])sin Subscript[Theta, a]). If there is a refracted ray, the ratio of reflected light is ((Subscript[N, 1]-Subscript[N, 2])/(Subscript[N, 1]+Subscript[N, 2]))^2 and the ratio of refracted light is 1-((Subscript[N, 1]-Subscript[N, 2])/(Subscript[N, 1]+Subscript[N, 2]))^2=Subscript[N, 1](Subscript[N, 2]((2)/(Subscript[N, 1]+Subscript[N, 2])))^2.
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+optical fiber
+
+### [Item]
+total internal reflection
+
+### [Item]
+light ray
+
+### [Item]
+reflectance
+
+### [Item]
+refraction
+
+### [Item]
+Snells Law
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Fermat's Principle and Snell's Law
+
+### [Text]
+Dispersion of Light through a Prism
+
+### [Text]
+Reflection and Refraction on a Flat Surface between Two Different Materials
+
+### [Text]
+Refraction through Parallel Faces
+
+### [Text]
+Light in a Fiber Optic Cable
+
+### [Text]
+Total Internal Reflection
+
+### [Text]
+An Efficient Test for a Point to Be in a Convex Polygon
+
+### [Text]
+Snell's Law
+
+### [Text]
+Angle of Refraction
+
+### [Text]
+Index of Refraction
+
+### [Text]
+Angle of Incidence
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2016-10-27
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

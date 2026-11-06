@@ -47,6 +47,10 @@ it is verified:
 | Maximizing Apparent Velocity in a Camera's Frame | [`demos/camera-apparent-velocity/DESIGN.md`](../demos/camera-apparent-velocity/DESIGN.md) | `demos/camera-apparent-velocity/` |
 | Packing Spheres into a Thin Cylinder | [`demos/packing-spheres-into-a-thin-cylinder/DESIGN.md`](../demos/packing-spheres-into-a-thin-cylinder/DESIGN.md) | `demos/packing-spheres-into-a-thin-cylinder/` |
 | Line Parameterization | [`demos/line-parameterization/DESIGN.md`](../demos/line-parameterization/DESIGN.md) | `demos/line-parameterization/` |
+| Lowpass Filter Design by Pole Placement | [`demos/lowpass-filter-design/DESIGN.md`](../demos/lowpass-filter-design/DESIGN.md) | `demos/lowpass-filter-design/` |
+| Synthesis with Even and Odd Functions | [`demos/even-odd-synthesis/DESIGN.md`](../demos/even-odd-synthesis/DESIGN.md) | `demos/even-odd-synthesis/` |
+| Time Shifting and Time Scaling in Signal Processing | [`demos/time-shifting-scaling/DESIGN.md`](../demos/time-shifting-scaling/DESIGN.md) | `demos/time-shifting-scaling/` |
+| Defects in an Optical Fiber | [`demos/optical-fiber-defects/DESIGN.md`](../demos/optical-fiber-defects/DESIGN.md) | `demos/optical-fiber-defects/` |
 
 The originals came without design documents. Version 0.1.6 added best-effort design documents
 reconstructed from the original notebooks (their code, captions and details text) and from the

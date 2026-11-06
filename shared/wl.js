@@ -23,7 +23,7 @@
 // Vectors   Dot, Cross, Norm, Normalize, EuclideanDistance, Det, Inverse, IdentityMatrix, RotationMatrix,
 //           RotationTransform, TranslationTransform, AngleVector, VectorAngle, Nearest
 // Numbers   Pi, E, Degree, Infinity, ArcTan, Mod, Quotient, Round, Floor, Ceiling, IntegerPart, FractionalPart, Sign,
-//           Abs, Sqrt, Clip, Rescale, Chop, Boole, UnitStep, Sin, Cos, Tan, ArcCos, ArcSin, Exp, Log, Power, EvenQ, OddQ,
+//           Abs, Sqrt, Clip, Rescale, Chop, Boole, UnitStep, HeavisidePi (v0.1.33), Sin, Cos, Tan, ArcCos, ArcSin, Exp, Log, Power, EvenQ, OddQ,
 //           Min/Max of numbers
 // Statistics Erf, Binomial, NormalDistribution, UniformDistribution, TriangularDistribution, PDF, CDF, Mean / Variance /
 //           StandardDeviation (of a distribution or a list), RandomVariate (v0.1.23)
@@ -70,6 +70,8 @@ export const Rescale = (x, [a, b], [c, d] = [0, 1]) => c + ((x - a) * (d - c)) /
 export const Chop = (x, delta = 1e-10) => (isArr(x) ? x.map((y) => Chop(y, delta)) : Math.abs(x) < delta ? 0 : x);
 export const Boole = (b) => (b ? 1 : 0);
 export const UnitStep = (x) => (x >= 0 ? 1 : 0);
+/** HeavisidePi[x] (v0.1.33): 1 for |x| < 1/2, 0 for |x| > 1/2; at ±1/2 Mathematica leaves it unevaluated — 1/2 here (the plots break there). */
+export const HeavisidePi = (x) => (Math.abs(x) < 0.5 ? 1 : Math.abs(x) === 0.5 ? 0.5 : 0);
 
 // ---- listable arithmetic (Mathematica's Plus, Subtract, Times, Divide thread over lists; numbers broadcast) -------
 const thread2 = (f) => function op(a, b) {

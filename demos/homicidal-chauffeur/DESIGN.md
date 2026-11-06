@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.32 |
+| Code version: | 0.1.33 |
 | Document revision | 2 (2026-10-26) |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "The Homicidal Chauffeur Problem", contributed by Aaron T. Becker and Javier Garcia, published 2018-01-22 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/TheHomicidalChauffeurProblem/> Source as text: [`docs/original-source/homicidal-chauffeur.txt`](../../docs/original-source/homicidal-chauffeur.txt); snapshots `docs/original-snapshots/homicidal-chauffeur-1…5.png`; saved states `tests/golden/homicidal-chauffeur.original-states.json` (`states[0]` the live state, `specs` the Manipulate's initial values — the same state here, `snapshots` the five snapshots' settings) |
@@ -201,6 +201,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 6 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
 | 7 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
 | 8 | v0.1.32 | 2026-11-05 | A-HC-07: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
+| 9 | v0.1.33 | 2026-11-06 | version number (v0.1.33: four new apps; opt-in shared additions S-1 … S-7, unused by this app, and the locators of a Locator list made after the first evaluation); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

@@ -39,6 +39,7 @@
 // the Manipulate layer draws them for a picture: shared/graphics-extras.js registers that part with setInsetLayout);
 // Texture(image) with Polygon(pts, { VertexTextureCoordinates }) (an image on a polygon, also used by the 3D renderer),
 // images as RGBA data or Rasterize(expr, { RasterSize, ImageSize, Background }), ImageReflect, imageCanvas (browser).
+// v0.1.33: JoinForm('Bevel' | 'Round' | 'Miter') — the corners of Lines (default round).
 //
 // Sizes follow svg-plot.js: Thickness[t] and PointSize[d] are fractions of the plot width; AbsoluteThickness,
 // AbsolutePointSize, AbsoluteDashing and font sizes are pixels at the picture's ImageSize.
@@ -89,6 +90,8 @@ export const AbsoluteDashing = (ds) => directive('dash', ds);
 export const Dashed = AbsoluteDashing([3, 3]), Dotted = AbsoluteDashing([0.5, 2]);
 /** CapForm["Butt" | "Round" | "Square"]. */
 export const CapForm = (c) => directive('cap', c === 'Square' ? 'square' : c === 'Round' ? 'round' : 'butt');
+/** JoinForm["Bevel" | "Round" | "Miter"] (v0.1.33): the corners of Lines (default round, as before). */
+export const JoinForm = (j) => directive('join', j === 'Bevel' ? 'bevel' : j === 'Miter' ? 'miter' : 'round');
 /** PointSize[d] (fraction of the width), AbsolutePointSize[px], or a named size 'Small' | 'Medium' | 'Large'. */
 /** PointSize[d] (fraction of the width); PointSize[Tiny | Small | Medium | Large] (v0.1.23): absolute sizes as measured in
  * Mathematica's pictures (2, 3, 4.4, 7 px at the image size), independent of the picture's width. */
@@ -567,7 +570,7 @@ export const Graphics = (list, options = {}) => Object.freeze({ head: 'Graphics'
  * default point size 0.008 of the width is the approximation measured for the ports, D-RM-05).
  */
 export const DEFAULT_STYLE = Object.freeze({
-  color: NAMED.Black, opacity: undefined, thickness: undefined, dash: undefined, cap: undefined, pointSize: 0.008,
+  color: NAMED.Black, opacity: undefined, thickness: undefined, dash: undefined, cap: undefined, join: undefined, pointSize: 0.008,
   arrowheads: 0.02, edge: null, face: undefined, fontSize: 12, fontFamily: undefined, fontSlant: undefined, fontWeight: undefined,
 });
 
@@ -832,7 +835,7 @@ function draw(plot, g, p, st) {
   const opacity = st.opacity;
   switch (p.head) {
     case 'Line': {
-      const paint = { stroke: st.color, thickness: st.thickness, dash: st.dash, cap: st.cap, opacity };
+      const paint = { stroke: st.color, thickness: st.thickness, dash: st.dash, cap: st.cap, join: st.join, opacity };
       // v0.1.26: Line[{}] and Line[{{}, {}}] draw nothing, as in Mathematica
       if (!p.pts.length || p.pts.every((q) => Array.isArray(q) && q.length === 0)) return plot.group(g);
       if (!isMulti(p.pts)) return plot.line(g, p.pts, paint);
@@ -870,9 +873,9 @@ function draw(plot, g, p, st) {
       if (Array.isArray(p.r)) { // Circle[c, {rx, ry}] (and arcs of it): an elliptic outline
         const [a0, a1] = p.angles ?? [0, 2 * Math.PI], n = Math.max(8, Math.ceil((Math.abs(a1 - a0) / (2 * Math.PI)) * 96));
         const pts = Array.from({ length: n + 1 }, (_, i) => { const t = a0 + ((a1 - a0) * i) / n; return [p.c[0] + p.r[0] * Math.cos(t), p.c[1] + p.r[1] * Math.sin(t)]; });
-        return plot.line(g, pts, { stroke: st.color, thickness: st.thickness, dash: st.dash, cap: st.cap, opacity });
+        return plot.line(g, pts, { stroke: st.color, thickness: st.thickness, dash: st.dash, cap: st.cap, join: st.join, opacity });
       }
-      if (p.angles) return plot.arc(g, p.c, p.r, p.angles[0], p.angles[1], { stroke: st.color, thickness: st.thickness, dash: st.dash, cap: st.cap, opacity });
+      if (p.angles) return plot.arc(g, p.c, p.r, p.angles[0], p.angles[1], { stroke: st.color, thickness: st.thickness, dash: st.dash, cap: st.cap, join: st.join, opacity });
       return g.appendChild(svgNode('circle', {
         cx: p.c[0], cy: p.c[1], r: p.r, fill: 'none', stroke: css(st.color), 'stroke-opacity': opacity,
         'stroke-width': plot.strokeWidth(st.thickness),
@@ -890,7 +893,7 @@ function draw(plot, g, p, st) {
     case 'Arrow': {
       if (p.pts.length < 2) return plot.group(g); // Arrow[{p}] / Arrow[{}]: nothing, as in Mathematica (v0.1.26)
       const grp = plot.group(g);
-      plot.line(grp, p.pts, { stroke: st.color, thickness: st.thickness, dash: st.dash, cap: st.cap, opacity }); // CapForm as for Line (v0.1.26)
+      plot.line(grp, p.pts, { stroke: st.color, thickness: st.thickness, dash: st.dash, cap: st.cap, join: st.join, opacity }); // CapForm as for Line (v0.1.26)
       const n = p.pts.length;
       const [tx, ty] = p.pts[n - 1], [px, py] = p.pts[n - 2];
       const len = Math.hypot(tx - px, ty - py) || 1;
@@ -959,7 +962,7 @@ function draw(plot, g, p, st) {
     case 'ImageRaster':
       return g.appendChild(rasterNode(p.image, p.box, !!p.smooth));
     case 'BSplineCurve': // v0.1.26: drawn like a Line through the finely sampled curve
-      return plot.line(g, bsplinePoints(p.pts, { SplineDegree: p.degree, SplineClosed: p.closed }), { stroke: st.color, thickness: st.thickness, dash: st.dash, cap: st.cap, opacity });
+      return plot.line(g, bsplinePoints(p.pts, { SplineDegree: p.degree, SplineClosed: p.closed }), { stroke: st.color, thickness: st.thickness, dash: st.dash, cap: st.cap, join: st.join, opacity });
     case 'FilledPolygons': { // v0.1.26: one <path>, nonzero rule (seamless faces of region plots)
       const f = fillOf(st), e = st.edge;
       return g.appendChild(svgNode('path', {

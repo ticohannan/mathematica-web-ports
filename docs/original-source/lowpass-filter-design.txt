@@ -1,0 +1,198 @@
+
+### [Title]
+Lowpass Filter Design by Pole Placement
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+An ideal lowpass filter, drawn in blue, passes all frequencies less than Subscript[Omega, c] and rejects all frequencies greater than Subscript[Omega, c]. Such a filter cannot be implemented physically because it is non-causal. However, we can design causal filters, drawn in orange, that approximate the ideal lowpass filter. This Demonstration lets you design such a filter by locating poles (of the transfer function), drawn with red ×s, in different arrangements.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [CodeText]
+If you provide initialization code, include a SaveDefinitions->True option in the Manipulate.
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{Theta,Hfilter,poles,imV,s},
+Theta = (π)/(n);(*angle for Butterworth or elliptical*)
+If[Length[p]<1,p ={ {Alpha,0}}];
+(*Enabled->False*)
+If[type=="\<triangle\>",
+poles=Table[imV =If[n==1,0,(i-1)2/(n-1)-1];
+ {Alpha(1-Abs[imV]*.95),imV},{i,1,n}]];
+If[type=="\<vertical line\>",
+poles=Table[{Alpha,If[n==1,0,(i-1)2/(n-1)-1]},{i,1,n}]];
+If[type=="\<Butterworth\>",
+poles=Table[{ Cos[π/2 +(i-1/2)Theta],Sin[π/2 +(i-1/2)Theta]},{i,1,n}]];
+If[type=="\<elliptical\>",
+poles=Table[{-Alpha Cos[π/2 +(i-1/2)Theta],Sin[π/2 +(i-1/2)Theta]},{i,1,n}]];
+If[type=="\<manual\>",poles=p;n = Length[p];Alpha=Min[poles[[;;,1]]],p = poles];
+
+(*generate filter based on poles*)
+Hfilter[Omega_]:=Times@@Table[(1)/(\[ImaginaryJ] Omega - poles[[i,1]]-\[ImaginaryJ] poles[[i,2]]),{i,1,Length[poles]}];
+(*scale filter*)
+s =Max[Abs[ Hfilter[0]],Abs[ Hfilter[1]],Abs[ Hfilter[poles[[Ceiling[n/2],2]]]]];
+Row[{(*plot pole positions*)
+ListPlot[poles,AspectRatio->1,PlotRange->{{-2.1,0.2},{-1.1,1.1}},PlotMarkers->{Graphics[{Red,Thick,Line[{{-0.5,-0.5},{0.5,0.5}}],Line[{{-0.5,0.5},{0.5,-0.5}}]}],0.06},ImageSize->{220,350},
+Ticks->{{{-2,"\<-2\!\(\*SubscriptBox[\(Omega\), \(c\)]\)\>"},{-3/2,"\<-\!\(\*FractionBox[\(3\), \(2\)]\)\!\(\*SubscriptBox[\(Omega\), \(c\)]\)\>"},{-1,"\<-\!\(\*SubscriptBox[\(Omega\), \(c\)]\)\>"},{-1/2,"\<-\!\(\*FractionBox[\(1\), \(2\)]\)\!\(\*SubscriptBox[\(Omega\), \(c\)]\)\>"}},{{-1,"\<-\[ImaginaryJ] \!\(\*SubscriptBox[\(Omega\), \(c\)]\)\>"},{-1/2,"\<-\!\(\*FractionBox[\(1\), \(2\)]\)\[ImaginaryJ] \!\(\*SubscriptBox[\(Omega\), \(c\)]\)\>"},{1/2,"\<\!\(\*FractionBox[\(1\), \(2\)]\)\[ImaginaryJ] \!\(\*SubscriptBox[\(Omega\), \(c\)]\)\>"},{1,"\<\[ImaginaryJ] \!\(\*SubscriptBox[\(Omega\), \(c\)]\)\>"}}}
+],(*plot the filter in the frequency domain*)
+Plot[{HeavisidePi[Omega/2],Abs[Hfilter[Omega]/s]},{Omega,-2.5,2.5},PlotRange->All,AxesLabel->{"\<Omega\>",Abs@H[Omega]},ImageSize->{350,350},ExclusionsStyle->Dashed,
+Ticks->{{{-2,"\<-2\!\(\*SubscriptBox[\(Omega\), \(c\)]\)\>"},{-1,"\<-\!\(\*SubscriptBox[\(Omega\), \(c\)]\)\>"},{1,"\<\!\(\*SubscriptBox[\(Omega\), \(c\)]\)\>"},{2,"\<2\!\(\*SubscriptBox[\(Omega\), \(c\)]\)\>"}},Automatic}
+]
+}]],(*setup controls*)
+{type,{"\<vertical line\>","\<triangle\>","\<Butterworth\>","\<elliptical\>","\<manual\>"}},
+{{n,3,Row[{Style["\<n\>",Italic], "\<, number of poles\>"}]},1,20,1,Appearance->"\<Labeled\>",Enabled->If[type== "\<manual\>",False,True]},
+{{Alpha,-1,"\<Alpha, real component\>"},-2,-1/100,Appearance->"\<Labeled\>",Enabled->If[type=="\<Butterworth\>"||type== "\<manual\>",False,True]},
+{{p,{{-1,-1},{-1,1}}},Locator,LocatorAutoCreate->True,Appearance->None},ControlPlacement->Top
+]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Aaron T. Becker
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+\<Four options are given for filter design by pole placement. All filters are scaled so that the maximum magnitude is about 1.\>
+
+### [Text]
+The first, "vertical line", places n poles equally spaced on the imaginary axis between -\[ImaginaryJ] Subscript[Omega, c] and \[ImaginaryJ] Subscript[Omega, c], with real component Alpha. The associated magnitude spectrum favors frequencies in the -Subscript[Omega, c] to Subscript[Omega, c] range, but the pattern has undesirable resonances at frequencies corresponding to the pole locations along the complex axis.
+
+### [Text]
+The second, "triangle", places n poles equally spaced along the imaginary axis between -\[ImaginaryJ] Subscript[Omega, c] and \[ImaginaryJ] Subscript[Omega, c], with real component Alpha(1-0.95Im(p)), where Im(p) is the imaginary component of the pole. The associated magnitude spectrum again favors frequencies in the -Subscript[Omega, c] to Subscript[Omega, c] range, but the pattern has undesirable resonances at -Subscript[Omega, c] and Subscript[Omega, c].
+
+### [Text]
+The "Butterworth" filter, introduced in 1930 by British engineer and physicist Stephen Butterworth, places the poles along the circumference of a circle of radius Subscript[Omega, c] in the left half-plane. The resulting filter is causal, BIBO stable, and flat for low frequencies. The roll-off rate is -20n dB/decade.
+
+### [Text]
+Switching to placing poles along an "elliptical" circumference enables faster roll-off, but introduces ripple in the low-frequency range.
+
+### [Text]
+\<Finally, in "manual" mode, you can drag, add, or delete poles and see the resulting effects in the frequency domain.\>
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] F. Ulaby and A. Yagle, Engineering Signals and Systems, Allendale: NTS Press, 2012.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+lowpass filter
+
+### [Item]
+filter
+
+### [Item]
+filter design
+
+### [Item]
+Butterworth
+
+### [Item]
+elliptical filter
+
+### [Item]
+pole placement
+
+### [Item]
+frequency domain
+
+### [Item]
+analog filter
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Pi Filter
+
+### [Text]
+Response of Low-Pass RC Filter to Periodic Waveforms
+
+### [Text]
+Infinite Impulse Response (IIR) Digital Low-Pass Filter Design by Butterworth Method
+
+### [Text]
+Frequency and Impulse Response of Linear Filters
+
+### [Text]
+Sallen\[Dash]Key Band-Pass Filter
+
+### [Text]
+Sallen\[Dash]Key Low-Pass Unity-Gain Filter Response
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2015-12-30
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

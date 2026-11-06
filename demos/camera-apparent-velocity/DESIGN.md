@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.32 |
+| Code version: | 0.1.33 |
 | Document revision | 2 (2026-10-27) |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Maximizing Apparent Velocity in a Camera's Frame", contributed by Mohammad Sultan and Aaron T. Becker, published 2018-11-07 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/MaximizingApparentVelocityInACamerasFrame/> Source as text: [`docs/original-source/camera-apparent-velocity.txt`](../../docs/original-source/camera-apparent-velocity.txt); snapshots `docs/original-snapshots/camera-apparent-velocity-1…8.png`; saved states `tests/golden/camera-apparent-velocity.original-states.json` (`states[0]` the live state, equal to `specs`, the Manipulate's initial values; `snapshots` the eight snapshots' settings) |
@@ -233,6 +233,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 6 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
 | 7 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
 | 8 | v0.1.32 | 2026-11-05 | A-CV-07: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
+| 9 | v0.1.33 | 2026-11-06 | version number (v0.1.33: four new apps; opt-in shared additions S-1 … S-7, unused by this app, and the locators of a Locator list made after the first evaluation); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 
