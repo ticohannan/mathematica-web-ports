@@ -7,6 +7,7 @@ import { describe, it, expect } from 'vitest';
 import { preGraphics, sameDrawing, graphicsJSON } from '../support/pre-graphics.js';
 import { initialState, evaluate, makePolys, pathOKT, clampLoc, TWO_PI, DELTA, LOC_MIN, LOC_MAX } from '../../demos/prm/model.js';
 import { createRng, replayRng } from '../../shared/random.js';
+import { myAstar as coreAstar, planQuery as coreQuery } from '../../demos/common/prm-core.js';
 
 const S3 = Math.sqrt(3) / 2;
 // a fixed obstacle set: one triangle CirclePoints[3] centred at {3, 3} (vertices {3±√3/2, 2.5}, {3, 4})
@@ -177,5 +178,52 @@ describe('prm: Graphics data = the drawing before v0.1.21', () => {
     const r = replay(s.steps);
     expect(graphicsJSON(r.state)).toEqual(s.state);
     expect(sameDrawing(r.graphics, s.graphics[0], name).replaced).toEqual([]);
+  });
+});
+
+// The switch "errors of the original: kept | corrected" (shared/errata.js; the query of demos/common/prm-core.js).
+// Expected values by hand on small roadmaps whose shortest path can be read off.
+describe('corrected mode (E-PR)', () => {
+  it('kept: errata = "original" gives exactly the result without the variable', () => {
+    const st = fixed({ qs: [3, 3], qf: [3.08, 3] });
+    const plain = evaluate(st, replayRng({})), kept = evaluate({ ...st, errata: 'original' }, replayRng({}));
+    expect(kept.view).toEqual(plain.view);
+    expect(kept.state.path).toBe(-2);
+  });
+  it('E-PR-05: start and goal inside the triangle, 0.08 apart — the original shows "path length = 0.08"; corrected no path', () => {
+    const r = evaluate(fixed({ qs: [3, 3], qf: [3.08, 3], errata: 'corrected' }), replayRng({}));
+    expect(r.view.qsInObstacle).toBe(true);
+    expect(r.state.path).toBe(-1);
+    expect(r.view.progressEnabled).toBe(false);
+    // free start and goal, 0.08 apart: the direct path stays
+    const free = evaluate(fixed({ qs: [1, 1], qf: [1.08, 1], errata: 'corrected' }), replayRng({}));
+    expect(free.state.path).toBe(-2);
+  });
+  const goodPts = [[1.5, 1], [2, 1], [2.5, 1], [3, 1], [3.5, 1], [4, 1]];
+  const adj = [[2], [1, 3], [2, 4], [3, 5], [4, 6], [5]];
+  const base = { goodPts, edgesNNadj: adj, pathOK: () => true, qsFree: () => true, qfFree: () => true };
+  it('E-PR-01: A* on a hand-made roadmap — the same shortest path as the original search (a line of six samples; a diamond with one short side)', () => {
+    expect(coreAstar(adj, goodPts, 1, 6, undefined, true)).toEqual(coreAstar(adj, goodPts, 1, 6));
+    expect(coreAstar(adj, goodPts, 1, 6, undefined, true)).toEqual([1, 2, 3, 4, 5, 6]);
+    const pts = [[1, 1], [2, 1.2], [2, 3], [3, 1]]; // start, near way, far way, goal
+    const dia = [[2, 3], [1, 4], [1, 4], [2, 3]];
+    expect(coreAstar(dia, pts, 1, 4, undefined, true)).toEqual([1, 2, 4]);
+    expect(coreAstar([[2], [1], []], [[1, 1], [2, 1], [3, 3]], 1, 3, undefined, true)).toBe(-1);
+  });
+  it('E-PR-05: a start in collision gets no direct path when corrected (the original: path -2)', () => {
+    const q = { ...base, qsFree: () => false, qs: [1, 1], qf: [1.3, 1], r: 0.5 };
+    expect(coreQuery(q).path).toBe(-2);
+    expect(coreQuery({ ...q, corrected: true }).path).toBe(-1);
+    expect(coreQuery({ ...base, qfFree: () => false, qs: [1, 1], qf: [1.3, 1], r: 0.5, corrected: true }).path).toBe(-1);
+    expect(coreQuery({ ...base, qs: [1, 1], qf: [1.3, 1], r: 0.5, corrected: true }).path).toBe(-2); // both free: unchanged
+  });
+  it('E-PR-04: when the nearest sample cannot be reached the next one within r is tried (the original gives up)', () => {
+    const pathOK = (a, b) => !(b[0] === 1.5 || a[0] === 1.5); // the planner refuses every segment to the sample (1.5, 1)
+    const q = { ...base, pathOK, qs: [1.45, 1], qf: [4.2, 1], r: 0.7 };
+    expect(coreQuery(q).path).toBe(-1);
+    const c = coreQuery({ ...q, corrected: true });
+    expect(c.qsn).toEqual([2, 1]); // 0.55 away, inside r
+    expect(c.path).toEqual([2, 3, 4, 5, 6]);
+    expect(coreQuery({ ...q, r: 0.3, corrected: true }).qsn).toBe(null); // no other sample within r
   });
 });

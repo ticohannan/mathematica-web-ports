@@ -137,7 +137,9 @@ Rules 7–9 are the owner's rules of 2026-10-17 (R-A, R-B, R-C). They apply to e
      mode"); whether the correction could be offered as an option (an `I-` entry); risks.
    - **Status**, exactly one of: `open` (the default: an open question for the owner), `kept` (the owner decided to
      keep the original's behaviour), `corrected in vX.Y.Z` (the owner approved a correction through a `P-` proposal,
-     named in the row).
+     named in the row), `switchable since vX.Y.Z` (both behaviours are in the port: the switch
+     "errors of the original: kept | corrected" of `shared/errata.js` chooses, the default is the original's; the
+     correction is listed in the app's `errata-mode.js` and in [`CORRECTED_MODE.md`](CORRECTED_MODE.md)).
    - If nothing was found, a single row `| — | none found | — | <what was checked> | — | — | — |`.
 
    Sources: the app's `Q-` quirks, `N-` notes and review findings first; each formula is checked against the

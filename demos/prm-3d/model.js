@@ -15,6 +15,7 @@ import {
   Cylinder, Cuboid, Sphere, Point, Line, Opacity, EdgeForm, PointSize, RGBColor, GeometricTransformation, affine,
   rotationMatrix, Graphics3D,
 } from '../../shared/graphics3d.js';
+import { isCorrected } from '../../shared/errata.js';
 
 export { TWO_PI, toroidDist, wrapto0to2pi, toroidLine, toroidLines };
 
@@ -288,6 +289,7 @@ export function evaluate(stateIn, rng, { controlActive = false } = {}) {
     qs, qf, r: st.r, goodPts: st.goodPts, edgesNNadj: st.edgesNNadj, dist: toroidDist,
     pathOK: (a, b) => pathOKTrobot(a, b, pObs3, obsRad, widtha, delta),
     qsFree: () => !inCollision, qfFree: () => !inCollisionf,
+    corrected: isCorrected(stateIn), correctedNearest: false, // the switch "errors of the original" (DESIGN.md §4): E-P3-01, E-P3-03
   });
 
   // Calculate the robot progress

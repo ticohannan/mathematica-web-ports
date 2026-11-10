@@ -104,6 +104,15 @@ procedure in [docs/MATHEMATICA_CHECKS.md](docs/MATHEMATICA_CHECKS.md) and result
 document lists it in §11 *Errors in the original*; the ports keep the original's behaviour until the owner decides.
 Full guide: [docs/TESTING.md](docs/TESTING.md). Feature changes: [docs/DESIGN_PROCESS.md](docs/DESIGN_PROCESS.md).
 
+### Errors of the originals: kept or corrected
+
+Every port reproduces its original, including the errors found in it (section 11 of each app's `DESIGN.md`). Since
+v0.1.34 the apps with code-level findings have a switch beside "Initial settings", **errors of the original: kept |
+corrected**. "kept" is the default and is the original's behaviour; "corrected" changes only the code needed for the
+listed findings. What changes in each app is on its page (under the Details) and in
+[docs/CORRECTED_MODE.md](docs/CORRECTED_MODE.md). The last version without the switch is the tag
+`pre-fixed-mode-v0.1.33`.
+
 ## Deploying a single app
 
 Every app can be taken out and hosted on its own (owner rule R-A). `npm run bundle -- prm-robot-arm` writes one app

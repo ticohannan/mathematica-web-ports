@@ -10,6 +10,8 @@ import { el } from '../../shared/ui.js';
 import { mmaNumberString } from '../../shared/mma-extra.js';
 import { TYPE_NAMES, typeOf, sliderSpec, jacobianFor } from './robots.js';
 import { initialState, evaluate, selectType } from './model.js';
+import { ErrataControl } from '../../shared/errata.js';
+import { CORRECTIONS } from './errata-mode.js';
 import { Graphics3D, Group3D, flatten } from './g3d.js';
 import { svd3, matrixRank } from './svd3.js';
 
@@ -126,6 +128,7 @@ M = Manipulate({
     [['showRobot', false, 'show robot'], [false, true], { parent: optionsBox }],
     [['showManipulability', false, 'show manipulability ellipsoid'], [false, true], { parent: optionsBox }],
     [['isJLinearVel', 'Linear', 'velocity singularities'], ['Linear', 'Angular'], { parent: optionsBox }],
+    ErrataControl(CORRECTIONS),
   ],
   after: (ctx) => { if (ctx.state.iType !== builtType) buildSliders(ctx.state); else showParams(ctx.state); },
   /** setState({iType, params, showRobot, showManipulability, isJLinearVel}): like the controls (a new iType resets params first) */

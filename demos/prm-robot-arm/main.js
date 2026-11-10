@@ -17,6 +17,8 @@ import { mmaNumberString } from '../../shared/mma-extra.js';
 import { LOC_ICON, TWO_PI } from '../common/prm-core.js';
 import { initialState, evaluate, xMin, yMin, xMax, yMax, toOuter, regionPolygons } from './model.js';
 import { createWorkspace } from './workspace3d.js';
+import { ErrataControl } from '../../shared/errata.js';
+import { CORRECTIONS } from './errata-mode.js';
 
 // ---- the outer Graphics[{Inset[3D], Inset[phase space], Text..., Locator...}, PlotRange -> {{-2.2,7.1},{-2.4,2.4}},
 //      ImageSize -> {600, 320}] -------------------------------------------------------------------------------------
@@ -177,6 +179,7 @@ const m = Manipulate({
   ],
   // ControlPlacement -> Top, Rows as in the original; `label` keeps the controls' accessible names, `name` their test ids
   controls: [
+    ErrataControl(CORRECTIONS),
     Row([
       [['obstaxy', I.obstaxy, Subscript('blue', 'xy')], [-1, -1], [1, 1], { name: 'blue-xy', label: 'blue_xy' }],
       [['obstaz', I.obstaz, Subscript('blue', 'z')], 0, 2, { ControlType: VerticalSlider, name: 'blue-z', label: 'blue_z' }],

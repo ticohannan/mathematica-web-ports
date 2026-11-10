@@ -155,3 +155,92 @@ describe('bfs-motion-planning: one evaluation of the body', () => {
     expect(angleLabelVisible(t2)).toBe(false);
   });
 });
+
+// The switch "errors of the original: kept | corrected" (A-BF-08, shared/errata.js). Expected values by hand: step
+// counts on small grids times 1 and √2; the blocked-goal state is the one of the browser test "a goal inside an
+// obstacle region gives a one-cell path and red glyphs".
+describe('corrected mode (E-BF)', () => {
+  const R2 = Math.SQRT2;
+  const blockedGoal = (errata) => evaluate({ ...initialState(), pConfigF: [3.315625, 1.740625], ...(errata ? { errata } : {}) });
+  it('kept: errata = "original" gives exactly the result without the variable', () => {
+    const plain = evaluate(initialState()), kept = evaluate({ ...initialState(), errata: 'original' });
+    expect(kept.view).toEqual(plain.view);
+    const { errata, errataApplied, ...rest } = kept.state;
+    expect([errata, errataApplied]).toEqual(['original', 'original']);
+    expect(rest).toEqual(plain.state);
+  });
+  it('E-BF-02: on a free 7 x 7 torus from (4, 4) a diagonal costs √2: (5,5) √2, (6,6) 2√2, (5,6) 1 + √2, (4,6) 2', () => {
+    const o = bfsTorus(zeros(7), [4, 4]), f = bfsTorus(zeros(7), [4, 4], { corrected: true });
+    expect([o.lvl[4][4], o.lvl[5][5]]).toEqual([1.41, 2.82]);
+    expect(f.lvl[4][4]).toBe(R2);
+    expect(f.lvl[5][5]).toBeCloseTo(2 * R2, 14);
+    expect(f.lvl[4][5]).toBeCloseTo(1 + R2, 14);
+    expect(f.lvl[3][5]).toBe(2);
+    expect(f.parent[4][4]).toEqual([4, 4]);
+  });
+  it('E-BF-02: the label of a path with two diagonals on a 32-cell grid is Round[(2π/32) 2√2, 0.01] = 0.56, the original\'s 0.55', () => {
+    expect(pathLengthLabel(2 * R2, 32).text).toBe('robot phase space, path length = 0.56 rads'); // 0.5554
+    expect(pathLengthLabel(2.82, 32).text).toBe('robot phase space, path length = 0.55 rads'); // 0.5537
+  });
+  it('E-BF-04: with (4,5) and (5,4) blocked the step (4,4) → (5,5) is not taken; the way round costs 3√2', () => {
+    const grid = withBlocked(7, [[4, 5], [5, 4]]);
+    expect(bfsTorus(grid, [4, 4]).lvl[4][4]).toBe(1.41); // the original cuts the corner
+    const f = bfsTorus(grid, [4, 4], { corrected: true });
+    expect(f.lvl[4][4]).toBeCloseTo(3 * R2, 12); // (4,4) → (3,5) → (4,6) → (5,5), or its mirror image
+    const path = getShortestPath(f.parent, [4, 4], [5, 5], { corrected: true }).reverse();
+    expect(path.length).toBe(4);
+    expect(path[0]).toEqual([4, 4]);
+    expect(path[3]).toEqual([5, 5]);
+    // one blocked neighbour only: the diagonal is still taken
+    expect(bfsTorus(withBlocked(7, [[4, 5]]), [4, 4], { corrected: true }).lvl[4][4]).toBe(R2);
+  });
+  it('E-BF-03: an unreachable goal — the original jumps to it and shows ∞; corrected stays at the start and says "no path exists"', () => {
+    const o = blockedGoal(), f = blockedGoal('corrected');
+    expect(o.state.lE).toEqual([1, 4]);
+    expect(o.state.path).toEqual([[1, 4]]);
+    expect(o.view.label.text).toBe('robot phase space, path length = ∞ rads');
+    expect(o.view.inCollision).toBe(true);
+    expect(f.state.lE).toEqual([1, 4]);
+    expect(f.state.path).toEqual([f.state.lS]);
+    expect(f.view.ccord).toEqual(f.state.lS);
+    expect(f.view.label.text).toBe('robot phase space, no path exists');
+    expect(f.view.noPath).toBe(true);
+    expect(f.view.inCollision).toBe(false);
+    // a reachable goal is not affected: the opening state has the same path in both modes (no diagonal: 1.57)
+    const a = evaluate(initialState()), b = evaluate({ ...initialState(), errata: 'corrected' });
+    expect(b.state.path).toEqual(a.state.path);
+    expect(b.view.label.text).toBe('robot phase space, path length = 1.57 rads');
+    expect(b.view.noPath).toBe(false);
+  });
+  it('E-BF-03: nothing spreads from a blocked start cell', () => {
+    const grid = withBlocked(7, [[4, 4]]);
+    expect(bfsTorus(grid, [4, 4]).lvl[3][4]).toBe(1); // the original searches from it
+    const f = bfsTorus(grid, [4, 4], { corrected: true });
+    expect(f.pushes).toBe(0);
+    expect(f.lvl.flat().filter(Number.isFinite)).toEqual([0]);
+  });
+  it('E-BF-05: with the goal in an obstacle region the original draws both glyphs red; corrected the start green and the goal red', () => {
+    const o = blockedGoal(), f = blockedGoal('corrected');
+    expect([o.view.glyphStart, o.view.glyphGoal]).toEqual(['red', 'red']);
+    expect([f.view.glyphStart, f.view.glyphGoal]).toEqual(['green', 'red']);
+    // a start in an obstacle region: at P = 1 (the arm at the free goal) the original shows both green
+    const os = evaluate({ ...initialState(), pConfigI: [3.315625, 1.740625] });
+    const fs = evaluate({ ...initialState(), pConfigI: [3.315625, 1.740625], errata: 'corrected' });
+    expect(os.state.lS).toEqual([1, 4]);
+    expect([os.view.glyphStart, os.view.glyphGoal]).toEqual(['green', 'green']);
+    expect([fs.view.glyphStart, fs.view.glyphGoal]).toEqual(['red', 'green']);
+    expect(fs.view.noPath).toBe(true); // E-BF-03: nothing is searched from the colliding start
+  });
+  it('E-BF-07: on the bottom edge of an odd grid (L = 17) the original gives row 18, corrected row 17; inside the grid nothing changes', () => {
+    expect(cellOf([5, -2], 17).cell[0]).toBe(18); // Round[17 + 0.5] = 18 (half to even), outside the grid
+    expect(cellOf([5, -2], 17, { corrected: true }).cell[0]).toBe(17);
+    for (const p of [[4.5, 0], [5.5, 0], [3.3, 1.7], [6.6, -1.9]]) expect(cellOf(p, 32, { corrected: true })).toEqual(cellOf(p, 32));
+  });
+  it('switching the mode runs the cached search again', () => {
+    const s1 = evaluate({ ...initialState(), errata: 'original' });
+    const s2 = evaluate({ ...s1.state, errata: 'corrected' });
+    expect(s2.view.searched).toBe(true);
+    expect(evaluate(s2.state).view.searched).toBe(false);
+  });
+});
+

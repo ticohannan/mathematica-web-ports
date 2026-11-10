@@ -18,7 +18,7 @@ SPDX-License-Identifier = "MIT"
 # Everything adapted from, or derived from, the Wolfram Demonstrations: CC BY-NC-SA 3.0
 [[annotations]]
 path = ["demos/**", "index.html", "README.md", "LICENSE.md", "tests/**",
-        "docs/original-source/**", "docs/original-snapshots/**", "docs/MANUAL_TEST_CHECKLIST.md", "docs/checklists/**"]
+        "docs/original-source/**", "docs/original-snapshots/**", "docs/MANUAL_TEST_CHECKLIST.md", "docs/checklists/**", "docs/CORRECTED_MODE.md"]
 precedence = "closest"
 SPDX-FileCopyrightText = ["2026 Tico Hannan", "Original Wolfram Demonstrations by their authors, see LICENSE.md"]
 SPDX-License-Identifier = "CC-BY-NC-SA-3.0"

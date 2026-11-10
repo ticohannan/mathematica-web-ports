@@ -6,6 +6,7 @@
 // shared/wl.js list functions); the picture is Graphics3D data of shared/graphics3d.js.
 import { Graphics3D, Red, Green, Blue, Yellow, White, Opacity, FontSize, Sphere, Tube, Polygon, InfiniteLine, InfinitePlane, Text } from '../../shared/graphics3d.js';
 import { Plus, Subtract, Times, Divide, Dot, Cross, Norm, Det, Sort, Join, Round } from '../../shared/wl.js';
+import { isCorrected } from '../../shared/errata.js';
 
 /** the Manipulate's initial settings (the notebook's stored Variables) */
 export const initialState = () => ({
@@ -63,9 +64,11 @@ export function findClosestPointLineSegment(p, l1, l2) {
 /**
  * The common part of drawClosestDistanceBetweenLines and closestDistanceBetweenLines (the StackOverflow algorithm,
  * transcribed): for parallel lines the branch taken; otherwise the projected points pA, pB (t0, t1 along uA, uB) and
- * the clamped points pAc, pBc. The clamping steps use the UNCLAMPED pA, pB, as the original does (§11 E-SD-01).
+ * the clamped points pAc, pBc. The clamping steps use the UNCLAMPED pA, pB, as the original does (§11 E-SD-01);
+ * with `corrected` (the switch "errors of the original: corrected") they project the already clamped points, as the
+ * StackOverflow algorithm does.
  */
-export function segmentsData(a0, a1, b0, b1) {
+export function segmentsData(a0, a1, b0, b1, corrected = false) {
   const vA = Subtract(a1, a0), vB = Subtract(b1, b0);
   const magA = Norm(vA), magB = Norm(vB);
   const uA = Divide(vA, magA), uB = Divide(vB, magB);
@@ -95,14 +98,14 @@ export function segmentsData(a0, a1, b0, b1) {
   let dot;
   // clamp projection A
   if (t0 < 0 || t0 > magA) {
-    dot = Dot(uB, Subtract(pA, b0));
+    dot = Dot(uB, Subtract(corrected ? pAc : pA, b0)); // E-SD-01
     if (dot < 0) dot = 0;
     if (dot > magB) dot = magB;
     pBc = Plus(b0, Times(uB, dot));
   }
   // clamp projection B
   if (t1 < 0 || t1 > magB) {
-    dot = Dot(uA, Subtract(pB, a0));
+    dot = Dot(uA, Subtract(corrected ? pBc : pB, a0)); // E-SD-01
     if (dot < 0) dot = 0;
     if (dot > magA) dot = magA;
     pAc = Plus(a0, Times(uA, dot));
@@ -111,8 +114,8 @@ export function segmentsData(a0, a1, b0, b1) {
 }
 
 /** drawClosestDistanceBetweenLines[a0, a1, b0, b1]: the drawings for the closest points of the two segments. */
-export function drawClosestDistanceBetweenLines(a0, a1, b0, b1) {
-  const s = segmentsData(a0, a1, b0, b1);
+export function drawClosestDistanceBetweenLines(a0, a1, b0, b1, corrected = false) {
+  const s = segmentsData(a0, a1, b0, b1, corrected);
   const { magA, uA, uB, d0, d1 } = s;
   if (s.parallel === 'before') {
     if (Math.abs(d0) < Math.abs(d1)) return [drawShortestLineSeg(a0, b0), drawPerpLineSeg(a0, Subtract(b0, Times(d0, uA)), uA, uB, true, true), drawPerpLineSeg(b0, Plus(a0, Times(d0, uA)), uA, uB, true, true)];
@@ -133,8 +136,8 @@ export function drawClosestDistanceBetweenLines(a0, a1, b0, b1) {
 }
 
 /** closestDistanceBetweenLines[a0, a1, b0, b1]: the distance of the two segments. */
-export function closestDistanceBetweenLines(a0, a1, b0, b1) {
-  const s = segmentsData(a0, a1, b0, b1);
+export function closestDistanceBetweenLines(a0, a1, b0, b1, corrected = false) {
+  const s = segmentsData(a0, a1, b0, b1, corrected);
   const { uA, d0, d1 } = s;
   if (s.parallel === 'before') return Math.abs(d0) < Math.abs(d1) ? Norm(Subtract(a0, b0)) : Norm(Subtract(a0, b1));
   if (s.parallel === 'after') return Math.abs(d0) < Math.abs(d1) ? Norm(Subtract(a1, b0)) : Norm(Subtract(a1, b1));
@@ -160,15 +163,17 @@ export function roundedText(dist) {
 export const PLOT_RANGE = [[-5.2, 5.2], [-5.2, 5.2], [-5.2, 5.2]];
 
 /** The Manipulate body. */
-export function evaluate({ axy, bxy, cxy, dxy, az, bz, cz, dz, showPlaneAB, showPlaneCD }) {
+export function evaluate(state) {
+  const { axy, bxy, cxy, dxy, az, bz, cz, dz, showPlaneAB, showPlaneCD } = state;
+  const corrected = isCorrected(state); // the switch "errors of the original" (A-SD-09): E-SD-01
   const a = Join(axy, [az]); // the four end points of the line segments
   const b = Join(bxy, [bz]);
   const c = Join(cxy, [cz]);
   const d = Join(dxy, [dz]);
   let dist, closest, kind;
   if (!same(a, b) && !same(c, d)) {
-    dist = closestDistanceBetweenLines(a, b, c, d);
-    closest = drawClosestDistanceBetweenLines(a, b, c, d);
+    dist = closestDistanceBetweenLines(a, b, c, d, corrected);
+    closest = drawClosestDistanceBetweenLines(a, b, c, d, corrected);
     kind = segmentsData(a, b, c, d).parallel ?? 'skew';
   } else if (same(a, b) && same(c, d)) {
     dist = Norm(Subtract(a, c)); // draw line between them

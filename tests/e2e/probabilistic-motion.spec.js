@@ -8,7 +8,8 @@ import fs from 'node:fs';
 import { openDemo, reviewShot } from './helpers.js';
 
 const URL = '/demos/probabilistic-motion/';
-const state = (page) => page.evaluate(() => window.__demo.getState());
+// the original's Manipulate variables (the port's switch variable `errata` is tested in errata-mode.spec.js)
+const state = (page) => page.evaluate(() => { const { errata, ...rest } = window.__demo.getState(); return rest; });
 const view = (page) => page.evaluate(() => window.__demo.view());
 const fx = JSON.parse(fs.readFileSync('tests/golden/probabilistic-motion.original-states.json', 'utf8'));
 const SLIDERS = ['θ', 'v', 'ω', 'α1', 'α2', 'α3', 'α4', 'α5', 'α6'];

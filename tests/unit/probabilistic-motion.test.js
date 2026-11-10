@@ -234,3 +234,59 @@ describe('probabilistic-motion model', () => {
     for (const mode of MODES) expect(() => evaluate({ ...initialState(), mode, v: 0 })).not.toThrow();
   });
 });
+
+// The switch "errors of the original: kept | corrected" (A-PM-07, shared/errata.js). Expected values by hand: a
+// symmetric triangular distribution on [−a, a] has variance a²/6; with only α1 > 0 the velocity sampler's noise is on v
+// alone, and a robot driven for ΔT = 1 along its arc ends at distance v̂ · 2 sin(ω/2)/ω from the start.
+describe('corrected mode (E-PM)', () => {
+  const only1 = { mode: 'VelocitySample', θ: 0, v: 2, ω: 1, α1: 0.02, α2: 0, α3: 0, α4: 0, α5: 0, α6: 0 };
+  const b = Math.sqrt(0.02 * 2 ** 2); // the book's standard deviation of the v noise: 0.2828
+  const chord = (2 * Math.sin(0.5)) / 1;
+  const vhat = (pts) => pts.map((p) => Math.hypot(p[0], p[1]) / chord);
+  const sd = (xs) => { const m = xs.reduce((a, x) => a + x, 0) / xs.length; return Math.sqrt(xs.reduce((a, x) => a + (x - m) ** 2, 0) / xs.length); };
+  it('kept: errata = "original" gives exactly the result without the variable', () => {
+    for (const st of [initialState(), only1, { ...only1, mode: 'OdometrySample' }]) {
+      const plain = evaluate(st), kept = evaluate({ ...st, errata: 'original' });
+      expect(kept.view).toEqual(plain.view);
+    }
+  });
+  it('E-PM-01: the v noise has standard deviation b/√6 in the original and b when corrected; its range is ±b and ±√6 b', () => {
+    const o = vhat(sampleMotionModelVelocityNsamples([2, 1], [0, 0, 0], 1, ...args(only1), 500, rng()));
+    const c = vhat(sampleMotionModelVelocityNsamples([2, 1], [0, 0, 0], 1, ...args(only1), 500, rng(), true));
+    expect(sd(o)).toBeGreaterThan(0.9 * b / Math.sqrt(6));
+    expect(sd(o)).toBeLessThan(1.1 * b / Math.sqrt(6));
+    expect(sd(c)).toBeGreaterThan(0.9 * b);
+    expect(sd(c)).toBeLessThan(1.1 * b);
+    expect(Math.max(...o.map((x) => Math.abs(x - 2)))).toBeLessThanOrEqual(b + 1e-12);
+    const far = Math.max(...c.map((x) => Math.abs(x - 2)));
+    expect(far).toBeGreaterThan(b); // beyond the original's range
+    expect(far).toBeLessThanOrEqual(Math.sqrt(6) * b + 1e-12); // inside the density's support
+    // the same draws, √6 times as far from the commanded speed
+    o.forEach((x, i) => expect(c[i] - 2).toBeCloseTo(Math.sqrt(6) * (x - 2), 9));
+  });
+  it('E-PM-01: every corrected velocity sample lies where the density is positive, and some lie where the original never samples', () => {
+    const c = sampleMotionModelVelocityNsamples([2, 1], [0, 0, 0], 1, ...args(only1), 500, rng(), true);
+    const dens = (p) => probTriangularDistribution(Math.hypot(p[0], p[1]) / chord - 2, b * b);
+    for (const p of c) expect(dens(p)).toBeGreaterThanOrEqual(0);
+    expect(c.filter((p) => dens(p) > 0).length).toBeGreaterThan(495);
+    expect(c.filter((p) => Math.abs(Math.hypot(p[0], p[1]) / chord - 2) > b).length).toBeGreaterThan(50);
+  });
+  it('E-PM-01: the odometry samples widen by √6 too; without noise both modes give the nominal pose; the density modes are unchanged', () => {
+    const st = { ...only1, mode: 'OdometrySample', α1: 0, α3: 0.02 }; // translation noise only
+    const o = evaluate(st).view.samples, c = evaluate({ ...st, errata: 'corrected' }).view.samples;
+    expect(Math.hypot(...c.spread) / Math.hypot(...o.spread)).toBeCloseTo(Math.sqrt(6), 6);
+    const none = { ...only1, α1: 0 };
+    expect(evaluate({ ...none, errata: 'corrected' }).view).toEqual(evaluate(none).view);
+    for (const mode of ['VelocityPDF', 'OdometryPDF']) {
+      const a = evaluate({ ...initialState(), mode }), f = evaluate({ ...initialState(), mode, errata: 'corrected' });
+      expect(f.view).toEqual(a.view);
+    }
+  });
+  it('the scenario of the browser test: sd of x = sin(1) · sd of v̂ — 0.097 in the original, 0.238 corrected', () => {
+    expect(Math.sin(1) * b / Math.sqrt(6)).toBeCloseTo(0.0972, 4);
+    expect(Math.sin(1) * b).toBeCloseTo(0.2380, 4);
+    expect(evaluate(only1).view.samples.spread[0]).toBeCloseTo(0.0972, 1);
+    expect(evaluate({ ...only1, errata: 'corrected' }).view.samples.spread[0]).toBeCloseTo(0.2380, 1);
+  });
+});
+

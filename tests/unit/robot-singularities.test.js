@@ -399,3 +399,50 @@ describe('Manipulate body', () => {
     expect(b[1]).toMatchObject({ type: 'sphere', radius: 0.5, opacity: 0.5, color: [0.87, 0.94, 1] });
   });
 });
+
+// The switch "errors of the original: kept | corrected" (shared/errata.js). Expected values: the joint z axes from the
+// DH chain (dhTransform products, independent of the hand-typed Jacobians), the reach of the wrist's end point, and 2π.
+describe('corrected mode (E-RS)', () => {
+  const mul = (A, B) => A.map((row) => [0, 1, 2, 3].map((j) => row.reduce((s, v, k) => s + v * B[k][j], 0)));
+  it('kept: errata = "original" gives exactly the result without the variable', () => {
+    for (const st of [initialState(), { ...initialState(), ...selectType(initialState(), 15), showManipulability: true, isJLinearVel: 'Angular' }]) {
+      const plain = evaluate(st), kept = evaluate({ ...st, errata: 'original' });
+      expect(kept.view).toEqual(plain.view);
+    }
+  });
+  it('E-RS-01: the corrected angular Jacobian of the spherical wrist has the joint z axes of its DH chain as columns; the original differs in entry (3,3) only', () => {
+    for (const q of CONFIGS) {
+      const Ad = computeAd(typeOf(15), q);
+      const z0 = [0, 0, 1], T1 = Ad[0], T2 = mul(Ad[0], Ad[1]);
+      const z1 = [T1[0][2], T1[1][2], T1[2][2]], z2 = [T2[0][2], T2[1][2], T2[2][2]];
+      const J = myJacobAngular(15, ...q, true), Jo = myJacobAngular(15, ...q);
+      for (let r = 0; r < 3; r++) close3([J[r][0], J[r][1], J[r][2]], [z0[r], z1[r], z2[r]], 12);
+      expect(J[2][2]).toBeCloseTo(-Jo[2][2], 15);
+      expect([J[0], J[1], J[2].slice(0, 2)]).toEqual([Jo[0], Jo[1], Jo[2].slice(0, 2)]);
+    }
+    for (let t = 1; t <= 16; t++) if (t !== 15) expect(myJacobAngular(t, 0.3, -0.7, 0.5, true)).toEqual(myJacobAngular(t, 0.3, -0.7, 0.5));
+  });
+  it('E-RS-02: the wrist\'s end point is always at distance 1 from (0, 0, 1); the corrected singular sphere has that radius, the original 0.2', () => {
+    const o3 = makeO3coords(typeOf(15));
+    for (const q of CONFIGS) expect(norm(sub(o3(...q), [0, 0, 1]))).toBeCloseTo(1, 12);
+    const big = (g) => flatten(g).filter((p) => p.type === 'sphere' && p.centers.length === 1 && p.centers[0][2] === 1).map((p) => p.radius);
+    expect(big(singularspace3D(15, 'Linear', o3))).toEqual([0.2]);
+    expect(big(singularspace3D(15, 'Linear', o3, true))).toEqual([1]);
+    for (let t = 1; t <= 16; t++) for (const mode of ['Linear', 'Angular']) {
+      if (t === 15 && mode === 'Linear') continue;
+      const o = makeO3coords(typeOf(t));
+      expect(JSON.stringify(flatten(singularspace3D(t, mode, o, true)))).toBe(JSON.stringify(flatten(singularspace3D(t, mode, o))));
+    }
+  });
+  it('E-RS-03: 1.01π wraps to −0.99π (the same direction); the original gives −3.10699, 0.0032 rad off', () => {
+    expect(wrapParams([1.01 * π, 0, 0])[0]).toBeCloseTo(-3.10699, 5);
+    const w = wrapParams([1.01 * π, -1.01 * π, 0.5], true);
+    expect(w[0]).toBeCloseTo(-0.99 * π, 12);
+    expect(w[1]).toBeCloseTo(0.99 * π, 12);
+    expect(w[2]).toBe(0.5);
+    expect(Math.cos(w[0])).toBeCloseTo(Math.cos(1.01 * π), 12); // the robot does not move
+    expect(Math.abs(wrapParams([1.01 * π, 0, 0])[0] - w[0])).toBeCloseTo(2 * π - 6.28, 12);
+    expect(wrapParams([3, -3, 0.2], true)).toEqual([3, -3, 0.2]);
+  });
+});
+

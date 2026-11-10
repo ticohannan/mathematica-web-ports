@@ -6,6 +6,8 @@
 import { Manipulate, Locator, None, Row, Slider } from '../../shared/manipulate.js';
 import { Round, Equal } from '../../shared/wl.js';
 import { SAVED, CONFIG_SPACE, initialState, evaluate, realText } from './model.js';
+import { ErrataControl } from '../../shared/errata.js';
+import { CORRECTIONS } from './errata-mode.js';
 
 const gcd = (a, b) => (b ? gcd(b, a % b) : a);
 /** Mathematica's text of a slider value of {min, max, 1/den}: the exact rational k/den reduced ("1/20", "13/500", "1");
@@ -36,5 +38,6 @@ Manipulate({
     [['s2', SAVED.s2], ...range, Locator, { Appearance: None }],
     [['e1', SAVED.e1], ...range, Locator, { Appearance: None }],
     [['e2', SAVED.e2], ...range, Locator, { Appearance: None }],
+    ErrataControl(CORRECTIONS),
   ],
 });

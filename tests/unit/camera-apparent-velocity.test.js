@@ -291,3 +291,27 @@ describe('camera-apparent-velocity model', () => {
     expect(Cases(g0, (q) => q.head === 'Arrow' && q.curve)).toHaveLength(0);
   });
 });
+
+// The switch "errors of the original: kept | corrected" (shared/errata.js). Expected value by hand: the distance of
+// the two projected points (u, v) = λ (x/z, y/z) of the pinhole camera, computed here from the 3D points.
+describe('corrected mode (E-CV)', () => {
+  it('kept: without the flag the grid is the original\'s (0.3 = maxdist at the opening settings)', () => {
+    expect(grid(imagePlaneCoor(1, 1, 15, 4, false))).toEqual(grid(imagePlaneCoor(1, 1, 15, 4)));
+    expect(grid(imagePlaneCoor(1, 1, 15, 4))[2]).toBe('0.3 =|maxdist');
+    expect(evaluate({ ...SPECS, errata: 'original' }).view).toEqual(evaluate(SPECS).view);
+    expect(evaluate({ ...SPECS, errata: 'corrected' }).view).toEqual(evaluate(SPECS).view); // the pictures do not change
+  });
+  it('E-CV-01: corrected maxdist is the distance between the projected start (1, 1, 15) and the optimum point: 1.4 at the opening settings', () => {
+    const { view } = evaluate(SPECS);
+    const image = norm(sub(proj([view.x, view.y, view.z]), proj([1, 1, 15])));
+    expect(image).toBeCloseTo(1.4261, 4);
+    expect(grid(imagePlaneCoor(1, 1, 15, 4, true))).toEqual(['(u, v) =|(1.3, 1.3)', 'λ =|5', '1.4 =|maxdist']);
+    // other settings: the image distance of the two projected points, to one decimal
+    for (const [xc, yc, zc, r] of [[1, 1, 15, 2], [8, 5, 14, 3.4], [0, 0, 17, 3], [-6, 3, 11, 1.5]]) {
+      const v = evaluate({ ...SPECS, xc, yc, zc, r }).view;
+      const d = norm(sub(proj([v.x, v.y, v.z]), proj([xc, yc, zc])));
+      expect(grid(imagePlaneCoor(xc, yc, zc, r, true))[2]).toBe(`${d.toFixed(1)} =|maxdist`);
+    }
+  });
+});
+

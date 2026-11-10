@@ -8,6 +8,8 @@ import { Manipulate, Row } from '../../shared/manipulate.js';
 import { Fraction } from '../../shared/graphics.js';
 import { View3D } from '../../shared/graphics3d-view.js';
 import { r, initialState, evaluate } from './model.js';
+import { ErrataControl } from '../../shared/errata.js';
+import { CORRECTIONS } from './errata-mode.js';
 
 Manipulate({
   name: 'packing-spheres-into-a-thin-cylinder',
@@ -30,6 +32,7 @@ Manipulate({
       [['SphereOpacity', 0.6, 'sphere opacity'], 0, 1, 0.01, { ImageSize: 'Small', Appearance: 'Labeled' }],
       [['NumSpheres', 8, 'spheres'], 8, 32, 1, { ImageSize: 'Small', Appearance: 'Labeled' }],
     ], { name: 'second' }),
+    ErrataControl(CORRECTIONS),
   ],
   hook: {
     inkFraction: (c) => () => c.renderer(1).inkFraction(),

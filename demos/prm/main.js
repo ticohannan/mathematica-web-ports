@@ -6,6 +6,8 @@
 // shared/manipulate.js (browser only).
 import { Manipulate, Locator, Button, None, hookCopy } from '../../shared/manipulate.js';
 import { initialState, evaluate, RANGE, IMAGE, LOC_MIN, LOC_MAX } from './model.js';
+import { ErrataControl } from '../../shared/errata.js';
+import { CORRECTIONS } from './errata-mode.js';
 
 Manipulate({
   name: 'prm',
@@ -16,6 +18,7 @@ Manipulate({
   // PORT DEVIATION: the sliders keep the port's own steps and number fields (steps: undefined), not the layer's
   // Mathematica slider values; `name` keeps the test ids of the variables r and showConfigObs (ControlPlacement -> Left)
   controls: [
+    ErrataControl(CORRECTIONS),
     [['qf', [5, 5]], [LOC_MIN, LOC_MIN], [LOC_MAX, LOC_MAX], Locator, { Appearance: None }],
     [['qs', [1, 1]], [LOC_MIN, LOC_MIN], [LOC_MAX, LOC_MAX], Locator, { Appearance: None }],
     Button('add 50 vertices', (s) => { s.addPoints = true; }, { name: 'add-vertices' }),

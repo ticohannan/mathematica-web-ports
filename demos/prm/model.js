@@ -15,6 +15,7 @@ import {
   TWO_PI, toroidDist, ptInPolys, pathOKT as pathOKTcore, connectPoints as connectPointsCore, planQuery,
   progressOnPath, toroidLine, toroidLines, circlePoints,
 } from '../common/prm-core.js';
+import { isCorrected } from '../../shared/errata.js';
 
 export { TWO_PI };
 
@@ -115,6 +116,7 @@ export function evaluate(stateIn, rng) {
     qs: st.qs, qf: st.qf, r: st.r, goodPts: st.goodPts, edgesNNadj: st.edgesNNadj,
     pathOK: (a, b) => pathOKT(a, b, st.polys, delta),
     qsFree: () => !ptInPolys(st.polys, st.qs), qfFree: () => !ptInPolys(st.polys, st.qf),
+    corrected: isCorrected(stateIn), // the switch "errors of the original" (DESIGN.md §4)
   });
   st.path = path;
 

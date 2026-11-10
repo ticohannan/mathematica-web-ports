@@ -146,7 +146,7 @@ export const sameReal = (a, b) => a === b || (Number.isFinite(a) && Number.isFin
  * (First@Position[...]); openSet is a list in insertion order (AppendTo), with no closed set, so a node can be
  * opened again when a cheaper path to it is found. `tentativegScore < gScore[nbr]` is Mathematica's tolerant Less.
  */
-export function myAstar(adjL, verts, si, fi, dist = toroidDist) {
+export function myAstar(adjL, verts, si, fi, dist = toroidDist, corrected = false) {
   const N = verts.length;
   let openSet = [si];
   const cameFrom = new Array(N + 1).fill(-1);
@@ -175,7 +175,8 @@ export function myAstar(adjL, verts, si, fi, dist = toroidDist) {
       if (mLess(tentativegScore, gScore[nbr])) {
         cameFrom[nbr] = current;
         gScore[nbr] = tentativegScore;
-        fScore[nbr] = gScore[nbr] + dist(verts[nbr - 1], verts[nbr - 1]);
+        // corrected (the switch "errors of the original: corrected"): the A* heuristic, the distance from the neighbour to the goal
+        fScore[nbr] = gScore[nbr] + dist(verts[nbr - 1], corrected ? verts[fi - 1] : verts[nbr - 1]);
         if (!openSet.includes(nbr)) openSet.push(nbr); // If[FreeQ[openSet, nbr], AppendTo[openSet, nbr]]
       }
     }
@@ -279,23 +280,27 @@ export function connectPoints(goodPts, edgesNNadjin, pathOK, edgesNNin, point2st
  *   If[qfn != {} && qsn != {} && Length[edgesNNadj] > 1, path = myAstar[edgesNNadj, goodPts, qsni, qfni]]
  * qsFree / qfFree: the app's "start / goal not in collision" tests; dist: toroidDist (default). Returns
  * { path, qsn, qfn } (qsn/qfn null = {}).
+ * corrected (the switch "errors of the original: corrected" of the three PRM apps): the direct path needs a start and
+ * a goal that are not in collision; start and goal try up to ten nearest samples within r (Nearest[…, {10, r}], as the
+ * roadmap is built), not only the nearest one; the search is A* (myAstar).
  */
-export function planQuery({ qs, qf, r, goodPts, edgesNNadj, pathOK, qsFree, qfFree, dist = toroidDist }) {
+export function planQuery({ qs, qf, r, goodPts, edgesNNadj, pathOK, qsFree, qfFree, dist = toroidDist, corrected = false, correctedNearest = corrected }) {
   let path = -1, qsn = null, qfn = null;
-  if (mLess(dist(qs, qf), r) && pathOK(qs, qf)) {
+  const candidates = correctedNearest ? { n: 10, r } : { n: 1 }; // prm-3d keeps the single nearest sample (not in its §11)
+  if (mLess(dist(qs, qf), r) && pathOK(qs, qf) && (!corrected || (qsFree() && qfFree()))) {
     path = -2;
   } else {
     if (qsFree() && goodPts.length > 5) {
-      for (const pe of nearest(goodPts, qs, { n: 1 }, dist)) if (pathOK(qs, pe)) { qsn = pe; break; }
+      for (const pe of nearest(goodPts, qs, candidates, dist)) if (pathOK(qs, pe)) { qsn = pe; break; }
     }
     if (qfFree() && goodPts.length > 5) {
-      for (const pe of nearest(goodPts, qf, { n: 1 }, dist)) if (pathOK(qf, pe)) { qfn = pe; break; }
+      for (const pe of nearest(goodPts, qf, candidates, dist)) if (pathOK(qf, pe)) { qfn = pe; break; }
     }
   }
   if (qfn !== null && qsn !== null && edgesNNadj.length > 1) {
     const qsni = positionOf(goodPts, qsn) + 1;
     const qfni = positionOf(goodPts, qfn) + 1;
-    path = myAstar(edgesNNadj, goodPts, qsni, qfni, dist);
+    path = myAstar(edgesNNadj, goodPts, qsni, qfni, dist, corrected);
   }
   return { path, qsn, qfn };
 }

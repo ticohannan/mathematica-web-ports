@@ -186,3 +186,81 @@ describe('packing-spheres-into-a-thin-cylinder model', () => {
     expect(Cases(marker, 'Point')[0].pts).toEqual([[1.924, z]]);
   });
 });
+
+// The switch "errors of the original: kept | corrected" (A-PS-08, shared/errata.js). Expected values from the
+// geometry, written here independently of the model: touching spheres are 2r apart; a ring of five on radius ρ turned
+// by π/5 per level has neighbours a chord 2ρ sin(π/10) apart sideways.
+describe('corrected mode (E-PS)', () => {
+  const SOME = GRID.filter((_, i) => i % 5 === 0 || i > 200).concat([2.71, 2.85]); // every structure, 45 radii
+  const setupC = (R, NumSpheres) => { const w = 2 * R, p = tubeSphereStackParamsFAST(w, r, true); return { w, p, c: centers({ w, NumSpheres, θ: 0 }, p, true) }; };
+  it('kept: errata = "original" gives exactly the result without the variable', () => {
+    for (const st of [initialState(), { ...initialState(), R: 2.708, NumSpheres: 17 }]) {
+      const plain = evaluate(st), kept = evaluate({ ...st, errata: 'original' });
+      expect(kept.view).toEqual(plain.view);
+      expect(flatten(kept.graphics[1])).toEqual(flatten(plain.graphics[1]));
+    }
+  });
+  it('E-PS-01: at R/r = 2.708 the corrected rings of five touch (2r apart) and the ratio is 0.169874; the original leaves 0.026 r and shows 0.172977', () => {
+    const w = 2 * 2.708, ρ = w / 2 - 1;
+    const h = Math.sqrt(4 - (2 * ρ * Math.sin(Math.PI / 10)) ** 2); // level spacing for touching neighbours, by hand
+    const p = tubeSphereStackParamsFAST(w, r, true);
+    expect(p.numsides).toBe(5);
+    expect(p.z).toBeCloseTo(h / 10, 12);
+    expect(p.z).toBeCloseTo(0.169874, 6);
+    expect(tubeSphereStackParamsFAST(w, r).z).toBeCloseTo(0.172977, 6);
+    const { c } = setupC(2.708, 20);
+    const lengths = segments(sphereToSphereContacts(w, r, c, true)).map(([a, b]) => dist(a, b));
+    expect(lengths.length).toBeGreaterThan(20);
+    for (const d of lengths) expect(d).toBeCloseTo(2, 9);
+    expect(evaluate({ R: 2.708, θ: 0, SphereOpacity: 0.6, NumSpheres: 20, errata: 'corrected' }).view.caption).toBe('compression ratio = 0.169874');
+  });
+  it('E-PS-01: five at a time is chosen where its corrected curve is the lowest: to R/r = 2.72283 (the original: 2.70986) and again from 2.8043 to 2.9204', () => {
+    const Wc = 2 + Math.sqrt(512 / (23 + 9 * Math.sqrt(5))); // (4 − u(3 − √5)/8)/100 = (4 − u/4)/36 with u = (W − 2)², by hand
+    expect(BOUNDS.five / 2).toBeCloseTo(2.70986, 5);
+    expect(Wc / 2).toBeCloseTo(2.72283, 5);
+    const three = Math.sqrt(4 - (Wc / 2 - 1) ** 2) / 6, five = Math.sqrt(4 - ((3 - Math.sqrt(5)) / 8) * (Wc - 2) ** 2) / 10;
+    expect(five).toBeCloseTo(three, 12);
+    const sides = (R, corrected) => tubeSphereStackParamsFAST(2 * R, r, corrected).numsides;
+    expect([2.70, 2.71, 2.72, 2.73, 2.80, 2.81, 2.85, 2.92, 2.93].map((R) => sides(R, true))).toEqual([3, 5, 5, 3, 6, 5, 5, 5, 6]);
+    expect([2.70, 2.71, 2.72, 2.73, 2.80, 2.81, 2.85, 2.92, 2.93].map((R) => sides(R, false))).toEqual([3, 3, 3, 3, 6, 6, 6, 6, 6]);
+    expect(sides(Wc / 2 - 1e-9, true)).toBe(5);
+    expect(sides(Wc / 2 + 1e-9, true)).toBe(3);
+    // at R/r = 2.85, by hand: ρ = 1.85, sideways chord 2ρ sin 18° = 1.14336, level spacing √(4 − 1.14336²) = 1.64095
+    const p = tubeSphereStackParamsFAST(5.7, r, true);
+    expect([p.z, p.IsTwist, p.Ang2, p.z2]).toEqual([expect.closeTo(0.164095, 6), false, 0, 0]);
+    expect(tubeSphereStackParamsFAST(5.7, r).z).toBeCloseTo(0.164814, 6); // the twisted three-at-a-time curve
+    // a valid packing there: neighbours in a ring are 2ρ sin 36° = 2.175 > 2 apart
+    expect(2 * 1.85 * Math.sin(Math.PI / 5)).toBeGreaterThan(2);
+  });
+  it('E-PS-01: the corrected structure at every slider step is the lowest corrected curve, only the fifth curve differs, and outside five at a time nothing changes', () => {
+    for (let k = 0; k < 200; k++) {
+      const R = 1 + k / 100;
+      const o = compressionCurves(R), f = compressionCurves(R, true);
+      const pc = tubeSphereStackParamsFAST(2 * R, r, true);
+      expect(pc.z).toBeCloseTo(Math.min(...f.filter((v) => !Number.isNaN(v))), 12);
+      expect([...f.slice(0, 4), ...f.slice(5)]).toEqual([...o.slice(0, 4), ...o.slice(5)]);
+      expect(f[4]).toBeLessThanOrEqual(o[4]);
+      if (pc.numsides !== 5) expect(pc).toEqual(tubeSphereStackParamsFAST(2 * R, r));
+    }
+  });
+  it('E-PS-02: exactly the chosen number of spheres (17 at R/r = 2.361, where the original draws 20)', () => {
+    expect(setup(2.361, 17).c).toHaveLength(20);
+    expect(setupC(2.361, 17).c).toHaveLength(17);
+    expect(setupC(2.361, 17).c).toEqual(setup(2.361, 17).c.slice(0, 17));
+    for (const R of SOME) for (let N = 8; N <= 32; N++) expect(evaluate({ R, θ: 0, SphereOpacity: 0.6, NumSpheres: N, errata: 'corrected' }).view.centers).toHaveLength(N);
+  }, 60_000);
+  it('E-PS-02: with an incomplete last level the contact lines still join touching spheres, the tube ends at the farthest sphere and the picture is drawn', () => {
+    for (const R of SOME) {
+      for (let N = 8; N <= 32; N++) {
+        const { view, graphics } = evaluate({ R, θ: 0, SphereOpacity: 0.6, NumSpheres: N, errata: 'corrected' });
+        expect(view.spheres).toBe(N);
+        expect(view.endC).toBeCloseTo(Math.max(...view.centers.map((q) => q[0])) + 1, 12);
+        for (const l of polylines(view.contacts)) { expect(l.length).toBeGreaterThan(1); for (const q of l) expect(view.centers).toContain(q); }
+        if (N % view.numsides === 0) expect(segments(view.contacts).length).toBe(segments(sphereToSphereContacts(2 * R, r, view.centers, view.numsides === 5)).length);
+        for (const [a, b] of segments(view.contacts)) { expect(a && b).toBeTruthy(); expect(dist(a, b)).toBeCloseTo(2, 9); }
+        expect(flatten(graphics[1]).length).toBeGreaterThan(N);
+      }
+    }
+  }, 60_000);
+});
+

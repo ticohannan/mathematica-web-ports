@@ -235,3 +235,84 @@ describe('four-bar-linkage: Graphics data = the drawing before v0.1.21', () => {
     expect(lk.map((x) => x[1]?.id ?? x.id)).toEqual(['text-L4', 'text-theta', 'text-L1', 'text-phi', 'text-L3', 'text-L2']);
   });
 });
+
+// The switch "errors of the original: kept | corrected" (A-FB-08, shared/errata.js). Expected values by hand: the
+// loop-closure geometry of the linkage (crank from the origin, rocker from (L4, 0)) and the triangle inequality.
+describe('corrected mode (E-FB)', () => {
+  const start = () => F.fromSettings(F.initialSettings());
+  it('kept: errata = "original" gives exactly the result without the variable', () => {
+    const plain = F.evaluate(start()), kept = F.evaluate({ ...start(), errata: 'original' });
+    expect(kept.view).toEqual(plain.view);
+    const { errata, errataApplied, ...rest } = kept.state;
+    expect([errata, errataApplied]).toEqual(['original', 'original']);
+    expect(rest).toEqual(plain.state);
+  });
+  it('E-FB-01: L3 = 2.35 > L1 + L2 + L4 = 0.9 is impossible; the original does not notice', () => {
+    const l = lenlengthsOf([0.05, 0.15], 0.75);
+    expect(l[2]).toBeCloseTo(2.35, 12);
+    expect(l[0] + l[1] + l[3]).toBeCloseTo(0.9, 12);
+    expect(F.impossibleLinksOf(l)).toBe(false);
+    expect(F.impossibleLinksOf(l, true)).toBe(true);
+    const f = F.evaluate({ ...start(), links: [0.05, 0.15], spacing: 0.75, errata: 'corrected' });
+    expect(f.view.impossibleLinks).toBe(true);
+    expect(f.state.plot.text).toBe(F.INVALID_TEXT);
+    expect(F.evaluate({ ...start(), links: [0.05, 0.15], spacing: 0.75 }).view.impossibleLinks).toBe(false);
+  });
+  it('E-FB-01: L3 = L1 + L2 + L4 (1.5 = 0.5 + 0.5 + 0.5) has the single configuration (π, π), which closes the loop', () => {
+    const l = lenlengthsOf([0.5, 1.0], 0.5);
+    expect(l).toEqual([0.5, 0.5, 1.5, 0.5]);
+    expect(F.piecewisePnear(l)).toEqual([PI / 2, PI / 2]); // the original never reaches {π, π}
+    expect(F.piecewisePnear(l, true)).toEqual([PI, PI]);
+    // by hand: crank tip (-0.5, 0); rocker tip (0.5 - 1.5, 0) = (-1, 0); their distance is the coupler L2 = 0.5
+    expect(Math.hypot(-0.5 - (-1), 0)).toBe(l[1]);
+    const f = F.evaluate({ ...start(), links: [0.5, 1.0], spacing: 0.5, errata: 'corrected' });
+    expect(f.state.plot.text).toBe(F.ONE_TEXT);
+    expect(f.state.pnear).toEqual([PI, PI]);
+    // the other three conditions are the same in both modes
+    for (const ll of [[2, 0.5, 0.5, 0.5], [0.5, 2, 0.5, 0.5], [0.5, 0.5, 0.5, 2], [1, 1, 0.5, 0.5]]) expect(F.impossibleLinksOf(ll, true)).toBe(F.impossibleLinksOf(ll));
+  });
+  it('E-FB-02: lengths {1, 1, 0.5, 0.5} at θ = 0 — α = -0.5, β = 0, γ = 0.5: the original gives Null, corrected φ = π (the loop closes)', () => {
+    const l = [1, 1, 0.5, 0.5];
+    const t = F.loopTerms(0, l);
+    expect([t.Alpha, t.Beta, t.Gamma]).toEqual([-0.5, -0, 0.5]);
+    expect(Phipos(0, l)).toBe(null);
+    expect(Phineg(0, l)).toBe(null);
+    for (const f of [Phipos, Phineg]) expect(Math.abs(f(0, l, true))).toBeCloseTo(PI, 12);
+    // by hand: crank tip (1, 0), rocker pivot (0.5, 0), rocker tip (0.5 + 0.5 cos π, 0) = (0, 0): coupler length 1 = L2
+    expect(Math.hypot(1 - (0.5 + 0.5 * Math.cos(PI)), 0 - 0.5 * Math.sin(PI))).toBeCloseTo(l[1], 12);
+  });
+  it('E-FB-02: away from the boundary both modes give the same angle, outside the domain both give Null, and every corrected angle closes the loop', () => {
+    const rnd = mulberry32(77);
+    let real = 0, none = 0;
+    for (let i = 0; i < 4000; i++) {
+      const l = [0.2 + 1.5 * rnd(), 0.2 + 1.5 * rnd(), 0.2 + 1.5 * rnd(), 0.1 + 1.4 * rnd()], th = -PI + 2 * PI * rnd();
+      for (const f of [Phipos, Phineg]) {
+        const o = f(th, l), c = f(th, l, true);
+        expect(c).toBe(o); // a random point is never exactly on the boundary
+        if (c === null) { none++; continue; }
+        real++;
+        const d = Math.hypot(l[0] * Math.cos(th) - (l[3] + l[2] * Math.cos(c)), l[0] * Math.sin(th) - l[2] * Math.sin(c));
+        expect(d).toBeCloseTo(l[1], 9);
+      }
+    }
+    expect(real).toBeGreaterThan(500);
+    expect(none).toBeGreaterThan(500);
+  });
+  it('E-FB-02: the corrected sampler never has fewer points than the original one, and all of them close the loop', () => {
+    const l = lenlengthsOf([1.0, 2.0], 0.5);
+    const o = F.plotSamples(l), c = F.plotSamples(l, undefined, true);
+    expect(c.records.length).toBeGreaterThanOrEqual(o.records.length);
+    for (const [th, ph] of c.records.flat(1)) {
+      if (ph === null) continue;
+      expect(Math.hypot(l[0] * Math.cos(th) - (l[3] + l[2] * Math.cos(ph)), l[0] * Math.sin(th) - l[2] * Math.sin(ph))).toBeCloseTo(l[1], 6);
+    }
+  });
+  it('switching the mode samples the curve again, without the recorded samples', () => {
+    const s1 = F.evaluate({ ...start(), errata: 'original' });
+    const s2 = F.evaluate({ ...s1.state, errata: 'corrected' });
+    expect(s2.view.resampled).not.toBe(null);
+    expect(s2.view.resampled.recorded).toBe(null);
+    expect(F.evaluate(s2.state).view.resampled).toBe(null);
+  });
+});
+

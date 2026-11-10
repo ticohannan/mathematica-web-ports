@@ -11,6 +11,7 @@ import { Graphics, Line, Point, Circle, Disk, Black, Red, Thin, PointSize, EdgeF
   from '../../shared/graphics.js';
 import { Plot, Placed, Show } from '../../shared/plot.js';
 import * as G3 from '../../shared/graphics3d.js';
+import { isCorrected } from '../../shared/errata.js';
 
 /** r = 1 (a global constant of the notebook; the sphere radius). */
 export const r = 1;
@@ -25,6 +26,10 @@ export const BOUNDS = Object.freeze({
   twoTwisted: 2 * (1 + sqrt2), four: (2 / 79) * (79 + Sqrt(1106 * (2 + 9 * sqrt2))), threeBack: 2 + Sqrt(8 + 8 / sqrt5),
   five: 2 + 16 * Sqrt((2 * (155 - 9 * sqrt5)) / 5905), threeAgain: 2 * (1 + sqrt3), threeTwisted: 6,
 });
+/** The axial advance per sphere / 2r of five at a time: the original's formula, or the one whose levels touch (E-PS-01). */
+const zFive = (W, r, corrected) => (corrected
+  ? (1 / (10 * r)) * Sqrt(4 * r ** 2 - ((3 - sqrt5) / 8) * (W - 2 * r) ** 2)
+  : (1 / (10 * r)) * Sqrt(4 + (1 / 32) * (-5 + sqrt5) * (-2 + W) ** 2));
 
 /**
  * tubeSphereStackParamsFAST[W, r]: for a cylinder of width W (= 2R) and spheres of radius r, {Alpha, e, z, numsides,
@@ -32,7 +37,7 @@ export const BOUNDS = Object.freeze({
  * (axial advance per sphere / 2r), numsides the spheres per level, IsTwist whether alternate levels are twisted by Ang2
  * and offset by z2. The Piecewise as an if chain in the original's order (comments: the original's).
  */
-export function tubeSphereStackParamsFAST(W, r) {
+export function tubeSphereStackParamsFAST(W, r, corrected = false) {
   const Wn = W / r;
   let IsTwist = false, Ang2 = 0, z2 = 0, z, numsides;
   const B = BOUNDS;
@@ -47,7 +52,7 @@ export function tubeSphereStackParamsFAST(W, r) {
     [z, numsides] = [(1 / (8 * r)) * (Sqrt(4 - (-4 + W) * W) + Sqrt(4 - (-4 + W) * W + 8 * sqrt2 * Sqrt((-4 + W) * W))) / (2 * sqrt2), 4];
   } else if (Wn <= B.four) [z, numsides] = [(1 / (8 * r)) * Sqrt(4 * r ** 2 + (1 / 4) * (-2 + sqrt2) * (-2 * r + W) ** 2), 4]; // 4 at a time
   else if (Wn <= B.threeBack) [z, numsides] = [(1 / (6 * r)) * Sqrt(4 * r ** 2 - (W / 2 - r) ** 2), 3]; // back to 3 at a time
-  else if (Wn <= B.five) [z, numsides] = [(1 / (10 * r)) * Sqrt(4 + (1 / 32) * (-5 + sqrt5) * (-2 + W) ** 2), 5]; // 5 at a time (E-PS-01)
+  else if (Wn <= B.five) [z, numsides] = [zFive(W, r, false), 5]; // 5 at a time (E-PS-01)
   else if (Wn <= B.threeAgain) [z, numsides] = [(1 / (6 * r)) * Sqrt(4 * r ** 2 - (W / 2 - r) ** 2), 3]; // back to 3 at a time
   else if (Wn <= B.threeTwisted) { // 3 at a time, twisted
     [z, numsides] = [(1 / (12 * r)) * ((1 / 4) * Sqrt(-(-6 + W) * (2 + W)) + (1 / 4) * Sqrt(-52 + 4 * W - W ** 2 + 16 * sqrt3 * Sqrt(4 - 4 * W + W ** 2))), 6];
@@ -68,6 +73,9 @@ export function tubeSphereStackParamsFAST(W, r) {
     z2 = Sqrt(4 * r ** 2 - (Wn / 2 - r) ** 2);
     Ang2 = ArcCos((-4 - 4 * Wn + Wn ** 2 + (1 / 8) * (Sqrt(-(-6 + Wn) * (2 + Wn)) + Sqrt(-52 + 16 * sqrt3 * Sqrt((-2 + Wn) ** 2) - (-4 + Wn) * Wn)) ** 2) / ((-2 + Wn) ** 2));
   }
+  // E-PS-01, corrected (the switch "errors of the original: corrected"): five at a time with the spacing whose levels
+  // touch, wherever that is the lowest of the eight curves — the original's bounds were found with its too-high curve
+  if (corrected && Wn > B.threeBack && zFive(W, r, true) < z) [z, numsides, IsTwist, Ang2, z2] = [zFive(W, r, true), 5, false, 0, 0];
   const Alpha = Pi / numsides;
   const e = (W / 2 - r) * 2 * Sin(Pi / numsides); // never used by the body (Q-PS-03)
   return { Alpha, e, z, numsides, IsTwist, Ang2, z2 };
@@ -78,10 +86,13 @@ const sp = (c, a, s) => span(c, a, -1, s);
 /**
  * sphereToSphereContacts[W, r, c]: the polylines through the centres c of touching spheres, for the structure of W/r
  * (the original's Piecewise, same bounds as tubeSphereStackParamsFAST but ≤ at 4). One polyline (the line and zigzag)
- * or a list of polylines.
+ * or a list of polylines. `five` (corrected mode, E-PS-01): the five-at-a-time pattern whatever the bounds say.
  */
-export function sphereToSphereContacts(W, r, c) {
+export function sphereToSphereContacts(W, r, c, five = false) {
   const Wn = W / r, B = BOUNDS;
+  const fives = () => [sp(c, 1, 5), sp(c, 2, 5), sp(c, 3, 5), sp(c, 4, 5), sp(c, 5, 5), Riffle(sp(c, 1, 10), sp(c, 10, 10)),
+    Riffle(sp(c, 2, 10), sp(c, 6, 10)), Riffle(sp(c, 3, 10), sp(c, 7, 10)), Riffle(sp(c, 4, 10), sp(c, 8, 10)), Riffle(sp(c, 5, 10), sp(c, 9, 10))];
+  if (five) return fives();
   const threes = () => [sp(c, 1, 3), sp(c, 2, 3), sp(c, 3, 3), Riffle(sp(c, 1, 6), sp(c, 6, 6)), Riffle(sp(c, 2, 6), sp(c, 4, 6)), Riffle(sp(c, 3, 6), sp(c, 5, 6))];
   const twos = () => [sp(c, 1, 2), sp(c, 2, 2), Riffle(sp(c, 1, 4), sp(c, 4, 4)), Riffle(sp(c, 2, 4), sp(c, 3, 4))];
   if (Wn <= B.zigzag) return c; // 1 at a time
@@ -98,10 +109,7 @@ export function sphereToSphereContacts(W, r, c) {
       Riffle(sp(c, 3, 8), sp(c, 6, 8)), Riffle(sp(c, 4, 8), sp(c, 7, 8))];
   }
   if (Wn <= B.threeBack) return threes(); // back to 3 at a time
-  if (Wn <= B.five) { // 5 at a time
-    return [sp(c, 1, 5), sp(c, 2, 5), sp(c, 3, 5), sp(c, 4, 5), sp(c, 5, 5), Riffle(sp(c, 1, 10), sp(c, 10, 10)),
-      Riffle(sp(c, 2, 10), sp(c, 6, 10)), Riffle(sp(c, 3, 10), sp(c, 7, 10)), Riffle(sp(c, 4, 10), sp(c, 8, 10)), Riffle(sp(c, 5, 10), sp(c, 9, 10))];
-  }
+  if (Wn <= B.five) return fives(); // 5 at a time
   if (Wn <= B.threeAgain) return threes(); // back to 3 at a time
   if (Wn <= B.threeTwisted) { // 3 at a time, zigzag: pairs by Mod[i, 12], then the columns
     const pairs = DeleteCases(Table((i) => {
@@ -119,14 +127,14 @@ export const reSqrt = (x) => (x < 0 ? 0 : Sqrt(x));
 const I = NaN;
 
 /** The eight curves of BestCompressionPlot at R (W = 2R, r = 1): five structures, then the three twisted ones. */
-export function compressionCurves(R) {
+export function compressionCurves(R, corrected = false) {
   const W = 2 * R;
   return [
     /* 1 */ (W < 2 + sqrt3 ? Sqrt((4 * r - W) * W) : r) / (2 * r),
     /* 2 */ W < 4 * r ? 1 : Max(reSqrt(4 * r ** 2 - ((W - 2 * r) ** 2) / 2) / (4 * r), 1 / 4),
     /* 3 */ W < 2 * ((2 / sqrt3) * r + r) ? 1 : Max(reSqrt(4 * r ** 2 - (W / 2 - r) ** 2) / (6 * r), 1 / 6),
     /* 4 */ W < 2 * r * (1 + sqrt2) ? 1 : Max(reSqrt(4 * r ** 2 + (1 / 4) * (-2 + sqrt2) * (-2 * r + W) ** 2) / (8 * r), 1 / 8),
-    /* 5 */ W < 2 + Sqrt(8 + 8 / sqrt5) ? 1 : Max(reSqrt(4 + (1 / 32) * (-5 + sqrt5) * (-2 + W) ** 2) / (10 * r), 1 / 10),
+    /* 5 */ W < 2 + Sqrt(8 + 8 / sqrt5) ? 1 : Max(reSqrt(corrected ? 4 * r ** 2 - ((3 - sqrt5) / 8) * (W - 2 * r) ** 2 : 4 + (1 / 32) * (-5 + sqrt5) * (-2 + W) ** 2) / (10 * r), 1 / 10),
     /* twisted */ W < 2 * r + Sqrt(3 * r ** 2) ? I : W < 4 * r
       ? (1 / (4 * r)) * (4 * Sqrt((-2 + W) ** 2) * W - Sqrt((-2 + W) ** 2) * W ** 2 - 2 * Sqrt(W) * Sqrt((-4 + W) * (-8 + (-4 + W) * W))
         + W ** (3 / 2) * Sqrt((-4 + W) * (-8 + (-4 + W) * W))) / (2 * Sqrt(-(-4 + W) * (-2 + W) ** 2 * W)) : I,
@@ -148,9 +156,9 @@ export const LEGEND_ICONS = Object.freeze([
 ]);
 
 /** BestCompressionPlot: computed once (the notebook computes it in its Initialization). */
-let bestPlot = null;
-export function BestCompressionPlot() {
-  bestPlot ??= Plot((R) => compressionCurves(R), [r, 3 * r], {
+const bestPlot = { false: null, true: null };
+export function BestCompressionPlot(corrected = false) {
+  bestPlot[corrected] ??= Plot((R) => compressionCurves(R, corrected), [r, 3 * r], {
     PlotStyle: ['Automatic', 'Automatic', 'Automatic', 'Automatic', 'Automatic', Dotted, Dotted, Dotted],
     // Placed[…, {.08, .51}]: Mathematica puts the legend's own point {.08, .51} there (D-PS-05)
     PlotLegends: Placed(LEGEND_ICONS, [[0.08, 0.51], [0.08, 0.51]]),
@@ -161,13 +169,13 @@ export function BestCompressionPlot() {
     // Mathematica's automatic margins of this plot, measured on the snapshots (left, right; bottom, top px; D-PS-06)
     ImagePadding: [[44, 46], [20, 26]],
   });
-  return bestPlot;
+  return bestPlot[corrected];
 }
 
-/** The sphere centres of the body (F-PS-07). */
-export function centers({ w, NumSpheres, θ }, { Alpha, z, numsides, IsTwist, Ang2, z2 }) {
+/** The sphere centres of the body (F-PS-07); corrected (E-PS-02): exactly NumSpheres of them, not whole levels. */
+export function centers({ w, NumSpheres, θ }, { Alpha, z, numsides, IsTwist, Ang2, z2 }, corrected = false) {
   const ρ = w / 2 - r;
-  return Flatten(Table((i) => Table((j) => {
+  const all = Flatten(Table((i) => Table((j) => {
     if (IsTwist) {
       if (numsides === 2) {
         const a = Alpha * 2 * j + (Ang2 + 2 * Alpha) * i + θ;
@@ -179,6 +187,22 @@ export function centers({ w, NumSpheres, θ }, { Alpha, z, numsides, IsTwist, An
     const a = Alpha * (2 * j + (EvenQ(i) ? 0 : 1)) + θ;
     return [r + 2 * z * i * numsides, ρ * Cos(a), ρ * Sin(a)];
   }, [0, numsides - 1]), [0, Ceiling(NumSpheres / numsides) - 1]), 1);
+  return corrected ? all.slice(0, NumSpheres) : all;
+}
+
+/** The contact polylines cut down to the spheres in `kept` (E-PS-02, corrected): runs of at least two kept centres. */
+export function keepContacts(contacts, kept) {
+  const single = !Array.isArray(contacts[0][0]);
+  const runs = [];
+  for (const line of single ? [contacts] : contacts) {
+    let run = [];
+    for (const q of [...line, null]) {
+      if (q && kept.has(q)) { run.push(q); continue; }
+      if (run.length > 1) runs.push(run);
+      run = [];
+    }
+  }
+  return single && runs.length === 1 ? runs[0] : runs;
 }
 
 /** The pushing rods' colour (the notebook's colour swatch: RGBColor[0.5, 0, 0.5]). */
@@ -187,13 +211,18 @@ export const ROD = G3.RGBColor(0.5, 0, 0.5);
 /** One evaluation of the Manipulate body. */
 export function evaluate(s) {
   const { R, θ, SphereOpacity, NumSpheres } = s;
+  const corrected = isCorrected(s); // the switch "errors of the original" (A-PS-08): E-PS-01, E-PS-02
   const w = 2 * R;
-  const p = tubeSphereStackParamsFAST(w, r);
+  const p = tubeSphereStackParamsFAST(w, r, corrected);
   const { z } = p;
-  const c = centers({ w, NumSpheres, θ }, p);
-  const endC = Last(c)[0] + r;
-  const contacts = sphereToSphereContacts(w, r, c);
-  const plot = Show(BestCompressionPlot(), Graphics([Black, Thin, Line([[1, z], [w / (2 * r), z], [w / (2 * r), 0]]), PointSize('Large'), Point([w / (2 * r), z])]));
+  const levels = centers({ w, NumSpheres, θ }, p); // whole levels, as the original draws them
+  // corrected (E-PS-02): exactly NumSpheres spheres; the tube ends at the farthest of them (the last level can be
+  // incomplete) and the contact lines of the spheres left out go with them
+  const c = corrected ? levels.slice(0, NumSpheres) : levels;
+  const endC = (corrected ? Max(...c.map((q) => q[0])) : Last(c)[0]) + r;
+  const whole = sphereToSphereContacts(w, r, levels, corrected && p.numsides === 5);
+  const contacts = corrected ? keepContacts(whole, new Set(c)) : whole;
+  const plot = Show(BestCompressionPlot(corrected), Graphics([Black, Thin, Line([[1, z], [w / (2 * r), z], [w / (2 * r), 0]]), PointSize('Large'), Point([w / (2 * r), z])]));
   const caption = StringForm('compression ratio = ``\n', z);
   const scene = G3.Graphics3D([
     [G3.Blue, G3.Thick, G3.Line(contacts)] /* one polyline or several */,

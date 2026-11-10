@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.33 |
+| Code version: | 0.1.34 |
 | Document revision | 2 (2026-10-25) |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Distribution of a Swarm of Robots in a Circular Workplace under Gravity", contributed by Haoran Zhao and Aaron T. Becker, published 2016-02-15 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/DistributionOfASwarmOfRobotsInACircularWorkplaceUnderGravity/> Source as text: [`docs/original-source/swarm-circle.txt`](../../docs/original-source/swarm-circle.txt); snapshots `docs/original-snapshots/swarm-circle-1…2.png`; saved states `tests/golden/swarm-circle.original-states.json` (four snapshot settings) |
@@ -163,6 +163,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 10 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
 | 11 | v0.1.32 | 2026-11-05 | A-SC-08: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 | 12 | v0.1.33 | 2026-11-06 | version number (v0.1.33: four new apps; opt-in shared additions S-1 … S-7, unused by this app, and the locators of a Locator list made after the first evaluation); no change to this app's code, behaviour or picture |
+| 13 | v0.1.34 | 2026-11-10 | version number (v0.1.34: the switch "errors of the original: kept \| corrected" for the apps with code-level findings in §11, `shared/errata.js`); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

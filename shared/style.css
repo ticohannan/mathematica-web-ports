@@ -94,6 +94,11 @@ svg.svg-plot .locator:focus-visible .locator-glyph circle, svg.svg-plot .locator
 .ctl-checkbar-item { display: inline-flex; align-items: center; gap: 4px; }
 /* a port-addition checkbox beside "Initial settings" (prm-seven-link's "mute beep") */
 .panel-tools .ctl-check { flex-direction: row; gap: 4px; align-self: center; }
+/* the switch "errors of the original: kept | corrected" (shared/errata.js, a port addition) beside "Initial settings" */
+.panel-tools .ctl-setter { flex-direction: row; align-items: center; gap: 6px; margin-right: auto; }
+.panel-tools .ctl-setter .ctl-label { color: var(--muted); }
+details.errata-note { border-left: 3px solid #d9c67a; padding-left: 10px; }
+details.errata-note li { margin: 4px 0; }
 .ctl-popup { font: inherit; font-size: 0.85rem; padding: 2px 4px; }
 .graphic.wide { max-width: 760px; flex-basis: 600px; }
 .vslider { writing-mode: vertical-lr; direction: rtl; height: 80px; width: 22px; }

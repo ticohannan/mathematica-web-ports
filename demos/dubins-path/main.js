@@ -7,6 +7,8 @@
 import { Manipulate, Locator, None } from '../../shared/manipulate.js';
 import { Style, Subscript, Italic, Gray, Lighter } from '../../shared/graphics.js';
 import { initialState, evaluate, picture, PLOT_RANGE, GOAL_RANGE } from './dubins.js';
+import { ErrataControl } from '../../shared/errata.js';
+import { CORRECTIONS } from './errata-mode.js';
 
 const PLOT_BOX = [[PLOT_RANGE[0][0], PLOT_RANGE[1][0]], [PLOT_RANGE[0][1], PLOT_RANGE[1][1]]];
 const DESCR = { goalXY: 'goal position', goalThetaloc: 'goal heading' };
@@ -26,6 +28,7 @@ Manipulate({
     [['goalThetaloc', [2 + Math.SQRT2, 2 - Math.SQRT2]], ...PLOT_BOX, Locator, { Appearance: None }],
     [['progress', 0.25], 0, 1, { Appearance: 'Labeled' }], // {{progress, 0.25}, 0, 1, Appearance -> "Labeled", ImageSize -> 400}
     [['minRadius', 3, Subscript(Style('r', Italic), 'min')], 0.001, 5, { Appearance: 'Labeled' }],
+    ErrataControl(CORRECTIONS),
   ],
   // two Locator controls picked as in a LocatorPane (D-DP-05, K-DP-04): a press within 12 px grabs the nearer one in
   // place, a press elsewhere makes the nearer one jump there; ties go to the goal locator (first name)

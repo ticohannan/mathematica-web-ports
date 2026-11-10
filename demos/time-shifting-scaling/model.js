@@ -6,6 +6,7 @@
 // arithmetic.
 import { Graphics, Point, PointSize, Text, Style, Italic, Red, RGBColor, Thickness, Row, Annotation } from '../../shared/graphics.js';
 import { ListLinePlot, Placed } from '../../shared/plot.js';
+import { isCorrected } from '../../shared/errata.js';
 
 // ---- the initialization cell ------------------------------------------------------------------------------------
 /** UHsignal[t, f]: the initials U H drawn as a signal (f = ±1 alternates the sampled values: the letters' strokes). */
@@ -99,6 +100,17 @@ export function evaluate(state) {
   const Ty = α === 0 ? Tx.map((t) => 10000 * t) : Tx.map((t) => (1.0 * (t + β)) / α);
   const Tb = Tx.map((t) => t + β);
   const Tw = α === 0 ? Tx.map((t) => 10000 * t) : Tx.map((t) => (1.0 * t) / α);
+  // E-TS-01 (the switch "errors of the original: corrected"): for a = 0, y(t) = x(−b) and w(t) = x(0) are constants,
+  // drawn as horizontal lines across the plot
+  const flat = isCorrected(state) && α === 0;
+  const xAt = (t) => { // x(t) from the break points (steps or lines); constant before the first and after the last
+    const n = Tx.length;
+    if (t < Tx[0]) return χ[0];
+    if (t >= Tx[n - 1]) return χ[n - 1];
+    for (let i = n - 2; i >= 0; i--) if (t >= Tx[i]) return orderOf(signal) === 0 || Tx[i + 1] === Tx[i] ? χ[i] : χ[i] + ((χ[i + 1] - χ[i]) * (t - Tx[i])) / (Tx[i + 1] - Tx[i]);
+    return χ[0];
+  };
+  const constant = (k, c) => (checked.includes(k) ? [[-10, c], [20, c]] : [[NaN, c], [NaN, c]]);
   // an unchecked curve is moved off the real axis (30 + t i): not drawn; its legend entry stays (Q-TS-01)
   const shown = (k, T) => (checked.includes(k) ? T : T.map(() => NaN));
   const order = orderOf(signal);
@@ -106,7 +118,7 @@ export function evaluate(state) {
     ...frame(['time (s)', 'signal']), PlotStyle: [Thickness(0.005)], InterpolationOrder: order,
     PlotLegends: Placed([LEGEND[0]], [0.1, 0.6]), Epilog: epilog(τ, β), label: 'The input signal x(t)',
   });
-  const bottom = ListLinePlot([pairs(shown(1, Tx), χ), pairs(shown(2, Ty), χ), pairs(shown(3, Tb), χ), pairs(shown(4, Tw), χ)], {
+  const bottom = ListLinePlot([pairs(shown(1, Tx), χ), flat ? constant(2, xAt(-β)) : pairs(shown(2, Ty), χ), pairs(shown(3, Tb), χ), flat ? constant(4, xAt(0)) : pairs(shown(4, Tw), χ)], {
     // Directive[{ColorData[3][[3]], Thickness[0.005]}]: ColorData[3][[3]] is not a colour, so z keeps the default third
     // colour (measured on the snapshots)
     ...frame(['time (s)', '']), PlotStyle: [Thickness(0.005), [Red, Thickness(0.005)], Thickness(0.005), Thickness(0.005)],
@@ -119,7 +131,7 @@ export function evaluate(state) {
   };
   return {
     state: s,
-    view: { signal, α, β, τ, checked: [...checked], Ty, Tb, Tw, x2: at(Tx, 2) },
+    view: { signal, α, β, τ, checked: [...checked], Ty, Tb, Tw, x2: at(Tx, 2), constants: flat ? { y: xAt(-β), w: xAt(0) } : null },
     graphics: [
       Graphics([Annotation(top.list, 'input-plot')], top.options),
       Graphics([Annotation(bottom.list, 'output-plot')], bottom.options),

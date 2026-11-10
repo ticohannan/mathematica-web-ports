@@ -8,6 +8,8 @@ import { Manipulate, Control, None } from '../../shared/manipulate.js';
 import { Style, Italic, Subscript, htmlOf } from '../../shared/graphics.js';
 import { View3D } from '../../shared/graphics3d-view.js';
 import { SPECS, initialState, evaluate, settles, sphericaldist, imagePlaneCoor } from './model.js';
+import { ErrataControl, isCorrected } from '../../shared/errata.js';
+import { CORRECTIONS } from './errata-mode.js';
 
 /**
  * Control@{{unusedVariable, 1, ""}, (sphericaldist[#1, xc, yc, zc, r] &), ImageSize -> 45}: a control that only shows a
@@ -60,6 +62,7 @@ Manipulate({
     '',
     'image plane coordinates',
     [['unusedVariable', SPECS.unusedVariable, ''], Control(gridDisplay('coords-image'))],
+    ErrataControl(CORRECTIONS),
   ],
   after: (ctx) => {
     const { xc, yc, zc, r, imPlaneView } = ctx.state;
@@ -70,7 +73,7 @@ Manipulate({
     const v = ctx.renderer(0)?.viewer;
     if (v && !imPlaneView) v.labelRenderer.render(v.scene, v.camera);
     writeGrid('coords-camera', sphericaldist(xc, yc, zc, r));
-    writeGrid('coords-image', imagePlaneCoor(xc, yc, zc, r));
+    writeGrid('coords-image', imagePlaneCoor(xc, yc, zc, r, isCorrected(ctx.state)));
   },
   hook: {
     inkFraction: (c) => () => c.renderer().inkFraction(),

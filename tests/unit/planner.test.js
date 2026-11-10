@@ -6,6 +6,7 @@
 // independent oracle in tests/support/reference-planner.js), never by
 // trusting the port's own output.
 import { describe, it, expect } from 'vitest';
+import fs from 'node:fs';
 import * as P from '../../demos/motion-planning/planner.js';
 import { referencePlan, referenceCObstacle, convexOverlap, strictlyInsideConvex } from '../support/reference-planner.js';
 
@@ -214,3 +215,105 @@ describe('configuration-space boundary vs the original run in Mathematica 15.0.1
     expect(P.configBoundaryFunc(P.borderPolygon(x), robot, r1)).toEqual(expected);
   });
 });
+
+// The switch "errors of the original: kept | corrected" (shared/errata.js). Expected values: the independent
+// reference planner (tests/support/reference-planner.js: a textbook visibility graph tested by sampling) and geometry
+// worked out by hand in each test.
+describe('corrected mode (E-MP)', () => {
+  const named = JSON.parse(fs.readFileSync('tools/data/motion-scenes.json', 'utf8')).scenes;
+  const scene = (id) => { const { id: _i, title: _t, ...st } = named.find((s) => s.id === id); return st; };
+  const fix = (st) => ({ ...st, errata: 'corrected' });
+  const enters = (path, ref) => path.slice(1).some((q, i) => {
+    const p = path[i];
+    for (let j = 1; j < 200; j++) if (!ref.freePoint([p[0] + ((q[0] - p[0]) * j) / 200, p[1] + ((q[1] - p[1]) * j) / 200])) return true;
+    return false;
+  });
+  it('kept: errata = "original" gives exactly the scene without the variable', () => {
+    for (const st of [P.DEFAULTS, scene('B1'), scene('C2')]) expect(P.computeScene({ ...st, errata: 'original' })).toEqual(P.computeScene(st));
+  });
+  it.each(['B1', 'B2', 'B3'])('E-MP-06: scene %s — the original goes straight through the obstacle; corrected takes the shortest way round (reference planner)', (id) => {
+    const st = scene(id), ref = referencePlan(st);
+    const o = P.computeScene(st), c = P.computeScene(fix(st));
+    expect(o.path).toHaveLength(2); // the straight line
+    expect(enters(o.path, ref)).toBe(true);
+    expect(enters(c.path, ref)).toBe(false);
+    expect(c.path.length).toBeGreaterThan(2);
+    expect(P.pathLength(c.path)).toBeCloseTo(ref.length, 9);
+    expect(P.pathLength(c.path)).toBeGreaterThan(P.pathLength(o.path));
+  });
+  it('E-MP-06: B1 by hand — the square C-obstacle spans the height of start and goal, so the straight line of length 4 is blocked; the detour is 4.3615', () => {
+    const st = scene('B1');
+    expect([st.r1, st.r2]).toEqual([[-3, -0.5], [1, -0.5]]);
+    expect(P.pathLength(P.computeScene(st).path)).toBe(4);
+    expect(P.pathLength(P.computeScene(fix(st)).path)).toBeCloseTo(4.3615, 4);
+  });
+  it('E-MP-06: crossesInterior — through two corners of a square: yes; along an edge, touching a corner, passing outside: no', () => {
+    const sq = [[0, 0], [2, 0], [2, 2], [0, 2]];
+    for (const poly of [sq, sq.slice().reverse()]) {
+      expect(P.crossesInterior([[-1, -1], [3, 3]], [poly])).toBe(true); // the diagonal, through (0,0) and (2,2)
+      expect(P.crossesInterior([[-1, 1], [3, 1]], [poly])).toBe(true); // through the middle
+      expect(P.crossesInterior([[1, 1], [5, 1]], [poly])).toBe(true); // starts inside
+      expect(P.crossesInterior([[0, 0], [2, 0]], [poly])).toBe(false); // an edge of the polygon itself
+      expect(P.crossesInterior([[-1, 0], [3, 0]], [poly])).toBe(false); // along an edge, beyond both corners
+      expect(P.crossesInterior([[-1, 1], [1, -1]], [poly])).toBe(false); // touches the corner (0, 0) only
+      expect(P.crossesInterior([[-1, 3], [3, 3]], [poly])).toBe(false); // outside
+      expect(P.crossesInterior([[0, 0], [2, 2]], [poly])).toBe(true); // corner to opposite corner
+    }
+  });
+  it('the other named scenes keep their path length, and no corrected path enters a C-obstacle', () => {
+    for (const s of named) {
+      const { id, title: _t, ...st } = s;
+      const o = P.computeScene(st), c = P.computeScene(fix(st));
+      expect(c.robotinsideobstcond, id).toEqual(o.robotinsideobstcond);
+      if (c.path.length > 1) expect(c.path.slice(1).some((q, i) => P.crossesInterior([c.path[i], q], c.robotobstconfig)), id).toBe(false);
+      if (!['B1', 'B2', 'B3'].includes(id)) expect(P.pathLength(c.path), id).toBeCloseTo(P.pathLength(o.path), 9);
+    }
+  });
+  it('seeded random scenes: corrected is collision-free and gives the length of the original', () => {
+    let seed = 4242;
+    const rnd = () => ((seed = (seed * 48271) % 2147483647) / 2147483647);
+    const pick = (k) => { const [[x0, y0], [x1, y1]] = P.LOCATOR_RANGES[k]; return [Math.round((x0 + rnd() * (x1 - x0)) * 100) / 100, Math.round((y0 + rnd() * (y1 - y0)) * 100) / 100]; };
+    let valid = 0;
+    for (let i = 0; i < 60; i++) {
+      const st = { ...P.DEFAULTS, n: 3 + Math.floor(rnd() * 3), x: 3 + Math.floor(rnd() * 3) };
+      for (const k of ['r1', 'r2', 'o1', 'o2', 'o3', 'o4']) st[k] = pick(k);
+      const o = P.computeScene(st), c = P.computeScene(fix(st));
+      if (o.robotinsideobstcond.some(Boolean)) { expect(c.path).toEqual([]); continue; }
+      valid++;
+      if (c.path.length > 1) expect(c.path.slice(1).some((q, k) => P.crossesInterior([c.path[k], q], c.robotobstconfig))).toBe(false);
+      expect(P.pathLength(c.path)).toBeCloseTo(P.pathLength(o.path), 9); // no degenerate alignment in random scenes
+    }
+    expect(valid).toBeGreaterThan(5);
+  }, 60_000);
+  it('E-MP-01: the corrected search is A* — the same shortest path on a hand-made graph and the same lengths as the reference on every named scene the original gets right', () => {
+    const verts = [[0, 0], [1, 0], [2, 0], [1, 5]]; // start, on the way, goal, a detour
+    const adj = P.getAdjListRev2(verts, [[verts[0], verts[1]], [verts[1], verts[2]], [verts[0], verts[3]], [verts[3], verts[2]]]);
+    expect(P.myAstarRev2(adj, verts, 0, 2)).toEqual([0, 1, 2]);
+    expect(P.myAstarRev2(adj, verts, 0, 2, true)).toEqual([0, 1, 2]);
+    expect(P.myAstarRev2([[1], [0], []], [[0, 0], [1, 0], [5, 5]], 0, 2, true)).toBe(-1);
+  });
+  it('E-MP-02: two vertices on one ray (angle 3 rad, distances 1 and 2) — the original puts each before the other; corrected the nearer first', () => {
+    const T = (v) => [[9, 9], v, [8, 8]];
+    const far = [2 * Math.cos(3), 2 * Math.sin(3)], near = [Math.cos(3), Math.sin(3)];
+    expect([P.angleSortCond([0, 0], T(far), T(near)), P.angleSortCond([0, 0], T(near), T(far))]).toEqual([true, true]);
+    expect([P.angleSortCond([0, 0], T(far), T(near), true), P.angleSortCond([0, 0], T(near), T(far), true)]).toEqual([false, true]);
+    // different angles: the angle decides in both modes
+    const other = [Math.cos(1), Math.sin(1)];
+    for (const corrected of [false, true]) expect([P.angleSortCond([0, 0], T(other), T(far), corrected), P.angleSortCond([0, 0], T(far), T(other), corrected)]).toEqual([true, false]);
+  });
+  it('E-MP-04: directions (1, 0) and (1, 1) are 45° apart; the original gives 0 because they agree in x', () => {
+    expect(P.getClockwiseAngle([1, 1], [0, 0], [1, 0])).toBe(0);
+    expect(P.getClockwiseAngle([1, 1], [0, 0], [1, 0], true)).toBeCloseTo(Math.PI / 4, 12);
+    expect(P.getClockwiseAngle([1, -1], [0, 0], [1, 0], true)).toBeCloseTo(2 * Math.PI - Math.PI / 4, 12);
+    expect(P.getClockwiseAngle([1, 0], [0, 0], [1, 0], true)).toBe(0); // equal directions
+    // no shared coordinate: the same in both modes
+    expect(P.getClockwiseAngle([1, 2], [0, 0], [3, 1], true)).toBe(P.getClockwiseAngle([1, 2], [0, 0], [3, 1]));
+  });
+  it('E-MP-03/04: from (0, 0) the square (1,0) (2,0) (2,1) (1,1) shows (1,0), (2,0) along its bottom edge and (1,1); a bar across that edge hides (2,0)', () => {
+    const sq = [[1, 0], [2, 0], [2, 1], [1, 1]], bar = [[1.4, -0.5], [1.6, -0.5], [1.6, 0.5], [1.4, 0.5]];
+    expect(P.visiblePolys([sq], [0, 0])).toEqual([[1, 1]]); // the original misses the two vertices at the height of the sweep point
+    expect(P.visiblePolys([sq], [0, 0], true)).toEqual([[1, 0], [2, 0], [1, 1]]);
+    expect(P.visiblePolys([sq, bar], [0, 0], true)).toEqual([[1, 0], [1, 1], [1.4, -0.5]]);
+  });
+});
+

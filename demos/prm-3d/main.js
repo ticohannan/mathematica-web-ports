@@ -13,6 +13,8 @@ import {
   initialState, evaluate, stateFromSettings, cloneState, PAD_MIN, PAD_MAX, THETA_SLIDER, R_SLIDER, PROGRESS_SLIDER, Z_SLIDER,
 } from './model.js';
 import { PrmViews } from './view3d.js';
+import { ErrataControl } from '../../shared/errata.js';
+import { CORRECTIONS } from './errata-mode.js';
 
 let page = null, evaluations = 0;
 const views = PrmViews({
@@ -56,6 +58,7 @@ page = Manipulate({
   throttle: 'frame',
   random: true, // A-P3-03: unseeded like the original; ?seed=N for reproducible runs
   controls: [
+    ErrataControl(CORRECTIONS),
     Row([1, 2, 3].map(theta), { name: 'theta' }),
     Row([
       pad('Obstaxy', 'blue_xy', Subscript('blue', Style('xy', Italic))), height('Obstaz', 'blue_z', Subscript('blue', Style('z', Italic))),

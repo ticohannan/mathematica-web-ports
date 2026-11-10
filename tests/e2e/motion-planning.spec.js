@@ -9,7 +9,8 @@ import { openDemo, reviewShot } from './helpers.js';
 const URL = '/demos/motion-planning/';
 const golden = JSON.parse(fs.readFileSync('tests/golden/motion-planning.original-states.json', 'utf8'));
 const scene = (page) => page.evaluate(() => window.__demo.scene());
-const state = (page) => page.evaluate(() => window.__demo.getState());
+// the original's Manipulate variables (the port's switch variable `errata` is tested in errata-mode.spec.js)
+const state = (page) => page.evaluate(() => { const { errata, ...rest } = window.__demo.getState(); return rest; });
 const polyPoints = async (page, testid) => (await page.getByTestId(testid).getAttribute('points')).trim().split(/\s+/).map((p) => p.split(',').map(Number));
 
 test.describe('Motion planning demo', () => {

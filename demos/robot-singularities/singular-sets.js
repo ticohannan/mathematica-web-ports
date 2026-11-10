@@ -27,7 +27,7 @@ const ring23 = (z) => {
  * singularspace3D for robot iType: If[isJLinearVel == "Linear", Piecewise[...linear...], Piecewise[...angular...]].
  * o3coords: (p1, p2, p3) => [x, y, z] of the current robot.
  */
-export function singularspace3D(iType, isJLinearVel, o3coords) {
+export function singularspace3D(iType, isJLinearVel, o3coords, corrected = false) {
   const o3 = o3coords;
   if (isJLinearVel === 'Linear') {
     switch (iType) {
@@ -62,7 +62,8 @@ export function singularspace3D(iType, isJLinearVel, o3coords) {
       case 12: return ParametricPlot3D([], [-π, π], [-π, π]); // ParametricPlot3D[{ }, ...]: nothing
       case 13: return Graphics3D([Red, Opacity(0.3), Polygon([[0, 0, -1], [0, 1, -1], [0, 1, 1], [0, 0, 1]])]);
       case 14: return Graphics3D([Red, Thick, Line([[0, 0, 0], [0, 0, 3]])]);
-      case 15: return Graphics3D([Red, Sphere([[0, 0, 0], [0, 0, 2]], 0.2), Line([[0, 0, 0], [0, 0, 2]]), [Opacity(0.3), Sphere([0, 0, 1], 0.2)]]);
+      // E-RS-02 (the switch "errors of the original: corrected"): the end point moves on the UNIT sphere about (0, 0, 1)
+      case 15: return Graphics3D([Red, Sphere([[0, 0, 0], [0, 0, 2]], 0.2), Line([[0, 0, 0], [0, 0, 2]]), [Opacity(0.3), Sphere([0, 0, 1], corrected ? 1 : 0.2)]]);
       case 16: return Show(
         ParametricPlot3D([(a, b) => o3(a, b, π / 2), (a, b) => o3(a, b, -π / 2), (a, b) => o3(a, ArcTan1(Cos(b) / 2), b), (a, b) => o3(a, ArcTan1(Cos(b) / 2) + π, b)],
           [-π, π], [-π, π], { Mesh: None, PlotStyle: Directive([Red, Opacity(0.2)]) }),

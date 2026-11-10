@@ -31,6 +31,7 @@ import {
 import { det, norm as normMma, arcTan, vectorAngle as vectorAngleMma } from '../../shared/mma-exact.js';
 // Polygon helpers shared with the Minkowski-sum port (moved in v0.1.15, unchanged).
 import { lineList, vector, areaOfPoly, centroidOfPoly, discretizeLineRev1 } from '../common/polygon-core.js';
+import { isCorrected } from '../../shared/errata.js';
 
 /** Normalize[v]: Mathematica multiplies by the reciprocal of Norm[v] (matches the traced normals,
  *  e.g. Normalize[{0., a}] can give 0.9999999999999999). */
@@ -233,8 +234,12 @@ export function pointOnSegmentQ([[x1, y1], [x2, y2]], [x3, y3]) {
 const vectorAngle = (a, b) => vectorAngleMma(a, b);
 
 /** getClockwiseAngle[p1, p2, p3] — angle from (p3 - p2) to (p1 - p2), in [0, 2π). */
-export function getClockwiseAngle(p1, p2, p3) {
+export function getClockwiseAngle(p1, p2, p3, corrected = false) {
   const a = chop(sub(p3, p2)), b = chop(sub(p1, p2));
+  if (corrected) { // E-MP-04: the angle is 0 only for equal vectors (Or instead of And)
+    const ang = (mUnequal(a[0] - b[0], 0.0) || mUnequal(a[1] - b[1], 0.0)) ? vectorAngle(a, b) : 0;
+    return a[0] * b[1] - a[1] * b[0] < 0.0 ? TWO_PI - ang : ang;
+  }
   // ORIGINAL QUIRK: the angle is forced to 0 whenever the two vectors agree in
   // either coordinate (the original tests a-b component-wise with And).
   const angle = (mUnequal(a[0] - b[0], 0.0) && mUnequal(a[1] - b[1], 0.0)) ? vectorAngle(a, b) : 0;
@@ -243,14 +248,16 @@ export function getClockwiseAngle(p1, p2, p3) {
 }
 
 /** intersectInteriorQRev2[p, {w1,w2,w3}] — w2 is an "interior" vertex as seen from p. */
-export function intersectInteriorQRev2(p, [w1, w2, w3]) {
-  return mGreater(getClockwiseAngle(w1, w2, w3), getClockwiseAngle(p, w2, w3));
+export function intersectInteriorQRev2(p, [w1, w2, w3], corrected = false) {
+  return mGreater(getClockwiseAngle(w1, w2, w3, corrected), getClockwiseAngle(p, w2, w3, corrected));
 }
 
 /** angleSortCond[point, l1, l2] — sweep order of vertex triples around `point`. */
-export function angleSortCond(point, l1, l2) {
+export function angleSortCond(point, l1, l2, corrected = false) {
   const a = getAngle([point, l1[1]]), b = getAngle([point, l2[1]]);
   const c = normMma(sub(point, l1[1]));
+  // E-MP-02 (corrected): same angle — the nearer vertex first (distance against distance)
+  if (corrected) return mLess(a, b) || (mEqual(a, b) && mLess(c, normMma(sub(point, l2[1]))));
   // ORIGINAL QUIRK: the tie-break compares the distance c with the ANGLE b
   // (`c < b`); the evident intent was `c < d` (distance vs distance).
   return mLess(a, b) || (mEqual(a, b) && mLess(c, b));
@@ -269,13 +276,13 @@ const sameSeg = (s, t) => sameKey(s, t);
  * visiblePolys[polys, p] — rotational-sweep visibility (after D.-T. Lee):
  * returns the polygon vertices visible from p along tangent (non-glancing) lines.
  */
-export function visiblePolys(polys, p) {
+export function visiblePolys(polys, p, corrected = false) {
   const listofAllLines = polys.flatMap((poly) => lineList(poly));
   const maxX = Math.max(...polys.flat().map((v) => v[0]));
   const infiniteLine = [p, [1.0 + maxX, p[1]]];
   const orderedList = polys.map((poly) => (testpoint(poly, p) ? poly.slice().reverse() : poly));
   const sortedList = sortMma(orderedList.flatMap((poly) => vertexList(poly)),
-    (t1, t2) => angleSortCond(p, t1, t2));
+    (t1, t2) => angleSortCond(p, t1, t2, corrected));
   let jList = listofAllLines.filter((e) => SegmentIntersectionQ([infiniteLine, e]));
   jList = sortMma(jList, (l1, l2) => distSortCond(infiniteLine, l1, l2, p));
 
@@ -283,12 +290,16 @@ export function visiblePolys(polys, p) {
   let wi, wip;
   sortedList.forEach(([a, b, c], idx) => {
     const i = idx + 1; // 1-based like the original loop
-    if (intersectInteriorQRev2(p, [a, b, c])) {
+    if (intersectInteriorQRev2(p, [a, b, c], corrected)) {
       wi = false;
     } else if (i === 1 || !pointOnSegmentQ([p, b], a)) {
       wi = !jList.some((e) => SegmentIntersectionQ([[p, b], e]));
     } else if (!wip) {
       wi = false;
+    } else if (corrected) {
+      // E-MP-03 (corrected): the test the original wrote but never ran — is the segment from the collinear previous
+      // vertex a to b crossed by an edge of the list?
+      wi = !jList.some((e) => SegmentIntersectionQ([[a, b], e]));
     } else {
       // ORIGINAL QUIRK: the original calls SegmentIntersectionQ with the wrong
       // argument shape here (SegmentIntersectionQ[{{a,b}}, #]); that call never
@@ -319,7 +330,7 @@ export function biTangents2polyRev1(poly1, poly2) {
 }
 
 /** visBiLineRev2[configpoly] — visible bitangent lines between C-obstacle vertices. */
-export function visBiLineRev2(configpoly) {
+export function visBiLineRev2(configpoly, corrected = false) {
   const bitangentKeys = new Set();
   for (let a = 0; a < configpoly.length; a++) {
     for (let b = a + 1; b < configpoly.length; b++) {
@@ -333,7 +344,7 @@ export function visBiLineRev2(configpoly) {
       const nxt = poly[(i + 1) % n], prv = poly[(i - 1 + n) % n];
       // Look from a point nudged 0.001 outward from the vertex.
       const q = sub(v, scale(sub(add(nxt, prv), scale(v, 2)), 0.001));
-      const lines = visiblePolys(configpoly, q).map((pt) => [pt, v]);
+      const lines = visiblePolys(configpoly, q, corrected).map((pt) => [pt, v]);
       // Intersection[lines, bitangentLine]: unique, canonical order
       const hit = [];
       const seen = new Set();
@@ -346,6 +357,42 @@ export function visBiLineRev2(configpoly) {
     });
   });
   return out;
+}
+
+/**
+ * E-MP-06 (corrected mode only): does the open segment p–q pass through the INTERIOR of one of the convex polygons?
+ * The segment is clipped against each polygon (the part inside its closed half-planes); it enters the interior when
+ * that part has a length and its middle lies strictly inside. A segment that only touches a corner, or runs along an
+ * edge, does not. The original's SegmentIntersectionQ ignores contacts at segment ends and collinear overlaps, so a
+ * line through two vertices of a C-obstacle counts as free there.
+ */
+export function crossesInterior([p, q], polys, tol = 1e-9) {
+  const d = sub(q, p);
+  const len = Math.hypot(d[0], d[1]);
+  if (len <= tol) return false;
+  for (const poly of polys) {
+    let area = 0;
+    for (let i = 0; i < poly.length; i++) { const u = poly[i], v = poly[(i + 1) % poly.length]; area += u[0] * v[1] - v[0] * u[1]; }
+    const orient = area < 0 ? -1 : 1;
+    const side = (u, v, w) => { // signed distance of w from the line u–v, positive inside
+      const e = sub(v, u), l = Math.hypot(e[0], e[1]) || 1;
+      return (orient * (e[0] * (w[1] - u[1]) - e[1] * (w[0] - u[0]))) / l;
+    };
+    let t0 = 0, t1 = 1;
+    for (let i = 0; i < poly.length && t0 <= t1; i++) {
+      const u = poly[i], v = poly[(i + 1) % poly.length];
+      const s0 = side(u, v, p), s1 = side(u, v, q);
+      if (s0 < 0 && s1 < 0) { t0 = 1; t1 = 0; break; }
+      if (s0 < 0) t0 = Math.max(t0, s0 / (s0 - s1));
+      else if (s1 < 0) t1 = Math.min(t1, s0 / (s0 - s1));
+    }
+    if ((t1 - t0) * len <= tol) continue;
+    const m = [p[0] + d[0] * ((t0 + t1) / 2), p[1] + d[1] * ((t0 + t1) / 2)];
+    let inside = true;
+    for (let i = 0; i < poly.length && inside; i++) inside = side(poly[i], poly[(i + 1) % poly.length], m) > tol;
+    if (inside) return true;
+  }
+  return false;
 }
 
 // ---------------------------------------------------------------------------
@@ -374,7 +421,7 @@ export function getAdjListRev2(pts, edges) {
  * EuclideanDistance[verts[[nbr]], verts[[nbr]]] (always 0), so the search is
  * effectively Dijkstra's algorithm. It still finds a shortest path in the graph.
  */
-export function myAstarRev2(adjL, verts, si, fi) {
+export function myAstarRev2(adjL, verts, si, fi, corrected = false) {
   let openSet = [si];
   const cameFrom = verts.map(() => -1);
   const gScore = verts.map(() => Infinity);
@@ -396,7 +443,8 @@ export function myAstarRev2(adjL, verts, si, fi) {
       if (mLess(tentative, gScore[nbr])) {
         cameFrom[nbr] = current;
         gScore[nbr] = tentative;
-        fScore[nbr] = gScore[nbr] + euclid(verts[nbr], verts[nbr]); // ORIGINAL QUIRK (see above)
+        // E-MP-01 (corrected): the A* heuristic, the straight distance from the neighbour to the goal
+        fScore[nbr] = gScore[nbr] + euclid(verts[nbr], corrected ? verts[fi] : verts[nbr]); // ORIGINAL QUIRK (see above)
         if (!openSet.includes(nbr)) openSet.push(nbr);
       }
     }
@@ -459,6 +507,7 @@ export function regularPolygon(c, sides) {
  */
 export function computeScene(state) {
   const { x, n } = state;
+  const corrected = isCorrected(state); // the switch "errors of the original" (DESIGN.md §4): E-MP-01, 02, 03, 04, 06
   const r = [state.r1, state.r2];
   const o = [state.o1, state.o2, state.o3, state.o4];
   const borderpoly = borderPolygon(x);
@@ -468,7 +517,10 @@ export function computeScene(state) {
   // Obstacle i is a regular (i+2)-gon: triangle, square, pentagon, hexagon.
   const obstaclepoly = o.map((c, i) => regularPolygon(c, i + 3));
   const robotobstconfig = obstaclepoly.map((ob) => ConvexMinkowskiSumRev3(robotStartPoly, ob));
-  const verticestoVertices = visBiLineRev2(robotobstconfig);
+  // E-MP-06 (corrected): lines through the interior of a C-obstacle are dropped — here, so the picture shows the lines
+  // the graph uses, and below for the C-obstacle edges
+  const open = (lines) => (corrected ? lines.filter((line) => !crossesInterior(line, robotobstconfig)) : lines);
+  const verticestoVertices = open(visBiLineRev2(robotobstconfig, corrected));
 
   const configBoundary = configBoundaryFunc(borderpoly, robotStartPoly, r[0]);
   const configadd = [...configBoundary, configBoundary[0]];
@@ -477,9 +529,9 @@ export function computeScene(state) {
   const robotinsideobstcond = r.map((rj, j) => !testpoint(configadd, rj) || obstCollision[j].some(Boolean));
 
   const linesStarttoObstacles = obstCollision[0].some(Boolean) ? []
-    : visiblePolys(robotobstconfig, r[0]).map((pt) => [r[0], pt]);
+    : open(visiblePolys(robotobstconfig, r[0], corrected).map((pt) => [r[0], pt]));
   const linesEndtoObstacles = obstCollision[1].some(Boolean) ? []
-    : visiblePolys(robotobstconfig, r[1]).map((pt) => [r[1], pt]);
+    : open(visiblePolys(robotobstconfig, r[1], corrected).map((pt) => [r[1], pt]));
 
   let path = [];
   let discretePath = [];
@@ -488,7 +540,9 @@ export function computeScene(state) {
 
   if (!robotinsideobstcond.some(Boolean)) {
     const allminkowsegs = robotobstconfig.flatMap((cob) => lineList(cob));
-    const directBlocked = allminkowsegs.some((seg) => SegmentIntersectionQ([[r[0], r[1]], seg]));
+    // E-MP-06 (corrected): the straight line is also blocked when it passes through the interior of a C-obstacle
+    const directBlocked = allminkowsegs.some((seg) => SegmentIntersectionQ([[r[0], r[1]], seg]))
+      || (corrected && crossesInterior([r[0], r[1]], robotobstconfig));
     if (directBlocked) {
       // Keep only C-obstacle edges that do not cross any other C-obstacle edge.
       const noInterConfig = allminkowsegs.filter((seg) => {
@@ -508,6 +562,8 @@ export function computeScene(state) {
       // Complement[allPoints, dpoints] — NB: Complement also sorts (canonical order).
       allPoints = allPoints.filter((pt) => !dkeys.has(key(pt))).sort(canonicalCompare);
       allLines = allLines.filter(([p, q]) => !dkeys.has(key(p)) && !dkeys.has(key(q)));
+      // E-MP-06 (corrected): no line of the graph may pass through the interior of a C-obstacle
+      if (corrected) allLines = allLines.filter((line) => !crossesInterior(line, robotobstconfig));
 
       const startPoint = allPoints.findIndex((pt) => mEqual(pt, r[0]));
       const endPoint = allPoints.findIndex((pt) => mEqual(pt, r[1]));
@@ -519,7 +575,7 @@ export function computeScene(state) {
         diagnostics.push(startPoint < 0 ? 'start not connected to graph' : 'goal not connected to graph');
         path = [];
       } else {
-        const idx = myAstarRev2(adjList, allPoints, startPoint, endPoint);
+        const idx = myAstarRev2(adjList, allPoints, startPoint, endPoint, corrected);
         path = idx === -1 ? [] : idx.map((k) => allPoints[k]);
       }
     } else {

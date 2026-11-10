@@ -334,3 +334,71 @@ describe('dubins-path Manipulate body', () => {
     expect(car).toEqual(view.car);
   });
 });
+
+// The switch "errors of the original: kept | corrected" (A-DP-…, shared/errata.js). Expected values by hand: quarter
+// circles of radius 1 (π/2 each), half circles, and the start heading 0 (the car starts at the origin along +x).
+describe('corrected mode (E-DP)', () => {
+  const fix = (st) => ({ ...st, errata: 'corrected' });
+  it('kept: errata = "original" gives exactly the result without the variable', () => {
+    for (const st of [initialState(), pose([8, 3], [8, 5], { progress: 0 }), pose([2, 2], [4, 2], { minRadius: 1 })]) {
+      const plain = evaluate(st), kept = evaluate({ ...st, errata: 'original' });
+      expect(kept.view).toEqual(plain.view);
+      const { errata, ...rest } = kept.state;
+      expect(rest).toEqual(plain.state);
+    }
+  });
+  it('E-DP-01: goal (8, 3) heading up — at progress 0 the car at the origin faces along +x (the original: −x)', () => {
+    const o = evaluate(pose([8, 3], [8, 5], { progress: 0 })), c = evaluate(fix(pose([8, 3], [8, 5], { progress: 0 })));
+    expect(c.view.word).toBe('RSL');
+    expect(o.view.car.angP).toBe(PI);
+    expect(wrap(c.view.car.angP)).toBeCloseTo(0, 12);
+    expect(c.view.car.xyP).toEqual(o.view.car.xyP);
+    expect(c.view.label).toBe(o.view.label);
+  });
+  it('E-DP-01: wherever the first arc has a length, both modes draw the same car (random poses and progress)', () => {
+    let seed = 99;
+    const rnd = () => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
+    let n = 0;
+    for (let i = 0; i < 400; i++) {
+      const g = [rnd() * 24 - 12, rnd() * 14 - 7], th = rnd() * 2 * PI - PI;
+      const st = pose(g, [g[0] + 2 * Math.cos(th), g[1] + 2 * Math.sin(th)], { progress: rnd(), minRadius: 0.5 + rnd() * 4 });
+      const o = evaluate(st), c = evaluate(fix(st));
+      expect(c.view.lengths).toEqual(o.view.lengths);
+      if (Math.abs(o.view.car.ang1) > 1e-5) { n++; expect(c.view.car).toEqual(o.view.car); }
+    }
+    expect(n).toBeGreaterThan(300);
+  });
+  it('E-DP-03: goal (2, 2) heading 0, r_min 1 — LSR is two quarter circles, π = 3.14 (the original: RSR, 9.11)', () => {
+    const o = evaluate(pose([2, 2], [4, 2], { minRadius: 1 })), c = evaluate(fix(pose([2, 2], [4, 2], { minRadius: 1 })));
+    expect(o.view.word).toBe('RSR');
+    expect(c.view.word).toBe('LSR');
+    near(c.view.lengths.LSR, PI, 1e-12); // (0,0) → (1,1) about (0,1), then (1,1) → (2,2) about (2,1)
+    expect(c.view.label).toBe('3.14 path length, 2.83 distance');
+    // the car half way: at (1, 1), heading up
+    const mid = evaluate(fix(pose([2, 2], [4, 2], { minRadius: 1, progress: 0.5 }))).view.car;
+    nearVec(mid.xyP, [1, 1], 1e-12);
+    near(wrap(mid.angP), PI / 2, 1e-12);
+    // every progress value gives a finite car (the straight piece has length 0)
+    for (let k = 0; k <= 100; k++) {
+      const car = evaluate(fix(pose([2, 2], [4, 2], { minRadius: 1, progress: k / 100 }))).view.car;
+      expect(car.xyP.every(Number.isFinite) && Number.isFinite(car.angP), `progress ${k / 100}`).toBe(true);
+    }
+  });
+  it('E-DP-03: goal (4, 0) heading 0, r_min 1 — the left circles are 4 r_min apart: LRL exists with length 2π (the original: none)', () => {
+    const st = pose([4, 0], [6, 0], { minRadius: 1 });
+    const o = evaluate(st), c = evaluate(fix(st));
+    expect(o.view.lengths.LRL).toBe(Infinity);
+    expect(o.view.lengths.RLR).toBe(Infinity);
+    // by hand: quarter circle up, half circle over the top, quarter circle down: π/2 + π + π/2
+    near(c.view.lengths.LRL, 2 * PI, 1e-9);
+    near(c.view.lengths.RLR, 2 * PI, 1e-9);
+    expect(c.view.word).toBe(o.view.word); // the straight line LSL (length 4) is still the shortest
+    near(c.view.shortestPath[0], 4, 1e-12);
+  });
+  it('E-DP-03: off the boundaries the six lengths are the same in both modes', () => {
+    for (const st of [initialState(), pose([2, 2.000001], [4, 2.000001], { minRadius: 1 }), pose([-5, 3], [-5, 5]), pose([1, 0.5], [3, 0.5], { minRadius: 2 })]) {
+      expect(evaluate(fix(st)).view.lengths).toEqual(evaluate(st).view.lengths);
+    }
+  });
+});
+

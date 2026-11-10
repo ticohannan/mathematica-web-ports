@@ -8,6 +8,8 @@ import { EdgeForm, Style, Italic, Black, Red, LightGray } from '../../shared/gra
 import { PLOT_RANGE, IMAGE_SIZE, W, OBS_RANGE, CONFIG_RANGE, arrayPlotColors } from '../common/arm-grid.js';
 import { armGraphics, obstacleDisks, gridInset, insetFrame, thetaLabel, plainText, configGlyph, obstacleGlyph } from '../common/arm-view.js';
 import { initialState, evaluate, blockedCount } from './model.js';
+import { ErrataControl } from '../../shared/errata.js';
+import { CORRECTIONS } from './errata-mode.js';
 
 let searches = 0, walks = 0; // how often bfsTorus and getShortestPath ran (automation hook)
 const insetImage = cacheLast(); // ArrayPlot[costmapcolor]: rebuilt only when the cost map, the path or the current cell changed
@@ -33,8 +35,8 @@ Manipulate({
     [Black, thetaLabel('1', [4.8, -2.2], 'text-theta1'), thetaLabel('2', [2.8, 0], 'text-theta2'),
       plainText(v.label.text, [4.8, 2.2], 'text-phase'), plainText('robot workspace', [0, 2.2], 'text-workspace')],
     // Locator[pConfigI, If[inCollision, loc[Red], loc[Darker[Green]]]], the same at pConfigF (Q-BF-06)
-    configGlyph(s.pConfigI, v.inCollision, 'glyph-start'),
-    configGlyph(s.pConfigF, v.inCollision, 'glyph-goal'),
+    configGlyph(s.pConfigI, v.glyphStart === 'red', 'glyph-start'), // corrected (E-BF-05): each glyph by its own configuration
+    configGlyph(s.pConfigF, v.glyphGoal === 'red', 'glyph-goal'),
   ],
   // Graphics[{…}, PlotRange -> {{-2.2, 7.1}, {-2.4, 2.4}}, ImageSize -> {600, 320}] — no plot-range padding (D-BF-04)
   graphics: {
@@ -48,13 +50,14 @@ Manipulate({
     [['pConfigF', [5.5, 0]], ...CONFIG_RANGE, Locator, { Appearance: None }],
     [['Quality', 2, Style('Q', Italic)], 1, 10, 1, { Appearance: 'Labeled' }],
     [['progress', 1, Style('P', Italic)], 0, 1, 0.01, { Appearance: 'Labeled' }],
+    ErrataControl(CORRECTIONS),
   ],
   // one LocatorPane: a press goes to the nearest of the four locators (F-BF-05)
   locators: { appearance: (n, plot) => obstacleGlyph(plot), describe: (n) => `${DESCR[n]} locator; arrow keys move it` },
   hook: { // port addition A-BF-03
     view: (v, s) => ({
       lS: s.lS, lE: s.lE, path: s.path, ccord: v.ccord, Theta1: v.Theta1, Theta2: v.Theta2,
-      inCollision: v.inCollision, glyph: v.glyph, label: v.label.text, gridSize: v.gridSize,
+      inCollision: v.inCollision, glyph: v.glyph, glyphStart: v.glyphStart, glyphGoal: v.glyphGoal, noPath: v.noPath, label: v.label.text, gridSize: v.gridSize,
       blocked: blockedCount(s.freeConfigSpace), searches, walks, highRes: s.highRes,
       theta1Label: v.geometry.theta1Label.visible, theta2Label: v.geometry.theta2Label.visible,
     }),

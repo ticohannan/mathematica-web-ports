@@ -7,6 +7,8 @@ import { Manipulate, None, Row, Rule, CheckboxBar } from '../../shared/manipulat
 import { Style, Italic, Fraction } from '../../shared/graphics.js';
 import { mmaNumberString } from '../../shared/mma-extra.js';
 import { initialState, evaluate, SIGNAL_NAMES, LEGEND } from './model.js';
+import { ErrataControl } from '../../shared/errata.js';
+import { CORRECTIONS } from './errata-mode.js';
 
 const it = (t) => Style(t, Italic);
 // T is always a machine real in the original (τ = 1.0 b/a): shown "2." (Q-TS-02)
@@ -32,5 +34,6 @@ Manipulate({
     [['aOld', 0], None],
     [['TOld', 0], None],
     [['checked', [1, 2], 'display: '], LEGEND.map((l, i) => Rule(i + 1, l)), { ControlType: CheckboxBar }],
+    ErrataControl(CORRECTIONS),
   ],
 });

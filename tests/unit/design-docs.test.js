@@ -44,7 +44,8 @@ describe.each(APPS)('design document of $dir', ({ dir, prefix, spec }) => {
   const file = `demos/${dir}/DESIGN.md`;
   const md = read(file);
   // bundle.spec.js titles its per-app tests with ${app.dir}; substituted here so the title can be cited verbatim
-  const e2eText = read(`tests/e2e/${spec}`) + read('tests/e2e/site.spec.js') + read('tests/e2e/bundle.spec.js').replaceAll('${app.dir}', dir);
+  const e2eText = read(`tests/e2e/${spec}`) + read('tests/e2e/site.spec.js') + read('tests/e2e/bundle.spec.js').replaceAll('${app.dir}', dir)
+    + read('tests/e2e/errata-mode.spec.js').replaceAll('${app.dir}', dir); // the switch "errors of the original" (v0.1.34)
   const featureRows = tableRows(section(md, '4. Features')).filter((r) => new RegExp(`^[FA]-${prefix}-\\d+$`).test(r[0]));
 
   it(`names the current code version (package.json ${version})`, () => {
@@ -149,7 +150,7 @@ describe.each(APPS)('design document of $dir', ({ dir, prefix, spec }) => {
         expect(id).toMatch(new RegExp(`^E-${prefix}-\\d+$`));
         expect(ERROR_KINDS, `${id}: Kind`).toContain(kind);
         expect(kind, `${id}: "none found" needs the ID —`).not.toBe('none found');
-        expect(status, `${id}: Status`).toMatch(/^(open|kept|corrected in v\d+\.\d+\.\d+)$/);
+        expect(status, `${id}: Status`).toMatch(/^(open|kept|corrected in v\d+\.\d+\.\d+|switchable since v\d+\.\d+\.\d+)$/);
       }
     }
     if (rows.some((r) => r[0] === '—')) expect(rows.length, 'the "none found" row stands alone').toBe(1);

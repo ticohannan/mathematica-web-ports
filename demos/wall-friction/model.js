@@ -16,6 +16,7 @@ import {
   Abs, Min, Max, Floor, Round, Clip, Norm, EuclideanDistance, Total, Plus, Subtract, Times, Divide, Append, SortBy, First,
   Rest, Equal, Unequal, Less, Greater, LessEqual, GreaterEqual,
 } from '../../shared/wl.js';
+import { isCorrected } from '../../shared/errata.js';
 
 // ---- the Initialization code ---------------------------------------------------------------------------------------
 // An entry of the search is the original's list {distance, r1, r2, path, path1, path2, done}: the distance moved (or
@@ -219,7 +220,7 @@ export function optimal2robotPath(s1, s2, g1, g2, ε, stats = null) {
  * or to the right near the left wall). The original's middle alternative (robot 1 moved away from robot 2) is never
  * used: a missing semicolon makes its If a factor of the previous assignment (Q-WF-03, E-WF-01).
  */
-export function keepRobotsInWorkspaceAndSpaced(r1, r2, ε) {
+export function keepRobotsInWorkspaceAndSpaced(r1, r2, ε, corrected = false) {
   // keep robots in ε workspace
   let p1 = [Clip(r1[0], [ε, 1 - ε]), Clip(r1[1], [ε, 1 - ε])];
   let p2 = [Clip(r2[0], [ε, 1 - ε]), Clip(r2[1], [ε, 1 - ε])];
@@ -231,7 +232,12 @@ export function keepRobotsInWorkspaceAndSpaced(r1, r2, ε) {
     else {
       let tp = Plus(p1, Times(ε, Divide(Subtract(p2, p1), ds))); // temp position
       if (inside(tp)) p2 = tp;
-      else {
+      else if (corrected) {
+        // E-WF-01 (the switch "errors of the original: corrected"): with the semicolon — robot 1 is moved away from
+        // robot 2 to distance ε if that stays inside, otherwise put ε from robot 2 toward the centre
+        tp = Plus(p2, Times(ε, Divide(Subtract(p1, p2), ds)));
+        p1 = inside(tp) ? tp : Plus(p2, Times(ε, Divide(Subtract([1 / 2, 1 / 2], p2), EuclideanDistance([1 / 2, 1 / 2], p2))));
+      } else {
         // "tp = p2+ε((p1-p2))/(ds)⏎If[…]" without a semicolon: ONE assignment whose right side multiplies by the If. Its
         // test is the one that just failed (tp is assigned only afterwards), so it always takes the second branch
         // p1 = p2 + ε ({1/2, 1/2} − p2)/|{1/2, 1/2} − p2|; the product (and so tp) is not used afterwards
@@ -303,8 +309,9 @@ export function evaluate(state) {
   const thickness = 0.005;
   const c1 = Blue, c2 = Magenta;
   // keep robots in ε workspace
-  [s.s1, s.s2] = keepRobotsInWorkspaceAndSpaced(s.s1, s.s2, ε);
-  [s.e1, s.e2] = keepRobotsInWorkspaceAndSpaced(s.e1, s.e2, ε);
+  const corrected = isCorrected(state); // the switch "errors of the original" (DESIGN.md §4): E-WF-01
+  [s.s1, s.s2] = keepRobotsInWorkspaceAndSpaced(s.s1, s.s2, ε, corrected);
+  [s.e1, s.e2] = keepRobotsInWorkspaceAndSpaced(s.e1, s.e2, ε, corrected);
   const [ps1, pe1, ps2, pe2] = [s.s1, s.e1, s.s2, s.e2];
   const stats = {};
   const found = optimal2robotPath(ps1, ps2, pe1, pe2, ε, stats);

@@ -13,6 +13,7 @@ import { singularspace3D, singularphasespace3D } from './singular-sets.js';
 import { manipEllip } from './svd3.js';
 import { Graphics3D, Show, GeometricTransformation, Sphere, Opacity, Blue, LightBlue, flatten, primitiveBounds } from './g3d.js';
 import { drawZArrow, drawCoordAxes, drawJoint, drawWristCenter, GROUND } from '../common/robot-draw.js';
+import { isCorrected } from '../../shared/errata.js';
 
 // ---- Initialization code ---------------------------------------------------------------------------------
 // drawZArrow, drawCoordAxes, drawJoint (variant 'rs', the default), drawWristCenter and the ground moved unchanged
@@ -74,7 +75,8 @@ export function robotGraphics(Type, params, Td) {
 export function evaluate(stateIn) {
   const st = { ...stateIn, params: stateIn.params.slice() };
   const Type = typeOf(st.iType);
-  st.params = wrapParams(st.params);
+  const corrected = isCorrected(stateIn); // the switch "errors of the original" (DESIGN.md §4): E-RS-01, 02, 03
+  st.params = wrapParams(st.params, corrected);
   const o3coords = makeO3coords(Type);
   let recomputed = false;
   if (st.iTypeOld !== st.iType || st.isJLinearVelOld !== st.isJLinearVel) {
@@ -86,11 +88,11 @@ export function evaluate(stateIn) {
   }
   // The stored sets are those of (iTypeOld, isJLinearVelOld), with the phase-space options of their time.
   const storedOpt = phaseOpt(typeOf(st.iTypeOld), st.singularLabel);
-  const singSpace = singularspace3D(st.iTypeOld, st.isJLinearVelOld, makeO3coords(typeOf(st.iTypeOld)));
+  const singSpace = singularspace3D(st.iTypeOld, st.isJLinearVelOld, makeO3coords(typeOf(st.iTypeOld)), corrected);
   const singPhase = singularphasespace3D(st.iTypeOld, st.isJLinearVelOld, storedOpt);
 
   const o3 = o3coords(st.params[0], st.params[1], st.params[2]);
-  const manip = st.showManipulability ? manipEllip(jacobianFor(st.iType, st.isJLinearVel, st.params), o3) : null;
+  const manip = st.showManipulability ? manipEllip(jacobianFor(st.iType, st.isJLinearVel, st.params, corrected), o3) : null;
 
   const Ad = computeAd(Type, st.params);
   const Td = computeTd(Ad);

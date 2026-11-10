@@ -11,6 +11,8 @@ import {
 } from '../../shared/graphics.js';
 import { svgNode } from '../../shared/svg-plot.js';
 import { computeScene, lineList, pathLength, regularPolygon, DEFAULTS, LOCATOR_RANGES, PLOT_RANGE } from './planner.js';
+import { ErrataControl } from '../../shared/errata.js';
+import { CORRECTIONS } from './errata-mode.js';
 
 const LOCATORS = ['r1', 'r2', 'o1', 'o2', 'o3', 'o4'];
 const clampTo = (k, [x, y]) => { const [[x0, y0], [x1, y1]] = LOCATOR_RANGES[k]; return [Math.min(Math.max(x, x0), x1), Math.min(Math.max(y, y0), y1)]; };
@@ -50,7 +52,7 @@ let prevLocators = null;
 // (F-09, v0.1.28, as the original: after boundary 4 → 3 → 5 → 4 the robot is back at the goal); where s is used it is
 // clamped to the path (the drawing, the slider's position; D-MP-01).
 function body(st) {
-  scene = computed([...LOCATORS.map((k) => st[k]), st.n, st.x], () => computeScene(st));
+  scene = computed([...LOCATORS.map((k) => st[k]), st.n, st.x, st.errata], () => computeScene(st));
   const moved = restart ?? (prevLocators !== null && LOCATORS.some((k, i) => st[k] !== prevLocators[i]));
   restart = null;
   prevLocators = LOCATORS.map((k) => st[k]);
@@ -151,6 +153,7 @@ const M = Manipulate({
       // fullPanel: the original's full panel — value field, faster/slower, direction (I-MP-09 → P-MP-08, v0.1.30)
       { Enabled: () => !scene || scene.discretePath.length > 0, animSeconds: 5, steps: null, pauseWhenHidden: true, fullPanel: true }],
     ...LOCATORS.map((k) => [[k, DEFAULTS[k]], ...LOCATOR_RANGES[k], Locator]),
+    ErrataControl(CORRECTIONS),
   ],
   // presses are handled by the page below (a press away from every locator moves the nearest, F-08); arrow keys 0.05,
   // Shift 0.25 (A-MP-04). pointer: false — arrow keys move the glyph at once, the scene follows on the

@@ -367,3 +367,16 @@ ideally by reproducing the scene in the original (above).
 - Manual tests: `M-<demo>-NN`; errors in the original: `E-<demo>-NN` (DESIGN.md §11).
 - Automated tests are referenced by file + test title.
 Demo codes: `MP` motion planning, `TP` three parametrizations, `EA` Euler angles, `GEN` general.
+
+## The switch "errors of the original: kept | corrected" (v0.1.34)
+
+- Unit: each app's own test file has a block `corrected mode (E-XX)`: "kept" gives exactly the result of a state without
+  the variable, and each correction is compared with a value derived independently of the port (by hand, from geometry,
+  or from the reference planner). `tests/unit/errata-mode.test.js` checks that each app's `errata-mode.js`, its page, its
+  DESIGN.md (§4, §5, §8, §9, §11) and `docs/CORRECTED_MODE.md` agree (`node tools/errata-docs.mjs` rewrites the documents).
+- Browser: `tests/e2e/errata-mode.spec.js` opens every app with the switch, checks the original's value at the scenario
+  of `tests/support/errata-scenarios.js`, switches to "corrected", checks the corrected value and the note, and returns
+  with "Initial settings". It saves `…-errata-kept.png` and `…-errata-corrected.png` in the review screenshots.
+- The corrections have not been run against Mathematica: the port's "corrected" mode is not compared with a corrected
+  notebook.
+

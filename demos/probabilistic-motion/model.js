@@ -15,6 +15,7 @@ import {
   UniformDistribution, Equal, Unequal, Less, Greater, GreaterEqual,
 } from '../../shared/wl.js';
 import { createRng } from '../../shared/random.js';
+import { isCorrected } from '../../shared/errata.js';
 
 // ---- the Initialization code ---------------------------------------------------------------------------------------
 
@@ -92,19 +93,21 @@ export function motionModelVelocityNoAng(xt, ut, xtm1, Δt, α1, α2, α3, α4, 
   return probTriangularDistribution(v - vh, α1 * v ** 2 + α2 * ω ** 2) * probTriangularDistribution(ω - ωh, α3 * v ** 2 + α4 * ω ** 2);
 }
 
-/** The noise of a sampler: RandomVariate[MyTriangularDistribution[Sqrt[bSq] {−1, 1}], n] from the source rng. */
-const noise = (bSq, n, rng) => RandomVariate(MyTriangularDistribution(Times(Sqrt(bSq), [-1, 1])), n, rng);
+/** The noise of a sampler: RandomVariate[MyTriangularDistribution[Sqrt[bSq] {−1, 1}], n] from the source rng — a
+ *  triangular distribution of variance bSq/6 (E-PM-01). With corrected (the switch "errors of the original: corrected")
+ *  the range is Sqrt[6 bSq] {−1, 1}: variance bSq, the distribution whose density probTriangularDistribution is. */
+const noise = (bSq, n, rng, corrected = false) => RandomVariate(MyTriangularDistribution(Times(Sqrt(corrected ? 6 * bSq : bSq), [-1, 1])), n, rng);
 
 /**
  * sampleMotionModelVelocityNsamples[ut, xtm1, ΔT, α1, …, α6, Nsamples] → Nsamples poses {x', y', θ'}: the commands
  * with triangular noise (variances α1 v² + α2 ω², α3 v² + α4 ω²), driven along their arcs, plus a final rotation γ
  * (α5 v² + α6 ω²) — Probabilistic Robotics' sample_motion_model_velocity. rng: the random source (SeedRandom).
  */
-export function sampleMotionModelVelocityNsamples(ut, xtm1, ΔT, α1, α2, α3, α4, α5, α6, Nsamples, rng) {
+export function sampleMotionModelVelocityNsamples(ut, xtm1, ΔT, α1, α2, α3, α4, α5, α6, Nsamples, rng, corrected = false) {
   const [x, y, θ] = xtm1, [v, ω] = ut;
-  const vh = noise(α1 * v ** 2 + α2 * ω ** 2, Nsamples, rng).map((e) => v + e);
-  const ωh = noise(α3 * v ** 2 + α4 * ω ** 2, Nsamples, rng).map((e) => ω + e);
-  const γh = noise(α5 * v ** 2 + α6 * ω ** 2, Nsamples, rng);
+  const vh = noise(α1 * v ** 2 + α2 * ω ** 2, Nsamples, rng, corrected).map((e) => v + e);
+  const ωh = noise(α3 * v ** 2 + α4 * ω ** 2, Nsamples, rng, corrected).map((e) => ω + e);
+  const γh = noise(α5 * v ** 2 + α6 * ω ** 2, Nsamples, rng, corrected);
   const xp = vh.map((vi, i) => x - (vi / ωh[i]) * Sin(θ) + (vi / ωh[i]) * Sin(θ + ωh[i] * ΔT));
   const yp = vh.map((vi, i) => y + (vi / ωh[i]) * Cos(θ) - (vi / ωh[i]) * Cos(θ + ωh[i] * ΔT));
   const θp = ωh.map((wi, i) => θ + wi * ΔT + γh[i] * ΔT);
@@ -137,15 +140,15 @@ export function MotionModelOdometryNoAng(xt, ut, xtm1, ΔT, α1, α2, α3, α4) 
  * rotation δrot1, translation δtrans and rotation δrot2, each with triangular noise — Probabilistic Robotics'
  * sample_motion_model_odometry (with the authors' wrapping fixes). rng: the random source (SeedRandom).
  */
-export function sampleMotionModelOdometryNsamples(ut, xtm1, ΔT, α1, α2, α3, α4, Nsamples, rng) {
+export function sampleMotionModelOdometryNsamples(ut, xtm1, ΔT, α1, α2, α3, α4, Nsamples, rng, corrected = false) {
   const [x, y, θ] = xtm1, [v, ω] = ut;
   const [xbp, ybp, θbp] = nominalMotionModel(v, ω, x, y, θ, ΔT);
   const δrot1 = signedAngleDist(ArcTan(xbp - x, ybp - y), θ); // FIX #1
   const δtrans = Sqrt((-x + xbp) ** 2 + (-y + ybp) ** 2);
   const δrot2 = signedAngleDist(signedAngleDist(θbp, θ), δrot1); // FIX #2
-  const δhatrot1 = noise(α1 * δrot1 ** 2 + α2 * δtrans ** 2, Nsamples, rng).map((e) => δrot1 + e);
-  const δhattrans = noise(α3 * δtrans ** 2 + α4 * (δrot1 ** 2 + δrot2 ** 2), Nsamples, rng).map((e) => δtrans + e);
-  const δhatrot2 = noise(α1 * δrot1 ** 2 + α2 * δtrans ** 2, Nsamples, rng).map((e) => δrot2 + e);
+  const δhatrot1 = noise(α1 * δrot1 ** 2 + α2 * δtrans ** 2, Nsamples, rng, corrected).map((e) => δrot1 + e);
+  const δhattrans = noise(α3 * δtrans ** 2 + α4 * (δrot1 ** 2 + δrot2 ** 2), Nsamples, rng, corrected).map((e) => δtrans + e);
+  const δhatrot2 = noise(α1 * δrot1 ** 2 + α2 * δtrans ** 2, Nsamples, rng, corrected).map((e) => δrot2 + e);
   const xp = δhattrans.map((t, i) => x + t * Cos(θ + δhatrot1[i]));
   const yp = δhattrans.map((t, i) => y + t * Sin(θ + δhatrot1[i]));
   const θp = δhatrot1.map((r1, i) => θ + r1 + δhatrot2[i]);
@@ -215,9 +218,13 @@ export const initialState = () => ({ ...SAVED });
 /** The picture's size: ImageSize -> 1.1 {400, 400}. */
 export const IMAGE_SIZE = [1.1 * 400, 1.1 * 400];
 
+/** The standard deviations of the samples' x and y (for the tests and the automation hook). */
+const spreadOf = (pts) => [0, 1].map((k) => { const m = pts.reduce((a, p) => a + p[k], 0) / pts.length; return Sqrt(pts.reduce((a, p) => a + (p[k] - m) ** 2, 0) / pts.length); });
+
 /** One evaluation of the Manipulate body (pure): the state in, { view, graphics } out. */
 export function evaluate(state) {
   const { mode, θ, v, ω, α1, α2, α3, α4, α5, α6 } = state;
+  const corrected = isCorrected(state); // the switch "errors of the original" (A-PM-07): E-PM-01
   const ΔT = 1, numSamples = 500, x = 0, y = 0, diam = 1;
   const pr3 = [[-3, 3], [-3, 3], 'All'], pr2 = [[-3, 3], [-3, 3]];
   const rng = createRng({ seed: 1 }); // SeedRandom[1]: make samples repeatable (D-PM-01: other numbers than Mathematica's)
@@ -232,14 +239,14 @@ export function evaluate(state) {
   if (mode === 'VelocityPDF') {
     first = DensityPlot((xx, yy) => motionModelVelocityNoAng([xx, yy], [v, ω], [x, y, θ], ΔT, α1, α2, α3, α4, α5, α6), [-3, 3], [-3, 3], densityOptions);
   } else if (mode === 'VelocitySample') {
-    robotSamples = sampleMotionModelVelocityNsamples([v, ω], [x, y, θ], ΔT, α1, α2, α3, α4, α5, α6, numSamples, rng);
+    robotSamples = sampleMotionModelVelocityNsamples([v, ω], [x, y, θ], ΔT, α1, α2, α3, α4, α5, α6, numSamples, rng, corrected);
     first = sampled(robotSamples);
   } else if (mode === 'OdometryPDF') {
     first = DensityPlot((xx, yy) => MotionModelOdometryNoAng([xx, yy], [v, ω], [x, y, θ], ΔT, α1, α2, α3, α4), [-3, 3], [-3, 3], densityOptions);
     exclusions = odometryExclusions([v, ω], [x, y, θ], ΔT, α1, α2, α3, α4);
     first = Show(first, exclusionGaps(exclusions, pr2));
   } else if (mode === 'OdometrySample') {
-    robotSamples = sampleMotionModelOdometryNsamples([v, ω], [x, y, θ], ΔT, α1, α2, α3, α4, numSamples, rng);
+    robotSamples = sampleMotionModelOdometryNsamples([v, ω], [x, y, θ], ΔT, α1, α2, α3, α4, numSamples, rng, corrected);
     first = sampled(robotSamples);
   }
 
@@ -282,7 +289,7 @@ export function evaluate(state) {
   return {
     view: {
       mode, nominal: [xp, yp, θp0],
-      samples: robotSamples && { count: robotSamples.length, mean: Mean(robotSamples) },
+      samples: robotSamples && { count: robotSamples.length, mean: Mean(robotSamples), spread: spreadOf(robotSamples) },
       exclusions: exclusions && { rays: exclusions.rays, radius: exclusions.radius, supports: exclusions.supports.map(Boolean) },
     },
     graphics,

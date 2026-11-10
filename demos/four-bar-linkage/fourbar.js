@@ -15,6 +15,7 @@
 import { mEqual, mUnequal, mGreaterEq } from '../../shared/mma.js';
 import { arcTan } from '../../shared/mma-exact.js';
 import { nearest } from '../../shared/mma-extra.js';
+import { isCorrected } from '../../shared/errata.js';
 import { myArrowArc } from '../common/arrow-arcs.js';
 import {
   Annotation, Line, Circle, Point, Rectangle, Rotate, Translate, Text, Style, Subscript, Row, Column, Clip, Italic, EdgeForm,
@@ -66,17 +67,24 @@ export function loopTerms(t, [l1, l2, l3, l4]) {
   const Gamma = l2 * l2 - l4 * l4 - l3 * l3 - l1 * l1 + timesAscending(2, l1, l4, c);
   return { Alpha, Beta, Gamma };
 }
-function phi(t, l, sign) {
+function phi(t, l, sign, corrected = false) {
   const { Alpha, Beta, Gamma } = loopTerms(t, l);
   const r = Alpha * Alpha + Beta * Beta;
+  if (corrected) {
+    // E-FB-02 (the switch "errors of the original: corrected"): Null only where γ² > α² + β²; on the boundary the one
+    // solution φ = ArcTan[α, β] is kept (ArcCos's argument clamped to ±1 against rounding); α = β = 0 has no direction
+    if (r === 0 || (Gamma * Gamma > r && !mEqual(Gamma * Gamma, r))) return null;
+    const p = mod2pi(arcTan(Alpha, Beta) + sign * Math.acos(Math.max(-1, Math.min(1, Gamma * (1 / Math.sqrt(r))))));
+    return mEqual(p, -PI) ? PI : p;
+  }
   let p = mod2pi(arcTan(Alpha, Beta) + sign * Math.acos(Gamma * (1 / Math.sqrt(r))));
   if (mEqual(p, -PI)) p = PI; // ORIGINAL QUIRK (Q-FB-06)
   return mGreaterEq(Gamma * Gamma, r) ? null : p; // Null where γ² >= α² + β² (E-FB-02: the boundary itself too)
 }
-/** Φpos[θ, l] (null = Null) */
-export const Phipos = (t, l) => phi(t, l, 1);
-/** Φneg[θ, l] (null = Null) */
-export const Phineg = (t, l) => phi(t, l, -1);
+/** Φpos[θ, l] (null = Null); corrected: E-FB-02 */
+export const Phipos = (t, l, corrected = false) => phi(t, l, 1, corrected);
+/** Φneg[θ, l] (null = Null); corrected: E-FB-02 */
+export const Phineg = (t, l, corrected = false) => phi(t, l, -1, corrected);
 
 /** myArrowArc from demos/common/arrow-arcs.js (12 control points, a Point when start == end). */
 export { myArrowArc };
@@ -87,15 +95,17 @@ export { myArrowArc };
 export const lenlengthsOf = (links, spacing) => [links[0], links[1] - links[0], 2.5 - links[1], spacing];
 
 /** impossibleLinks — the four conditions as written; ORIGINAL QUIRK (Q-FB-01, E-FB-01): the third reads l3 >= l2 + l3 + l1. */
-export function impossibleLinksOf([l1, l2, l3, l4]) {
+export function impossibleLinksOf([l1, l2, l3, l4], corrected = false) {
+  // corrected (E-FB-01): the third condition is L3 >= L1 + L2 + L4
+  if (corrected) return mGreaterEq(l1, l2 + l3 + l4) || mGreaterEq(l2, l1 + l3 + l4) || mGreaterEq(l3, l2 + l4 + l1) || mGreaterEq(l4, l2 + l3 + l1);
   return mGreaterEq(l1, l2 + l3 + l4) || mGreaterEq(l2, l1 + l3 + l4) || mGreaterEq(l3, l2 + l3 + l1) || mGreaterEq(l4, l2 + l3 + l1);
 }
 
 /** The Piecewise of the impossible branch (Q-FB-02: {π, π} and {0, π} unreachable). */
-export function piecewisePnear([l1, l2, l3, l4]) {
+export function piecewisePnear([l1, l2, l3, l4], corrected = false) {
   if (mEqual(l1, l2 + l3 + l4)) return [0, 0];
   if (mEqual(l2, l1 + l3 + l4)) return [PI, 0];
-  if (mEqual(l3, l2 + l3 + l1)) return [PI, PI];
+  if (mEqual(l3, corrected ? l2 + l4 + l1 : l2 + l3 + l1)) return [PI, PI]; // corrected: E-FB-01
   if (mEqual(l4, l2 + l3 + l1)) return [0, PI];
   return [PI / 2, PI / 2];
 }
@@ -115,10 +125,10 @@ const exactSin = (t) => (t === 0 || t === PI ? 0 : Math.sin(t));
  * Returns {records, curve1 (number of curve-1 records), nulls: [θs evaluated with no value, per curve]}.
  */
 export const SAMPLER = Object.freeze({ MAX_LEVELS: 3, TURN_DEG: 2, EDGE_STEPS: 9 });
-export function plotSamples(l, grid = plotGrid()) {
+export function plotSamples(l, grid = plotGrid(), corrected = false) {
   const records = [];
   const nulls = [[], []];
-  const fs = [Phipos, Phineg];
+  const fs = corrected ? [(t, ll) => Phipos(t, ll, true), (t, ll) => Phineg(t, ll, true)] : [Phipos, Phineg];
   let curve1 = 0;
   const turn = (a, b, c) => { // turning angle at b in degrees
     const u = [b[0] - a[0], b[1] - a[1]], v = [c[0] - b[0], c[1] - b[1]];
@@ -345,17 +355,22 @@ export function fromSettings(settings) {
  */
 export function evaluate(stateIn, { sampler = plotSamples } = {}) {
   const st = { ...stateIn, p: [...stateIn.p], links: [...stateIn.links] };
+  const corrected = isCorrected(stateIn); // the switch "errors of the original" (A-FB-08): E-FB-01, E-FB-02
+  // the curve is cached in the state: a change of the switch samples it again (only pages with the switch carry errataApplied)
+  let modeChanged = false;
+  if ('errata' in stateIn) { modeChanged = st.errataApplied !== undefined && st.errataApplied !== stateIn.errata; st.errataApplied = stateIn.errata; }
   const lenlengths = lenlengthsOf(st.links, st.spacing);
-  const impossibleLinks = impossibleLinksOf(lenlengths);
+  const impossibleLinks = impossibleLinksOf(lenlengths, corrected);
   let resampled = null;
   if (impossibleLinks) {
-    st.pnear = piecewisePnear(lenlengths);
+    st.pnear = piecewisePnear(lenlengths, corrected);
     st.plot = { lines: [[], []], text: mEqual(st.pnear, [PI / 2, PI / 2]) ? INVALID_TEXT : ONE_TEXT, recorded: null };
     st.spacingOld = st.spacing; st.linksOld = [...st.links];
   } else {
-    if (mUnequal(st.spacingOld, st.spacing) || mUnequal(st.linksOld, st.links)) {
-      const rec = recordedSamples(st.spacing, st.links);
-      const smp = rec ?? sampler(lenlengths);
+    if (mUnequal(st.spacingOld, st.spacing) || mUnequal(st.linksOld, st.links) || modeChanged) {
+      // the recorded samples are the ORIGINAL's (they leave the boundary points out): corrected mode samples itself
+      const rec = corrected ? null : recordedSamples(st.spacing, st.links);
+      const smp = rec ?? (corrected ? sampler(lenlengths, undefined, true) : sampler(lenlengths));
       resampled = { recorded: rec ? rec.recorded : null, count: smp.records.length };
       // K-FB-03: with no record Reap gives {g, {}} and the Set of {plot, {pvals}} fails: plot and pvals keep their values
       if (smp.records.length) {

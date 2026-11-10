@@ -8,6 +8,8 @@ import { Manipulate, VerticalSlider } from '../../shared/manipulate.js';
 import { Style, Italic, Subscript } from '../../shared/graphics.js';
 import { View3D } from '../../shared/graphics3d-view.js';
 import { initialState, evaluate } from './model.js';
+import { ErrataControl } from '../../shared/errata.js';
+import { CORRECTIONS } from './errata-mode.js';
 
 const zColumn = document.getElementById('controls-z');
 const checks = document.getElementById('controls-checks');
@@ -28,6 +30,7 @@ Manipulate({
     z('az', 1, 'A'), z('bz', 2, 'B'), z('cz', -1, 'C'), z('dz', -2, 'D'),
     [['showPlaneAB', true, 'show plane for AB'], [false, true], { parent: checks }],
     [['showPlaneCD', true, 'show plane for CD'], [false, true], { parent: checks }],
+    ErrataControl(CORRECTIONS),
   ],
   hook: {
     inkFraction: (c) => () => c.renderer().inkFraction(),

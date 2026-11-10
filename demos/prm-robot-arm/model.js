@@ -10,6 +10,7 @@ import {
   TWO_PI, toroidDist, pathOKT as pathOKTcore, connectPoints as connectPointsCore, planQuery, progressOnPath, toroidLine,
   toroidLines,
 } from '../common/prm-core.js';
+import { isCorrected } from '../../shared/errata.js';
 
 export { TWO_PI, toroidDist };
 
@@ -200,6 +201,7 @@ export function evaluate(stateIn, rng, { controlActive = false } = {}) {
     qs, qf, r: st.r, goodPts: st.goodPts, edgesNNadj: st.edgesNNadj,
     pathOK: (a, b) => pathOKTrobot(a, b, pObs3, obsRad, widtha, delta),
     qsFree: () => !inCollision, qfFree: () => !inCollisionf,
+    corrected: isCorrected(stateIn), // the switch "errors of the original" (DESIGN.md §4)
   });
 
   // Calculate the robot progress

@@ -8,6 +8,8 @@ import { Style, Subscript, Row, Italic } from '../../shared/graphics.js';
 import {
   useRecordedSamples, initialSettings, evaluate, fromSettings, CS_RANGE, LINKAGE_RANGE, IMAGE_SIZE, SPACING_SLIDER, LINKS_SLIDER,
 } from './fourbar.js';
+import { ErrataControl } from '../../shared/errata.js';
+import { CORRECTIONS } from './errata-mode.js';
 
 const copy = (x) => JSON.parse(JSON.stringify(x));
 
@@ -42,6 +44,7 @@ fetch('./recorded-samples.json').then((r) => {
         ControlType: IntervalSlider, Method: 'Push', MinIntervalSize: LINKS_SLIDER.minIntervalSize, Appearance: 'Labeled',
         label: 'link lengths (L1,L2,L3)', trackPress: true, look: 'mma', // the snapshots' colours (D-FB-05)
       }],
+      ErrataControl(CORRECTIONS),
     ],
     locators: { describe: () => 'configuration locator (θ, φ); arrow keys move it' },
     hook: { // port addition A-FB-03

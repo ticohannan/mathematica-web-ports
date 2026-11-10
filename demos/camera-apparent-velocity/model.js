@@ -94,10 +94,12 @@ export function sphericaldist(xc, yc, zc, r) {
  * the "image plane coordinates" Grid. maxdist = √((x/z − xc/zc)² + (y/z − yc/zc)²) has no factor λ (E-CV-01), and the
  * Grid shows it as "0.3 = maxdist" (value and name swapped, Q-CV-06).
  */
-export function imagePlaneCoor(xc, yc, zc, r) {
+export function imagePlaneCoor(xc, yc, zc, r, corrected = false) {
   const λ = 5;
   const [, Phi, x, y, z] = computeShortestPt(xc, yc, zc, r);
-  const maxdist = Sqrt((x / z - xc / zc) ** 2 + (y / z - yc / zc) ** 2);
+  // corrected (E-CV-01, the switch "errors of the original: corrected"): the distance in the image plane, with the
+  // factor λ of the (u, v) shown above it
+  const maxdist = (corrected ? λ : 1) * Sqrt((x / z - xc / zc) ** 2 + (y / z - yc / zc) ** 2);
   const vari = [Row(['(', Style('u', Italic), ', ', Style('v', Italic), ') =']), 'λ =', Row([numberForm(maxdist), ' ='])];
   const vali = xc === 0 && yc === 0
     ? [`${numberForm(r * (λ / z) * Sin(Phi))}(cos θ, sin θ)`, String(λ), 'maxdist']

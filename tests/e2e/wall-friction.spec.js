@@ -8,7 +8,8 @@ import fs from 'node:fs';
 import { openDemo, reviewShot } from './helpers.js';
 
 const URL = '/demos/wall-friction/';
-const state = (page) => page.evaluate(() => window.__demo.getState());
+// the original's Manipulate variables (the port's switch variable `errata` is tested in errata-mode.spec.js)
+const state = (page) => page.evaluate(() => { const { errata, ...rest } = window.__demo.getState(); return rest; });
 const view = (page) => page.evaluate(() => window.__demo.view());
 const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
 const fx = JSON.parse(fs.readFileSync('tests/golden/wall-friction.original-states.json', 'utf8'));

@@ -67,3 +67,36 @@ describe('time-shifting-scaling model', () => {
     expect(B_COLOR.rgb).toEqual([138 / 255, 182 / 255, 7 / 255]);
   });
 });
+
+// The switch "errors of the original: kept | corrected" (shared/errata.js). Expected values by hand from the signal
+// definitions: the ramp x(t) = 4 − 0.8 t on [0, 5), 0 elsewhere.
+describe('corrected mode (E-TS)', () => {
+  const at0 = (extra) => ({ ...initialState(), α: 0, ...extra });
+  it('kept: errata = "original" gives exactly the result without the variable, also at a = 0', () => {
+    for (const st of [initialState(), at0({})]) {
+      const plain = evaluate(st), kept = evaluate({ ...st, errata: 'original' });
+      expect(kept.view).toEqual(plain.view);
+      expect(JSON.stringify(kept.graphics)).toBe(JSON.stringify(plain.graphics));
+    }
+  });
+  it('E-TS-01: a = 0, ramp — y(t) = x(−b) and w(t) = x(0) = 4 are constants (b = 4: y = 0; b = −2: y = x(2) = 2.4)', () => {
+    expect(evaluate(at0({ errata: 'corrected' })).view.constants).toEqual({ y: 0, w: 4 });
+    const c = evaluate(at0({ β: -2, errata: 'corrected' })).view.constants;
+    expect(c.y).toBeCloseTo(4 - 0.8 * 2, 12);
+    expect(c.w).toBe(4);
+    expect(evaluate(at0({ β: -7, errata: 'corrected' })).view.constants.y).toBe(0); // x(7): after the ramp
+    expect(evaluate(at0({})).view.constants).toBe(null); // the original: x stretched 10000 times
+  });
+  it('E-TS-01: the corrected picture at a = 0 differs from the original\'s; for a ≠ 0 both modes draw the same', () => {
+    const o = evaluate(at0({ β: -2 })), c = evaluate(at0({ β: -2, errata: 'corrected' }));
+    expect(JSON.stringify(c.graphics[1])).not.toBe(JSON.stringify(o.graphics[1]));
+    expect(JSON.stringify(c.graphics[0])).toBe(JSON.stringify(o.graphics[0])); // the input plot is the same
+    expect(JSON.stringify(c.graphics[1])).toContain('[20,2.4');
+    for (const α of [2, -1.5, 0.1]) {
+      const a = evaluate({ ...initialState(), α }), b = evaluate({ ...initialState(), α, errata: 'corrected' });
+      expect(JSON.stringify(b.graphics)).toBe(JSON.stringify(a.graphics));
+      expect(b.view.constants).toBe(null);
+    }
+  });
+});
+

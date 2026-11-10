@@ -6,6 +6,8 @@
 import { Manipulate, Delimiter, PopupMenu } from '../../shared/manipulate.js';
 import { Style, Subscript, Italic } from '../../shared/graphics.js';
 import { MODES, SPECS, initialState, evaluate } from './model.js';
+import { ErrataControl } from '../../shared/errata.js';
+import { CORRECTIONS } from './errata-mode.js';
 
 const labeled = { Appearance: 'Labeled', ImageSize: 'Tiny' };
 const α = (k) => Subscript(Style('α', Italic), k);
@@ -40,6 +42,7 @@ Manipulate({
     [['α4', SPECS.α4, α(4)], 0, 0.1, 0.001, labeled],
     [['α5', SPECS.α5, α(5)], 0, 0.5, 0.001, { ...labeled, Enabled: velocityMode }],
     [['α6', SPECS.α6, α(6)], 0, 0.5, 0.001, { ...labeled, Enabled: velocityMode }],
+    ErrataControl(CORRECTIONS),
   ],
 });
 

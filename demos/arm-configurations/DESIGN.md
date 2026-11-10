@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.33 |
+| Code version: | 0.1.34 |
 | Document revision | 1 (2026-10-18) — first implementation |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Common Robot Arm Configurations", contributed by Mohammad Sultan and Aaron T. Becker, published 2017-06-28 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/CommonRobotArmConfigurations/>. Readable source: [`docs/original-source/arm-configurations.txt`](../../docs/original-source/arm-configurations.txt); snapshots: `docs/original-snapshots/arm-configurations-1.png` … `-6.png` (pictures 1 and 2 are identical, N-AC-01); golden data: `tests/golden/arm-configurations.original-states.json` (written with `tools/extract_state.py --snapshots` from the raw notebook, COMMON-DECISIONS §1: `states[0]` = output-cell state, raw notebook line 1948; `snapshots[1…6]` = the snapshot cells' Settings, raw lines 5256, 7471, 9130, 10505, 12137, 13574; `specs` = the stored Specifications) |
@@ -282,6 +282,7 @@ Template: [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md).
 | 17 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
 | 18 | v0.1.32 | 2026-11-05 | A-AC-08: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 | 19 | v0.1.33 | 2026-11-06 | version number (v0.1.33: four new apps; opt-in shared additions S-1 … S-7, unused by this app, and the locators of a Locator list made after the first evaluation); no change to this app's code, behaviour or picture |
+| 20 | v0.1.34 | 2026-11-10 | version number (v0.1.34: the switch "errors of the original: kept \| corrected" for the apps with code-level findings in §11, `shared/errata.js`); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

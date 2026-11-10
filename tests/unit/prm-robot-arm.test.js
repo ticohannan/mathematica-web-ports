@@ -10,6 +10,7 @@ import {
 } from '../../demos/prm-robot-arm/model.js';
 import { createRng, replayRng } from '../../shared/random.js';
 import { ptInPoly } from '../../demos/common/prm-core.js';
+import { myAstar as coreAstar, planQuery as coreQuery } from '../../demos/common/prm-core.js';
 
 const far = [[5, 5, 5], [-5, -5, 5]]; // obstacles that touch nothing
 const settle = (extra = {}) => evaluate({ ...initialState(), ...extra }, createRng({ seed: 3 })).state;
@@ -203,5 +204,49 @@ describe('robot arm Manipulate body', () => {
     expect(covered([2.9, 0.3])).toBe(true);
     expect(covered([0.5, 0.3])).toBe(false);
     expect(regionPolygons(far[0], 16).polys.length).toBe(0);
+  });
+});
+
+// The switch "errors of the original: kept | corrected" (shared/errata.js; the query of demos/common/prm-core.js).
+describe('corrected mode (E-PA)', () => {
+  const x = xMin + (2.9 / TWO_PI) * (xMax - xMin);
+  const colliding = { ...initialState(), pConfig: [x, 0], pConfigf: [x + 0.05, 0] };
+  it('kept: errata = "original" gives exactly the result without the variable', () => {
+    const plain = evaluate(colliding, createRng({ seed: 1 })), kept = evaluate({ ...colliding, errata: 'original' }, createRng({ seed: 1 }));
+    expect(kept.view).toEqual(plain.view);
+    expect(kept.view.path).toBe(-2);
+  });
+  it('E-PA-04: start and goal in collision, 0.08 rad apart — the original shows "Path length = 0.08"; corrected no path', () => {
+    const r = evaluate({ ...colliding, errata: 'corrected' }, createRng({ seed: 1 }));
+    expect(r.view.inCollision).toBe(true);
+    expect(r.view.inCollisionf).toBe(true);
+    expect(r.view.path).toBe(-1);
+  });
+  const goodPts = [[1.5, 1], [2, 1], [2.5, 1], [3, 1], [3.5, 1], [4, 1]];
+  const adj = [[2], [1, 3], [2, 4], [3, 5], [4, 6], [5]];
+  const base = { goodPts, edgesNNadj: adj, pathOK: () => true, qsFree: () => true, qfFree: () => true };
+  it('E-PA-02: A* on a hand-made roadmap — the same shortest path as the original search (a line of six samples; a diamond with one short side)', () => {
+    expect(coreAstar(adj, goodPts, 1, 6, undefined, true)).toEqual(coreAstar(adj, goodPts, 1, 6));
+    expect(coreAstar(adj, goodPts, 1, 6, undefined, true)).toEqual([1, 2, 3, 4, 5, 6]);
+    const pts = [[1, 1], [2, 1.2], [2, 3], [3, 1]]; // start, near way, far way, goal
+    const dia = [[2, 3], [1, 4], [1, 4], [2, 3]];
+    expect(coreAstar(dia, pts, 1, 4, undefined, true)).toEqual([1, 2, 4]);
+    expect(coreAstar([[2], [1], []], [[1, 1], [2, 1], [3, 3]], 1, 3, undefined, true)).toBe(-1);
+  });
+  it('E-PA-04: a start in collision gets no direct path when corrected (the original: path -2)', () => {
+    const q = { ...base, qsFree: () => false, qs: [1, 1], qf: [1.3, 1], r: 0.5 };
+    expect(coreQuery(q).path).toBe(-2);
+    expect(coreQuery({ ...q, corrected: true }).path).toBe(-1);
+    expect(coreQuery({ ...base, qfFree: () => false, qs: [1, 1], qf: [1.3, 1], r: 0.5, corrected: true }).path).toBe(-1);
+    expect(coreQuery({ ...base, qs: [1, 1], qf: [1.3, 1], r: 0.5, corrected: true }).path).toBe(-2); // both free: unchanged
+  });
+  it('E-PA-03: when the nearest sample cannot be reached the next one within r is tried (the original gives up)', () => {
+    const pathOK = (a, b) => !(b[0] === 1.5 || a[0] === 1.5); // the planner refuses every segment to the sample (1.5, 1)
+    const q = { ...base, pathOK, qs: [1.45, 1], qf: [4.2, 1], r: 0.7 };
+    expect(coreQuery(q).path).toBe(-1);
+    const c = coreQuery({ ...q, corrected: true });
+    expect(c.qsn).toEqual([2, 1]); // 0.55 away, inside r
+    expect(c.path).toEqual([2, 3, 4, 5, 6]);
+    expect(coreQuery({ ...q, r: 0.3, corrected: true }).qsn).toBe(null); // no other sample within r
   });
 });

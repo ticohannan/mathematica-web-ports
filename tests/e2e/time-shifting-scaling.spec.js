@@ -9,7 +9,8 @@ import { test, expect } from '@playwright/test';
 import { openDemo, reviewShot } from './helpers.js';
 
 const URL = '/demos/time-shifting-scaling/';
-const state = (page) => page.evaluate(() => window.__demo.getState());
+// the original's Manipulate variables (the port's switch variable `errata` is tested in errata-mode.spec.js)
+const state = (page) => page.evaluate(() => { const { errata, ...rest } = window.__demo.getState(); return rest; });
 const view = (page) => page.evaluate(() => window.__demo.view());
 const OPENING = { signal: 'RampDown', β: 4, α: 2, τ: 2, bOld: 4, aOld: 2, TOld: 2, checked: [1, 2] };
 

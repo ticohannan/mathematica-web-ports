@@ -12,6 +12,7 @@ import { armGeometry } from '../common/two-link.js';
 import { arrowArc } from '../common/arrow-arcs.js';
 import { W, L, xMin, yMin, xMax, yMax, applyTorus, armHits, cSpaceTable } from '../common/arm-grid.js';
 import { piOver } from '../../shared/exact-pi.js';
+import { isCorrected } from '../../shared/errata.js';
 
 const STRAIGHT = [[1, 0], [0, 1], [-1, 0], [0, -1]];
 const DIAGONAL = [[1, 1], [-1, 1], [-1, -1], [1, -1]];
@@ -26,15 +27,19 @@ const DIAGONAL = [[1, 1], [-1, 1], [-1, -1], [1, -1]];
  * Defined only for a start inside the grid (`/; 1 <= start[[1]] <= d1 && 1 <= start[[2]] <= d2`): otherwise null (the
  * call stays unevaluated in Mathematica). Option greater: the comparison (default the tolerant mGreater; tests pass `>`).
  * Returns { parent, lvl, pushes } — parent[r - 1][c - 1] = [row, col] of the parent ([0, 0] when none).
+ * Option corrected (the switch "errors of the original: corrected", A-BF-08): a diagonal step costs Sqrt[2.] (E-BF-02),
+ * a diagonal step between two blocked cells is not taken (E-BF-04), and nothing spreads from a blocked start (E-BF-03).
  */
-export function bfsTorus(cSpace, start, { greater = mGreater } = {}) {
+export function bfsTorus(cSpace, start, { greater = mGreater, corrected = false } = {}) {
   const d1 = cSpace.length, d2 = d1 ? cSpace[0].length : 0;
   if (!(start[0] >= 1 && start[0] <= d1 && start[1] >= 1 && start[1] <= d2)) return null;
   const parent = Array.from({ length: d1 }, () => Array.from({ length: d2 }, () => [0, 0]));
   const lvl = Array.from({ length: d1 }, () => new Array(d2).fill(Infinity));
   lvl[start[0] - 1][start[1] - 1] = 0.0;
-  const queue = [[start[0], start[1]]];
+  const queue = corrected && !(cSpace[start[0] - 1][start[1] - 1] > -0.5) ? [] : [[start[0], start[1]]]; // E-BF-03: a blocked start
   let head = 0;
+  const wrap = (k, d) => (k < 1 ? d : k > d ? 1 : k);
+  const free = (r, c) => cSpace[wrap(r, d1) - 1][wrap(c, d2) - 1] > -0.5;
   const visit = (v, coords, inc) => {
     for (const cr of coords) {
       const mylc = lvl[v[0] - 1][v[1] - 1] + inc;
@@ -43,6 +48,8 @@ export function bfsTorus(cSpace, start, { greater = mGreater } = {}) {
       if (r > d1) r = 1;
       if (c < 1) c = d2;
       if (c > d2) c = 1;
+      // E-BF-04 (corrected): no diagonal step through the corner where two blocked cells meet
+      if (corrected && cr[0] !== 0 && cr[1] !== 0 && !free(v[0] + cr[0], v[1]) && !free(v[0], v[1] + cr[1])) continue;
       if (cSpace[r - 1][c - 1] > -0.5 && greater(lvl[r - 1][c - 1], mylc)) {
         parent[r - 1][c - 1] = [v[0], v[1]];
         lvl[r - 1][c - 1] = mylc;
@@ -53,7 +60,7 @@ export function bfsTorus(cSpace, start, { greater = mGreater } = {}) {
   while (head < queue.length) {
     const v = queue[head++];
     visit(v, STRAIGHT, 1.0);
-    visit(v, DIAGONAL, 1.41);
+    visit(v, DIAGONAL, corrected ? Math.SQRT2 : 1.41); // E-BF-02
   }
   return { parent, lvl, pushes: queue.length };
 }
@@ -66,13 +73,14 @@ const inGrid = (grid, p) => Array.isArray(grid) && p[0] >= 1 && p[0] <= grid.len
  * appending each cell. Returns the path from the goal back to the start (the caller reverses it). A goal that was never
  * reached, or that equals the start, gives {end}. PORT GUARD (D-BF-07, provisional): a walk that reaches a cell outside
  * the grid or without a parent stops there (Mathematica would run into Part errors; reachable only with cells outside
- * the grid, E-BF-07).
+ * the grid, E-BF-07). With corrected (E-BF-03): a goal that was never reached gives {start} — the arm stays where it is.
  */
-export function getShortestPath(parents, start, end) {
+export function getShortestPath(parents, start, end, { corrected = false } = {}) {
   let ps = [end[0], end[1]];
   const path = [ps];
   if (!inGrid(parents, ps)) return path;
   const first = parents[ps[0] - 1][ps[1] - 1];
+  if (corrected && first[0] === 0 && first[1] === 0 && (start[0] !== end[0] || start[1] !== end[1])) return [[start[0], start[1]]];
   if (first[0] !== 0 || first[1] !== 0) {
     let guard = parents.length * parents[0].length + 1;
     while ((start[0] !== ps[0] || start[1] !== ps[1]) && guard-- > 0) {
@@ -89,10 +97,12 @@ export function getShortestPath(parents, start, end) {
  * The locator → cell rule of the stored Body: pS = {L ((x - xMin)/(xMax - xMin)), L (1 - (y - yMin)/(yMax - yMin))} with
  * L = Length[freeConfigSpace], then Round[{.5 + pS[[2]], Max[1, pS[[1]] + .5]}] (row, column; Round half to even, no
  * other guard: Q-BF-08). Division as a·(1/b) (COMMON-DECISIONS §4; K-BF-03). Returns { pS, cell }.
+ * With corrected (E-BF-07) both indices are kept inside the grid: Min[L, Max[1, …]].
  */
-export function cellOf([x, y], len) {
+export function cellOf([x, y], len, { corrected = false } = {}) {
   const pS = [len * ((x - xMin) * (1 / (xMax - xMin))), len * (1 - (y - yMin) * (1 / (yMax - yMin)))];
-  return { pS, cell: [roundHalfEven(0.5 + pS[1]), roundHalfEven(Math.max(1, pS[0] + 0.5))] };
+  const cell = [roundHalfEven(0.5 + pS[1]), roundHalfEven(Math.max(1, pS[0] + 0.5))];
+  return { pS, cell: corrected ? cell.map((k) => Math.min(len, Math.max(1, k))) : cell };
 }
 
 /** ccord = path[[Max[1, Ceiling[progress*Length[path]]]]] (machine arithmetic, Q-BF-09); returns the 1-based index. */
@@ -107,7 +117,8 @@ export function cellAngles([r, c], len) {
  * The label number Round[(2. (Pi/L)) costmap[[lE]], 0.01] and its text as Mathematica shows it ("1.57", "4.", "∞").
  * L = Length[costmap] is an exact integer, so 2. (Pi/L) is twice the correctly rounded π/L (piOver, K-BF-09).
  */
-export function pathLengthLabel(cost, len) {
+export function pathLengthLabel(cost, len, { noPath = false } = {}) {
+  if (noPath) return { value: cost, text: 'robot phase space, no path exists' }; // E-BF-03 (corrected)
   const piL = Number.isInteger(len) && len > 0 ? piOver(len) : Math.PI * (1 / len);
   const value = Number.isFinite(cost) ? roundTo((2 * piL) * cost, 0.01) : cost;
   const text = Number.isNaN(value) ? 'Indeterminate' : mmaNumberString(value, { isReal: true });
@@ -137,6 +148,7 @@ const costAt = (costmap, p) => (inGrid(costmap, p) ? costmap[p[0] - 1][p[1] - 1]
  */
 export function evaluate(input, { controlActive = false } = {}) {
   const st = { ...input, pObs: [...input.pObs], pObs2: [...input.pObs2] };
+  const corrected = isCorrected(input); // the switch "errors of the original" (A-BF-08): E-BF-02, 03, 04, 05, 07
   st.pConfigI = applyTorus(input.pConfigI);
   st.pConfigF = applyTorus(input.pConfigF);
   const pObsV = [st.pObs, st.pObs2];
@@ -149,12 +161,14 @@ export function evaluate(input, { controlActive = false } = {}) {
     gridRecomputed = true;
   }
   const len = Array.isArray(st.freeConfigSpace) ? st.freeConfigSpace.length : 0;
-  const { pS, cell: cS } = cellOf(st.pConfigI, len);
-  const { pS: pE, cell: cE } = cellOf(st.pConfigF, len);
+  const { pS, cell: cS } = cellOf(st.pConfigI, len, { corrected });
+  const { pS: pE, cell: cE } = cellOf(st.pConfigF, len, { corrected });
+  // the search is cached in the state: a change of the switch runs it again (only pages with the switch carry errataApplied)
+  if ('errata' in input) { if (st.errataApplied !== undefined && st.errataApplied !== input.errata) st.updatedCspace = true; st.errataApplied = input.errata; }
   // (*only update these if locators change or config space change*)
   if (mUnequal(st.lS, cS) || st.updatedCspace) {
     st.lS = cS;
-    const r = bfsTorus(st.freeConfigSpace, st.lS);
+    const r = bfsTorus(st.freeConfigSpace, st.lS, { corrected });
     // {parents, costmap} = bfsTorus[…]: an unevaluated call (start outside the grid) leaves both unchanged (D-BF-07)
     if (r) { st.parents = r.parent; st.costmap = r.lvl; } else searchFailed = true;
     searched = true;
@@ -164,7 +178,7 @@ export function evaluate(input, { controlActive = false } = {}) {
   // (*only update these if locators change or cost map change*)
   if (mUnequal(st.lE, cE) || st.updatedcostmap) {
     st.lE = cE;
-    st.path = getShortestPath(st.parents, st.lS, st.lE).reverse();
+    st.path = getShortestPath(st.parents, st.lS, st.lE, { corrected }).reverse();
     walked = true;
     st.updatedcostmap = false;
   }
@@ -175,7 +189,14 @@ export function evaluate(input, { controlActive = false } = {}) {
   const clen = st.costmap.length;
   const [Theta1, Theta2] = cellAngles(ccord, clen);
   const inCollision = armHits(Theta1, Theta1 + Theta2, pObsV);
-  const label = pathLengthLabel(costAt(st.costmap, st.lE), clen);
+  // E-BF-03 (corrected): an unreachable goal or a start in an obstacle region is reported; E-BF-05 (corrected): each
+  // glyph shows whether its OWN configuration collides (the original colours both by the current configuration)
+  const collidesAt = (cell) => { const [t1, t2] = cellAngles(cell, clen); return armHits(t1, t1 + t2, pObsV); };
+  const startBlocked = corrected && inGrid(st.freeConfigSpace, st.lS) && !(st.freeConfigSpace[st.lS[0] - 1][st.lS[1] - 1] > -0.5);
+  const noPath = corrected && (startBlocked || !Number.isFinite(costAt(st.costmap, st.lE)));
+  const glyphStart = (corrected ? collidesAt(st.lS) : inCollision) ? 'red' : 'green';
+  const glyphGoal = (corrected ? collidesAt(st.lE) : inCollision) ? 'red' : 'green';
+  const label = pathLengthLabel(costAt(st.costmap, st.lE), clen, { noPath });
   const geometry = armGeometry({ r1: L, r2: L, theta1: Theta1, theta2: Theta2, w: W, theta1LabelRadius: L / 2, robotArmLabel: 'link2' });
   const arcs = [
     arrowArc({ center: [0, 0], r: L / 3, start: 0, end: Theta1 }),
@@ -185,7 +206,7 @@ export function evaluate(input, { controlActive = false } = {}) {
     state: st,
     view: {
       pS, pE, ccord, costmapcolor, Theta1, Theta2, inCollision, label, resolution, gridRecomputed, searched, walked, searchFailed,
-      geometry, arcs, glyph: inCollision ? 'red' : 'green', gridSize: clen, pObsV,
+      geometry, arcs, glyph: inCollision ? 'red' : 'green', glyphStart, glyphGoal, noPath, gridSize: clen, pObsV,
     },
   };
 }

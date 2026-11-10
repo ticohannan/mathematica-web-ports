@@ -14,7 +14,7 @@
 // Numerics (DESIGN §6): tolerant comparisons of reals (shared/mma.js), comparisons with exact 0 plain, Chop 1e-10,
 // a bit-exact ArcTan[x, y] (shared/mma-exact.js), Sqrt of the sum of squares, a/b of machine numbers as a·(1/b) with
 // the grouping of the stored definitions.
-import { mUnequal, mGreater, mLess, mLessEq, chop, roundTo } from '../../shared/mma.js';
+import { mUnequal, mGreater, mGreaterEq, mLess, mLessEq, chop, roundTo } from '../../shared/mma.js';
 import { arcTan } from '../../shared/mma-exact.js';
 import { mmaNumberString } from '../../shared/mma-extra.js';
 import {
@@ -24,6 +24,7 @@ import {
 import { plotUnitsPerPx } from '../../shared/graphics-extras.js';
 import { NAMED, darker } from '../../shared/mma-colors.js';
 import { drawCar } from '../common/car-icon.js';
+import { isCorrected } from '../../shared/errata.js';
 
 const PI = Math.PI;
 const TWO_PI = 2 * PI;
@@ -77,11 +78,12 @@ export function drawLSL(csL, ceL, Theta, minRadius) {
 }
 
 /** drawLSR[csL, ceR, Theta, minRadius]: inner tangent, only If[dLR > 2 minRadius, …] (Blue). */
-export function drawLSR(csL, ceR, Theta, minRadius) {
+export function drawLSR(csL, ceR, Theta, minRadius, corrected = false) {
   const dLR = distPt2Pt(csL, ceR), AlphaL2R = angPt2Pt(csL, ceR);
   let dLSR = Infinity, drawing = null;
-  if (mGreater(dLR, 2 * minRadius)) {
-    const GammaLSR = Math.acos(2 * (minRadius * (1 / dLR))); // ArcCos[2 (minRadius/dLR)]
+  // corrected (E-DP-03): the boundary dLR == 2 minRadius belongs to the word (a straight piece of length 0)
+  if (corrected ? mGreaterEq(dLR, 2 * minRadius) : mGreater(dLR, 2 * minRadius)) {
+    const GammaLSR = Math.acos(corrected ? Math.min(1, 2 * (minRadius * (1 / dLR))) : 2 * (minRadius * (1 / dLR))); // ArcCos[2 (minRadius/dLR)]
     const oLSR = times(minRadius, [Math.cos(AlphaL2R - GammaLSR), Math.sin(AlphaL2R - GammaLSR)]);
     const arc1 = arcLen(-PI / 2, AlphaL2R - GammaLSR, 1);
     const arc2 = arcLen(PI + AlphaL2R - GammaLSR, Theta + PI / 2, -1);
@@ -104,11 +106,12 @@ export function drawRSR(csR, ceR, Theta, minRadius) {
 }
 
 /** drawRSL[csR, ceL, Theta, minRadius]: inner tangent, only If[dRL > 2 minRadius, …] (Orange). */
-export function drawRSL(csR, ceL, Theta, minRadius) {
+export function drawRSL(csR, ceL, Theta, minRadius, corrected = false) {
   const dRL = distPt2Pt(csR, ceL), AlphaR2L = angPt2Pt(csR, ceL);
   let dRSL = Infinity, drawing = null;
-  if (mGreater(dRL, 2 * minRadius)) {
-    const GammaRSL = Math.acos(2 * (minRadius * (1 / dRL))); // ArcCos[2 (minRadius/dRL)]
+  // corrected (E-DP-03): the boundary dRL == 2 minRadius belongs to the word (a straight piece of length 0)
+  if (corrected ? mGreaterEq(dRL, 2 * minRadius) : mGreater(dRL, 2 * minRadius)) {
+    const GammaRSL = Math.acos(corrected ? Math.min(1, 2 * (minRadius * (1 / dRL))) : 2 * (minRadius * (1 / dRL))); // ArcCos[2 (minRadius/dRL)]
     const oRSL = times(minRadius, [Math.cos(AlphaR2L + GammaRSL), Math.sin(AlphaR2L + GammaRSL)]);
     const arc1 = arcLen(PI / 2, AlphaR2L + GammaRSL, -1);
     const arc2 = arcLen(-PI + AlphaR2L + GammaRSL, Theta - PI / 2, 1);
@@ -120,12 +123,13 @@ export function drawRSL(csR, ceL, Theta, minRadius) {
 }
 
 /** drawLRL[csL, ceL, Theta, minRadius]: three arcs, only If[dLL < 4 minRadius, …] (Brown). */
-export function drawLRL(csL, ceL, Theta, minRadius) {
+export function drawLRL(csL, ceL, Theta, minRadius, corrected = false) {
   const dLL = distPt2Pt(csL, ceL);
   let dLRL = Infinity, drawing = null;
-  if (mLess(dLL, 4 * minRadius)) {
+  // corrected (E-DP-03): the boundary dLL == 4 minRadius belongs to the word (a middle arc of π)
+  if (corrected ? mLessEq(dLL, 4 * minRadius) : mLess(dLL, 4 * minRadius)) {
     const AlphaL2L = angPt2Pt(csL, ceL);
-    const LRLBeta = -Math.acos(dLL * (1 / (4 * minRadius))); // -ArcCos[(dLL)/(4 minRadius)]
+    const LRLBeta = -Math.acos(corrected ? Math.min(1, dLL * (1 / (4 * minRadius))) : dLL * (1 / (4 * minRadius))); // -ArcCos[(dLL)/(4 minRadius)]
     const arc1 = arcLen(-PI / 2, AlphaL2L - LRLBeta, 1);
     const arc2 = arcLen(AlphaL2L - LRLBeta - PI, AlphaL2L + LRLBeta, -1);
     const arc3 = arcLen(AlphaL2L + LRLBeta - PI, Theta - PI / 2, 1);
@@ -137,12 +141,13 @@ export function drawLRL(csL, ceL, Theta, minRadius) {
 }
 
 /** drawRLR[csR, ceR, Theta, minRadius]: three arcs, only If[dRR < 4 minRadius, …] (Darker[Green]). */
-export function drawRLR(csR, ceR, Theta, minRadius) {
+export function drawRLR(csR, ceR, Theta, minRadius, corrected = false) {
   const dRR = distPt2Pt(csR, ceR);
   let dRLR = Infinity, drawing = null;
-  if (mLess(dRR, 4 * minRadius)) {
+  // corrected (E-DP-03): the boundary dRR == 4 minRadius belongs to the word (a middle arc of π)
+  if (corrected ? mLessEq(dRR, 4 * minRadius) : mLess(dRR, 4 * minRadius)) {
     const AlphaR2R = angPt2Pt(csR, ceR);
-    const RLRBeta = -Math.acos(dRR * (1 / (4 * minRadius))); // -ArcCos[(dRR)/(4 minRadius)]
+    const RLRBeta = -Math.acos(corrected ? Math.min(1, dRR * (1 / (4 * minRadius))) : dRR * (1 / (4 * minRadius))); // -ArcCos[(dRR)/(4 minRadius)]
     const arc1 = arcLen(PI / 2, AlphaR2R + RLRBeta, -1);
     const arc2 = arcLen(PI + (AlphaR2R + RLRBeta), AlphaR2R - RLRBeta, 1);
     const arc3 = arcLen(PI + AlphaR2R - RLRBeta, Theta + PI / 2, -1);
@@ -175,7 +180,7 @@ export function sortWords(cands) {
  * The inner moving-car Module: the blue car after progress·length along the shortest path.
  * Returns { distTrav, ang1, ang2, ang3, angP, xyP, Alpha, segment } (segment 1, 2 or 3: which branch ran).
  */
-export function movingCar(shortestPath, progress, minRadius) {
+export function movingCar(shortestPath, progress, minRadius, corrected = false) {
   const L = shortestPath[0];
   const distTrav = progress * L;
   const [p1, p2, p3] = shortestPath[1].pieces; // drawing[[2]], drawing[[3]], drawing[[4]]
@@ -188,7 +193,10 @@ export function movingCar(shortestPath, progress, minRadius) {
     angP = p1.angles[0] + ang1 * (m1 === 0 ? 0 : distTrav * (1 / m1));
     xyP = add(p1.c, times(minRadius, [Math.cos(angP), Math.sin(angP)]));
     Alpha = sign(ang1) * minRadius;
-    angP += sign(ang1 + 1e-6) * (PI / 2);
+    // corrected (E-DP-01): the heading is the radius angle ± π/2 by the arc's turning direction (L: +, R: −), also for
+    // an arc of length 0
+    const word = shortestPath[1].word;
+    angP += (corrected && word ? (word[0] === 'L' ? 1 : -1) : sign(ang1 + 1e-6)) * (PI / 2);
     segment = 1;
   } else if (mLessEq(distTrav, L - Math.abs(minRadius * ang3))) {
     segment = 2;
@@ -205,7 +213,8 @@ export function movingCar(shortestPath, progress, minRadius) {
       const [from, to] = p2.pts;
       Alpha = 0;
       angP = arcTan(to[0] - from[0], to[1] - from[1]);
-      const k = (distTrav - Math.abs(minRadius * ang1)) * (1 / distPt2Pt(to, from));
+      const len = distPt2Pt(to, from);
+      const k = corrected && len === 0 ? 0 : (distTrav - Math.abs(minRadius * ang1)) * (1 / len); // a straight piece of length 0 (E-DP-03)
       xyP = add(from, times(k, sub(to, from)));
     }
   } else { // in 3rd segment
@@ -290,6 +299,7 @@ export const picture = (s, v) => [
 export function evaluate(stateIn) {
   const st = { ...stateIn, goalXY: [...stateIn.goalXY], goalXYold: [...stateIn.goalXYold], goalThetaloc: [...stateIn.goalThetaloc] };
   const r = st.minRadius;
+  const corrected = isCorrected(stateIn); // the switch "errors of the original" (the switch's A- feature, DESIGN.md §4): E-DP-01, E-DP-03
   // a moved goal keeps the old heading and carries the heading locator (tolerant Unequal on the two lists)
   if (mUnequal(st.goalXYold, st.goalXY)) {
     st.goalThetaloc = add(st.goalXY, times(2, [Math.cos(st.Theta), Math.sin(st.Theta)]));
@@ -313,17 +323,17 @@ export function evaluate(stateIn) {
   const ceR = add(st.goalXY, times(r, [Math.cos(st.Theta - PI / 2), Math.sin(st.Theta - PI / 2)]));
   // CSC words, then the two CCC words
   const dLSL = drawLSL(csL, ceL, st.Theta, r);
-  const dLSR = drawLSR(csL, ceR, st.Theta, r);
+  const dLSR = drawLSR(csL, ceR, st.Theta, r, corrected);
   const dRSR = drawRSR(csR, ceR, st.Theta, r);
-  const dRSL = drawRSL(csR, ceL, st.Theta, r);
-  const dLRL = drawLRL(csL, ceL, st.Theta, r);
-  const dRLR = drawRLR(csR, ceR, st.Theta, r);
+  const dRSL = drawRSL(csR, ceL, st.Theta, r, corrected);
+  const dLRL = drawLRL(csL, ceL, st.Theta, r, corrected);
+  const dRLR = drawRLR(csR, ceR, st.Theta, r, corrected);
   const words = [dLSL, dLSR, dRSR, dRSL, dLRL, dRLR];
   const shortestPath = sortWords(words)[0];
   const pathLength = round01(shortestPath[0]); // Round[N[shortestPath[[1]]], 0.01]
   const distance = round01(Math.sqrt(st.goalXY[0] * st.goalXY[0] + st.goalXY[1] * st.goalXY[1]));
   const label = `${labelNumber(pathLength)} path length, ${labelNumber(distance)} distance`;
-  const car = movingCar(shortestPath, st.progress, r);
+  const car = movingCar(shortestPath, st.progress, r, corrected);
   const view = {
     dTheta, csL, csR, ceL, ceR, words, shortestPath, word: shortestPath[1].word,
     lengths: { LSL: dLSL[0], LSR: dLSR[0], RSR: dRSR[0], RSL: dRSL[0], LRL: dLRL[0], RLR: dRLR[0] },

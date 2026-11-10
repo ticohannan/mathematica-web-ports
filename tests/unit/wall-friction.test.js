@@ -281,3 +281,36 @@ describe('wall-friction model', () => {
     expect(run({ s1: [0.3, 0.5], s2: [0.4, 0.51], e1: [0.2, 0.3], e2: [0.7, 0.3] }).view.found).toBe(true);
   });
 });
+
+// The switch "errors of the original: kept | corrected" (shared/errata.js). Expected values by hand from the
+// intended rule: robot 1 on the line through both robots, ε from robot 2 on the far side.
+describe('corrected mode (E-WF)', () => {
+  it('kept: without the flag, and with errata = "original", the result is the original\'s', () => {
+    expect(keepRobotsInWorkspaceAndSpaced([0.93, 0.6], [0.99, 0.6], 0.05, false)).toEqual(keepRobotsInWorkspaceAndSpaced([0.93, 0.6], [0.99, 0.6], 0.05));
+    const plain = evaluate(initialState()), kept = evaluate({ ...initialState(), errata: 'original' });
+    expect(kept.view).toEqual(plain.view);
+  });
+  it('E-WF-01: robot 2 at the right edge (0.95, 0.6), robot 1 at (0.93, 0.6) — corrected moves robot 1 straight away to (0.9, 0.6); the original toward the centre', () => {
+    const [o1, o2] = keepRobotsInWorkspaceAndSpaced([0.93, 0.6], [0.99, 0.6], 0.05);
+    const [c1, c2] = keepRobotsInWorkspaceAndSpaced([0.93, 0.6], [0.99, 0.6], 0.05, true);
+    close(c2, [0.95, 0.6], 15);
+    close(c1, [0.9, 0.6], 14);
+    close(o2, [0.95, 0.6], 15);
+    expect(o1[1]).toBeLessThan(0.59); // off the line of the two robots
+    expect(len(minus(c1, c2))).toBeCloseTo(0.05, 14);
+  });
+  it('E-WF-01: when moving away would leave the workspace, robot 1 goes toward the centre in both modes; all other cases are the same', () => {
+    // both robots in the corner: robot 2 cannot move (to the right), robot 1 cannot move away (below the edge)
+    const args = [[0.95, 0.06], [0.95, 0.08], 0.05];
+    expect(keepRobotsInWorkspaceAndSpaced(...args, true)).toEqual(keepRobotsInWorkspaceAndSpaced(...args));
+    for (const a of [[[-1, 0.5], [0.5, 2], 0.05], [[0.5, 0.5], [0.52, 0.5], 0.05], [[0.5, 0.5], [0.5, 0.5], 0.05], [[0.06, 0.5], [0.06, 0.5], 0.05], [[0.95, 0.95], [0.2, 0.8], 0.05]]) {
+      expect(keepRobotsInWorkspaceAndSpaced(...a, true)).toEqual(keepRobotsInWorkspaceAndSpaced(...a));
+    }
+  });
+  it('the body uses it for the start and the goal markers', () => {
+    const st = { ...initialState(), s1: [0.93, 0.6], s2: [0.99, 0.6], 'ϵ': 0.05 };
+    close(evaluate({ ...st, errata: 'corrected' }).state.s1, [0.9, 0.6], 14);
+    expect(evaluate(st).state.s1[1]).toBeCloseTo(0.6 - 0.1 * (0.05 / Math.hypot(0.45, 0.1)), 12);
+  });
+});
+

@@ -15,6 +15,7 @@ import { field, cObstacle, volumeFor, GRID } from '../../demos/prm-3d/cspace3d.j
 import { flatten, apply4 } from '../../shared/graphics3d.js';
 import { mLess, mGreater } from '../../shared/mma.js';
 import { replayRng, mulberry32 } from '../../shared/random.js';
+import { myAstar as coreAstar, planQuery as coreQuery } from '../../demos/common/prm-core.js';
 
 const SPHERES = [[1, 0, 0], [0, -1, 0.5]];
 const ulps = (a, b) => (a === b ? 0 : Math.abs(a - b) / (Number.EPSILON * Math.max(Math.abs(a), Math.abs(b))));
@@ -400,3 +401,41 @@ function insideMesh(p, V, tris) {
   }
   return n % 2 === 1;
 }
+
+// The switch "errors of the original: kept | corrected" (shared/errata.js; the query of demos/common/prm-core.js).
+describe('corrected mode (E-P3)', () => {
+  const o3 = [2.8785189552120833, 0.47966463907398726, 1.4871167285566245]; // the end point of (0.25, 0.25, 0.25)
+  const colliding = { Obstaxy: [o3[0], o3[1]], Obstaz: o3[2], qf: [0.3, 0.25, 0.25] };
+  it('kept: errata = "original" gives exactly the result without the variable', () => {
+    const plain = run(colliding), kept = run({ ...colliding, errata: 'original' });
+    expect(kept.view).toEqual(plain.view);
+    expect(kept.view.path).toBe(-2);
+  });
+  it('E-P3-03: the start in collision, the goal 0.05 away — the original shows a path of length 0.05; corrected no path', () => {
+    const r = run({ ...colliding, errata: 'corrected' });
+    expect(r.view.inCollision).toBe(true);
+    expect(r.view.path).toBe(-1);
+  });
+  const goodPts = [[1.5, 1], [2, 1], [2.5, 1], [3, 1], [3.5, 1], [4, 1]];
+  const adj = [[2], [1, 3], [2, 4], [3, 5], [4, 6], [5]];
+  const base = { goodPts, edgesNNadj: adj, pathOK: () => true, qsFree: () => true, qfFree: () => true };
+  it('E-P3-01: A* on a hand-made roadmap — the same shortest path as the original search (a line of six samples; a diamond with one short side)', () => {
+    expect(coreAstar(adj, goodPts, 1, 6, undefined, true)).toEqual(coreAstar(adj, goodPts, 1, 6));
+    expect(coreAstar(adj, goodPts, 1, 6, undefined, true)).toEqual([1, 2, 3, 4, 5, 6]);
+    const pts = [[1, 1], [2, 1.2], [2, 3], [3, 1]]; // start, near way, far way, goal
+    const dia = [[2, 3], [1, 4], [1, 4], [2, 3]];
+    expect(coreAstar(dia, pts, 1, 4, undefined, true)).toEqual([1, 2, 4]);
+    expect(coreAstar([[2], [1], []], [[1, 1], [2, 1], [3, 3]], 1, 3, undefined, true)).toBe(-1);
+  });
+  it('E-P3-03: a start in collision gets no direct path when corrected (the original: path -2)', () => {
+    const q = { ...base, qsFree: () => false, qs: [1, 1], qf: [1.3, 1], r: 0.5 };
+    expect(coreQuery(q).path).toBe(-2);
+    expect(coreQuery({ ...q, corrected: true }).path).toBe(-1);
+    expect(coreQuery({ ...base, qfFree: () => false, qs: [1, 1], qf: [1.3, 1], r: 0.5, corrected: true }).path).toBe(-1);
+    expect(coreQuery({ ...base, qs: [1, 1], qf: [1.3, 1], r: 0.5, corrected: true }).path).toBe(-2); // both free: unchanged
+  });
+  it('the single nearest sample is still the only one tried (not among this app\'s listed findings)', () => {
+    const pathOK = (a, b) => !(b[0] === 1.5 || a[0] === 1.5);
+    expect(coreQuery({ ...base, pathOK, qs: [1.45, 1], qf: [4.2, 1], r: 0.7, corrected: true, correctedNearest: false }).path).toBe(-1);
+  });
+});

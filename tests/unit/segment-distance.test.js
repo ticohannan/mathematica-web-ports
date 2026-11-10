@@ -167,3 +167,67 @@ describe('segment-distance model', () => {
     });
   }
 });
+
+// The switch "errors of the original: kept | corrected" (A-SD-09, shared/errata.js). Expected values: the independent
+// closest-points routine of shared/geometry.js, and an alternating projection written here (each step moves one point
+// to the closest point of its segment to the other point; for two segments it converges to the closest pair).
+describe('corrected mode (E-SD)', () => {
+  const clampProject = (p, [u, v]) => {
+    const w = Subtract(v, u), n2 = w[0] ** 2 + w[1] ** 2 + w[2] ** 2;
+    const t = Math.min(1, Math.max(0, ((p[0] - u[0]) * w[0] + (p[1] - u[1]) * w[1] + (p[2] - u[2]) * w[2]) / n2));
+    return u.map((x, k) => x + t * w[k]);
+  };
+  const alternating = (ab, cd) => {
+    let p = ab[0], q = cd[0];
+    for (let i = 0; i < 5000; i++) { q = clampProject(p, cd); p = clampProject(q, ab); }
+    return Norm(Subtract(p, q));
+  };
+  it('kept: the variable errata = "original" gives exactly the state without it (5.51 at the opening settings)', () => {
+    const plain = evaluate(initialState()), kept = evaluate({ ...initialState(), errata: 'original' });
+    expect(kept.view).toEqual(plain.view);
+    expect(flatten(kept.graphics)).toEqual(flatten(plain.graphics));
+    expect(kept.view.label).toBe('minimum distance is 5.51');
+  });
+  it('E-SD-01: at the opening settings the corrected distance is the true one, 5.27 (two independent routines)', () => {
+    const { view } = evaluate({ ...initialState(), errata: 'corrected' });
+    const truth = SegmentsClosestPoints([view.a, view.b], [view.c, view.d]).distance;
+    expect(truth).toBeCloseTo(5.2684, 4);
+    expect(alternating([view.a, view.b], [view.c, view.d])).toBeCloseTo(truth, 9);
+    expect(view.dist).toBeCloseTo(truth, 12);
+    expect(view.label).toBe('minimum distance is 5.27');
+  });
+  it('E-SD-01: the corrected distance equals the true segment distance in 2000 seeded random cases, with and without clamping', () => {
+    let seed = 2468;
+    const rnd = () => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
+    const pt = () => [0, 1, 2].map(() => Math.round((rnd() * 10 - 5) * 100) / 100);
+    let clamped = 0, differs = 0;
+    for (let i = 0; i < 2000; i++) {
+      const a = pt(), b = pt(), c = pt(), d = pt();
+      const truth = SegmentsClosestPoints([a, b], [c, d]).distance;
+      const fixed = closestDistanceBetweenLines(a, b, c, d, true), orig = closestDistanceBetweenLines(a, b, c, d);
+      expect(fixed).toBeCloseTo(truth, 9);
+      const s = segmentsData(a, b, c, d);
+      if (s.t0 < 0 || s.t0 > s.magA || s.t1 < 0 || s.t1 > s.magB) clamped++;
+      else expect(fixed).toBe(orig); // no clamping: the same arithmetic, the same number
+      if (Math.abs(orig - truth) > 1e-9) differs++;
+    }
+    expect(clamped).toBeGreaterThan(500);
+    expect(differs).toBeGreaterThan(100); // the original is too long in many of the clamped cases
+  });
+  it('E-SD-01: only the red segment changes — the yellow one (the full lines) and the parallel cases are the same', () => {
+    const o = segmentsData([-3, 3, 1], [1, 1, 2], [-2, -4, -1], [4, -2, -2]), f = segmentsData([-3, 3, 1], [1, 1, 2], [-2, -4, -1], [4, -2, -2], true);
+    expect(f.pA).toEqual(o.pA);
+    expect(f.pB).toEqual(o.pB);
+    expect(f.pAc).toEqual(o.pAc); // B itself
+    expect(f.pBc).not.toEqual(o.pBc);
+    const red = (g) => flatten(g).filter((p) => p.type === 'tube' && p.color.join() === RED.join());
+    const tubeO = red(drawClosestDistanceBetweenLines([-3, 3, 1], [1, 1, 2], [-2, -4, -1], [4, -2, -2]));
+    const tubeF = red(drawClosestDistanceBetweenLines([-3, 3, 1], [1, 1, 2], [-2, -4, -1], [4, -2, -2], true));
+    expect(tubeF).not.toEqual(tubeO);
+    for (const k of ['3', '4']) { // snapshot 3 (parallel, overlapping) and 4 (no error in the original): identical
+      const st = saved.snapshots[k];
+      expect(evaluate({ ...st, errata: 'corrected' }).view).toEqual(evaluate(st).view);
+    }
+  });
+});
+

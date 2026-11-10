@@ -75,11 +75,12 @@ export function sliderSpec(Type, i) {
  * ORIGINAL QUIRK (Q-RS-03): the jump is 6.28, not 2π, and it applies to prismatic values too (never triggered
  * in their 0..1 range). Comparisons are Mathematica's tolerant Less/Greater.
  */
-export function wrapParams(params) {
+export function wrapParams(params, corrected = false) {
   const p = params.slice();
+  const turn = corrected ? 2 * PI : 6.28; // E-RS-03 (the switch "errors of the original: corrected"): a jump of 2π
   for (let i = 0; i < 3; i++) {
-    if (mLess(p[i], -PI)) p[i] = p[i] + 6.28;
-    if (mGreater(p[i], PI)) p[i] = p[i] - 6.28;
+    if (mLess(p[i], -PI)) p[i] = p[i] + turn;
+    if (mGreater(p[i], PI)) p[i] = p[i] - turn;
   }
   return p;
 }
@@ -149,7 +150,9 @@ export function myJacob(iType, q1, q2, q3) {
 }
 
 /** myJacobAngular[q1, q2, q3]: Piecewise over iType of the precomputed angular velocity Jacobians. */
-export function myJacobAngular(iType, q1, q2, q3) {
+export function myJacobAngular(iType, q1, q2, q3, corrected = false) {
+  // E-RS-01 (corrected): the third joint axis of the spherical wrist is (−cos q1 sin q2, −sin q1 sin q2, +cos q2)
+  if (corrected && iType === 15) return [[0, Sin(q1), -Cos(q1) * Sin(q2)], [0, -Cos(q1), -Sin(q1) * Sin(q2)], [1, 0, Cos(q2)]];
   switch (iType) {
     case 1: return [[0, 0, 0], [0, 0, 0], [1, 1, 1]];
     case 2: case 3: case 4: return [[0, Sin(q1), Sin(q1)], [0, -Cos(q1), -Cos(q1)], [1, 0, 0]];
@@ -165,8 +168,8 @@ export function myJacobAngular(iType, q1, q2, q3) {
 }
 
 /** The matrix the body decomposes: If[isJLinearVel == "Linear", myJacob[...], myJacobAngular[...]] at params. */
-export const jacobianFor = (iType, isJLinearVel, params) =>
-  (isJLinearVel === 'Linear' ? myJacob : myJacobAngular)(iType, params[0], params[1], params[2]);
+export const jacobianFor = (iType, isJLinearVel, params, corrected = false) =>
+  (isJLinearVel === 'Linear' ? myJacob : myJacobAngular)(iType, params[0], params[1], params[2], corrected);
 
 /**
  * phaseOpt = {PlotRange -> Table[If["p" == Type[[1,i]], {0,1}, {-3.15,3.15}], {i, dof}], Axes -> True,

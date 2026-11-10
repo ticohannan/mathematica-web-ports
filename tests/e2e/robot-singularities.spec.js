@@ -152,7 +152,7 @@ test.describe('robot singularities', () => {
     await page.getByTestId('setter-isJLinearVel-Angular').click();
     await page.getByTestId('reset').click();
     const s = await demo(page, () => window.__demo.getState());
-    expect(s).toEqual({ iType: 2, params: [0, 0, 0], showRobot: false, showManipulability: false, isJLinearVel: 'Linear', iTypeOld: 2, isJLinearVelOld: 'Linear', singularLabel: 'phase space' });
+    expect(s).toEqual({ iType: 2, params: [0, 0, 0], showRobot: false, showManipulability: false, isJLinearVel: 'Linear', iTypeOld: 2, isJLinearVelOld: 'Linear', singularLabel: 'phase space', errata: 'original' }); // errata: the port's switch (errata-mode.spec.js)
     await expect(page.getByTestId('popup-iType').locator('option:checked')).toHaveText('elbow robot arm');
     await expect(page.getByTestId('check-showRobot')).not.toBeChecked();
     await expect(page.getByTestId('setter-isJLinearVel-Linear')).toHaveAttribute('aria-pressed', 'true');
