@@ -1,0 +1,143 @@
+# Design document: Voronoi Diagrams
+
+| | |
+|---|---|
+| Code version: | 0.1.35 |
+| Document revision | 2 (2026-11-11) — implemented after the owner's "go" (2026-11-11); compared with the snapshots |
+| Status | describes the app as implemented; changes go through Proposed changes (§8) |
+| Original | Wolfram Demonstrations Project, "Voronoi Diagrams", contributed by Ed Pegg Jr, Jeff Bryant and Theodore W. Gray, published 2008-03-24 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/VoronoiDiagrams/> |
+| Port files | `model.js` (the Voronoi cells of the points clipped to the square, their colours from the chosen gradient; pure), `main.js` (the Manipulate on `shared/manipulate.js`), `index.html`, `gradients.js` (the colour data of the gradients: interim, measured on the snapshots, D-VD-04) |
+| Role in the project | new demonstration (not by Dr. Becker: Ed Pegg Jr, Jeff Bryant and Theodore W. Gray), simple mode (v0.1.35): generator, `shared/manipulate.js` (Locator list with `LocatorAutoCreate`, v0.1.33), `shared/graphics.js`, plain arithmetic |
+
+## 1. Purpose and background
+
+The Voronoi diagram of a set of points S partitions the plane into convex polygons, each holding the points
+closer to one point of S than to any other. The original draws it with `ListDensityPlot` of the points with the values
+1 … n and `InterpolationOrder -> 0` (nearest-point interpolation): each cell takes the colour of its point's index in
+the chosen colour gradient. The points are locators: drag them, Alt-click (⌘-click) to add or delete one; "show
+borders" draws the cell edges (`Mesh -> All`).
+
+Source as text: [`docs/original-source/voronoi-diagrams.txt`](../../docs/original-source/voronoi-diagrams.txt); snapshots `docs/original-snapshots/voronoi-diagrams-1…5.png`; saved states `tests/golden/voronoi-diagrams.original-states.json`. The notebook has no initialization; the opening points are random (`RandomReal`), so the page
+opens with the saved state (the notebook's live state = snapshot 1).
+
+## 2. Scope
+
+In scope: the Manipulate (the locators with auto-create, the "color scheme" popup menu, the "show borders"
+checkbox, the picture) and the caption. The Details and References are the template's placeholders (E-VD-01): the page
+shows the caption only.
+
+## 3. Users and use cases
+
+- UC-VD-01: a student moves, adds and deletes points and sees each cell change.
+- UC-VD-02: a student shows the borders and sees that the cells are convex polygons whose edges bisect neighbouring
+  points.
+
+## 4. Features
+
+Source: the Manipulate.
+
+| ID | Feature | Reason | Since | Verified by |
+|----|----|----|----|----|
+| F-VD-01 | Locator list `"None" -> {{loc, RandomReal[{0, 10}, {10, 2}]}, {0, 0}, {10, 10}, Locator, LocatorAutoCreate -> True}`: drag within the square, Alt-click (⌘-click) adds a point, on a point deletes it (shared S-5) | the sites | v0.1.35 | e2e "drag, add and delete a point"; M-VD-07 |
+| F-VD-02 | Popup menu `{{colors, "BeachColors", "color scheme"}, ColorData["Gradients"]}` — in v0.1.35 the five gradients of the snapshots, measured (D-VD-04); all gradients once exported from Mathematica (Q-1) | the colours | v0.1.35 | e2e "has its controls with their defaults"; unit "the gradient data"; M-VD-08 |
+| F-VD-03 | Checkbox `{{mesh, False, "show borders"}, {True, False}}` | the cell edges | v0.1.35 | e2e "show borders draws the cell edges" |
+| F-VD-04 | Fewer than 3 points: one random point in [0, 10]² is appended per evaluation, and the body is evaluated again until three remain | the original's guard | v0.1.35 | unit "fewer than three points get a random one" |
+| F-VD-05 | The cells: for each point the part of [0, 10]² nearer to it than to every other point (exact half-plane clipping), the colour `ColorData[colors][(k − 1)/(n − 1)]` for point k (`ColorFunctionScaling`) | the diagram | v0.1.35 | unit "the cells tile the square"; unit "the colours at the snapshot settings" |
+| F-VD-06 | Picture: `PlotRange -> {{0, 10}, {0, 10}}`, frame without ticks, the cells, with `Mesh -> All` the cell edges (dark lines) | the scene | v0.1.35 | e2e "loads without errors and draws the picture" |
+| F-VD-07 | Opening state: the saved state (10 points, BeachColors, no borders) | the notebook's state | v0.1.35 | unit "the opening state" |
+| F-VD-08 | The five snapshot settings load and give the original's pictures | parity with the original | v0.1.35 | e2e "the five snapshot settings" |
+| F-VD-09 | Caption (from the Demonstration) | the original's explanation | v0.1.35 | M-VD-01 |
+| A-VD-01 | "Initial settings" restores the opening state (port: the saved points; Mathematica would draw new random points, D-VD-02) | Manipulate's Initial Settings | v0.1.35 | e2e "Initial settings restores the opening state" |
+| A-VD-02 | Test and automation hook `window.__demo` from the Manipulate layer | automated tests | v0.1.35 | e2e "drag, add and delete a point" |
+| A-VD-03 | Start-up notice when the browser cannot run the page (DEC-22) | no empty page | v0.1.35 | e2e "start-up notice when" |
+| A-VD-04 | Breadcrumb link to all demos | navigation | v0.1.35 | inventory |
+| A-VD-05 | Credits footer (authors, title, source, licence, adaptation notice) | required by the licence (CC BY-NC-SA 3.0 §4) | v0.1.35 | e2e "attribution on" |
+| A-VD-06 | This app can be bundled and served alone (§6.1) | owner rule R-A | v0.1.35 | e2e "bundle: voronoi-diagrams runs from its own folder" |
+| A-VD-07 | Landing-page thumbnail `thumbnail.webp` | owner request 2026-11-05 | v0.1.35 | e2e "every card on the landing page has a thumbnail that loads" |
+
+## 5. UI inventory
+
+Every interactive element of the page, identified by its `data-testid` (or that of the nearest ancestor); `*`
+matches any text. Checked by the browser test "every control on … is specified in its design document".
+
+| data-testid | Feature |
+|----|----|
+| `locator-loc-*` | F-VD-01 |
+| `popup-colors` | F-VD-02 |
+| `check-mesh` | F-VD-03 |
+| `reset` | A-VD-01 |
+| `crumbs` | A-VD-04 |
+| `credits` | A-VD-05 |
+
+## 6. Design
+
+- `model.js` (pure): `voronoiCell(sites, k)` (the square clipped by the bisector half-planes, Sutherland–Hodgman;
+  a repeated site gives its cell to the first copy), `scaledValue`, `guardPoints` (the < 3 guard) and
+  `evaluate(state, { rng })` → `{ state, view: { n, colors, cells, fills, area }, graphics }`: the cells as flat-filled
+  polygons, with "show borders" their inner edges as one Line.
+- `gradients.js`: the gradients as samples read linearly. **Interim (D-VD-04):** the five gradients of the snapshots,
+  measured on them (each cell is one flat colour and site k of n has value (k − 1)/(n − 1): 10, 11, 11, 30 and 30
+  samples). Replaced by Mathematica's exported values once the owner runs `tools/wolfram/export-gradients.wls`.
+- `main.js`: one `Manipulate({…})`, ControlPlacement Top, the Locator list with range {0, 0} … {10, 10} and
+  `LocatorAutoCreate` (shared, v0.1.33), the popup menu, the checkbox; `random: true` for the < 3 guard.
+- Shared code: none added. New tool (MIT): `tools/wolfram/export-gradients.wls`.
+- Size: model 83 lines, main 23 lines, gradients 25 lines (the WL Manipulate is 1 line).
+
+### 6.1 Building and deploying this app alone
+
+Owner rule R-A (2026-10-17): this one app can be taken out of the repository and hosted anywhere.
+
+- Command, in the repository folder: `npm run bundle -- voronoi-diagrams` → `dist/voronoi-diagrams/`.
+- Contents (generated with `node tools/bundle-app.mjs voronoi-diagrams --update-docs`):
+
+<!-- bundle-contents:begin (generated by `npm run bundle -- --update-docs`; do not edit by hand) -->
+| Area | Files | Files loaded by the page |
+|---|---|---|
+| the app (`demos/voronoi-diagrams/`) | 4 | `gradients.js`, `index.html`, `main.js`, `model.js` |
+| `shared/` | 15 | `clock.js`, `graphics-extras.js`, `graphics.js`, `manipulate.js`, `mma-colors.js`, `mma-exact.js`, `mma-extra.js`, `random.js`, `requirements.js`, `style.css`, `svg-frame.js`, `svg-plot.js`, `ui-extra.js`, `ui-interval.js`, `ui.js` |
+| added by the bundler | 7 | `index.html`, `README.md`, `.nojekyll`, `LICENSE.md`, `LICENSES/CC-BY-NC-SA-3.0.txt`, `LICENSES/MIT.txt`, `demos/voronoi-diagrams/DESIGN.md` |
+<!-- bundle-contents:end -->
+
+- Checked by e2e "bundle: voronoi-diagrams runs from its own folder" (A-VD-06).
+
+## 7. Deviations (D), quirks kept (Q), known issues (K) and notes (N)
+
+| ID | Kind | Description |
+|----|------|-------------|
+| D-VD-01 | deviation | Mathematica draws the nearest-point density plot on its own mesh; the port draws the exact Voronoi cells (half-plane clipping). The cells are the same regions; edges may differ by a fraction of a pixel. |
+| D-VD-02 | deviation | Randomness: the opening points are the notebook's saved ones; "Initial settings" restores them (Mathematica draws ten new random points); the point added when fewer than 3 remain comes from the page's random generator, not Mathematica's. |
+| D-VD-03 | deviation | The gradient list and colours are those of the Mathematica version that exported them (Q-1), not of Mathematica 6 (2008), whose list was shorter. |
+| D-VD-04 | deviation (interim) | The colour menu offers only the five gradients of the snapshots (BeachColors, DarkRainbow, LakeColors, PlumColors, SunsetColors), measured on the pictures (8-bit, read linearly between 10–30 samples; DarkRainbow’s samples at 0.9 and 1.0 are equal — a plateau or a measuring artefact, to be checked against the export); the original offers all of `ColorData["Gradients"]`. Pending the owner’s export (Q-1). |
+| D-VD-05 | deviation | The locators are the shared layer’s glyph; Mathematica’s default locator glyph is drawn without a light fill. |
+
+## 8. Proposed changes
+
+No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
+
+| ID | Status | Requested by / date | Change | Reason | Acceptance criteria |
+|----|--------|---------------------|--------|--------|---------------------|
+
+## 9. Revision history
+
+| Doc rev. | Code version | Date | Change |
+|----------|--------------|------|--------|
+| 1 | v0.1.35 | 2026-11-11 | generated by `tools/new-app.mjs`, then the design written from the notebook (owner request 2026-11-11) |
+| 2 | v0.1.35 | 2026-11-11 | implemented after the owner's "go" (2026-11-11); compared with the snapshots |
+
+## 10. Improvements to consider (not implemented)
+
+| ID | Improvement | Benefit | Cost / risk | Related |
+|----|-------------|---------|-------------|---------|
+| I-VD-01 | A Details text (definition, the bisector property, Delaunay duality) | the page explains itself | new text, not the original's | E-VD-01 |
+| I-VD-02 | Mark the sites with small points under the locators | the sites stay visible while dragging | differs from the original | |
+| I-VD-03 | Colours that differ between neighbouring cells (four-colouring or a qualitative palette) | cells easier to tell apart | differs from the original | |
+
+## 11. Errors in the original (conceptual and mathematical)
+
+Checked on 2026-11-11 against the notebook and its snapshots.
+
+| ID | Kind | Where in the original | What is (probably) wrong | What the port does | Effect of correcting it | Status |
+|----|------|-----------------------|--------------------------|--------------------|-------------------------|--------|
+| E-VD-01 | text | Details & Citations, References | template placeholders were published ("Details, references or citation information", "References for demonstration.") | shows no Details | write a Details text (I-VD-01) | open |
+| E-VD-02 | conceptual | `If[Length[loc] < 3, AppendTo[loc, RandomReal[{0, 10}, {2}]]]` | deleting a point when three remain adds a new random one somewhere else instead of refusing the deletion: the diagram jumps, and a point the user never placed appears. A Voronoi diagram of one or two points is well defined (the plot just cannot draw it with ListDensityPlot)| keeps it | allow 1–2 points (draw half-planes) or refuse the deletion | open |
+

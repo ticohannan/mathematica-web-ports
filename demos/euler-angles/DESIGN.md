@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.34 |
+| Code version: | 0.1.35 |
 | Document revision | 5 (2026-10-17) — §11 Errors in the original (R-C); checklist items as operator procedures (R-B) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Euler Angles: Precession, Nutation, and Spin", contributed by Kevin Hernandez, based on a program by Sándor Kabai (CC BY-NC-SA 3.0). Readable source: [`docs/original-source/euler-angles.txt`](../../docs/original-source/euler-angles.txt) |
@@ -208,6 +208,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 22 | v0.1.32 | 2026-11-05 | A-EA-09: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 | 23 | v0.1.33 | 2026-11-06 | version number (v0.1.33: four new apps; opt-in shared additions S-1 … S-7, unused by this app, and the locators of a Locator list made after the first evaluation); no change to this app's code, behaviour or picture |
 | 24 | v0.1.34 | 2026-11-10 | version number (v0.1.34: the switch "errors of the original: kept \| corrected" for the apps with code-level findings in §11, `shared/errata.js`); no change to this app's code, behaviour or picture |
+| 25 | v0.1.35 | 2026-11-11 | version number (v0.1.35: two new apps, paths-inside-a-polygon and voronoi-diagrams; no shared code changed); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

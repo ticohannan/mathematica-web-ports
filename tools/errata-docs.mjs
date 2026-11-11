@@ -7,7 +7,8 @@
 //   node tools/errata-docs.mjs --check    exit 1 if a file would change (used by the unit test)
 //
 // For every app of tests/e2e/apps.js:
-//   * §9 gets (or keeps) the revision row of the current package.json version, and the header's "Code version";
+//   * §9 gets the revision row of the current package.json version (in the switch's own version its text; in a later
+//     version an existing row is kept, a missing one is added as a version-number row), and the header's "Code version";
 //   * with a demos/<dir>/errata-mode.js: the A- feature row of the switch (§4), its two rows in the UI inventory (§5),
 //     the approved P- row (§8) and, for each listed E- finding, Status "switchable since vX.Y.Z" with the sentence
 //     "Switch: …" at the end of "What the port does" (§11).
@@ -122,7 +123,16 @@ export function updateDesign(md, { dir, prefix }, corrections, version) {
   const text = corrections
     ? `${featureId}: the switch "errors of the original: kept \\| corrected" (${REQUEST}); corrected mode for ${corrections.map((c) => c.id).join(', ')}, default kept: the original's behaviour, golden data and pictures unchanged`
     : VERSION_ONLY;
-  if (have >= 0) { const cs = cells(lines[have]); cs[3] = text; lines[have] = row(cs); }
+  // v0.1.35: the row text above belongs to the version that brought the switch (SINCE); in a later version an existing
+  // row of that version is the release's own and is kept, and a missing one gets a plain version-number row
+  if (`v${version}` !== SINCE) {
+    if (have < 0) {
+      const last = lastTableLine(lines, i, j);
+      const rev = Number(cells(lines[last])[0]);
+      const today = new Date().toISOString().slice(0, 10); // DATE is the switch's own date
+      lines.splice(last + 1, 0, row([Number.isFinite(rev) ? rev + 1 : 1, `v${version}`, today, `version number (v${version}); no change to this app's code, behaviour or picture`]));
+    }
+  } else if (have >= 0) { const cs = cells(lines[have]); cs[3] = text; lines[have] = row(cs); }
   else {
     const last = lastTableLine(lines, i, j);
     const rev = Number(cells(lines[last])[0]);

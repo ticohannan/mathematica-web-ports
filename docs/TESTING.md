@@ -117,7 +117,9 @@ snapshot is marked `it.skip` with the `K-` lead that explains it (the port is no
 decision).
 Questions only Mathematica can answer are collected as `K-` leads in each DESIGN.md and checked with plain Wolfram
 Language scripts: `wolframscript -file tools\wolfram\extra-checks.wls` and `extra-checks-2.wls` (they write
-`test-output\extra-checks*.txt`). An automated `compare:original` (layer 5) exists only for motion planning.
+`test-output\extra-checks*.txt`), and `wolframscript -file tools\wolfram\export-gradients.wls` (v0.1.35; writes
+`test-output\gradients.json`, the colour gradients of `ColorData["Gradients"]` for voronoi-diagrams). An automated
+`compare:original` (layer 5) exists only for motion planning.
 
 Numbers across engines: bit-exact comparisons only where the arithmetic is exact; elsewhere decisions are compared
 exactly (collision yes/no, chosen path word, graph edges) and coordinates with a tolerance.

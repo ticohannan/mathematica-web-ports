@@ -15,7 +15,7 @@ Since v0.1.34 the apps listed here have a switch beside "Initial settings": **er
 
 To go back to the last version without the switch: tag `pre-fixed-mode-v0.1.33` (= v0.1.33, commit `b4569b0`).
 
-Apps with the switch: 14; corrections: 32. Code version 0.1.34.
+Apps with the switch: 14; corrections: 32. Code version 0.1.35.
 
 ## Motion Planning for Robot Path around Obstacles (`demos/motion-planning/`)
 

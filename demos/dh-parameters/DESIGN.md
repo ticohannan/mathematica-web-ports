@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.34 |
+| Code version: | 0.1.35 |
 | Document revision | 1 (2026-10-18) — first implementation |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Denavit-Hartenberg Parameters for a Three-Link Robot", contributed by Aaron T. Becker and Mary Burbage, published 2016-06-16 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/DenavitHartenbergParametersForAThreeLinkRobot/>. Readable source: [`docs/original-source/dh-parameters.txt`](../../docs/original-source/dh-parameters.txt); snapshots: `docs/original-snapshots/dh-parameters-1.png` … `-5.png`; saved state: `tests/golden/dh-parameters.original-states.json` (written with `tools/extract_state.py --snapshots` from the raw notebook: live state, initial settings and the five snapshot `Settings`) |
@@ -289,6 +289,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 18 | v0.1.32 | 2026-11-05 | A-DH-08: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 | 19 | v0.1.33 | 2026-11-06 | version number (v0.1.33: four new apps; opt-in shared additions S-1 … S-7, unused by this app, and the locators of a Locator list made after the first evaluation); no change to this app's code, behaviour or picture |
 | 20 | v0.1.34 | 2026-11-10 | version number (v0.1.34: the switch "errors of the original: kept \| corrected" for the apps with code-level findings in §11, `shared/errata.js`); no change to this app's code, behaviour or picture |
+| 21 | v0.1.35 | 2026-11-11 | version number (v0.1.35: two new apps, paths-inside-a-polygon and voronoi-diagrams; no shared code changed); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

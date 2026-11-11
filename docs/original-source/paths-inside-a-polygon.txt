@@ -1,0 +1,262 @@
+
+### [Title]
+Paths inside a Polygon
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+\<This Demonstration illustrates an algorithm for finding the shortest path that stays inside a polygon and connects two given interior points. Aside from the start and finish, such a path must go from reflex vertex to reflex vertex; thus you start by first making the graph whose edges (shown in blue) are all the segments that stay inside the polygon and connect two such vertices (and the start and finish points). Then a standard shortest path algorithm yields the desired path. You can drag the start and finish points to new locations.\>
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [CodeText]
+If you provide initialization code, include a SaveDefinitions->True option in the Manipulate.
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{pol},
+pt=Round[pt];
+If[MemberQ[{{A[1],B[1]},{A[2],B[2]},{A[3],B[3]}},pt],pt={A[i],B[i]}];
+pol=polygonEx[i];
+If[!Inside[pol,pt[[1]]],pt[[1]]=Nearest[pol,pt[[1]]][[1]]];If[!Inside[pol,pt[[2]]],pt[[2]]=Nearest[pol,pt[[2]]][[1]]];
+Show[ShortestInsidePath[pol,pt[[1]],pt[[2]],ImageSize->{450,450}  ,
+PlotLabel->None , Frame->False,FrameTicks->None]]],{{i,1,"\<polygon type\>"},{1->"\<random\>",2->"\<orthogonal\>"}},{{pt,{A[i],B[i]}},Locator},
+TrackedSymbols->True,
+
+Initialization:> (
+SignedArea[poly_]:=Plus@@Flatten[poly*Map[{1,-1}*Reverse[#]&,RotateLeft[poly]]]/2/;Length[poly]>=3;
+
+AreaSW[pp_]:=Abs[SignedArea[pp]];
+
+IntersectOpen[{a_,b_},{c_,d_}]:=((LeftOf[a,b,c]&&RightOf[a,b,d])||(LeftOf[a,b,d]&&RightOf[a,b,c]))&&((LeftOf[c,d,a]&&RightOf[c,d,b])||(LeftOf[c,d,b]&&RightOf[c,d,a]));
+
+BetweenSW[p_,q_,r_]:=Orientation[{p,q,r}]==0&&If[p[[1]]!=r[[1]],p[[1]]<=r[[1]]<=q[[1]]||q[[1]]<=r[[1]]<=p[[1]],p[[2]]<=r[[2]]<=q[[2]]||q[[2]]<=r[[2]]<=p[[2]]];
+
+IntersectClosed[{a_,b_},{c_,d_}]:=IntersectOpen[{a,b},{c,d}]||BetweenSW[a,b,c]||BetweenSW[a,b,d]||BetweenSW[c,d,a]||BetweenSW[c,d,b];
+
+Orientation[triangle_] := Sign[SignedArea[triangle]] /; Length[triangle] == 3;
+
+ConvexVertex[pp_]:= Ordering[pp, 1][[1]];
+
+Orientation[poly_]:=Orientation[
+     poly[[ConvexVertex[poly]+{-1,0,1}/.{
+            0 -> Length[poly],Length[poly]+1->1}
+            ]]] /; Length[poly]>3;
+
+LeftOf[p_,q_,r_] := Orientation[{p,q,r}]==1;RightOf[p_,q_,r_]:=(Orientation[{p,q,r}]==-1);
+
+Inside[{p_,q_,r_},pt_]:=Module[{pp,qq,rr},{pp,qq,rr}=If[Orientation[{p,q,r}]==-1,Reverse,Identity][{p,q,r}];
+(!LeftOf[qq,pp,pt]&&!LeftOf[rr,qq,pt]&&!LeftOf[pp,rr,pt])];
+
+Inside[p_List/;Length[p]>3,pt_List]:=Module[{tris=(p[[#1]]&)/@Triangulate[p],ans=False,ii=0},While[!ans&&ii<Length[tris],ii++;ans=Inside[tris[[ii]],pt]];ans];
+
+PolygonDiagonal[poly_]:=Module[{v=ConvexVertex[poly],invertices,u,w},u=v-1/.0->Length[poly];
+w=v+1/.1+Length[poly]->1;
+invertices=Select[Delete[poly,{{u},{v},{w}}],Inside[poly[[{u,v,w}]],#]&];
+Sort[If[invertices=={},{u,w},Identity[{Position[poly,Last[Sort[invertices,AreaSW[{poly[[u]],#1,poly[[w]]}]<=AreaSW[{poly[[u]],#2,poly[[w]]}]&]]][[1,1]],v}]]]];
+
+Triangulate[poly_List]:=If[Orientation[poly]==1,Triangulate[poly,Range[Length[poly]]],Reverse/@(Length[poly]+1-Triangulate[Reverse[poly],Range[Length[poly]]])];
+
+Triangulate[poly_,inds_]:=Module[{d=PolygonDiagonal[poly[[inds]]]},Join[Triangulate[poly,Take[inds,d]],Triangulate[poly,Drop[inds,d+{1,-1}]]]];
+
+Triangulate[_,{i1_,i2_,i3_}]:={{i1,i2,i3}};
+
+extend[a_]:=Flatten[{a,{First[a]}},1];
+
+ReflexVertexQ[poly_,ii_] := !LeftOf[poly[[ii-1/. 0-> Length[poly]]],poly[[ii]],poly[[ii+1/.  1+ Length[poly]->1]]];
+InsideFast[tris_, pt_] := (ans1=False; Do[If[Inside[tt, pt],ans1=True;Break[]], {tt, tris}]; Return[ans1]);
+
+options[ShortestInsidePath] = {AlgorithmTraceQ->False, ShowDistance->True};
+VisibleReflexEdges//Clear;
+VisibleReflexEdges[poly_] :=VisibleReflexEdges[poly]= Module[{i,j,n,v,tris, verts, border, borderReflexEdges, possibleVVEdges, killer},
+n=Length[poly];
+v=If[Orientation[poly]==-1, Reverse, Identity][poly];
+tris = v[[#]]&/@ Triangulate[v];
+vertsShow=verts =Select[ Range[n], ReflexVertexQ[v,#]&];
+border = Partition[Append[Range[n],1],2,1];
+ borderReflexEdges =Select[border, MemberQ[verts,#[[1]]]&& MemberQ[verts,#[[2]]] &];
+possibleVVEdges=Flatten[Table[verts[[{i,j}]], {i,Length[verts]-(3;1)}, {j, i+1,Length[verts]-(2;0)}],1];
+possibleVVEdges=Select[possibleVVEdges, InsideFast[tris,Mean[v[[#]]]]&];
+Do[killer=v[[border[[i]]]]; possibleVVEdges=Select[possibleVVEdges ,MemberQ[border[[i]], #[[1]]]||MemberQ[border[[i]], #[[2]]]|| !IntersectClosed[v[[#]],killer]&],{i,1, n}];
+Union[borderReflexEdges, possibleVVEdges]];
+
+ShortestInsidePath[s_, start_, finish_, opts___] :=Module[{mPrint,n,ss,v,tris, trQ, distQ, verts, border, finishEdges, killer,startEdges, pp, g1, sp, dist}, n=Length[s];
+{distQ,trQ} = {ShowDistance,AlgorithmTraceQ}/. {opts} /. options[ShortestInsidePath];
+
+If[trQ, mPrint = Print, mPrint=mPrint];
+ss=If[Orientation[s]==-1, Reverse, Identity][s];
+v=Join[ss, {start, finish}];
+tris = v[[#]]&/@ Triangulate[ss];
+If[!InsideFast[tris, start], Print["\<The starting point is outside the polygon\>"]; Return[HoldForm[ShortestInsidePath[s, start, finish, opts]]]];
+
+If[!InsideFast[tris, finish], Print["\<The ending point is outside the polygon\>"]; Return[HoldForm[ShortestInsidePath[s, start, finish, opts]]]];
+
+verts =Join[Select[ Range[n], ReflexVertexQ[ss,#]&], {n+1, n+2}];
+mPrint[Length[verts],  "\< = number of reflex verts; now triangulating\>"];
+
+mPrint["\<got triangulation\>"];
+border = Partition[Append[Range[n],1],2,1];
+(* three types of legal moves   type 1: border edge from reflex to reflex   type 2: vertex to vertex, not an edge
+*) 
+
+mPrint["\<starting to kill vertex to vertex\>"];
+possibleVVEdges=VisibleReflexEdges[ss];
+mPrint["\<finished kill vertex to vertex\>"];
+startEdges = Select[Table[verts[[{i,-2}]],{i,1,Length[verts]-2} ],(   InsideFast[tris,Mean[v[[#]]]]) &];
+
+If[InsideFast[tris,Mean@v[[{n+1,n+2}]]],startEdges=Append[ Select[startEdges, InsideFast[tris,Mean[v[[#]]]]&], {n+1,n+2}]];
+mPrint["\<start \>", startEdges];Do[killer=v[[border[[i]]]]; startEdges=Select[startEdges ,MemberQ[v[[border[[i]]]], v[[#[[1]]]]]||MemberQ[v[[border[[i]]]],v[[ #[[2]]]]]||!IntersectClosed[v[[#]],killer]&],{i,1, n}];
+mPrint["\<start\>", startEdges];
+
+finishEdges = Select[Table[verts[[{i,-1}]],{i,1,Length[verts]-2} ] ,(   InsideFast[tris,Mean[v[[#]]]]) &];
+finishEdges= Select[finishEdges, InsideFast[tris,Mean[v[[#]]]]&];
+Do[killer=v[[border[[i]]]]; finishEdges=Select[finishEdges ,MemberQ[v[[border[[i]]]], v[[#[[1]]]]]||MemberQ[v[[border[[i]]]], v[[#[[2]]]]]||!IntersectClosed[v[[#]],killer]&],{i,1, n}];
+
+mPrint["\<Forming graph\>"];
+pp=Union[ possibleVVEdges, startEdges, finishEdges];
+mPrint[pp];
+(*g=Graph[List/@pp, List/@ v];*)
+g1 =Graph[v, pp/. {i_Integer,j_} :>i\[UndirectedEdge]j, EdgeWeight->Table[Norm[v[[e[[1]]]]-v[[e[[2]]]]], {e, pp}]];
+mPrint[g1];
+mPrint[VertexCount[g1]];
+(*g1=SetEdgeWeights[g, Table[Norm[v[[e[[1]]]]-v[[e[[2]]]]], {e, Edges[g]}]];*)
+mPrint["\<Finding shortest path\>"];
+sp=FindShortestPath[g1, n+1,n+2];
+mPrint[sp];
+dist=N@Total[Norm[#[[2]]-#[[1]]]&/@ Partition[v[[sp]],2,1]];
+mPrint[dist];
+
+Quiet[gg=Graphics[{{EdgeForm[Black], FaceForm[RGBColor[1,1,.6]],Polygon[Most@Most@v]},
+{Blue, Thickness[.001],Table[Line[v[[j]]],{j,pp}]},
+{Red, PointSize[.02],Point[{start,finish}], Thick, Line[v[[sp]]]},
+Table[Text[Style[kk,16, Blue], s[[kk]]],{kk,n}];{}}, Evaluate[Sequence@@(FilterRules[{opts}, First/@ Options[Graphics]])],PlotRange->All, Frame->True, ImageSize->300,
+FrameTicks->{{Automatic, None},{Automatic, None}},
+(*PlotLabel->vertsShow,*)
+PlotLabel->If[distQ,StringForm["\<Path distance = ``\>",Quiet@ NumberForm[dist,{9,3}]], None]]]];
+
+
+
+polygonEx[1]={{983,649},{638,513+10},{723,558};{762,611},{382,510},{697,744},{685,766},{836,799},{594,770},{238,532},{404,872},{702,888},{963,889},{442,960},{186,628},{293,872},{180,851},{92,599},{94,684},{6,778},{16,430},{55,340},{320,378},{750,542},{169,277},{198,286},{872,596-18},{133,166},{66,120},{411,158},{468,269},{563,324},{598,410},{689,454},{344,52},{485,26},{713,174},{778,260},{690,9},{866,166}};
+
+
+polygonEx[2]=Reverse@{{169,804},{169,1042},{255,1042},{255,1179},{360,1179},{360,1042},{426,1042},{426,923},{559,923},{559,757},{664,757},{664,623},{534,623},{534,571},{745,571},{745,389},{831,389},{831,483},{924,483},{924,522},{894,522},{894,677},{1120,677},{1120,553},{1212,553},{1212,428},{1015,428},{1015,385},{1037,385},{1037,257},{1015,257},{1015,247},{981,247},{981,154},{722,154},{722,358},{642,358},{642,229},{418,229},{418,387},{497,387},{497,396},{313,396},{313,400},{249,400},{249,583},{292,583},{292,644},{313,644},{313,678},{423,678},{423,804}};
+
+polygonEx[3]={{(1)/(16),-(3)/(80)},{(1)/(16),(3)/(16)},{(3)/(16),(3)/(16)},{(3)/(16),(1)/(16)},{(5)/(16),(1)/(16)},{(7)/(16),(1)/(16)},{(7)/(16),(3)/(16)},{(5)/(16),(3)/(16)},{(5)/(16),(5)/(16)},{(7)/(16),(5)/(16)},{(7)/(16),(7)/(16)},{(5)/(16),(7)/(16)},{(3)/(16),(7)/(16)},{(3)/(16),(5)/(16)},{(1)/(16),(5)/(16)},{(1)/(16),(7)/(16)},{(1)/(16),(9)/(16)},{(3)/(16),(9)/(16)},{(3)/(16),(11)/(16)},{(1)/(16),(11)/(16)},{(1)/(16),(13)/(16)},{(1)/(16),(15)/(16)},{(3)/(16),(15)/(16)},{(3)/(16),(13)/(16)},{(5)/(16),(13)/(16)},{(5)/(16),(15)/(16)},{(7)/(16),(15)/(16)},{(7)/(16),(13)/(16)},{(7)/(16),(11)/(16)},{(5)/(16),(11)/(16)},{(5)/(16),(9)/(16)},{(7)/(16),(9)/(16)},{(9)/(16),(9)/(16)},{(11)/(16),(9)/(16)},{(11)/(16),(11)/(16)},{(9)/(16),(11)/(16)},{(9)/(16),(13)/(16)},{(9)/(16),(15)/(16)},{(11)/(16),(15)/(16)},{(11)/(16),(13)/(16)},{(13)/(16),(13)/(16)},{(13)/(16),(15)/(16)},{(15)/(16),(15)/(16)},{(15)/(16),(13)/(16)},{(15)/(16),(11)/(16)},{(13)/(16),(11)/(16)},{(13)/(16),(9)/(16)},{(15)/(16),(9)/(16)},{(15)/(16),(7)/(16)},{(15)/(16),(5)/(16)},{(13)/(16),(5)/(16)},{(13)/(16),(7)/(16)},{(11)/(16),(7)/(16)},{(9)/(16),(7)/(16)},{(9)/(16),(5)/(16)},{(11)/(16),(5)/(16)},{(11)/(16),(3)/(16)},{(9)/(16),(3)/(16)},{(9)/(16),(1)/(16)},{(11)/(16),(1)/(16)},{(13)/(16),(1)/(16)},{(13)/(16),(3)/(16)},{(15)/(16),(3)/(16)},{(15)/(16),-(3)/(80)}};
+
+A[1]={500,100}; B[1]={500,910};
+A[2]={300, 1150};B[2]= {1150, 450};
+A[3]={.83, .93}; B[3]= {.9,0};)]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Item]
+Stan Wagon
+
+### [Item]
+Karen Saxe
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+\<The algorithm presented here is relatively simple. A more sophisticated algorithm that is theoretically faster is called the funnel algorithm (see[1, 2]).\>
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] B. Chazelle, "A Theorem on Polygon Cutting with Applications," in 23rd Annual Symposium on Foundations of Computer Science, 1982, pp. 339\[Dash]349.
+
+### [Text]
+[2] D. T. Lee and F. P. Preparata, "Euclidean Shortest Paths in the Presence of Rectilinear Barriers," Networks, 14(3), 1984 pp. 393\[Dash]410.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+polygon
+
+### [Item]
+shortest path
+
+### [Item]
+convex vertex
+
+### [Item]
+triangulation
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Item]
+Link to external information
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2012-04-27
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

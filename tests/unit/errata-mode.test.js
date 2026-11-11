@@ -84,6 +84,16 @@ describe('documents in step with errata-mode.js (node tools/errata-docs.mjs)', (
       expect(updateDesign(read(file), app, await loadCorrections(app.dir), version) === read(file), `${file}: run "node tools/errata-docs.mjs"`).toBe(true);
     }
   });
+  it('after v0.1.34 the tool keeps a release\'s own revision row and adds a version row only where one is missing (v0.1.35)', async () => {
+    const app = APPS.find((a) => a.dir === 'motion-planning');
+    const md = read(`demos/${app.dir}/DESIGN.md`), corr = await loadCorrections(app.dir);
+    const later = updateDesign(md, app, corr, '9.9.9');
+    expect(later).toContain('| v9.9.9 | ');
+    expect(later).toMatch(/\| v9\.9\.9 \| [0-9-]+ \| version number \(v9\.9\.9\); no change to this app's code, behaviour or picture \|/);
+    expect(updateDesign(later, app, corr, '9.9.9')).toBe(later); // idempotent, the row is kept
+    const own = later.replace(/version number \(v9\.9\.9\); no change[^|]*/, 'a release text ');
+    expect(updateDesign(own, app, corr, '9.9.9')).toBe(own);
+  });
   it('docs/CORRECTED_MODE.md is what the tool writes', async () => {
     const entries = [];
     for (const app of WITH) entries.push({ ...app, corrections: await loadCorrections(app.dir) });

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.34 |
+| Code version: | 0.1.35 |
 | Document revision | 6 (2026-10-18) — `demos/common/prm-core.js` generalised to n dimensions (by prm-3d); no change to this app |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Probabilistic Roadmap Method for Robot Arm", contributed by Aaron T. Becker and Yitong Lu, published January 29, 2020 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ProbabilisticRoadmapMethodForRobotArm/>. Readable source: [`docs/original-source/prm-robot-arm.txt`](../../docs/original-source/prm-robot-arm.txt); snapshots: `docs/original-snapshots/prm-robot-arm-*.png`; saved state: `tests/golden/prm-robot-arm.original-state.json` |
@@ -256,6 +256,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 22 | v0.1.32 | 2026-11-05 | A-PA-10: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 | 23 | v0.1.33 | 2026-11-06 | version number (v0.1.33: four new apps; opt-in shared additions S-1 … S-7, unused by this app, and the locators of a Locator list made after the first evaluation); no change to this app's code, behaviour or picture |
 | 24 | v0.1.34 | 2026-11-10 | A-PA-11: the switch "errors of the original: kept \| corrected" (owner request 2026-11-10); corrected mode for E-PA-02, E-PA-03, E-PA-04, default kept: the original's behaviour, golden data and pictures unchanged |
+| 25 | v0.1.35 | 2026-11-11 | version number (v0.1.35: two new apps, paths-inside-a-polygon and voronoi-diagrams; no shared code changed); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

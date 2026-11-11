@@ -2,7 +2,7 @@
 
 **Live site:** <https://ticohannan.github.io/mathematica-web-ports/> · **Source:** <https://github.com/ticohannan/mathematica-web-ports>
 
-Forty-four Mathematica `Manipulate` demonstrations (and one lecture notebook) re-implemented as a **static website**:
+Forty-six Mathematica `Manipulate` demonstrations (and one lecture notebook) re-implemented as a **static website**:
 plain HTML + JavaScript (ES modules, no build step), SVG for 2D, three.js/WebGL for 3D.
 
 | Demo | Folder | Rendering | Interaction |
@@ -52,6 +52,8 @@ plain HTML + JavaScript (ES modules, no build step), SVG for 2D, three.js/WebGL 
 | Synthesis with Even and Odd Functions | `demos/even-odd-synthesis/` | SVG | signal setter, time offset T slider; the signal and its even and odd parts |
 | Time Shifting and Time Scaling in Signal Processing | `demos/time-shifting-scaling/` | SVG | signal setter bar, b, a and T sliders (b and T coupled), display checkboxes for x, y, z, w |
 | Defects in an Optical Fiber | `demos/optical-fiber-defects/` | SVG | defect height and width, two light angles; drag the two light sources |
+| Paths inside a Polygon | `demos/paths-inside-a-polygon/` | SVG | polygon type setter bar; drag the start and finish points (rounded, snapped to a corner when outside) |
+| Voronoi Diagrams | `demos/voronoi-diagrams/` | SVG | drag the points, Alt/⌘-click to add or delete one; colour scheme menu, show borders checkbox |
 
 The apps came in groups: the first three (motion planning, rotations, Euler angles); seven more from the
 seven-link PRM to robot singularities, added in v0.1.12 as further proofs of concept (developed first in a separate,
@@ -61,7 +63,9 @@ Denavit-Hartenberg parameters to the PRM in 3D, added in v0.1.16 as "batch B" (s
 from robot singularities to `demos/common/`); and new demonstrations ported on the shared layer with the app
 generator: five from the Graham scan to the swarm in a circle in v0.1.23, the RC cars steered with one joystick
 in v0.1.24, seven from the visibility region to the apparent velocity in a camera's frame in v0.1.26, and spheres packed into a
-thin cylinder in v0.1.27; and, from a lecture notebook Dr. Becker gave the owner to convert, the normal form of a line in v0.1.31.
+thin cylinder in v0.1.27; from a lecture notebook Dr. Becker gave the owner to convert, the normal form of a line in v0.1.31;
+four signal-processing and optics demonstrations in v0.1.33; and two by other authors in v0.1.35, shortest paths inside a
+polygon (Stan Wagon and Karen Saxe) and Voronoi diagrams (Ed Pegg Jr, Jeff Bryant and Theodore W. Gray).
 
 ## Where the code runs
 

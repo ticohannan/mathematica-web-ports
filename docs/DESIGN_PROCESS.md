@@ -51,6 +51,8 @@ it is verified:
 | Synthesis with Even and Odd Functions | [`demos/even-odd-synthesis/DESIGN.md`](../demos/even-odd-synthesis/DESIGN.md) | `demos/even-odd-synthesis/` |
 | Time Shifting and Time Scaling in Signal Processing | [`demos/time-shifting-scaling/DESIGN.md`](../demos/time-shifting-scaling/DESIGN.md) | `demos/time-shifting-scaling/` |
 | Defects in an Optical Fiber | [`demos/optical-fiber-defects/DESIGN.md`](../demos/optical-fiber-defects/DESIGN.md) | `demos/optical-fiber-defects/` |
+| Paths inside a Polygon | [`demos/paths-inside-a-polygon/DESIGN.md`](../demos/paths-inside-a-polygon/DESIGN.md) | `demos/paths-inside-a-polygon/` |
+| Voronoi Diagrams | [`demos/voronoi-diagrams/DESIGN.md`](../demos/voronoi-diagrams/DESIGN.md) | `demos/voronoi-diagrams/` |
 
 The originals came without design documents. Version 0.1.6 added best-effort design documents
 reconstructed from the original notebooks (their code, captions and details text) and from the

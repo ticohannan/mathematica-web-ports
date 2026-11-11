@@ -1,0 +1,135 @@
+
+### [Title]
+Voronoi Diagrams
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+The Voronoi diagram for a set of points S in the plane is a partition of the plane into convex polygons, each of which consists of all the points in the plane closer to one particular point of S than to any other. You can also use \[AltKey]-click (\[CommandKey]-click on Mac) with your mouse to add or delete points.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [CodeText]
+If you provide initialization code, include a SaveDefinitions->True option in the Manipulate.
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[If[Length[loc]<3,AppendTo[loc,RandomReal[{0,10},{2}]]];ListDensityPlot[Map[Flatten,Transpose[{loc,Range[Length[loc]]}]],PlotRange->{{0,10},{0,10}},InterpolationOrder->0,Mesh->If[mesh,All,None],ColorFunction->(ColorData[colors][#]&),FrameTicks->False],"\<None\>"->{{loc,RandomReal[{0,10},{10,2}]},{0,0},{10,10},Locator,LocatorAutoCreate->True},{{colors,"\<BeachColors\>","\<color scheme\>"},ColorData["\<Gradients\>"]},{{mesh,False,"\<show borders\>"},{True,False}}]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Item]
+Ed Pegg Jr
+
+### [Item]
+Jeff Bryant
+
+### [Item]
+Theodore W. Gray
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+Details, references or citation information
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+convex polygons
+
+### [Item]
+Dirichlet regions
+
+### [Item]
+Dirichlet tessellation
+
+### [Item]
+Thiessen polytopes
+
+### [Item]
+Voronoi polygons
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Voronoi Diagram
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2008-03-24
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

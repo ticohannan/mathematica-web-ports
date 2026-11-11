@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.34 |
+| Code version: | 0.1.35 |
 | Document revision | 1 (2026-10-18) — first implementation |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Probabilistic Roadmap Method in 3D", contributed by Aaron T. Becker and Yitong Lu, published 2020-02-26 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ProbabilisticRoadmapMethodIn3D/>. Readable source: [`docs/original-source/prm-3d.txt`](../../docs/original-source/prm-3d.txt); snapshots: `docs/original-snapshots/prm-3d-1.png` … `-5.png` (files 6 and 7 of the extraction are 96 × 100 placeholder icons); golden data: `tests/golden/prm-3d.original-states.json` (written with `tools/extract_state.py --snapshots` from the raw notebook, COMMON-DECISIONS §1: `states[0]` = the live state, `snapshots[1…5]` = the five snapshot cells' Settings — complete states with samples, roadmaps and, in 3 and 4, the RegionPlot3D volumes; raw notebook lines 10908, 12996, 16776, 21566, 24913 — and `specs` = the initial settings, equal to the live state up to the option form of `freeConfigSpacea/b`; Greek names and exact 1/2 kept, N-P3-01) |
@@ -316,6 +316,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 18 | v0.1.32 | 2026-11-05 | A-P3-09: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 | 19 | v0.1.33 | 2026-11-06 | version number (v0.1.33: four new apps; opt-in shared additions S-1 … S-7, unused by this app, and the locators of a Locator list made after the first evaluation); no change to this app's code, behaviour or picture |
 | 20 | v0.1.34 | 2026-11-10 | A-P3-10: the switch "errors of the original: kept \| corrected" (owner request 2026-11-10); corrected mode for E-P3-01, E-P3-03, default kept: the original's behaviour, golden data and pictures unchanged |
+| 21 | v0.1.35 | 2026-11-11 | version number (v0.1.35: two new apps, paths-inside-a-polygon and voronoi-diagrams; no shared code changed); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

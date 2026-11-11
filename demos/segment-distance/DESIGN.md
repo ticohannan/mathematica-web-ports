@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.34 |
+| Code version: | 0.1.35 |
 | Document revision | 2 (2026-10-25) |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Shortest Distance between Two Line Segments", contributed by Aaron T. Becker, Victor M. Baez and Nikhil Navkar, published 2023-05-26 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ShortestDistanceBetweenTwoLineSegments/> Source as text: [`docs/original-source/segment-distance.txt`](../../docs/original-source/segment-distance.txt); snapshots `docs/original-snapshots/segment-distance-1…4.png`; saved states `tests/golden/segment-distance.original-states.json` |
@@ -165,6 +165,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 11 | v0.1.32 | 2026-11-05 | A-SD-08: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 | 12 | v0.1.33 | 2026-11-06 | version number (v0.1.33: four new apps; opt-in shared additions S-1 … S-7, unused by this app, and the locators of a Locator list made after the first evaluation); no change to this app's code, behaviour or picture |
 | 13 | v0.1.34 | 2026-11-10 | A-SD-09: the switch "errors of the original: kept \| corrected" (owner request 2026-11-10); corrected mode for E-SD-01, default kept: the original's behaviour, golden data and pictures unchanged |
+| 14 | v0.1.35 | 2026-11-11 | version number (v0.1.35: two new apps, paths-inside-a-polygon and voronoi-diagrams; no shared code changed); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 
