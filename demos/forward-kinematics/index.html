@@ -1,0 +1,75 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstration by Rob Lockhart
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Forward Kinematics</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <script type="importmap">{ "imports": { "three": "../../vendor/three/three.module.js", "three/addons/": "../../vendor/three/addons/" } }</script>
+  <script src="../../shared/requirements.js" data-needs-webgl2></script>
+  <style>
+    /* the Manipulate's default control placement (top): labels right-aligned left of the sliders, "show frames ☐" */
+    #controls .ctl-slider { flex-direction: row; align-items: center; gap: 8px; }
+    #controls .ctl-slider input[type=range] { flex: 0 1 200px; width: 200px; min-width: 60px; }
+    #controls .ctl-label, #controls .ctl-check > span { flex: 0 0 84px; text-align: right; white-space: nowrap; }
+    #controls .ctl-check { flex-direction: row-reverse; justify-content: flex-end; gap: 8px; }
+    @media (max-width: 420px) { #controls .ctl-slider input[type=range] { flex-basis: 150px; width: 150px; } }
+    /* Pane[Grid[{{Graphics3D, table}}, Frame -> All], {575, 375}]: two framed cells side by side (stacked on narrow screens) */
+    .fk-out { background: #fff; border: 1px solid var(--line); border-radius: 3px; padding: 8px; width: 100%; max-width: 620px; box-sizing: border-box; overflow-x: auto; }
+    .fk-grid { border-collapse: collapse; }
+    .fk-grid > tbody > tr > td { border: 1px solid #000; padding: 2px; vertical-align: middle; text-align: center; }
+    .fk-grid .fk-scene { width: 350px; }
+    .fk-grid .fk-scene canvas { display: block; width: 100%; height: auto; touch-action: none; }
+    .fk-grid .fk-matrices { padding: 4px; font: 10px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #000; }
+    @media (max-width: 640px) { .fk-grid, .fk-grid > tbody, .fk-grid > tbody > tr, .fk-grid > tbody > tr > td { display: block; } .fk-grid .fk-scene { width: auto; max-width: 350px; } }
+    .fk-table { border-collapse: collapse; }
+    .fk-table > tbody > tr > td { padding: 1px 4px; text-align: center; vertical-align: middle; white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Forward Kinematics</div>
+    <h1 class="demo-title">Forward Kinematics</h1>
+
+    <section class="manipulate controls-top" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="fk-out">
+        <table class="fk-grid" data-testid="output-grid"><tr>
+          <td class="fk-scene" id="graphic" data-testid="graphic">
+            <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser with WebGL 2.</div></noscript>
+          </td>
+          <td class="fk-matrices" id="graphic2" data-testid="graphic2"></td>
+        </tr></table>
+      </div>
+    </section>
+
+    <p class="caption">This is a Demonstration of traditional forward kinematics. In order to get the global position of any
+      particular point, take the dot product of all the matrices up to the frame of the point in question, as well as the
+      local coordinates.</p>
+
+    <details class="details" data-testid="details">
+      <summary>Details</summary>
+      <p>This Demonstration was inspired by Professor Oussama Khatib's Introduction to Robotics Course, available free online
+        through Stanford's Engineering Everywhere.</p>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. All computation runs in your browser. The matrices are shown
+      in Mathematica's exact form (cos and sin of multiples of π/32 reduced to the first octant).</p>
+    <div class="credits" data-testid="credits">
+      Adapted from <a href="https://demonstrations.wolfram.com/ForwardKinematics/">"Forward Kinematics"</a>
+      by Rob Lockhart, Wolfram Demonstrations Project (published 2011-03-07), licensed
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+      This JavaScript translation by Tico Hannan (© 2026; produced with an AI code-generation tool) is released under the
+      same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

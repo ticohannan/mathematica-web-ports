@@ -26,22 +26,34 @@ export const MMA_DEFAULT_LIGHTS = [
   { kind: 'Directional', color: [0, 0, 0.18], imageScaled: [0, 0, 2] },
 ];
 
+/**
+ * Lighting -> "Neutral" ("white light sources in default positions"), as the documentation's example "Predefined neutral
+ * lighting" spells it out: AmbientLight[RGBColor[.35, .35, .35]] and three DirectionalLight[RGBColor[.37, .37, .37]]
+ * at ImageScaled {2, 0, 2}, {2, 2, 2}, {0, 2, 2}. Added in v0.1.38 (forward-kinematics); additive.
+ */
+export const MMA_NEUTRAL_LIGHTS = [
+  { kind: 'Ambient', color: [0.35, 0.35, 0.35] },
+  { kind: 'Directional', color: [0.37, 0.37, 0.37], imageScaled: [2, 0, 2] },
+  { kind: 'Directional', color: [0.37, 0.37, 0.37], imageScaled: [2, 2, 2] },
+  { kind: 'Directional', color: [0.37, 0.37, 0.37], imageScaled: [0, 2, 2] },
+];
+
 /** Camera-space direction (x right, y up, z toward the viewer) of a light at ImageScaled[{x, y, z}]. */
 export const imageScaledDirection = ([x, y, z]) => [x - 0.5, y - 0.5, z];
 
 /**
- * Add Mathematica's default lights to `camera` (which must be in the scene). Existing lights attached to the
+ * Add Mathematica's default lights (or `lights`, e.g. MMA_NEUTRAL_LIGHTS) to `camera` (which must be in the scene). Existing lights attached to the
  * camera are removed first unless replace = false. Intensity π makes a Lambert surface reflect colour × cos(angle),
  * as Mathematica's lights do.
  */
-export function addMathematicaLighting(camera, { replace = true, intensity = Math.PI } = {}) {
+export function addMathematicaLighting(camera, { replace = true, intensity = Math.PI, lights: sources = MMA_DEFAULT_LIGHTS } = {}) {
   if (replace) for (const o of [...camera.children]) if (o.isLight || o.userData.mmaLightTarget) camera.remove(o);
   // the target sits at the camera's origin, so each light shines along -imageScaledDirection(...) in camera space
   const target = new THREE.Object3D();
   target.userData.mmaLightTarget = true;
   camera.add(target);
   const lights = [];
-  for (const L of MMA_DEFAULT_LIGHTS) {
+  for (const L of sources) {
     const color = new THREE.Color().setRGB(L.color[0], L.color[1], L.color[2], THREE.LinearSRGBColorSpace);
     let light;
     if (L.kind === 'Ambient') light = new THREE.AmbientLight(color, intensity);

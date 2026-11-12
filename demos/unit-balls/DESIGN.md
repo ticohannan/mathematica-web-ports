@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.37 |
+| Code version: | 0.1.38 |
 | Document revision | 5 (2026-10-17) — §11 Errors in the original (R-C); checklist items as operator procedures (R-B) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Unit Balls for Different p-Norms in 2D and 3D", contributed by Aaron T. Becker and Ravi Patel, published December 29, 2020 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/UnitBallsForDifferentPNormsIn2DAnd3D/>. Readable source: [`docs/original-source/unit-balls.txt`](../../docs/original-source/unit-balls.txt) (since v0.1.25 it shows the notebook's `(…)^(1/p)`; earlier extractions flattened it to `(…)^1/p`); saved state: `tests/golden/unit-balls.original-state.json`; snapshots: `docs/original-snapshots/unit-balls-1…7.png` |
@@ -257,6 +257,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 25 | v0.1.35 | 2026-11-11 | version number (v0.1.35: two new apps, paths-inside-a-polygon and voronoi-diagrams; no shared code changed); no change to this app's code, behaviour or picture |
 | 26 | v0.1.36 | 2026-11-11 | version number (v0.1.36: the full colour menu of voronoi-diagrams); no change to this app's code, behaviour or picture |
 | 27 | v0.1.37 | 2026-11-12 | version number (v0.1.37: thirteen control and signal ports and the shared modules they use; the additions to shared/plot.js, graphics.js and manipulate.js are opt-in); no change to this app's code, behaviour or picture |
+| 28 | v0.1.38 | 2026-11-12 | version number (v0.1.38: one new app, forward-kinematics; shared/traditional-form.js is new, and `Lighting -> "Neutral"` in shared/mma-lighting.js and graphics3d-view.js is opt-in); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

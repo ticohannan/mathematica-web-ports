@@ -2,7 +2,7 @@
 
 **Live site:** <https://ticohannan.github.io/mathematica-web-ports/> · **Source:** <https://github.com/ticohannan/mathematica-web-ports>
 
-Fifty-nine Mathematica `Manipulate` demonstrations (and one lecture notebook) re-implemented as a **static website**:
+Sixty Mathematica `Manipulate` demonstrations (and one lecture notebook) re-implemented as a **static website**:
 plain HTML + JavaScript (ES modules, no build step), SVG for 2D, three.js/WebGL for 3D.
 
 | Demo | Folder | Rendering | Interaction |
@@ -67,6 +67,7 @@ plain HTML + JavaScript (ES modules, no build step), SVG for 2D, three.js/WebGL 
 | Quarter-Car Suspension Model with Double Spring | `demos/quarter-car-double-spring/` | SVG | play trigger and time slider, 6 mass/stiffness/damping sliders, input radio buttons; errors switch |
 | Zero-Pole Cancellation in Transfer Functions | `demos/zero-pole-cancellation/` | SVG | gain slider, three transfer functions; root locus; errors switch |
 | Simulation of Feedback Control System with Controller and Second-Order Plant | `demos/feedback-control-simulation/` | SVG | run / stop, time and speed, plant and P/PI/PD/PID controller; step, Bode, Nyquist, poles |
+| Forward Kinematics | `demos/forward-kinematics/` | WebGL 2 | 4 joint sliders (π/32), show frames; 3D arm with its frames and the exact local matrices; errors switch |
 
 The apps came in groups: the first three (motion planning, rotations, Euler angles); seven more from the
 seven-link PRM to robot singularities, added in v0.1.12 as further proofs of concept (developed first in a separate,
@@ -78,7 +79,9 @@ generator: five from the Graham scan to the swarm in a circle in v0.1.23, the RC
 in v0.1.24, seven from the visibility region to the apparent velocity in a camera's frame in v0.1.26, and spheres packed into a
 thin cylinder in v0.1.27; from a lecture notebook Dr. Becker gave the owner to convert, the normal form of a line in v0.1.31;
 four signal-processing and optics demonstrations in v0.1.33; and two by other authors in v0.1.35, shortest paths inside a
-polygon (Stan Wagon and Karen Saxe) and Voronoi diagrams (Ed Pegg Jr, Jeff Bryant and Theodore W. Gray).
+polygon (Stan Wagon and Karen Saxe) and Voronoi diagrams (Ed Pegg Jr, Jeff Bryant and Theodore W. Gray); thirteen
+control-theory and signal demonstrations by other authors in v0.1.37, with shared modules for transfer functions, NDSolve and
+the control plots; and forward kinematics of a three-link arm (Rob Lockhart) in v0.1.38.
 
 ## Where the code runs
 

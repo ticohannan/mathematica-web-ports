@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.37 |
+| Code version: | 0.1.38 |
 | Document revision | 5 (2026-10-17) — §11 Errors in the original (R-C); checklist items as operator procedures (R-B) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Shortest Path for Forward and Reverse Motion of a Car", contributed by Francesco Bernardini and Aaron T. Becker, published January 4, 2023 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ShortestPathForForwardAndReverseMotionOfACar/>. Readable source: [`docs/original-source/car-paths.txt`](../../docs/original-source/car-paths.txt); snapshots: `docs/original-snapshots/car-paths-*.png` |
@@ -251,6 +251,7 @@ Open proposal (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
 | 25 | v0.1.35 | 2026-11-11 | version number (v0.1.35: two new apps, paths-inside-a-polygon and voronoi-diagrams; no shared code changed); no change to this app's code, behaviour or picture |
 | 26 | v0.1.36 | 2026-11-11 | version number (v0.1.36: the full colour menu of voronoi-diagrams); no change to this app's code, behaviour or picture |
 | 27 | v0.1.37 | 2026-11-12 | version number (v0.1.37: thirteen control and signal ports and the shared modules they use; the additions to shared/plot.js, graphics.js and manipulate.js are opt-in); no change to this app's code, behaviour or picture |
+| 28 | v0.1.38 | 2026-11-12 | version number (v0.1.38: one new app, forward-kinematics; shared/traditional-form.js is new, and `Lighting -> "Neutral"` in shared/mma-lighting.js and graphics3d-view.js is opt-in); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

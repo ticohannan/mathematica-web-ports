@@ -66,6 +66,7 @@ it is verified:
 | Quarter-Car Suspension Model with Double Spring | [`demos/quarter-car-double-spring/DESIGN.md`](../demos/quarter-car-double-spring/DESIGN.md) | `demos/quarter-car-double-spring/` |
 | Zero-Pole Cancellation in Transfer Functions | [`demos/zero-pole-cancellation/DESIGN.md`](../demos/zero-pole-cancellation/DESIGN.md) | `demos/zero-pole-cancellation/` |
 | Simulation of Feedback Control System with Controller and Second-Order Plant | [`demos/feedback-control-simulation/DESIGN.md`](../demos/feedback-control-simulation/DESIGN.md) | `demos/feedback-control-simulation/` |
+| Forward Kinematics | [`demos/forward-kinematics/DESIGN.md`](../demos/forward-kinematics/DESIGN.md) | `demos/forward-kinematics/` |
 
 The originals came without design documents. Version 0.1.6 added best-effort design documents
 reconstructed from the original notebooks (their code, captions and details text) and from the

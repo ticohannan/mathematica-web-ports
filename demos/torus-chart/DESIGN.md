@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.37 |
+| Code version: | 0.1.38 |
 | Document revision | 1 (2026-10-18) — first implementation |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Chart for a Torus", contributed by Aaron T. Becker and Haoran Zhao, published 2016-05-02 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ChartForATorus/>. Readable source: [`docs/original-source/torus-chart.txt`](../../docs/original-source/torus-chart.txt); snapshots: `docs/original-snapshots/torus-chart-1.png` … `-4.png` (files 5 and 6 of the extraction are 96 × 100 placeholder icons); golden data: `tests/golden/torus-chart.original-states.json` (COMMON-DECISIONS §1: `states[0]` = the live state, `snapshots[1…4]` = the snapshot cells' Settings, raw notebook lines 2311, 6086, 9212, 12067, `specs` = the initial settings; λ read from the raw notebook by `tools/extract_state.py --snapshots`, N-TC-01) |
@@ -260,6 +260,7 @@ Open proposals (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
 | 21 | v0.1.35 | 2026-11-11 | version number (v0.1.35: two new apps, paths-inside-a-polygon and voronoi-diagrams; no shared code changed); no change to this app's code, behaviour or picture |
 | 22 | v0.1.36 | 2026-11-11 | version number (v0.1.36: the full colour menu of voronoi-diagrams); no change to this app's code, behaviour or picture |
 | 23 | v0.1.37 | 2026-11-12 | version number (v0.1.37: thirteen control and signal ports and the shared modules they use; the additions to shared/plot.js, graphics.js and manipulate.js are opt-in); no change to this app's code, behaviour or picture |
+| 24 | v0.1.38 | 2026-11-12 | version number (v0.1.38: one new app, forward-kinematics; shared/traditional-form.js is new, and `Lighting -> "Neutral"` in shared/mma-lighting.js and graphics3d-view.js is opt-in); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

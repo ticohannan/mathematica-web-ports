@@ -56,4 +56,6 @@ export const SCENARIOS = {
   'quarter-car-double-spring': { probe: '() => [...document.querySelectorAll(\'[data-testid="graphic2"] text\')].some((t) => t.textContent.includes("51.60 rad/s"))', original: false, corrected: true },
   // E-ZP-01: the gain 0.628 (snapshot 2): no marker in the original, one per branch corrected
   'zero-pole-cancellation': { state: { gain: 0.628 }, probe: '(v) => v.parameterPoints', original: 0, corrected: 3 },
+  // E-FK-01: the table's header
+  'forward-kinematics': { probe: '(v) => v.header', original: 'local rotation matrix', corrected: 'local transformation matrix' },
 };

@@ -1,0 +1,27 @@
+{
+ "source": "ForwardKinematics.nb",
+ "note": "Manipulate states saved in the ORIGINAL notebook, computed by the original Mathematica code: states[0] = the live state of the output cell, specs = the initial settings (the Manipulate's stored \"Variables\"), snapshots = the Settings stored with each snapshot cell. Extracted with tools/extract_state.py --snapshots. Golden parity fixture (CC BY-NC-SA 3.0, as the original).",
+ "format": "Numbers: a JSON integer is an exact Wolfram integer (|x| <= 2^53 - 1; larger ones are {\"wl\": digits}); a JSON number written with a decimal point or an exponent is a machine real (the shortest text that reads back as the identical double); any other exact number (Rational, rational multiple of Pi, arbitrary-precision real, an unevaluated Sin[...], Infinity) is {\"wl\": a Wolfram-readable form (not necessarily InputForm: compare exact values by value), \"n\": its double} - \"n\" is the correctly rounded double for a Rational or rational multiple of Pi, Python's double evaluation otherwise, and absent for Infinity. Symbols are {\"sym\": name}, other expressions {\"head\": name, \"args\": [...]}; variable names without context and $$, Greek letters as Unicode. packedTypes maps the JSON pointer of a decoded packed array that was stored with a narrower element type (CompressedData tag b) to that type. snapshots[\"k\"] belongs to the picture docs/original-snapshots/<dir>-k.png (cells in file order).",
+ "specs": {
+  "FT": false,
+  "T1": 0,
+  "T2": {"wl":"5*Pi/16","n":0.9817477042468103},
+  "T3": {"wl":"-Pi/2","n":-1.5707963267948966},
+  "T4": {"wl":"7*Pi/32","n":0.6872233929727672}
+ },
+ "states": [
+  {"FT":false,"T1":0,"T2":{"wl":"5*Pi/16","n":0.9817477042468103},"T3":{"wl":"-Pi/2","n":-1.5707963267948966},"T4":{"wl":"7*Pi/32","n":0.6872233929727672}}
+ ],
+ "snapshots": {
+  "1": {"T1":0,"T2":{"wl":"5*Pi/16","n":0.9817477042468103},"T3":{"wl":"-Pi/2","n":-1.5707963267948966},"T4":{"wl":"7*Pi/32","n":0.6872233929727672},"FT":false},
+  "2": {"T1":0,"T2":{"wl":"9*Pi/32","n":0.8835729338221293},"T3":{"wl":"-3*Pi/8","n":-1.1780972450961724},"T4":{"wl":"13*Pi/32","n":1.2762720155208536},"FT":false},
+  "3": {"T1":{"wl":"17*Pi/16","n":3.3379421944391554},"T2":{"wl":"25*Pi/32","n":2.454369260617026},"T3":{"wl":"-9*Pi/32","n":-0.8835729338221293},"T4":{"wl":"15*Pi/32","n":1.4726215563702156},"FT":true},
+  "4": {"T1":0,"T2":{"wl":"Pi/2","n":1.5707963267948966},"T3":{"wl":"-Pi/2","n":-1.5707963267948966},"T4":0,"FT":false}
+ },
+ "snapshotCellIds": {
+  "1": 943678134,
+  "2": 348627135,
+  "3": 1040868929,
+  "4": 482301241
+ }
+}

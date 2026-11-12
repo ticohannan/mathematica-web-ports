@@ -15,7 +15,7 @@ Since v0.1.34 the apps listed here have a switch beside "Initial settings": **er
 
 To go back to the last version without the switch: tag `pre-fixed-mode-v0.1.33` (= v0.1.33, commit `b4569b0`).
 
-Apps with the switch: 22; corrections: 42. Code version 0.1.37.
+Apps with the switch: 23; corrections: 43. Code version 0.1.38.
 
 ## Motion Planning for Robot Path around Obstacles (`demos/motion-planning/`)
 
@@ -168,3 +168,9 @@ Apps with the switch: 22; corrections: 42. Code version 0.1.37.
 | Finding | The original (kept) | Corrected |
 |---|---|---|
 | E-ZP-01 | the "gain" slider has no visible effect: the option PoleZeroMarkers -> {Automatic, "ParameterValues" -> gain} draws no marker at the closed-loop poles for that gain (none in the snapshots at gain 0.628 and 0.634), so the plot never shows where the poles are for the chosen gain. | the closed-loop poles at the chosen gain are drawn as points in the colours of their branches (at 0.628 without compensation: −1.436 and 0.018 ± 0.634 i, just right of the imaginary axis). |
+
+## Forward Kinematics (`demos/forward-kinematics/`, since v0.1.38)
+
+| Finding | The original (kept) | Corrected |
+|---|---|---|
+| E-FK-01 | the table is headed "local rotation matrix", but its entries are 4×4 homogeneous transformations: each holds a rotation and a translation (the 20 of link 2 and the end-effector), and a rotation matrix is the 3×3 block alone. | the header reads "local transformation matrix". |

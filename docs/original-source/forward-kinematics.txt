@@ -1,0 +1,148 @@
+
+### [Title]
+Forward Kinematics
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+\<This is a Demonstration of traditional forward kinematics. In order to get the global position of any particular point, take the dot product of all the matrices up to the frame of the point in question, as well as the local coordinates.\>
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+TR1[vec_,ang_]:=Flatten[Dot[{{Cos[ang],-Sin[ang],0,0},{Sin[ang],Cos[ang],0,0},{0,0,1,0},{0,0,0,1}},Transpose[List[Append[vec,1]]]]][[1;;3]]
+
+### [Input] (init)
+TR2[vec_, ang1_,ang2_]:=Flatten[Dot[Dot[{{Cos[ang1],-Sin[ang1],0,0},{Sin[ang1],Cos[ang1],0,0},{0,0,1,0},{0,0,0,1}},{{Cos[ang2],0,-Sin[ang2],0},{0,1,0,0},{Sin[ang2],0,Cos[ang2],3},{0,0,0,1}}],Transpose[List[Append[vec,1]]]]][[1;;3]]
+
+### [Input] (init)
+TR3[vec_,ang1_,ang2_,ang3_]:=Flatten[Dot[Dot[Dot[{{Cos[ang1],-Sin[ang1],0,0},{Sin[ang1],Cos[ang1],0,0},{0,0,1,0},{0,0,0,1}},{{Cos[ang2],0,-Sin[ang2],0},{0,1,0,0},{Sin[ang2],0,Cos[ang2],3},{0,0,0,1}}],{{Cos[ang3],0,-Sin[ang3],20},{0,1,0,0},{Sin[ang3],0,Cos[ang3],0},{0,0,0,1}}],Transpose[List[Append[vec,1]]]]][[1;;3]]
+
+### [Input] (init)
+TR4[vec_,ang1_,ang2_,ang3_,ang4_]:=Flatten[Dot[Dot[Dot[Dot[{{Cos[ang1],-Sin[ang1],0,0},{Sin[ang1],Cos[ang1],0,0},{0,0,1,0},{0,0,0,1}},{{Cos[ang2],0,-Sin[ang2],0},{0,1,0,0},{Sin[ang2],0,Cos[ang2],3},{0,0,0,1}}],{{Cos[ang3],0,-Sin[ang3],20},{0,1,0,0},{Sin[ang3],0,Cos[ang3],0},{0,0,0,1}}],{{Cos[ang4],0,-Sin[ang4],20},{0,1,0,0},{Sin[ang4],0,Cos[ang4],0},{0,0,0,1}}],Transpose[List[Append[vec,1]]]]][[1;;3]]
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[Pane[Grid[{{Graphics3D[{Opacity[.9],RGBColor[.25,.43,.82], Cylinder[{{0, 0, -5},{0, 0, 0}}, 10],RGBColor[.49,0,0], Rotate[Cuboid[{-3,-3,0},{3,3,3}],T1,{0,0,1}],Cylinder[{TR1[{0,-3, 3},T1],TR1[{0, 3, 3},T1]},3],RGBColor[.25,.43,.82],Cylinder[{TR2[{0,0,0},T1,T2],TR2[{20,0,0},T1,T2]},2],RGBColor[.49,0,0],Cylinder[{TR2[{20,-3,0},T1,T2],TR2[{20,3,0},T1,T2]},3],RGBColor[.25,.43,.82],Cylinder[{TR3[{0,0,0},T1,T2,T3],TR3[{20,0,0},T1,T2,T3]},2], RGBColor[.49,0,0], Cylinder[{TR3[{20,-3,0},T1,T2,T3],TR3[{20,3,0},T1,T2,T3]},3],RGBColor[.25,.43,.82], JoinForm["\<Miter\>"],Tube[{TR4[{6,3,0},T1,T2,T3,T4],TR4[{3,3,0},T1,T2,T3,T4],TR4[{3,-3,0},T1,T2,T3,T4],TR4[{6,-3,0},T1,T2,T3,T4]},1],Black,If[FT,Opacity[1],Opacity[0]],Arrow[{{0,0,3},{0,10,3}}],Arrow[{{0,0,3},{10,0,3}}],Arrow[{{0,0,3},{0,0,13}}],Arrow[{TR1[{0,0,3},T1],TR1[{0,10,3},T1]}],Arrow[{TR1[{0,0,3},T1],TR1[{10,0,3},T1]}],Arrow[{TR1[{0,0,3},T1],TR1[{0,0,13},T1]}],Arrow[{TR2[{0,0,0},T1,T2],TR2[{0,10,0},T1,T2]}],Arrow[{TR2[{0,0,0},T1,T2],TR2[{10,0,0},T1,T2]}],Arrow[{TR2[{0,0,0},T1,T2],TR2[{0,0,10},T1,T2]}],Arrow[{TR3[{0,0,0},T1,T2,T3],TR3[{0,10,0},T1,T2,T3]}],Arrow[{TR3[{0,0,0},T1,T2,T3],TR3[{10,0,0},T1,T2,T3]}],Arrow[{TR3[{0,0,0},T1,T2,T3],TR3[{0,0,10},T1,T2,T3]}],Arrow[{TR4[{0,0,0},T1,T2,T3,T4],TR4[{0,10,0},T1,T2,T3,T4]}],Arrow[{TR4[{0,0,0},T1,T2,T3,T4],TR4[{10,0,0},T1,T2,T3,T4]}],Arrow[{TR4[{0,0,0},T1,T2,T3,T4],TR4[{0,0,10},T1,T2,T3,T4]}]},Boxed->False,ImageSize->{350,350},PlotRange->{{-50,50},{-50,50},{0,55}},ViewAngle->π/15,Lighting->"\<Neutral\>"],Text@Style[Grid[{{"\<  \>","\<local rotation matrix\>"},{"\<base\>",TraditionalForm[{{Cos[T1],-Sin[T1],0,0},{Sin[T1],Cos[T1],0,0},{0,0,1,0},{0,0,0,1}}]},{"\<link 1\>",TraditionalForm[{{Cos[T2],0,-Sin[T2],0},{0,1,0,0},{Sin[T2],0,Cos[T2],0},{0,0,0,1}}]},{"\<link 2\>",TraditionalForm[{{Cos[T3],0,-Sin[T3],20},{0,1,0,0},{Sin[T3],0,Cos[T3],0},{0,0,0,1}}]},{"\<end-effector\>",TraditionalForm[{{Cos[T4],0,-Sin[T4],20},{0,1,0,0},{Sin[T4],0,Cos[T4],0},{0,0,0,1}}]}}],FontSize->10]}},Frame->All],{575,375}],
+{{T1,0,"\<base\>"},0,2Pi,Pi/32},
+{{T2,5Pi/16,"\<link 1\>"},0,Pi,Pi/32},
+{{T3,-Pi/2,"\<link 2\>"},-Pi/2,Pi/2,Pi/32},
+{{T4,7Pi/32,"\<end effector\>"},-Pi/2,Pi/2,Pi/32},
+{{FT,False,"\<show frames\>"},Checkbox},
+SaveDefinitions->True]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Rob Lockhart
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+This Demonstration was inspired by Professor Oussama Khatib's Introduction to Robotics Course, available free online through Stanford's Engineering Everywhere.
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+robot
+
+### [Item]
+robotics
+
+### [Item]
+forward kinematics
+
+### [Item]
+kinematics
+
+### [Item]
+rotation matrix
+
+### [Item]
+linkage
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Linkage
+
+### [Text]
+Linkage Designer
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2011-03-07
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+7
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

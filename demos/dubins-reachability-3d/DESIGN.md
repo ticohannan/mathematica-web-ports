@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.37 |
+| Code version: | 0.1.38 |
 | Document revision | 2 (2026-10-27) |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "3D Reachability Set for a Dubins Car", contributed by Mohammad Sultan and Aaron T. Becker, published 2020-12-16 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/3DReachabilitySetForADubinsCar/> Source as text: [`docs/original-source/dubins-reachability-3d.txt`](../../docs/original-source/dubins-reachability-3d.txt); snapshots `docs/original-snapshots/dubins-reachability-3d-1…4.png`; saved states `tests/golden/dubins-reachability-3d.original-states.json` (`states[0]` the live state, `specs` the Manipulate's initial values — the same here —, `snapshots` the four snapshots' settings; each also stores the computed plot `plotReach`) |
@@ -249,6 +249,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 11 | v0.1.35 | 2026-11-11 | version number (v0.1.35: two new apps, paths-inside-a-polygon and voronoi-diagrams; no shared code changed); no change to this app's code, behaviour or picture |
 | 12 | v0.1.36 | 2026-11-11 | version number (v0.1.36: the full colour menu of voronoi-diagrams); no change to this app's code, behaviour or picture |
 | 13 | v0.1.37 | 2026-11-12 | version number (v0.1.37: thirteen control and signal ports and the shared modules they use; the additions to shared/plot.js, graphics.js and manipulate.js are opt-in); no change to this app's code, behaviour or picture |
+| 14 | v0.1.38 | 2026-11-12 | version number (v0.1.38: one new app, forward-kinematics; shared/traditional-form.js is new, and `Lighting -> "Neutral"` in shared/mma-lighting.js and graphics3d-view.js is opt-in); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

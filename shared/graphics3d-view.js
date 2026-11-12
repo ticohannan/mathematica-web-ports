@@ -21,7 +21,8 @@
 //   {{v, label, length}}), tick labels and AxesLabel (HTML strings) as CSS2D labels on the AxesEdge edges; drawn only
 //   when Axes or Boxed is True — the ports' default is no box, unlike Mathematica), PlotLabel (written into
 //   plotLabelElement), Lighting: 'Automatic' (Mathematica's documented default lights, linear output,
-//   shared/mma-lighting.js) or 'Viewer' (createViewer's own setting, as the oldest ports had it);
+//   shared/mma-lighting.js), 'Neutral' (v0.1.38: the documented white lights, MMA_NEUTRAL_LIGHTS, linear output) or
+//   'Viewer' (createViewer's own setting, as the oldest ports had it);
 //   maxSize (px cap of the canvas, default ImageSize), zoom (SphericalRegion fit, > 1 draws larger, default 1),
 //   thickPx / thinPx (Thickness[Large] / normal lines in px, defaults 3 / 1), size(box, prims) (the length for
 //   PointSize and Arrowheads, default the box diagonal), pointLength ('ImageWidth' — the width the image shows at the
@@ -44,7 +45,7 @@
 // shared/three-helpers.js viewer: scene, camera, renderer, controls), group (the first content group), groups, box (the
 // last plot range), clip (the clipping planes or null), webgl, inkFraction(), camera(), pixelAt(p), worldToClient(p).
 import { THREE, createViewer, inkFraction, fatLine, label, requireWebGL2, webgl2Available } from './three-helpers.js';
-import { addMathematicaLighting } from './mma-lighting.js';
+import { addMathematicaLighting, MMA_NEUTRAL_LIGHTS } from './mma-lighting.js';
 import { flatten, primitiveBounds, groupsOf, clipPlaneData, boxRatioTransform, niceTicks, frameData, imageWidth } from './graphics3d.js';
 import { addPrims, disposeGroup, fitViewer, VIEWPOINT } from './graphics3d-three.js';
 import { htmlOf } from './graphics.js';
@@ -101,6 +102,9 @@ export function View3D(o = {}) {
       // Mathematica lights and blends the displayed colour values directly, with its documented default lights
       viewer.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
       addMathematicaLighting(viewer.camera);
+    } else if (op.Lighting === 'Neutral') { // v0.1.38: the documented white lights, same colour handling
+      viewer.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
+      addMathematicaLighting(viewer.camera, { lights: MMA_NEUTRAL_LIGHTS });
     }
     if (Array.isArray(op.PlotRange)) viewer.renderer.localClippingEnabled = true;
     container = viewer.scene;

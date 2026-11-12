@@ -60,6 +60,9 @@ test.describe('quarter-car-suspension', () => {
     await openDemo(page, URL);
     await page.evaluate(() => window.__demo.setClock(0));
     await page.getByTestId('trigger-play-time').click();
+    // v0.1.38a: let the animation's first frame run before the clock moves (it records the start time; without this
+    // wait a slow first frame starts at 1.1 and, with the clock fixed, no time ever passes), as dh-parameters and euler
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
     await page.evaluate(() => window.__demo.setClock(1.1));
     await expect.poll(async () => (await state(page)).time, { timeout: 5000 }).toBeGreaterThan(0.9);
     expect((await state(page)).time % 0.25).toBeCloseTo(0, 9);

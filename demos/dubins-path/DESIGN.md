@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.37 |
+| Code version: | 0.1.38 |
 | Document revision | 1 (2026-10-17) — first implementation |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Shortest Path for the Dubins Car", contributed by Aaron T. Becker and Shiva Shahrokhi, published 2017-12-14 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ShortestPathForTheDubinsCar/>. Readable source: [`docs/original-source/dubins-path.txt`](../../docs/original-source/dubins-path.txt); snapshots: `docs/original-snapshots/dubins-path-1.png` … `dubins-path-4.png` (pictures 5 and 6 of the extraction are the Wolfram icon, not snapshots); golden fixture (COMMON-DECISIONS §1): `tests/golden/dubins-path.original-states.json` with `states[0]` = the live output-cell state, `snapshots[1…4]` = the `"Settings"` of the four snapshot cells (raw definition notebook lines 3511, 4416, 5299, 6178) and `specs` = the initial settings (output cell `"Variables"`, line 2047, and `"Specifications"`, line 2235); exact values kept as `{"wl": …}` |
@@ -275,6 +275,7 @@ Template: see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md).
 | 21 | v0.1.35 | 2026-11-11 | version number (v0.1.35: two new apps, paths-inside-a-polygon and voronoi-diagrams; no shared code changed); no change to this app's code, behaviour or picture |
 | 22 | v0.1.36 | 2026-11-11 | version number (v0.1.36: the full colour menu of voronoi-diagrams); no change to this app's code, behaviour or picture |
 | 23 | v0.1.37 | 2026-11-12 | version number (v0.1.37: thirteen control and signal ports and the shared modules they use; the additions to shared/plot.js, graphics.js and manipulate.js are opt-in); no change to this app's code, behaviour or picture |
+| 24 | v0.1.38 | 2026-11-12 | version number (v0.1.38: one new app, forward-kinematics; shared/traditional-form.js is new, and `Lighting -> "Neutral"` in shared/mma-lighting.js and graphics3d-view.js is opt-in); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 
