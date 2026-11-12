@@ -1,0 +1,203 @@
+
+### [Title]
+Link Budget for Communication Systems
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+\<Propagation loss, multipath and noise are factors that can prevent ideal communication between a source and destination. To mitigate these challenges, communication systems employ various techniques and hardware components, including directional antennas, transmitter power, low noise amplifiers and filters. A crucial tool for assessing system performance in relation to these parameters is the link budget, which shows the relationship between system characteristics and the pre-detection signal-to-noise ratio (S/N). By employing a link budget, system designers can make informed decisions and determine tradeoffs to achieve a desired S/N ratio.\>
+
+### [Text]
+You can use this Demonstration to explore the tradeoffs involved in communication link design. You can vary the key system parameters carrier frequency (in MHz), transmitter power (in Subscript[dB, W]), path-loss exponent, receiver antenna temperature (in kelvin), receiver noise figure (in dB), bandwidth (in MHz) and transmitter/receiver antenna sizes (in meters). It is worth noting that the relationship among antenna size, configuration and antenna gain can be complex. However, for the purposes of this Demonstration, a parabolic reflector antenna serves as a proxy for the relationship between the relative size of the antenna (antenna size (m))/(transmitted wavelength (m)) and its gain. Consequently, the calculated S/N is not valid if the calculated antenna gain (as displayed) is less than 0 dB, as a gain of 0 dB corresponds to an isotropic antenna. This Demonstration calculates the antenna gains. The S/N is presented as a function of the distance between the transmitter and receiver, which influences S/N values over a selected range of distances.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [CodeText]
+If you provide initialization code, include a SaveDefinitions->True option in the Manipulate.
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[LogLinearPlot[Pt+20*Log10[(π*Dtt)/((3.*10^8)/(fc*10^6))] - (20*Log10[(4*π)/((3*10^8)/(fc*10^6))]+10*n*Log10[d])+20*Log10[(π*Dr)/((3.*10^8)/(fc*10^6))]-10Log10[Be*10^6]-10Log10[1.38*10^(-23)*(Ta+290*(10^((F)/(10))-1))], {d,dmin, dmax},PlotRange->All, AxesOrigin->{0,0},PlotLabel->Row[{"\<transmit antenna gain = \>",ToString[NumberForm[20*Log10[(π*Dtt)/((3.*10^8)/(fc*10^6))],4]], "\< dB\>","\<
+\>",
+"\<receive antenna gain = \>",ToString[NumberForm[20*Log10[(π*Dr)/((3.*10^8)/(fc*10^6))],4]],"\< dB\>"}],Axes->True, Frame->True,
+FrameLabel->{"\<distance (m)\>","\<(S/N\!\(\*SubscriptBox[\()\), \(dB\)]\)\>"}, GridLines->Full,ImageSize->{400,350}] , 
+Column[{"\<carrier frequency (MHz)\>",
+Control@{{fc,1000,"\<\>"},2.,40000,Appearance->"\<Labeled\>", ImageSize-> Tiny},
+"\<\>",
+"\<transmit antenna diameter (m)\>",
+Control@{{Dtt,1,"\<\>"},.001,40,.0001,Appearance->"\<Labeled\>", ImageSize-> Tiny},
+"\<receive antenna diameter (m)\>",
+Control@{{Dr,1,"\<\>"},.001,40,.0001,Appearance->"\<Labeled\>", ImageSize-> Tiny},
+"\<\>",
+"\<transmit power (\!\(\*SubscriptBox[\(dB\), \(W\)]\))\>",
+Control@{{Pt,10,"\<\>"},-20,30,0.1,Appearance->"\<Labeled\>", ImageSize-> Tiny},
+"\<path\[Hyphen]loss exponent\>",
+Control@{{n,2,"\<\>"},2,6,.1, Appearance->"\<Labeled\>", ImageSize-> Tiny},
+"\<\>",
+"\<system noise figure (dB)\>",
+Control@{{F,2,"\<\>"},.01,15,0.1, Appearance->"\<Labeled\>", ImageSize-> Tiny},
+"\<antenna noise temperature\>",
+Control@{{Ta,290,"\<\>"},2,500,5, Appearance->"\<Labeled\>", ImageSize-> Tiny},
+"\<\>",
+"\<bandwidth (MHz)\>",
+Control@{{Be,2,"\<\>"},.01,2500,0.1, Appearance->"\<Labeled\>", ImageSize-> Tiny},
+"\<\>",
+Control@{{dmin,100,Row[{Subscript[Style["\<d\>",Italic], "\<min\>"],"\< (m)\>"}]},10,dmax-1,1,Appearance->"\<Labeled\>", ImageSize-> Tiny},
+Control@{{dmax,10000,Row[{Subscript[Style["\<d\>",Italic], "\<max\>"],"\< (m)\>"}]},dmin+1,36000000,1,Appearance->"\<Labeled\>", ImageSize-> Tiny}
+},ItemSize->{24,All}],
+ControlPlacement->Left, SaveDefinitions->True]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Victor S. Frost
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+\<The following parameter definitions and relationships are used:\>
+
+### [Text]
+Subscript[f, c] is the carrier frequency (Hz)
+
+### [Text]
+Subscript[P, T] is the transmitter power (W)
+
+### [Text]
+λ=(c)/(Subscript[f, c]) is the wavelength with c=3×10^8 m/s
+
+### [Text]
+Subscript[L, P] is the path loss equal to 20log((4π)/(λ))+10n log d with distance d and path loss exponent n (dB)
+
+### [Text]
+Subscript[G, T or R] is the antenna gain ((π D)/(λ))^2 with parabolic antenna diameter D (T is the transmitter and R is the receiver)
+
+### [Text]
+Subscript[T, 0]=290^0 K
+
+### [Text]
+Subscript[T, a] is the antenna temperature (K)
+
+### [Text]
+k is Boltzmann's constant 1.38 ×10^(-23)
+
+### [Text]
+Subscript[B, e] is the bandwidth (Hz)
+
+### [Text]
+F is the receiver noise figure
+
+### [Text]
+Subscript[(S/N), dB]=10Subscript[log, 10](Subscript[P, T])+10Subscript[log, 10](Subscript[G, T])+10Subscript[log, 10](Subscript[G, R])-Subscript[L, P]-10Subscript[log, 10](k(Subscript[T, a]+Subscript[T, 0](F-1)))-10Subscript[log, 10](Subscript[B, e]).
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] S. Haykin and M. Moher, Introduction to Analog and Digital Communications, 2nd ed., Hoboken, NJ: Wiley, 2007.
+
+### [Text]
+[2] L. W. Couch, Digital and Analog Communications Systems, 7th ed., Upper Saddle River, NJ: Pearson/Prentice Hall, 2007.
+
+### [Text]
+[3] V. S. Frost. "Introduction to Communication Systems: An Interactive Approach Using the Wolfram Language." University of Kansas Libraries. (Jul 5, 2023) kuscholarworks.ku.edu/bitstream/handle/1808/31779/Introduction-to-Communication-Systems-Deployed-V3.cdf?sequence=5&isAllowed=y.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+link budget
+
+### [Item]
+radio
+
+### [Item]
+communications system design
+
+### [Item]
+Signal-to-noise ratio
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Radio Propagation and Multipath with Diversity Antennas
+
+### [Text]
+Introduction to Communication Systems with Wolfram Language
+
+### [Text]
+Fundamentals of Communication Systems Using the Wolfram Language\[LongDash]Presentation
+
+### [Text]
+Fundamentals of Communication Systems Using the Wolfram Language\[LongDash]Video
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2023-07-06
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

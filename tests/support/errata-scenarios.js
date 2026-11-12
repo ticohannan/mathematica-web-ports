@@ -39,4 +39,21 @@ export const SCENARIOS = {
   'prm-robot-arm': { state: { pConfig: [4.653887472872686, 0], pConfigf: [4.703887472872686, 0] }, probe: '(v) => v.path', original: -2, corrected: -1 },
   // E-P3-03: the blue sphere on the end point of the start configuration (0.25, 0.25, 0.25), the goal 0.05 away
   'prm-3d': { state: { Obstaxy: [2.8785189552120833, 0.47966463907398726], Obstaz: 1.4871167285566245, qf: [0.3, 0.25, 0.25] }, probe: '(v) => v.path', original: -2, corrected: -1 },
+  // v0.1.37 ports
+  // E-HD-01: c1 = 0.5: the mean of x + 0.5 x² over whole periods is 0.25 (the original's DC bin shows twice that)
+  'harmonic-distortion': { state: { c1: 0.5 }, probe: '(v) => v.dc', original: 0.5, corrected: 0.25, digits: 6 },
+  // E-FO-03: the opening settings: the first maximum of the response 0.91209 (snapshot 1: 0.91); the steady amplitude 3/√26 = 0.588348
+  'first-order-process-control': { probe: '(v) => v.B', original: 0.912091, corrected: 0.588348, digits: 4 },
+  // E-IE-01: the IAE tuning plot: the authors' optimum gain 1.48845; a midpoint-sum minimisation (unit test) gives 1.452
+  'integral-error-criteria': { state: { ctrl2: 2, ctrl: 1 }, probe: '(v) => v.optimum[0]', original: 1.48845, corrected: 1.452, digits: 2 },
+  // E-PT-01: the plot label's units (m³/h kept, L/h corrected)
+  'proportional-temperature-control': { probe: '() => document.querySelector(\'[data-testid="plot-label"]\').textContent.includes("L/h")', original: false, corrected: true },
+  // E-ST-01: T_r at t = 50 h, the opening settings; both values agree with a fixed-step RK4 (unit test)
+  'stirred-tank-feedback': { probe: '(v) => v.at50.TR', original: 78.5738, corrected: 59.9119, digits: 3 },
+  // E-QC-01: the opening settings (ζ = 1.05): the original's formula gives 0; the peak of |G(iω)| is at 0.28289 (unit test: a grid search)
+  'quarter-car-suspension': { probe: '(v) => v.resonant', original: 0, corrected: 0.28289, digits: 4 },
+  // E-QD-01: the unit of ω₂ in the picture
+  'quarter-car-double-spring': { probe: '() => [...document.querySelectorAll(\'[data-testid="graphic2"] text\')].some((t) => t.textContent.includes("51.60 rad/s"))', original: false, corrected: true },
+  // E-ZP-01: the gain 0.628 (snapshot 2): no marker in the original, one per branch corrected
+  'zero-pole-cancellation': { state: { gain: 0.628 }, probe: '(v) => v.parameterPoints', original: 0, corrected: 3 },
 };

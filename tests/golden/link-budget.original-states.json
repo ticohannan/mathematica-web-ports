@@ -1,0 +1,32 @@
+{
+ "source": "LinkBudgetForCommunicationSystems.nb",
+ "note": "Manipulate states saved in the ORIGINAL notebook, computed by the original Mathematica code: states[0] = the live state of the output cell, specs = the initial settings (the Manipulate's stored \"Variables\"), snapshots = the Settings stored with each snapshot cell. Extracted with tools/extract_state.py --snapshots. Golden parity fixture (CC BY-NC-SA 3.0, as the original).",
+ "format": "Numbers: a JSON integer is an exact Wolfram integer (|x| <= 2^53 - 1; larger ones are {\"wl\": digits}); a JSON number written with a decimal point or an exponent is a machine real (the shortest text that reads back as the identical double); any other exact number (Rational, rational multiple of Pi, arbitrary-precision real, an unevaluated Sin[...], Infinity) is {\"wl\": a Wolfram-readable form (not necessarily InputForm: compare exact values by value), \"n\": its double} - \"n\" is the correctly rounded double for a Rational or rational multiple of Pi, Python's double evaluation otherwise, and absent for Infinity. Symbols are {\"sym\": name}, other expressions {\"head\": name, \"args\": [...]}; variable names without context and $$, Greek letters as Unicode. packedTypes maps the JSON pointer of a decoded packed array that was stored with a narrower element type (CompressedData tag b) to that type. snapshots[\"k\"] belongs to the picture docs/original-snapshots/<dir>-k.png (cells in file order).",
+ "specs": {
+  "Be": 2,
+  "dmax": 10000,
+  "dmin": 100,
+  "Dr": 1,
+  "Dtt": 1,
+  "F": 2,
+  "fc": 1000,
+  "n": 2,
+  "Pt": 10,
+  "Ta": 290
+ },
+ "states": [
+  {"Be":2,"dmax":10000,"dmin":100,"Dr":1,"Dtt":1,"F":2,"fc":1000,"n":2,"Pt":10,"Ta":290}
+ ],
+ "snapshots": {
+  "1": {"fc":1000,"Dtt":1,"Dr":1,"Pt":10,"n":2,"F":2,"Ta":290,"Be":2,"dmin":100,"dmax":10000},
+  "2": {"fc":2400,"Dtt":0.08,"Dr":0.05,"Pt":-6,"n":2,"F":8.92,"Ta":300,"Be":10,"dmin":100,"dmax":1500},
+  "3": {"fc":2000,"Dtt":0.2,"Dr":0.1,"Pt":18,"n":3,"F":6.0,"Ta":290,"Be":10,"dmin":100,"dmax":10000},
+  "4": {"fc":500,"Dtt":1,"Dr":2,"Pt":18,"n":2,"F":0.5,"Ta":22,"Be":25,"dmin":100000,"dmax":15000000}
+ },
+ "snapshotCellIds": {
+  "1": 913152983,
+  "2": 1334427975,
+  "3": 1559250204,
+  "4": 575234287
+ }
+}

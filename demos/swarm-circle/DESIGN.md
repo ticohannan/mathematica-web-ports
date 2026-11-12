@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.36 |
+| Code version: | 0.1.37 |
 | Document revision | 2 (2026-10-25) |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Distribution of a Swarm of Robots in a Circular Workplace under Gravity", contributed by Haoran Zhao and Aaron T. Becker, published 2016-02-15 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/DistributionOfASwarmOfRobotsInACircularWorkplaceUnderGravity/> Source as text: [`docs/original-source/swarm-circle.txt`](../../docs/original-source/swarm-circle.txt); snapshots `docs/original-snapshots/swarm-circle-1…2.png`; saved states `tests/golden/swarm-circle.original-states.json` (four snapshot settings) |
@@ -166,6 +166,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 13 | v0.1.34 | 2026-11-10 | version number (v0.1.34: the switch "errors of the original: kept \| corrected" for the apps with code-level findings in §11, `shared/errata.js`); no change to this app's code, behaviour or picture |
 | 14 | v0.1.35 | 2026-11-11 | version number (v0.1.35: two new apps, paths-inside-a-polygon and voronoi-diagrams; no shared code changed); no change to this app's code, behaviour or picture |
 | 15 | v0.1.36 | 2026-11-11 | version number (v0.1.36: the full colour menu of voronoi-diagrams); no change to this app's code, behaviour or picture |
+| 16 | v0.1.37 | 2026-11-12 | version number (v0.1.37: thirteen control and signal ports and the shared modules they use; the additions to shared/plot.js, graphics.js and manipulate.js are opt-in); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

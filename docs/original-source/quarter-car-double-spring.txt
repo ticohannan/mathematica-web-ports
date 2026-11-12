@@ -1,0 +1,262 @@
+
+### [Title]
+Quarter-Car Suspension Model with Double Spring
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+\<The quarter-car suspension model simulates a double-spring mass system. The mass attached to the spring represents the body of the car while the free mass represents the wheel, tire, and suspension.\>
+
+### [Text]
+\<The effect of an input from a single road hump or from a continuous sinusoidal input are simulated with graphical and animated representation of the system response. You can control the masses, stiffness, and damping for each spring and the input data.\>
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [CodeText]
+If you provide initialization code, include a SaveDefinitions->True option in the Manipulate.
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{eqn1,eqn2,ivals,dispx,f,followu,follows,bottoms,topu,lens,as,bs,cs,bottomu,ground,lenu,au,bu,cu,dispgraphics},
+
+eqn1=m1 x1^\[Prime]\[Prime][t]+k1 (x1[t]-x2[t])+c1 (x1^\[Prime][t]-x2^\[Prime][t])==0;
+eqn2=m2 x2^\[Prime]\[Prime][t]+k1 (x2[t]-x1[t])+c1 (x2^\[Prime][t]-x1^\[Prime][t])+k2 x2[t]+c2 x2^\[Prime][t]==f[t];
+ivals={x1[0]==0,x1^\[Prime][0]==0,x2[0]==0,x2^\[Prime][0]==0};
+
+f[t]=CalcForce[t,type,k2,wid,h,Omega ];
+
+soln=NDSolve[{{eqn1, eqn2}, ivals},{x1[t],x2[t]},{t,0,maxtime}];
+sols[t_]=x1[t]/.soln[[1,1]];
+solu[t_]=x2[t]/.soln[[1,2]];
+
+ζs=NumberForm[N[c1/(2Sqrt[m1 k1])],{3,2}];
+fs=NumberForm[N[Re[Sqrt[1-c1^2/(2 k1 m1)]Sqrt[k1/m1]]/(2 Pi)],{3,2}];
+Omegas=NumberForm[N[Re[Sqrt[1-c1^2/(2 k1 m1)]Sqrt[k1/m1]]],{3,2}];
+ζu=NumberForm[N[c2/(2Sqrt[m2 k2])],{3,2}];
+fu=NumberForm[N[Re[Sqrt[1-c2^2/(2 k2 m2)]Sqrt[k2/m2]]/(2 Pi)],{3,2}];
+Omegau=NumberForm[N[Re[Sqrt[1-c2^2/(2 k2 m2)]Sqrt[k2/m2]]],{3,2}];
+
+dispx = Plot[{sols[t],solu[t]},{t,0,maxtime},PlotRange->{-0.25,0.25},
+Background->LightGray,PlotStyle->{Darker[Blue],Darker[Red]},Axes->{False,False},Ticks->None,AspectRatio->.3,ImageSize->400];
+followu=Graphics[{PointSize[Large],RGBColor[.49,0,0],Point[{run,solu[run]}]}];
+follows=Graphics[{PointSize[Large],RGBColor[0,0,0.49],Point[{run,sols[run]}]}];
+startys = sols[run];
+startyu = solu[run];
+bottoms=0.5 + startys;
+topu=-0.5+startyu;
+lens =bottoms-topu-0.2;
+as={{startx,bottoms},{startx,bottoms-0.1}};
+bs=Table[ {startx+dia*Sin[π*n-π/2],0.5+startys-0.1-n * lens/11},{n,10}];
+cs={{startx,topu+0.1},{startx,topu}};
+
+bottomu=-1.25 + startyu;
+ground = CalcGround[type,run,wid,h,Omega];
+lenu =bottomu -ground-0.2;
+au={{startx,bottomu},{startx,bottomu- 0.1}};
+bu=Table[ {startx+dia*Sin[π*n-π/2],bottomu-0.1-n * lenu/11},{n,10}];
+cu={{startx,ground+0.1},{startx,ground}};
+
+dispgraphics = Graphics[{ 
+Line[Join[as, bs,cs]],
+Line[Join[au,bu,cu]],
+Darker[Blue],
+Rectangle[{startx-1,0.5 + startys},{startx+1,1.5 + startys}],
+Darker[Red],
+Rectangle[{startx-0.5,-1.25 + startyu},{startx+0.5,-0.5 + startyu}],
+Black,
+Inset[Style[
+Column[{
+Row[{Subscript["\<ζ\>", 1],"\< = \>",ζs}],
+Row[{Subscript["\<Omega\>", 1],"\< = \>",Omegas,"\< rad/s\>"}],
+ Row[{Subscript["\<f\>", 1],"\< = \>", fs,"\< Hz\>"}]}],14],
+{1.75,0.5}],
+Inset[Style[
+Column[{
+Row[{Subscript["\<ζ\>", 2],"\< = \>",ζu}],
+Row[{Subscript["\<Omega\>", 2],"\< = \>",Omegau, "\< Hz\>"}], Row[{Subscript["\<f\>", 2],"\< = \>", fu,"\< Hz\>"}]
+}],14],{1.75,-1.25}],
+Plot[CalcCurve[t,type, run,wid,h,Omega],{t,-3,3},Axes->False,PlotStyle->Darker[Green],PlotRange->{Automatic,{-2.5,2.5}},Filling->-2.5,FillingStyle->Darker[Green, .6]][[1]],
+PointSize[Large],Pink,Point[{startx,ground}]},
+PlotRange->{{-3,3},{-2.5,2}},Axes->{False,False},AxesOrigin->{-1.25,0},ImageSize->400];
+
+Column[{
+Show[dispx,followu,follows],Show[dispgraphics]
+}]],
+
+{{run,0,"\<play\>"},0,maxtime,.05,Trigger,AnimationRate->1, AppearanceElements->{"\<PlayPauseButton\>","\<ResetButton\>"}},
+{{run,0,"\<time\>"},0,maxtime,.05,Appearance->"\<Labeled\>",ImageSize->Tiny},
+Delimiter,
+Style["\<mass\>",Bold],
+{{m1,400,Subscript[Style["\<m\>",Italic], 1]},200,1000,1,Appearance->"\<Labeled\>",ImageSize->Tiny},
+{{m2,30,Subscript[Style["\<m\>",Italic], 2]},5,100,1,Appearance->"\<Labeled\>",ImageSize->Tiny},
+"\<\>",
+Style["\<stiffness\>",Bold],
+{{k1,20000,Subscript[Style["\<k\>",Italic], 1]},10000,200000,1000,Appearance->"\<Labeled\>",ImageSize->Tiny},
+{{k2,80000,Subscript[Style["\<k\>",Italic], 2]},10000,200000,1000,Appearance->"\<Labeled\>",ImageSize->Tiny},
+"\<\>",
+Style["\<damping\>",Bold],
+{{c1,2000,Subscript[Style[c,Italic], 1]},0,10000,100,Appearance->"\<Labeled\>",ImageSize->Tiny},
+{{c2,0,Subscript[Style["\<c\>",Italic], 2]},0,10000,100,Appearance->"\<Labeled\>",ImageSize->Tiny},
+Delimiter,
+Style["\<input\>",Bold],
+{{type,1,"\<type\>"},{1->"\<single bump\>",2->"\<sinusoidal\>"},RadioButton,Appearance->"\<Vertical\>"},
+{{h,0.15,"\<height\>"},0,0.2,.01,Appearance->"\<Labeled\>",ImageSize->Tiny},
+{{wid, 1.0,"\<duration\>"},0.1,5,.1,Appearance->"\<Labeled\>",ImageSize->Tiny},
+{{Omega, 1.0,"\<frequency\>"},0,3,.1,Appearance->"\<Labeled\>",ImageSize->Tiny},
+"\<\>",
+SynchronousUpdating->True,
+ControlPlacement->Left,
+SaveDefinitions->True,
+TrackedSymbols->All,
+Initialization:> 
+(maxtime=10;
+startx = -0.75;
+dia = 0.2;
+CalcPulse[ti_,tmin_,length_, he_]:=If[ti>=tmin&&ti<=(tmin+length),he Sin[(π/length)*(ti-tmin)],0];
+CalcForce[ti_,typ_,k_,wi_,he_,omega_ ]:=If[typ== 1,k CalcPulse[ti, 2, wi, he],k he Sin[2 π omega ti]];
+CalcCurve[ti_,typ_, ru_,wi_,he_,omega_]:=If[typ==1,-2+CalcPulse[ti+ru-startx, 2, wi, he],-2+he Sin[2π omega (ru+ti - startx)]];
+CalcGround[typ_, ru_,wi_,he_,omega_]:=If[typ==1,-2+CalcPulse[ru, 2, wi, he],-2+he Sin[2π omega ru]]
+)]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Jon Neades
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+\<Snapshot 1: single road hump response from a system using typical parameters\>
+
+### [Text]
+\<Snapshot 2: response of an underdamped system to a single road hump\>
+
+### [Text]
+\<Snapshot 3: response to continuous input at resonant frequency of mass attached to spring\>
+
+### [Text]
+Snapshot 4: interference effects with no damping
+
+### [Text]
+\<The Demonstration solves the two second-order differential equations that describe a double-spring system:\>
+
+### [Text]
+Subscript[m, 1]Subscript[x, 1]''+Subscript[k, 1](Subscript[x, 1]-Subscript[x, 2])+Subscript[c, 1](Subscript[x, 1]'-Subscript[x, 2]')=0,
+
+### [Text]
+Subscript[m, 2]Subscript[x, 2]''+Subscript[k, 1](Subscript[x, 2]-Subscript[x, 1])+Subscript[c, 1](Subscript[x, 2]'-Subscript[x, 1]')+Subscript[k, 2]Subscript[x, 2]+Subscript[c, 2]Subscript[x, 2]'=f.
+
+### [Text]
+The forcing function f is modeled as either a single cosine shaped bump, such as a road speed hump, or a continuous sinusoidal input. A numerical solution is employed to show the evolution of the system.
+
+### [Text]
+This Demonstration was inspired by "Simulating Vehicle Suspension with a Simplified Quarter-Car Model" by Erik Mahieu.
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+mechanics
+
+### [Item]
+damped harmonic motion
+
+### [Item]
+double spring
+
+### [Item]
+car
+
+### [Item]
+vehicle
+
+### [Item]
+suspension
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Modeling a Mechanical System by Numerical Solutions to Differential Equations
+
+### [Text]
+Simulating Vehicle Suspension with a Simplified Quarter-Car Model
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2014-01-08
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

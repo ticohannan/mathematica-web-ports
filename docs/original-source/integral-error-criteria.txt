@@ -1,0 +1,162 @@
+
+### [Title]
+Integral Error Criteria for Controller Tuning
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+Consider the closed loop shown in Figure 10.8 in[1], where Subscript[G, p]=(1)/(5 s+1), Subscript[G, v]=(1)/(2 s+1), Subscript[G, m]=(1)/(s+1), Subscript[K, m]=1, and Subscript[G, c]=Subscript[K, c](1+(1)/(5 s)).
+
+### [Text]
+Here we consider a proportional-integral controller. Set the value of the control gain Subscript[K, c]; the integral time is fixed (Subscript[τ, I]=5).
+
+### [Text]
+The closed-loop transfer function for step point changes is given by G=(Y)/(Subscript[Y, sp])=(Subscript[K, c]  (1+s))/(Subscript[K, c]+5 s (1+3 s+2 s^2)) (if there is no disturbance).
+
+### [Text]
+When a step in the set point is applied (i.e. Subscript[Y, sp]=(1)/(s)), the response y(t) is plotted and values of the three integral errors are given (see Snapshot 1).
+
+### [Text]
+These integral errors (all truncated at t=5000 in the calculation shown here) are defined by:
+
+### [Text]
+IAE=Subscript[\[Integral],0]^∞\[LeftBracketingBar]e(t)\[RightBracketingBar]dt (the integral of the absolute value of the error indicated by the gray area shown in the response versus time plot),
+
+### [Text]
+ISE=Subscript[\[Integral],0]^∞(e(t))^2dt (the integral of the squared error),
+
+### [Text]
+and ITAE=Subscript[\[Integral],0]^∞t \[LeftBracketingBar]e(t)\[RightBracketingBar]dt (the integral of the time-weighted absolute error).
+
+### [Text]
+In addition, the Demonstration performs controller tuning by computing the values of Subscript[K, c] that minimize the integral errors (see Snapshots 2\[Dash]4). These are shown by blue dots.
+
+### [Text]
+A frequency analysis shows that sustained oscillations (shown in Snapshot 5) take place when Subscript[K, c]=7.5 and Omega=(Sqrt[2])/(2).
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [CodeText]
+If you provide initialization code, include a SaveDefinitions->True option in the Manipulate.
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[Module[{p2,a},
+Switch[ctrl2,1,a=b[Kc];
+p2=Quiet@Plot[{1,a},{t,0,500},PlotRange->{{0,50},{-0.2,2.4}},Frame->True,AspectRatio->1,ImageSize->{350,350},GridLines->Automatic,PlotStyle->{{Thick,Darker@Red,Dashed},{Thick,Darker@Green}},Filling->{1-> {2}},FillingStyle->Directive[Darker@Gray],FrameLabel->{Style["\<time\>",16],Style["\<response\>",16]},PlotLabel->Row[{Style["\<IAE: \>",16,Darker@Gray],Style[NumberForm[f1[Kc],{4,3}],16,Darker@Gray],"\<    \>",Style["\<ISE: \>",16,Darker@Green],Style[NumberForm[f2[Kc],{4,3}],16,Darker@Green],"\<    \>",Style["\<ITAE: \>",16,Blue],Style[NumberForm[f3[Kc],{6,3}],16,Blue]}]];Show[p2],2,Switch[ctrl,1,Show[pIAE],2,Show[pISE],3,Show[pITAE]]]],{{ctrl2,1,"\<\>"},{1-> "\<response\>",2-> "\<tuning\>"}},{{Kc,1.25,"\<controller gain\>"},1.0,7.6,0.05,Appearance-> "\<Labeled\>",Enabled-> If[ctrl2==1,True,False]},{{ctrl,1,"\<tuning criteria\>"},{1-> "\<IAE\>",2-> "\<ISE\>",3-> "\<ITAE\>"},ControlType->RadioButton,Enabled-> If[ctrl2==2,True,False]},TrackedSymbols:>{ctrl,ctrl2,Kc},SynchronousUpdating-> False,SynchronousInitialization->False,
+Initialization:> {b[q_?NumericQ]:=InverseLaplaceTransform[ 1/s (q (1+s))/(q+5 s (1+3 s+2 s^2)),s,t]//Chop;
+IAE={{1.,5.3547},{1.25,5.05889},{1.5,5.00968},{1.75,5.09285},{2.,5.25657},{2.25,5.49275},{2.5,5.78598},{2.75,6.13584}};
+ISE={{1.,3.34615},{1.25,2.95},{1.5,2.72917},{1.75,2.61335},{2.,2.56818},{2.25,2.5754},{2.5,2.625},{2.75,2.71172}};
+ITAE={{1.,24.8437},{1.25,25.529},{1.5,28.0479},{1.75,31.3496},{2.,35.4364},{2.25,40.3886},{2.5,46.2944},{2.75,53.2584}};
+f1[q_?NumericQ]:= Re[Quiet@NIntegrate[Abs[1-b[q]],{t,0,5000}]//Chop];f2[q_?NumericQ]:= Re[Quiet@NIntegrate[(1-b[q])^2,{t,0,5000}]//Chop];f3[q_?NumericQ]:= Re[Quiet@NIntegrate[t Abs[1-b[q]],{t,0,5000}]//Chop];
+w1={5.00816,{q->1.48845}};w2={2.5653841409022107`,{q->2.084447222082553`}};w3={24.807852220081998`,{q->1.0347352871788122`}};pIAE=ListPlot[IAE,PlotRange->All,Frame->True,AspectRatio->1,GridLines->Automatic,PlotStyle->{Thick,PointSize[0.0175],Darker@Red},Epilog-> {Blue,PointSize[0.025],Point[{q/.w1[[2]],w1[[1]]}]},ImageSize->{350,350},PlotLabel->Row[{Style["\<IAE: \>",16,Darker@Blue],Style[NumberForm[w1[[1]],{4,3}],16,Darker@Blue],"\<        \>",Style["\<Gain: \>",16,Darker@Blue],Style[NumberForm[q/.w1[[2]],{4,3}],16,Darker@Blue]}],FrameLabel->{Style["\<gain\>",16],Style["\<IAE\>",16]}];
+pISE=ListPlot[ISE,PlotRange->All,Frame->True,AspectRatio->1,GridLines->Automatic,PlotStyle->{Thick,PointSize[0.0175],Darker@Red},Epilog-> {Blue,PointSize[0.025],Point[{q/.w2[[2]],w2[[1]]}]},ImageSize->{350,350},PlotLabel->Row[{Style["\<ISE: \>",16,Darker@Blue],Style[NumberForm[w2[[1]],{4,3}],16,Darker@Blue],"\<        \>",Style["\<Gain: \>",16,Darker@Blue],Style[NumberForm[q/.w2[[2]],{4,3}],16,Darker@Blue]}],FrameLabel->{Style["\<gain\>",16],Style["\<ISE\>",16]}];
+pITAE=ListPlot[ITAE,PlotRange->All,Frame->True,AspectRatio->1,GridLines->Automatic,PlotStyle->{Thick,PointSize[0.0175],Darker@Red},Epilog-> {Blue,PointSize[0.025],Point[{q/.w3[[2]],w3[[1]]}]},PlotLabel->Row[{Style["\<ITAE: \>",16,Darker@Blue],Style[NumberForm[w3[[1]],{4,3}],16,Darker@Blue],"\<        \>",Style["\<Gain: \>",16,Darker@Blue],Style[NumberForm[q/.w3[[2]],{4,3}],16,Darker@Blue]}],ImageSize->{350,350},FrameLabel->{Style["\<gain\>",16],Style["\<ITAE\>",16]}];},ControlPlacement->Top]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Housam Binous
+
+### [Text]
+Mohammad Mozahar Hossain
+
+### [Text]
+Ahmed Bellagi
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+Details, references or citation information
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] D. E. Seborg, T. F. Edgar, D. A. Mellichamp, and F. J. Doyle III, Process Dynamics and Control, 3rd ed., Hoboken, NJ: John Wiley & Sons, Inc., 2011.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+keyword 1
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Item]
+Link to external information
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2015-12-30
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

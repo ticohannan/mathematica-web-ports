@@ -65,7 +65,7 @@
 
 import {
   Graphics, RGBColor, Black, Opacity, AbsoluteThickness, AbsolutePointSize, PointSize, Line, Polygon, Point, applyDirective, DEFAULT_STYLE,
-  Annotation, EdgeForm, Darker, FilledPolygons, ImageRaster, Inset, bounds,
+  Annotation, EdgeForm, Darker, FilledPolygons, ImageRaster, Inset, bounds, GrayLevel, AbsoluteDashing, Superscript, Row,
 } from './graphics.js';
 
 /** ColorData[97] — Mathematica's default plot colours (the first 10, then repeated). */
@@ -214,7 +214,7 @@ function plotOptions(opts, range, items, aspect) {
     AxesInFrame: frame && opts.Axes !== false, // Mathematica keeps the axes (lines, no ticks) inside a Frame
     AxesOrigin: opts.AxesOrigin ?? [clampTo(0, PlotRange[0]), clampTo(0, PlotRange[1])],
   };
-  for (const k of ['Ticks', 'AxesLabel', 'Frame', 'FrameTicks', 'FrameLabel', 'PlotLabel', 'LabelStyle', 'Background', 'ImagePadding', 'label', 'testid', 'id']) if (opts[k] !== undefined) o[k] = opts[k];
+  for (const k of ['Ticks', 'AxesLabel', 'Frame', 'FrameTicks', 'FrameLabel', 'PlotLabel', 'LabelStyle', 'Background', 'ImagePadding', 'GridLines', 'GridLinesStyle', 'FrameTicksStyle', 'label', 'testid', 'id']) if (opts[k] !== undefined) o[k] = opts[k];
   const lg = opts.PlotLegends;
   if (lg != null && items.length) {
     const labels = lg.placed ? lg.labels : lg;
@@ -232,8 +232,18 @@ const fillTargets = (Filling, n) => {
 const baseline = (t, R, origin) => (t === 'Axis' ? origin : t === 'Bottom' ? R[1][0] : t === 'Top' ? R[1][1] : t);
 
 // ---- the plot functions ------------------------------------------------------------------------------------------
+/**
+ * PlotTheme (v0.1.37): "Detailed" = Frame, GridLines -> Automatic in dotted gray (as the snapshots of Mathematica 13 show
+ * it: dots of GrayLevel 0.7), the legend as given. The plot's own options win over the theme's.
+ */
+export function withTheme(opts) {
+  if (opts.PlotTheme === 'Detailed') return { Frame: true, GridLines: 'Automatic', GridLinesStyle: [GrayLevel(0.7), AbsoluteThickness(1), AbsoluteDashing([1, 2])], ...opts };
+  return opts;
+}
+
 /** Plot[f, {x, a, b}, opts] — see the header. */
 export function Plot(f, [a, b], opts = {}) {
+  opts = withTheme(opts);
   const fs = Array.isArray(f) ? f : null;
   const g = fs ? (x) => fs.map((h) => h(x)) : f;
   const sampled = sample(g, [a, b], opts);
@@ -326,6 +336,7 @@ export function ParametricPlot(f, [a, b], opts = {}, regionOpts = {}) {
 const isPointList = (d) => Array.isArray(d) && d.length > 0 && d.every((p) => Array.isArray(p) && p.length === 2 && typeof p[0] === 'number');
 /** ListPlot[data, opts]: data = [[x, y], …] or [y1, y2, …] (x = 1, 2, …), or a list of such data sets. */
 export function ListPlot(data, opts = {}) {
+  opts = withTheme(opts);
   const sets = (isPointList(data) || typeof data[0] === 'number' ? [data] : data).map((d) => (typeof d[0] === 'number' ? d.map((y, i) => [i + 1, y]) : d));
   const n = sets.length;
   const styles = styleList(opts.PlotStyle, n).map((s, i) => [RGBColor(...COLOR_DATA_97[i % 10]), AbsoluteThickness(1.6), ...asList(s)]);
@@ -649,4 +660,69 @@ export function DensityPlot(f, [x0, x1], [y0, y1], opts = {}) {
   o.FrameInFront = opts.FrameInFront ?? true; // v0.1.26: the frame and its ticks over the raster, as Mathematica draws them
   const raster = Annotation(ImageRaster({ width: nx, height: ny, data }, [[x0, y0], [x1, y1]], { smooth: true }), 'density-raster');
   return Graphics([asList(opts.Prolog), raster, asList(opts.Epilog)], o);
+}
+
+// ---- logarithmic axes (v0.1.37) ----------------------------------------------------------------------------------------
+// LogLinearPlot, LogLogPlot and LogPlot plot in the coordinates Log[x] (natural logarithm, as Mathematica: Epilog,
+// GridLines and PlotRange given to them are in those coordinates — use Math.log(x)) with tick marks at the round
+// values of the data. Ticks as Mathematica draws them on a log axis: labels at 1, 2, 5 × 10^k when the range spans less
+// than about 1.3 decades, at 1 and 5 × 10^k up to 4 decades, at 10^k beyond; unlabelled ticks at every other integer
+// multiple of 10^k; GridLines -> Automatic draws lines at all of them (gridAll). Labels: plain numbers below 10^4;
+// from 10^4 up "10^k" when all labels there are powers of ten, else "m×10^k" (Mathematica's two forms, seen in the
+// snapshots of Link Budget for Communication Systems).
+
+/** The log-axis tick spec for data values lo … hi (> 0): { ticks: { major: [[Log v, label]], minor: [Log v] }, gridAll }. */
+export function logTicks(lo, hi) {
+  const decades = Math.log10(hi / lo);
+  const labelled = decades < 1.3 ? [1, 2, 5] : decades <= 4.2 ? [1, 5] : [1];
+  const k0 = Math.floor(Math.log10(lo)) - 1, k1 = Math.ceil(Math.log10(hi)) + 1;
+  const major = [], minor = [];
+  const vals = [];
+  for (let k = k0; k <= k1; k++) for (let m = 1; m <= 9; m++) {
+    const v = Number((m * 10 ** k).toPrecision(12));
+    if (v < lo * (1 - 1e-12) || v > hi * (1 + 1e-12)) continue;
+    vals.push([v, m, k]);
+  }
+  const big = vals.filter(([v, m]) => labelled.includes(m) && v >= 1e4);
+  const sci = big.some(([, m]) => m !== 1);
+  for (const [v, m, k] of vals) {
+    if (!labelled.includes(m)) { minor.push(Math.log(v)); continue; }
+    let label;
+    if (v < 1e4 && v >= 1e-4) label = String(v);
+    else if (!sci && m === 1) label = Superscript('10', String(k));
+    else label = Row([`${m}×`, Superscript('10', String(k))]);
+    major.push([Math.log(v), label]);
+  }
+  return { ticks: { major, minor }, gridAll: true };
+}
+const logRange = (r) => (Array.isArray(r) && typeof r[0] === 'number' ? r.map(Math.log) : r);
+function logOpts(opts, xLog, yLog, xr, yr) {
+  const o = { ...opts };
+  const key = opts.Frame || opts.PlotTheme === 'Detailed' ? 'FrameTicks' : 'Ticks';
+  const [tx, ty] = Array.isArray(opts[key]) && opts[key].length === 2 ? opts[key] : [undefined, undefined];
+  o[key] = [xLog && tx == null ? logTicks(...xr) : tx, yLog && ty == null && yr ? logTicks(...yr) : ty];
+  if (Array.isArray(opts.PlotRange) && opts.PlotRange.length === 2 && Array.isArray(opts.PlotRange[0])) {
+    o.PlotRange = [xLog ? logRange(opts.PlotRange[0]) : opts.PlotRange[0], yLog ? logRange(opts.PlotRange[1]) : opts.PlotRange[1]];
+  } else if (yLog && Array.isArray(opts.PlotRange) && typeof opts.PlotRange[0] === 'number') o.PlotRange = logRange(opts.PlotRange);
+  return o;
+}
+/** LogLinearPlot[f, {x, a, b}, opts]: x on a log scale. */
+export function LogLinearPlot(f, [a, b], opts = {}) {
+  const fs = Array.isArray(f) ? f.map((h) => (u) => h(Math.exp(u))) : (u) => f(Math.exp(u));
+  return Plot(fs, [Math.log(a), Math.log(b)], logOpts(opts, true, false, [a, b]));
+}
+const logOf = (v) => (Array.isArray(v) ? v.map((y) => (y > 0 ? Math.log(y) : NaN)) : v > 0 ? Math.log(v) : NaN);
+/** LogPlot[f, {x, a, b}, opts]: y on a log scale (opts.yRange [lo, hi] fixes the tick range; default from the samples). */
+export function LogPlot(f, [a, b], opts = {}) {
+  const g = (x) => logOf(Array.isArray(f) ? f.map((h) => h(x)) : f(x));
+  const ys = sample(g, [a, b], opts).ys.flat().filter(finite);
+  const yr = opts.yRange ?? [Math.exp(Math.min(...ys)), Math.exp(Math.max(...ys))];
+  return Plot(g, [a, b], logOpts(opts, false, true, null, yr));
+}
+/** LogLogPlot[f, {x, a, b}, opts]: both axes on log scales. */
+export function LogLogPlot(f, [a, b], opts = {}) {
+  const g = (u) => logOf(Array.isArray(f) ? f.map((h) => h(Math.exp(u))) : f(Math.exp(u)));
+  const ys = sample(g, [Math.log(a), Math.log(b)], opts).ys.flat().filter(finite);
+  const yr = opts.yRange ?? [Math.exp(Math.min(...ys)), Math.exp(Math.max(...ys))];
+  return Plot(g, [Math.log(a), Math.log(b)], logOpts(opts, true, true, [a, b], yr));
 }

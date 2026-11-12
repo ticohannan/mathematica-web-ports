@@ -1,0 +1,138 @@
+
+### [Title]
+Zero-Pole Cancellation in Transfer Functions
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+\<When the transfer function of a system has poles in the right half-plane of the complex numbers, the system is unstable. While it is theoretically possible to design a proportional-derivative (PD) compensator to cancel the poles, in practice is it is difficult to create perfect pole-zero cancellation due to imprecision in the model.\>
+
+### [Text]
+\<This Demonstration shows the locus root of a unity (negative) feedback system for three scenarios:\>
+
+### [Text]
+\<1. The plant (i.e. the instability) is not compensated, and the closed-loop system is unstable for some values of the gain.\>
+
+### [Text]
+\<2. The plant is compensated with a zero placed precisely at the unstable pole. Thus, the closed-loop system is stable for any value of gain.\>
+
+### [Text]
+\<3. There is a mismatch between the position of the zero and the unstable pole, causing the closed-loop system to be unstable.\>
+
+### [Text]
+Poles are marked by a cross "×" and zeros by a dot "\[CenterDot]".
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [CodeText]
+If you provide initialization code, include a SaveDefinitions->True option in the Manipulate.
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+RootLocusPlot[k * funcs[[tf]],{k,0,1},PlotRange->All,AspectRatio->1,PoleZeroMarkers->{Automatic,"\<ParameterValues\>"->gain},ImageSize->450],
+{gain,0,1, Appearance-> "\<Labeled\>"},
+{{tf,1,"\<\>"},Thread[Range[3]-> {"\<without compensation\>", "\<precise pole\[Hyphen]zero cancellation\>", "\<imprecise pole\[Hyphen]zero cancellation\>"}]},
+Initialization:> (funcs={1/((s+0.5) (s+1)(s-0.1)), 1/((s+0.5) (s+1)),(s-0.3)/((s+0.5) (s+1)(s-0.1))})
+]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Hugo Tadashi
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+Details, references or citation information
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+control theory
+
+### [Item]
+stability
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Item]
+Link to external information
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2018-09-21
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

@@ -107,3 +107,65 @@ export function addRow(controls, { name } = {}) {
   controls.root.append(row);
   return row;
 }
+
+/**
+ * RadioButtonBar (v0.1.37): Mathematica's {{x, x0, "label"}, {v1 -> "a", v2 -> "b"}, RadioButton} (ControlType ->
+ * RadioButton; Appearance -> "Vertical" stacks the choices). data-testid "radio-<name>-<i>" (i from 1), the row
+ * "ctl-<name>"; an option's html (typeset label) replaces its text.
+ */
+export function addRadioButtons(controls, { name, label = '', options, value, onChange, parent, vertical = false }) {
+  const group = `radio-${name}-${Math.random().toString(36).slice(2, 8)}`;
+  const items = options.map((o, i) => {
+    const input = el('input', { type: 'radio', name: group, 'data-testid': `radio-${name}-${i + 1}` });
+    const span = el('span', {}, o.label ?? String(o.value));
+    if (o.html && o.html !== o.label) span.innerHTML = o.html;
+    input.addEventListener('change', () => { if (input.checked) onChange?.(o.value); });
+    return { input, value: o.value, item: el('label', { class: 'ctl-radio-item', style: vertical ? 'display:block' : 'margin-right:8px' }, input, span) };
+  });
+  const set = (v) => items.forEach((it) => { it.input.checked = it.value === v; });
+  set(value);
+  const box = el('span', { class: 'ctl-radio', style: vertical ? 'display:inline-block' : 'display:inline-flex;flex-wrap:wrap' }, ...items.map((it) => it.item));
+  const row = el('div', { class: 'ctl ctl-radiobar', 'data-testid': `ctl-${name}` }, label ? el('span', { class: 'ctl-label' }, label) : null, box);
+  (parent ?? controls.root).append(row);
+  const api = {
+    row, get: () => items.find((it) => it.input.checked)?.value, set,
+    setEnabled: (on) => { items.forEach((it) => { it.input.disabled = !on; }); row.classList.toggle('is-disabled', !on); },
+  };
+  controls.controls.set(name, api);
+  return api;
+}
+
+/**
+ * Trigger (v0.1.37): Mathematica's {{t, t0, "label"}, tmin, tmax, dt, ControlType -> Trigger, AnimationRate -> r}: a
+ * play/pause button (data-testid "trigger-play-<name>") and a reset button ("trigger-reset-<name>"). Play runs the value
+ * from where it is up to tmax at r units per second of the page clock (shared/clock.js; default (tmax − tmin)/5), in
+ * steps of dt when dt > 0, then stops (Mathematica's Trigger runs once); pause holds it; reset puts it back to tmin and
+ * stops. The value is shown as Mathematica's Trigger does not: the ports that need it draw it themselves.
+ */
+export function addTrigger(controls, { name, label = '', min, max, step = 0, value, onInput, parent, rate, animate }) {
+  const r = rate > 0 ? rate : (max - min) / 5;
+  let v = value ?? min, stop = null;
+  const quant = (x) => (step > 0 ? Math.min(max, min + Math.floor((x - min) / step + 1e-9) * step) : Math.min(max, x));
+  const play = el('button', { type: 'button', class: 'trigger-play', 'data-testid': `trigger-play-${name}`, 'aria-label': `play ${label || name}` }, '▶');
+  const reset = el('button', { type: 'button', class: 'trigger-reset', 'data-testid': `trigger-reset-${name}`, 'aria-label': `reset ${label || name}` }, '⏮');
+  const show = () => { play.textContent = stop ? '❚❚' : '▶'; play.setAttribute('aria-pressed', stop ? 'true' : 'false'); };
+  const halt = () => { if (stop) { stop(); stop = null; } show(); };
+  play.addEventListener('click', () => {
+    if (stop) { halt(); return; }
+    let start = v >= max ? min : v;
+    if (start !== v) { v = start; onInput?.(v); }
+    stop = animate((t, dt, elapsed) => {
+      const nv = quant(start + r * elapsed);
+      if (nv !== v) { v = nv; onInput?.(v); }
+      if (v >= max) { stop = null; show(); return false; }
+      return true;
+    });
+    show();
+  });
+  reset.addEventListener('click', () => { halt(); v = min; onInput?.(v); });
+  const row = el('div', { class: 'ctl ctl-trigger', 'data-testid': `ctl-${name}` }, label ? el('span', { class: 'ctl-label' }, label) : null, play, reset);
+  (parent ?? controls.root).append(row);
+  const api = { row, get: () => v, set: (x) => { v = x; }, stop: halt, isPlaying: () => !!stop };
+  controls.controls.set(`${name}#trigger`, api);
+  return api;
+}

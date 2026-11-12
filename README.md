@@ -2,7 +2,7 @@
 
 **Live site:** <https://ticohannan.github.io/mathematica-web-ports/> · **Source:** <https://github.com/ticohannan/mathematica-web-ports>
 
-Forty-six Mathematica `Manipulate` demonstrations (and one lecture notebook) re-implemented as a **static website**:
+Fifty-nine Mathematica `Manipulate` demonstrations (and one lecture notebook) re-implemented as a **static website**:
 plain HTML + JavaScript (ES modules, no build step), SVG for 2D, three.js/WebGL for 3D.
 
 | Demo | Folder | Rendering | Interaction |
@@ -54,6 +54,19 @@ plain HTML + JavaScript (ES modules, no build step), SVG for 2D, three.js/WebGL 
 | Defects in an Optical Fiber | `demos/optical-fiber-defects/` | SVG | defect height and width, two light angles; drag the two light sources |
 | Paths inside a Polygon | `demos/paths-inside-a-polygon/` | SVG | polygon type setter bar; drag the start and finish points (rounded, snapped to a corner when outside) |
 | Voronoi Diagrams | `demos/voronoi-diagrams/` | SVG | drag the points, Alt/⌘-click to add or delete one; colour scheme menu, show borders checkbox |
+| Link Budget for Communication Systems | `demos/link-budget/` | SVG | 14 sliders in a column (frequency, antennas, power, path-loss exponent, noise, bandwidth, distance range); log distance axis |
+| Harmonic Distortion of Nonlinear Transfer Function | `demos/harmonic-distortion/` | SVG | c₁, c₂ sliders, clipping checkbox and level, linear/decibel spectrum |
+| First-Order Transfer Functions in Process Control | `demos/first-order-process-control/` | SVG | step / ramp / sinusoidal setter, τ, a, ω sliders; errors switch |
+| First- and Second-Order Transfer Functions | `demos/first-second-order-tf/` | SVG | FOPDT / SOPDT popup, τ, K, θ, ζ sliders; block diagram |
+| Performance Characteristics for Step Response of an Underdamped Process | `demos/underdamped-step-performance/` | SVG | K_g, τ, ζ, M sliders; response / performance table |
+| Integral Error Criteria for Controller Tuning | `demos/integral-error-criteria/` | SVG | response / tuning setter, K_c slider, IAE / ISE / ITAE radio buttons; errors switch |
+| Proportional Temperature Control | `demos/proportional-temperature-control/` | SVG | 5 sliders (computed on release); errors switch |
+| Feedback Control in a Stirred-Tank Reactor | `demos/stirred-tank-feedback/` | SVG | 6 sliders (PI constants, heat, inlet, disturbance, flow); errors switch |
+| Active Shock Absorbers | `demos/active-shock-absorbers/` | SVG | damping popup, y₀, y₀′, m, k, t sliders; phase plane |
+| Simulating Vehicle Suspension with a Simplified Quarter-Car Model | `demos/quarter-car-suspension/` | SVG | start / pause / reset trigger, 5 sliders; errors switch |
+| Quarter-Car Suspension Model with Double Spring | `demos/quarter-car-double-spring/` | SVG | play trigger and time slider, 6 mass/stiffness/damping sliders, input radio buttons; errors switch |
+| Zero-Pole Cancellation in Transfer Functions | `demos/zero-pole-cancellation/` | SVG | gain slider, three transfer functions; root locus; errors switch |
+| Simulation of Feedback Control System with Controller and Second-Order Plant | `demos/feedback-control-simulation/` | SVG | run / stop, time and speed, plant and P/PI/PD/PID controller; step, Bode, Nyquist, poles |
 
 The apps came in groups: the first three (motion planning, rotations, Euler angles); seven more from the
 seven-link PRM to robot singularities, added in v0.1.12 as further proofs of concept (developed first in a separate,

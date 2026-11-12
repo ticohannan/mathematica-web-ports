@@ -1,0 +1,157 @@
+
+### [Title]
+Active Shock Absorbers
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+Active shock absorbers are used in several kinds of machines and vehicles (for example, in a seat, as shown in the graphic). An active shock absorber is basically a damped harmonic oscillator with spring constant k for a mass m. This technology uses magnetorheological fluids that change their damping factor when a magnetic field is applied. Three different damping functions are considered here.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+gr=Plot[.05TriangleWave[6x],{x,0,2}][[1]];
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[With[{s=Quiet@NDSolve[{m y^\[Prime]\[Prime][t]+Which[f==1,y[t]^4,f==2,1-Exp[-10 y[t]^2],f==3,ArcTan[y[t]]] y^\[Prime][t]+k y[t]==0,y[0]==y0,y^\[Prime][0]==yp0},y,{t,0,50}]},
+
+Column[{Row[{With[{max=1.2},Graphics[
+{Thickness[.04],Gray,Line[{{-.4,0},{.45,0}}],
+Brown,Line[{{.2,0},{.2,max+y[tf]}}]/.s,
+Red,Thickness[.08],Line[{{.2,0},{.2,.65 max+y[tf]}}]/.s,Orange,Translate[Rotate[Scale[gr,{.5First[max+y[tf]/.s],1},{0,0}],π/2,{0,0}],{-.1,0}],
+Blue,Line[{{-.3,max+y[tf]},{.4,max+y[tf]},{.4,y[tf]+2max}}]/.s},PlotRange->{{-.4,.45},{-.1,1.6+2max}},ImageSize->{150,250},Axes->False]],
+
+ParametricPlot[Evaluate[{y[t],y'[t]}/.s],{t,0,tf},Frame->True,ImageSize->1.08{250,250},PlotRange->All,AspectRatio->1,Axes->False,ImagePadding->40,FrameLabel->{y[t],y'[t]}]}],
+
+Plot[Evaluate[y[t]/.s],{t,0,tf},PlotRange->All,AspectRatio->1/3,ImageSize->{.9 450,150},AxesLabel->{t,y[t]}]
+},Alignment->Center]],
+
+{{f,2,Style["\<Gamma\>"]},{1->TraditionalForm@HoldForm[y[t]^4],2->TraditionalForm@HoldForm[1-Exp[-10 y[t]^2]],3->TraditionalForm@HoldForm[ArcTan[y[t]]]},ImageSize->Small,ControlType->PopupMenu},
+{{y0,.1,Text@Subscript[Style["\<y\>",Italic],"\<0\>"]},.1,1.,.001,ImageSize->Tiny,Appearance->"\<Labeled\>"},
+{{yp0,.2,Text@Subsuperscript[Style["\<y\>",Italic],"\<0\>","\<\[Prime]\>"]},0.,1.,.001,ImageSize->Tiny,Appearance->"\<Labeled\>"},
+{{m,.1,Style["\<m\>",Italic]},0.1,5.,.01,ImageSize->Tiny,Appearance->"\<Labeled\>"},
+{{k,1.,Style["\<k\>",Italic]},.1,10.,.01,ImageSize->Tiny,Appearance->"\<Labeled\>"},
+{{tf,35.,Style["\<t\>",Italic]},1.,50.,.01,ImageSize->Tiny,Appearance->"\<Labeled\>"},ControlPlacement->Left,SaveDefinitions->True]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Enrique Zeleny
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+The equation for the system is m y''(t)+Gamma y'(t)+k y(t)\[LongEqual]0, where Gamma can be chosen according to the application.
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] P. Blanchard, R. L. Devaney, and G. R. Hall, Differential Equations, 4th ed., Boston: Brooks/Cole, 2012 pp. 454\[Dash]456.
+
+### [Text]
+[2] G. Stix, "Project Skyhook," Scientific American, 284(5) pp. 28\[Dash]29.
+
+### [Text]
+[3] Wikipedia. "Magnetorheological Fluid." (Jan 15, 2012) en.wikipedia.org/wiki/Magnetorheological_fluid.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+spring constant
+
+### [Item]
+magnetic field
+
+### [Item]
+damped simple harmonic motion
+
+### [Item]
+phase portrait
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Spring Constant
+
+### [Text]
+Magnetic Field
+
+### [Text]
+Damped Simple Harmonic Motion
+
+### [Text]
+Phase Portrait
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2013-01-15
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

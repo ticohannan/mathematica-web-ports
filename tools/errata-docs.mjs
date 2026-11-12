@@ -48,8 +48,12 @@ export async function loadCorrections(dir) {
   const file = path.resolve(`demos/${dir}/errata-mode.js`);
   if (!fs.existsSync(file)) return null;
   const mod = await import(pathToFileURL(file).href);
+  // v0.1.37: an app that came with its switch exports SWITCH = { since, date, request } (its own version and request);
+  // the list then carries it as a property (the entries themselves are unchanged)
+  if (mod.SWITCH) return Object.assign([...mod.CORRECTIONS], { switch: mod.SWITCH });
   return mod.CORRECTIONS;
 }
+const switchOf = (corrections) => corrections?.switch ?? { since: SINCE, date: DATE, request: REQUEST, owner: 'owner / 2026-11-10' };
 
 export function updateDesign(md, { dir, prefix }, corrections, version) {
   const lines = md.split('\n');
@@ -58,6 +62,9 @@ export function updateDesign(md, { dir, prefix }, corrections, version) {
   if (cv >= 0) lines[cv] = `| Code version: | ${version} |`;
 
   let featureId = null;
+  const { since: SW_SINCE, date: SW_DATE, request: SW_REQUEST } = switchOf(corrections);
+  const SW_OWNER = switchOf(corrections).owner ?? `owner / ${SW_DATE}`;
+  const own = !!corrections?.switch; // an app ported with its switch: its revision rows are its own
   if (corrections) {
     const ids = corrections.map((c) => c.id);
     // §4 feature row
@@ -70,8 +77,8 @@ export function updateDesign(md, { dir, prefix }, corrections, version) {
     }
     const featureRow = row([featureId,
       `${FEATURE_MARK} beside "Initial settings" (variable \`errata\`, default kept = the original's behaviour). "corrected" changes only ${ids.join(', ')} (§11; \`errata-mode.js\`); the differences are listed on the page under "Errors of the original: what "corrected" changes"`,
-      `${REQUEST}: every code-level error of the original can be switched between the original's behaviour and its correction`,
-      SINCE,
+      `${SW_REQUEST}: every code-level error of the original can be switched between the original's behaviour and its correction`,
+      SW_SINCE,
       `unit "corrected mode (E-${prefix})"; e2e "errata switch on ${dir}: kept is the original, corrected changes the listed result"`]);
     if (existing) lines[lines.indexOf(existing)] = featureRow;
     else {
@@ -93,7 +100,7 @@ export function updateDesign(md, { dir, prefix }, corrections, version) {
       const nums = [...md.matchAll(new RegExp(`\\bP-${prefix}-(\\d+)\\b`, 'g'))].map((m) => Number(m[1]));
       pId = `P-${prefix}-${String(Math.max(0, ...nums) + 1).padStart(2, '0')}`;
     }
-    const pRow = row([pId, `approved (${REQUEST}), implemented in ${SINCE} as ${featureId}`, 'owner / 2026-11-10',
+    const pRow = row([pId, `approved (${SW_REQUEST}), implemented in ${SW_SINCE} as ${featureId}`, SW_OWNER,
       `${FEATURE_MARK}: mark the current version, then offer each logical error of the original as a gated correction; the corrected mode changes only the code needed for ${ids.join(', ')}`,
       'the errors of the original were reproduced bug for bug; the owner wants to compare the original with a corrected version and to be able to go back',
       'the default is the original (golden data, harness replays and parity unchanged); each correction has a unit test with an independently derived expected value and the browser test of the switch; the page documents the differences']);
@@ -112,8 +119,8 @@ export function updateDesign(md, { dir, prefix }, corrections, version) {
       if (k < 0) throw new Error(`${dir}: ${c.id} is not a row of §11`);
       const cs = cells(lines[k]);
       if (cs.length !== 7) throw new Error(`${dir}: ${c.id} has ${cs.length} columns`);
-      cs[4] = `${cs[4].replace(/\s*\*\*Switch:\*\*.*$/, '')} **Switch:** with "errors of the original: corrected" (${featureId}, ${SINCE}) — ${strip(c.corrected).replace(/\|/g, '\\|')}`;
-      cs[6] = `switchable since ${SINCE}`;
+      cs[4] = `${cs[4].replace(/\s*\*\*Switch:\*\*.*$/, '')} **Switch:** with "errors of the original: corrected" (${featureId}, ${SW_SINCE}) — ${strip(c.corrected).replace(/\|/g, '\\|')}`;
+      cs[6] = `switchable since ${SW_SINCE}`;
       lines[k] = row(cs);
     }
   }
@@ -121,11 +128,11 @@ export function updateDesign(md, { dir, prefix }, corrections, version) {
   const [i, j] = sectionRange(lines, '9. Revision history');
   const have = lines.findIndex((l, k) => k > i && k < j && l.startsWith('|') && cells(l)[1] === `v${version}`);
   const text = corrections
-    ? `${featureId}: the switch "errors of the original: kept \\| corrected" (${REQUEST}); corrected mode for ${corrections.map((c) => c.id).join(', ')}, default kept: the original's behaviour, golden data and pictures unchanged`
+    ? `${featureId}: the switch "errors of the original: kept \\| corrected" (${SW_REQUEST}); corrected mode for ${corrections.map((c) => c.id).join(', ')}, default kept: the original's behaviour, golden data and pictures unchanged`
     : VERSION_ONLY;
   // v0.1.35: the row text above belongs to the version that brought the switch (SINCE); in a later version an existing
   // row of that version is the release's own and is kept, and a missing one gets a plain version-number row
-  if (`v${version}` !== SINCE) {
+  if (`v${version}` !== SW_SINCE || own) {
     if (have < 0) {
       const last = lastTableLine(lines, i, j);
       const rev = Number(cells(lines[last])[0]);
@@ -136,7 +143,7 @@ export function updateDesign(md, { dir, prefix }, corrections, version) {
   else {
     const last = lastTableLine(lines, i, j);
     const rev = Number(cells(lines[last])[0]);
-    lines.splice(last + 1, 0, row([Number.isFinite(rev) ? rev + 1 : 1, `v${version}`, DATE, text]));
+    lines.splice(last + 1, 0, row([Number.isFinite(rev) ? rev + 1 : 1, `v${version}`, SW_DATE, text]));
   }
   return lines.join('\n');
 }
@@ -155,7 +162,7 @@ export function correctedModeDoc(entries, version) {
     `To go back to the last version without the switch: tag \`pre-fixed-mode-v0.1.33\` (= v0.1.33, commit \`b4569b0\`).`, '',
     `Apps with the switch: ${entries.length}; corrections: ${entries.reduce((n, e) => n + e.corrections.length, 0)}. Code version ${version}.`, ''];
   for (const e of entries) {
-    out.push(`## ${e.title} (\`demos/${e.dir}/\`)`, '', '| Finding | The original (kept) | Corrected |', '|---|---|---|');
+    out.push(`## ${e.title} (\`demos/${e.dir}/\`${e.corrections.switch ? `, since ${e.corrections.switch.since}` : ''})`, '', '| Finding | The original (kept) | Corrected |', '|---|---|---|');
     for (const c of e.corrections) out.push(row([c.id, c.original.replace(/\|/g, '\\|'), c.corrected.replace(/\|/g, '\\|')]));
     out.push('');
   }

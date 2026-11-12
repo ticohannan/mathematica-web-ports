@@ -47,6 +47,13 @@ precedence = "closest"
 SPDX-FileCopyrightText = "2010-2026 three.js authors"
 SPDX-License-Identifier = "MIT"
 
+# Third-party: ml-matrix 6.15.1 (npm, unchanged UMD build; the ES-module wrapper index.js carries its own header)
+[[annotations]]
+path = "vendor/ml-matrix/**"
+precedence = "closest"
+SPDX-FileCopyrightText = "2014 Michaël Zasso and ml-matrix contributors"
+SPDX-License-Identifier = "MIT"
+
 # Upstream licence notice kept for the car-path port (code converted by the original's authors from this library)
 [[annotations]]
 path = "docs/third-party/reeds-shepp-curves-LICENSE.txt"

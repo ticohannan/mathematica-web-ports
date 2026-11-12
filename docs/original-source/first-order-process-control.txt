@@ -1,0 +1,277 @@
+
+### [Title]
+First-Order Transfer Functions in Process Control
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+\<A transfer function is the ratio of the output to the input of a system. The system response is determined from the transfer function and the system input. A Laplace transform converts the input from the time domain to the spatial domain by using Laplace transform relations. The transformed spatial input is multiplied by the transfer function to get the output in the spatial domain. It is then converted back to the time domain using an inverse Laplace transform.\>
+
+### [Text]
+This Demonstration shows the responses to a first-order transfer function. You can vary the magnitude of the input and the time constant τ. The time constant is related to how long a system takes to reach the new steady state. The input can be a step function, a ramp, or a sinusoidal input.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [CodeText]
+If you provide initialization code, include a SaveDefinitions->True option in the Manipulate.
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[Module[{plot1,plot2,plot3,plot4,plot5,plot6,Theta,Φ,Yτ,Xτ,YΔSS,line,timeconstant,yline,time,time1,time2,time3,x,τramp,PTV,PTV1,PTV2,yyline},
+Theta=0;
+Φ=-ArcTan[w*T];
+Yτ=(1*Alpha-0)*0.632+0;
+Xτ=-T*Log[((-Yτ)/(1*Alpha))+1]+Theta;
+YΔSS=1*Alpha*(1-Exp[(-(24-Theta))/((T))]);
+line=1*Alpha*(1-Exp[(-(Xτ-Theta))/((T))]);
+timeconstant=Xτ-Theta;
+yline=1*(1*Alpha*T*(Exp[(-((10/Alpha)-Theta))/(T)]-1)+1*Alpha*((10/Alpha)-Theta));
+time=FindMaximum[{((1*Alpha*w*T))/(w^2*T^2+1)*Exp[(-(t))/(T)]+((1*Alpha))/(Sqrt[w^2*T^2+1])*Sin[w*(t)+Φ],0.05<=t<=10},{t,0.05}][[2]];
+time1=t/.time;
+time2=FindMaximum[{((1*Alpha*w*T))/(w^2*T^2+1)*Exp[(-(t))/(T)]+((1*Alpha))/(Sqrt[w^2*T^2+1])*Sin[w*(t)+Φ],0.05<=t<=10},{t,0.05}][[1]];
+x=1.5*w^(-1);
+τramp=10-yline;
+PTV=Graphics[{
+Inset[
+Style[Grid[
+{{Row[{"\<gain \>",Style["\<K\>",Italic],"\< =\>"}],NumberForm[N[1],2],"\<\>"},
+{"\<time constant  τ  =\>",NumberForm[N[timeconstant],2],"\<\>"}
+},
+Frame->{False,All},
+Alignment->{{"\<=\>","\<.\>",Center}}],15]]},
+ImageSize->{300,250},ImagePadding->10];
+PTV1=Graphics[{
+Inset[
+Style[Grid[
+{{"\<amplitude output \>",Style["\<B\>",Italic],"\<  =\>",NumberForm[N[time2],2],"\<\>"},
+{"\<amplitude ratio \>",(Style["\<B\>",Italic])/(Style["\<A\>",Italic]),"\< =\>",NumberForm[N[(time2)/(Alpha)],2],"\<\>"},
+{"\<phase shift Phi  =\>",NumberForm[N[-Φ],2],"\<min\>"}
+},
+Frame->{False,All},
+Alignment->{{"\<=\>","\<.\>",Center}}],12]]},
+ImageSize->{300,250},ImagePadding->10];
+PTV2=Graphics[{
+Inset[
+Style[Grid[
+{{Row[{"\<gain \>",Style["\<K\>",Italic],"\< =\>"}],NumberForm[N[1],2],"\<\>"},
+{"\<time constant  τ  =\>",NumberForm[N[τramp],2],"\<min\>"}
+},
+Frame->{False,All},
+Alignment->{{"\<=\>","\<.\>",Center}}],15]]},
+ImageSize->{300,250},ImagePadding->10];
+
+
+plot1=Plot[Piecewise[{{0,x<0},{Alpha,x>0}}],{x,-5,5},Exclusions->None,PlotStyle->{{Thick, Green}},ImageSize->{200},PlotRange->{{-5,5},{-1,6}},Axes->{False,False},Frame->True,FrameLabel->{"\<time (min)\>",Row[{"\<
+\>",Style["\<x\>",Italic],"\<(\>",Style["\<t\>",Italic],"\<)\>"}]},PlotLabel->Style["\<input\>",16],LabelStyle->Directive[14]]; 
+plot4=Plot[{1*Alpha*(1-Exp[(-(t))/((T))])},{t,0,25},PlotStyle->{Thickness[0.007],Thickness[0.005]},PlotRange->{{0,25},{0,10}},ImageSize->{500,350},Epilog->{Line[{{Xτ,0},{Xτ,line}}],Line[{{24,0},{24,YΔSS}}],Inset[PTV,Scaled[{0.72,0.80}]],Inset[Style["\<0.632 × ΔSS\>",12],
+{Xτ,(line/2+0)}, Background->White],Inset[Style["\<ΔSS\>",12],{24,Alpha/2}, Background->White],Inset[plot1,Scaled[{0.22,0.70}]]},Frame->True,FrameLabel->{"\<time (min)\>","\<response\>"},PlotLabel->Style[Row[{"\<response = \>",TraditionalForm@HoldForm[K a (1-e^(-(t)/(τ)))]}],17],LabelStyle->Directive[14]] ; 
+
+
+plot5=Plot[{(1*Alpha*T*(Exp[(-(t-Theta))/(T)]-1)+1*Alpha*(t-Theta)),Alpha*t},{t,0,10},PlotStyle->{{Thick,Blue},{Thick, Green}},PlotRange->{{0,20},{0,20}},ImageSize->{500,350},Epilog->{Line[{{10/Alpha,10},{10/Alpha,yline}}],Inset[Style["\<input\>",12],
+{3,3*Alpha}, Background->White],Inset[Style["\<response\>",12],
+{6,(1*Alpha*T*(Exp[(-(6))/(T)]-1)+1*Alpha*(6))}, Background->White],Inset[Style["\<τ\>",12],{10/Alpha,(Alpha*10/Alpha-yline)/2+yline}, Background->White],Inset[PTV2,Scaled[{0.77,.81}]]},Frame->True,FrameLabel->{"\<time (min)\>","\<response\>"},PlotLabel->Style[Row[{"\<response = \>",TraditionalForm@HoldForm[K a τ(e^(-(t)/(τ))-1)+K a t]}],17],LabelStyle->Directive[14]]; 
+
+
+plot6=Plot[{((1*Alpha*w*T))/(w^2*T^2+1)*Exp[(-(t))/(T)]+((1*Alpha))/(Sqrt[w^2*T^2+1])*Sin[w*(t)+Φ],Alpha*Sin[w*t]},{t,0,10},PlotStyle->{{Thick,Blue},{Thick, Green}},PlotRange->{{0,10},{-6,10}},PlotRangeClipping->False,ImageSize->{500,350},
+Epilog->{Line[{{x,0},{x,Alpha}}],Line[{{time1,0},{time1,time2}}],Line[{{x,time2},{time1,time2}}],
+Inset[Style["\<Phi\>",12],{(time1-x)/2+x,time2}, Background->White],
+Inset[Style["\<A\>",12,Italic],{x,Alpha/2}, Background->White],
+Inset[Style["\<B\>",12,Italic],{time1,time2/2}, Background->White],
+Inset[PTV1,Scaled[{0.75,0.85}]],
+Inset[Style["\<input\>",12],{8,Alpha*Sin[w*8]}, Background->White],
+Inset[Style["\<response\>",12],{6,((1*Alpha*w*T))/(w^2*T^2+1)*Exp[(-(6))/(T)]+((1*Alpha))/(Sqrt[w^2*T^2+1])*Sin[w*(6)+Φ]}, Background->White]},
+Frame->True,FrameLabel->{"\<time (min)\>","\<response\>"},PlotLabel->Style[Row[{"\<response = \>",TraditionalForm@HoldForm[(K a Omega τ e^(-(t)/(τ)))/(Omega^2τ^2+1)+(K a Sin[Omega t+Phi])/(Sqrt[Omega^2τ^2+1])]}],14],LabelStyle->Directive[14]]; 
+Switch[W,1,Show[plot4],2,Show[plot5],3,Show[plot6]]],
+{{W,1,"\<choose input\>"},{1->"\<step\>",2->"\<ramp\>",3->"\<sinusoidal\>"},ControlType->Setter},
+{{T,5,"\<time constant, τ\>"},1,10,1, Appearance ->"\<Labeled\>"},
+{{Alpha,3,"\<input step size, a\>"},1,5,.5, Appearance ->"\<Labeled\>"},
+{{w,1,"\<angular frequency Omega\>"},0.5,5,.5, Appearance ->"\<Labeled\>",Enabled->If[W==3,True,False]}
+]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Simon M. Lane
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+Step Input and Response
+
+### [Text]
+For a step input of magnitude a,
+
+### [Text]
+s= space domain
+
+### [Text]
+t= time domain
+
+### [Text]
+x(t)=a 
+
+### [Text]
+x(s)=(a)/(s)
+
+### [Text]
+y(s)=(K a)/(s(τs+1))
+
+### [Text]
+y(t)=K a (1-e^((-t)/(τ)))
+
+### [Text]
+τ = 0.632 ΔSS time constant
+
+### [Text]
+ΔSS= change in steady states
+
+### [Text]
+Ramp Input and Response
+
+### [Text]
+For a ramp input of magnitude a,
+
+### [Text]
+x(t)=a t
+
+### [Text]
+x(s)=(a)/(s^2)
+
+### [Text]
+y(s)=(K a)/((τs+1)s^2)
+
+### [Text]
+y(t)=K a τ (e^((-t)/(τ))-1)+K a t
+
+### [Text]
+Sinusoidal Input and Response
+
+### [Text]
+Omega=2 π f angular frequency, rate of change of the function
+
+### [Text]
+x(t)=a sin(Omega t)
+
+### [Text]
+x(s)=((a Omega))/(s^2+Omega^2)
+
+### [Text]
+y(s)=(K a Omega)/((Subscript[τ, s]+1)(s^2+Omega^2))
+
+### [Text]
+y(t)=(K a Omega τ)/(Omega^2τ^2+1)e^((-t)/(τ))+(K a)/(Sqrt[Omega^2τ^2+1])sin(Omega t+Phi)
+
+### [Text]
+Phi=-tan^(-1)(Omega t) phase shift, negative value represents a delay
+
+### [Text]
+time shift =-(360)/(Phi)p
+
+### [Text]
+amplitude ratio =(A)/(B)
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+first-order transfer function
+
+### [Item]
+step input
+
+### [Item]
+ramp input
+
+### [Item]
+sine input
+
+### [Item]
+process control
+
+### [Item]
+chemical engineering
+
+### [Item]
+Laplace transform
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Item]
+Link to external information
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2014-05-06
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

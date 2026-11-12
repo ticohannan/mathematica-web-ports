@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.36 |
+| Code version: | 0.1.37 |
 | Document revision | 2 (2026-10-27) |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Probabilistic Models for Robot Motion", contributed by Aaron T. Becker and Renuka Pakeetharan, published 2016-01-12 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ProbabilisticModelsForRobotMotion/> Source as text: [`docs/original-source/probabilistic-motion.txt`](../../docs/original-source/probabilistic-motion.txt); snapshots `docs/original-snapshots/probabilistic-motion-1…5.png`; saved states `tests/golden/probabilistic-motion.original-states.json` (`states[0]` the live state, `specs` the Manipulate's initial values — the same here —, `snapshots` the five snapshots' settings) |
@@ -232,6 +232,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 10 | v0.1.34 | 2026-11-10 | A-PM-08: the switch "errors of the original: kept \| corrected" (owner request 2026-11-10); corrected mode for E-PM-01, default kept: the original's behaviour, golden data and pictures unchanged |
 | 11 | v0.1.35 | 2026-11-11 | version number (v0.1.35: two new apps, paths-inside-a-polygon and voronoi-diagrams; no shared code changed); no change to this app's code, behaviour or picture |
 | 12 | v0.1.36 | 2026-11-11 | version number (v0.1.36: the full colour menu of voronoi-diagrams); no change to this app's code, behaviour or picture |
+| 13 | v0.1.37 | 2026-11-12 | version number (v0.1.37: thirteen control and signal ports and the shared modules they use; the additions to shared/plot.js, graphics.js and manipulate.js are opt-in); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

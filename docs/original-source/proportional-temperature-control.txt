@@ -1,0 +1,139 @@
+
+### [Title]
+Proportional Temperature Control
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+\<In this Demonstration, water is flowing through the tank and is being heated to attain a target temperature. A proportional control sensor provides feedback to the heater. The tank's outlet water temperature (red) often oscillates before converging. The sensor experiences a delay in measuring the temperature (blue), demonstrated by the time lag in the blue curve.\>
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [CodeText]
+If you provide initialization code, include a SaveDefinitions->True option in the Manipulate.
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[Module[{rho,cp,Kp,TauSens,TauQ,QC,Tsens,sol1,TR,Q},rho=1;cp=4.19;Kp=300;TauSens=2;TauQ=1;
+QC[t_]=Max[0,Q0+Kp (TRset-Tsens[t])];
+sol1=NDSolve[{V rho cp D[TR[t],{t,1}]== F rho cp (T0-TR[t])+Q[t],
+      D[Q[t],{t,1}]== (QC[t]-Q[t])/TauQ, 
+      D[Tsens[t],{t,1}]== (TR[t]-Tsens[t])/TauSens,TR[0]== T0,
+      Tsens[0]== T0,Q[0]== 2500},{Q[t],Tsens[t],TR[t]},{t,0,150}];
+Plot[{Evaluate[Tsens[t]]/.sol1,Evaluate[TR[t]]/.sol1},{t,0,150},PlotRange->All,ImageSize->{500,350},ImagePadding->{{50,45},{35,50}},Frame->{True,True,False,False},FrameLabel->{"\<time (hours)\>","\<temperature C\>"},PlotLabel->Style[Column[{Row[{"\<volume = \>"<>ToString[V]<>"\< \!\(\*SuperscriptBox[\(m\), \(3\)]\)\>","\<water flow = \>"<>ToString[F]<>"\< \!\(\*SuperscriptBox[\(m\), \(3\)]\)/h\>","\<heat input = \>"<>ToString[Q0]<>"\< kJ/h\>"},Style["\<    |    \>",GrayLevel[.5]]],Row[{"\<outlet temperature = \>"<>ToString[TRset]<>"\< C\>","\<initial tank temperature = \>"<>ToString[T0]<>"\< C\>"},Style["\<    |    \>",GrayLevel[.5]]]},Center],SingleLetterItalics->False],AxesOrigin->{0,0}]],{{V,100,"\<tank volume\>"},10,100,1},{{F,10,"\<water flow\>"},1,20,1},{{Q0,2500,"\<heat input\>"},1000,3000,1},{{TRset,80,"\<outlet temperature\>"},20,150,1},{{T0,20,"\<initial tank temperature\>"},20,100,1},TrackedSymbols:>{V,F,Q0,TRset,T0},ContinuousAction->False]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Jeff Bryant
+
+### [Text]
+Housam Binous
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+Details, references or citation information
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+feedback control
+
+### [Item]
+first order lag
+
+### [Item]
+proportional control
+
+### [Item]
+proportional-integral control
+
+### [Item]
+proportional-integral-derivative control
+
+### [Item]
+temperature control of continuous flow tank
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Temperature Control of a Water Tank
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2007-09-28
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

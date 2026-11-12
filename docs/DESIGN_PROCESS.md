@@ -53,6 +53,19 @@ it is verified:
 | Defects in an Optical Fiber | [`demos/optical-fiber-defects/DESIGN.md`](../demos/optical-fiber-defects/DESIGN.md) | `demos/optical-fiber-defects/` |
 | Paths inside a Polygon | [`demos/paths-inside-a-polygon/DESIGN.md`](../demos/paths-inside-a-polygon/DESIGN.md) | `demos/paths-inside-a-polygon/` |
 | Voronoi Diagrams | [`demos/voronoi-diagrams/DESIGN.md`](../demos/voronoi-diagrams/DESIGN.md) | `demos/voronoi-diagrams/` |
+| Link Budget for Communication Systems | [`demos/link-budget/DESIGN.md`](../demos/link-budget/DESIGN.md) | `demos/link-budget/` |
+| Harmonic Distortion of Nonlinear Transfer Function | [`demos/harmonic-distortion/DESIGN.md`](../demos/harmonic-distortion/DESIGN.md) | `demos/harmonic-distortion/` |
+| First-Order Transfer Functions in Process Control | [`demos/first-order-process-control/DESIGN.md`](../demos/first-order-process-control/DESIGN.md) | `demos/first-order-process-control/` |
+| First- and Second-Order Transfer Functions | [`demos/first-second-order-tf/DESIGN.md`](../demos/first-second-order-tf/DESIGN.md) | `demos/first-second-order-tf/` |
+| Performance Characteristics for Step Response of an Underdamped Process | [`demos/underdamped-step-performance/DESIGN.md`](../demos/underdamped-step-performance/DESIGN.md) | `demos/underdamped-step-performance/` |
+| Integral Error Criteria for Controller Tuning | [`demos/integral-error-criteria/DESIGN.md`](../demos/integral-error-criteria/DESIGN.md) | `demos/integral-error-criteria/` |
+| Proportional Temperature Control | [`demos/proportional-temperature-control/DESIGN.md`](../demos/proportional-temperature-control/DESIGN.md) | `demos/proportional-temperature-control/` |
+| Feedback Control in a Stirred-Tank Reactor | [`demos/stirred-tank-feedback/DESIGN.md`](../demos/stirred-tank-feedback/DESIGN.md) | `demos/stirred-tank-feedback/` |
+| Active Shock Absorbers | [`demos/active-shock-absorbers/DESIGN.md`](../demos/active-shock-absorbers/DESIGN.md) | `demos/active-shock-absorbers/` |
+| Simulating Vehicle Suspension with a Simplified Quarter-Car Model | [`demos/quarter-car-suspension/DESIGN.md`](../demos/quarter-car-suspension/DESIGN.md) | `demos/quarter-car-suspension/` |
+| Quarter-Car Suspension Model with Double Spring | [`demos/quarter-car-double-spring/DESIGN.md`](../demos/quarter-car-double-spring/DESIGN.md) | `demos/quarter-car-double-spring/` |
+| Zero-Pole Cancellation in Transfer Functions | [`demos/zero-pole-cancellation/DESIGN.md`](../demos/zero-pole-cancellation/DESIGN.md) | `demos/zero-pole-cancellation/` |
+| Simulation of Feedback Control System with Controller and Second-Order Plant | [`demos/feedback-control-simulation/DESIGN.md`](../demos/feedback-control-simulation/DESIGN.md) | `demos/feedback-control-simulation/` |
 
 The originals came without design documents. Version 0.1.6 added best-effort design documents
 reconstructed from the original notebooks (their code, captions and details text) and from the

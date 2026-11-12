@@ -1,0 +1,224 @@
+
+### [Title]
+First- and Second-Order Transfer Functions
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+This Demonstration plots the time-domain response of a system with a step input of unity. Select either a first-order plus dead time (FOPDT) model or a second-order plus dead time (SOPDT) model. Set the time constant τ to change how quickly the system reaches a new steady state, the process gain K to change how aggressively the system responds to the unity step input and the dead time Theta that delays the system response by a value of Theta. For the second-order process, change the damping coefficient ζ with a slider. The damping coefficient is a measure of the magnitude of damping, which affects the degree of oscillation in the response. Dimensionless time is used.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [CodeText]
+If you provide initialization code, include a SaveDefinitions->True option in the Manipulate.
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{Gp,system,response,step,τ0,block},
+Gp=If[tab==1,(k*Exp[-Theta*s])/(τ*s+1),(k*Exp[-Theta*s])/(τ^2*s^2+2*ζ*τ*s+1)];
+
+system=TransferFunctionModel[{{Gp}},s];
+response=OutputResponse[system,1,{t,0,100}];
+
+step=OutputResponse[TransferFunctionModel[{{1}},s],1,{t,0,100}][[1]];
+
+τ0=0.632*k;
+
+(********************************)
+
+block=Module[{w1,w2,w3,h},
+w1=0.75;w2=2.1;w3=1.15;h=1;
+Graphics[{Thick,
+Arrow[{{0,h/2},{w1,h/2}}],Arrow[{{w1+w3,h/2},{2*w1+w3,h/2}}],Arrow[{{2*w1+w2+w3,h/2},{3*w1+w2+w3,h/2}}],Arrow[{{3*w1+w2+2*w3,h/2},{4*w1+w2+2*w3,h/2}}],
+{EdgeForm@Thick,FaceForm@GrayLevel@0.8,Rectangle[{w1,0},{w1+w3,h}],Rectangle[{2*w1+w3,0},{2*w1+w2+w3,h}],Rectangle[{3*w1+w2+w3,0},{3*w1+w2+2*w3,h}]},
+Text[Style["\<step = 1\>",17,Background->White],{w1/2,h/2},{0.1,-1.5}],
+Text[Style["\<\[ScriptCapitalL](1)\>",17],{w1+w3/2,h/2}],
+Text[Style[Row@{"\<1/\>",Style["\<s\>",Italic]},17,Background->White],{1.5*w1+w3,h/2},{0,-1.5}],
+Text[Style[Row@{
+Superscript[Style["\<K e\>",Italic],Row[{"\<-Theta \>",Style["\<s\>",Italic]}]]/If[tab==1,Row@{"\<τ \>",Style["\<s\>",Italic],"\< + 1\>"},Row@{Superscript[Row[{"\<(τ \>",Style["\<s\>",Italic],"\<)\>"}],2],"\< + 2 ζ τ \>",Style["\<s\>",Italic],"\< + 1\>"}]},17],{2*w1+w2/2+w3,h/2}],
+Text[Style[Row[{Style["\<Y\>",Italic],"\<(\>",Style["\<s\>",Italic],"\<)\>"}],17,Background->White],{2.5*w1+w2+w3,h/2},{0,-1.5}],
+Text[Style[Row@{Superscript["\<\[ScriptCapitalL]\>","\<-1\>"],"\<(\>",Style["\<Y\>",Italic],"\<(\>",Style["\<s\>",Italic],"\<))\>"},17],{3*w1+w2+1.5*w3,h/2}],
+Text[Style[Row[{Style["\<y\>",Italic],"\<(\>",Style["\<t\>",Italic],"\<)\>"}],17,Background->White],{3.5*w1+w2+2*w3,h/2},{0,-1.5}]
+},ImageSize->{560,75},AspectRatio->Full]];
+
+Plot[response,{t,0,100},PlotStyle->{Thick,Black},PlotRange->{{-1,100},{0,20}},PlotRangePadding->{None,Scaled@0.01},Frame->True,FrameTicks->{{All,Automatic},{Automatic,None}},FrameLabel->{Row@{"\<dimensionless time \>",Style["\<t\>",Italic]},Row@{"\<time\[Hyphen]domain response \>",Style["\<y\>",Italic],"\<(\>",Style["\<t\>",Italic],"\<)\>"}},LabelStyle->{17,Black},ImageSize->{605,380},AspectRatio->Full,
+Epilog->{
+{Thick,Blue,Line[{{0,0},{Theta,0},{Theta,step},{100,step}}]},
+{Dashed,RGBColor[0,0.6,0],Line[{{0,k},{100,k}}],Purple,Line[{{Theta,0},{Theta,20}}]},
+If[tab==1,{
+{Dashed,Magenta,Line[{{τ+Theta,0},{τ+Theta,τ0},{Theta,τ0}}],Text[Style[Row@{"\<time constant, τ = \>",NumberForm[τ,{3,1}]},17,Background->White],{Theta+τ,τ0/2},{-1.1,0}],
+Arrowheads@{-0.03,0.03},Arrow[{{Theta,τ0/2},{Theta+τ,τ0/2}}],Text[Style[Row@{"\<0.632 \>",Style["\<K\>",Italic],"\< = \>",NumberForm[τ0,{4,1}]},17,Background->White],{τ+Theta,τ0},{-0.5,-1.2}]}
+}],
+Text[Style["\<step input = 1\>",17,Blue],{50,step},{0,-1.2}],
+Text[Style[Row@{"\<gain \>",Style["\<K\>",Italic],"\< = \>",k},17,RGBColor[0,0.6,0],Background->White],{75,k},{0,-1.2}],
+Text[Style[Row@{"\<dead time Theta = \>",NumberForm[Theta,{4,1}]},17,Purple,Background->White],{Theta,13.5},{-1.1,0}],
+Inset[block,{50,17.5}]
+}]
+],
+Grid[{
+{Control[{{tab,1,"\<transfer function model\>"},{1->"\< first order plus dead time (FOPDT)\>",2->"\< second order plus dead time (SOPDT)\>"},PopupMenu}],SpanFromLeft},
+{Control[{{τ,7,"\<time constant, τ\>"},1,10,0.1,Appearance->"\<Labeled\>",ImageSize->Small}],Spacer@50,
+Control[{{k,10,Row@{"\<process gain, \>",Style["\<K\>",Italic]}},1,13,1,Appearance->"\<Labeled\>",ImageSize->Small}],SpanFromLeft},
+{Control[{{Theta,2,"\<dead time, Theta\>"},1,10,0.1,Appearance->"\<Labeled\>",ImageSize->Small}],Spacer@50,
+PaneSelector[{2->Control[{{ζ,0.2,"\<damping coefficient, ζ\>"},-0.05,2,0.05,Appearance->"\<Labeled\>",ImageSize->Small}]},Dynamic@tab]}
+},Alignment->Left]
+]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Rachael L. Baumann
+
+### [Text]
+Adam J. Johnston
+
+### [Text]
+John L. Falconer
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+\<The general first-order transfer function in the Laplace domain is:\>
+
+### [Text]
+G(s)=(Y(s))/(U(s))=(K e^(-Theta s))/(τ s+1),
+
+### [Text]
+where K is the process gain, τ is the time constant, Theta is the system dead time or lag and s is a Laplace variable. The process gain is the ratio of the output response to the input (unit step for this Demonstration), the time constant determines how quickly the process responds or how rapidly the output changes and the dead time delays the system response by the amount Theta.
+
+### [Text]
+\<This Demonstration converts from the Laplace domain to the time domain for a step-response input. For a first-order transfer function, the time-domain response is:\>
+
+### [Text]
+y(t)=K (1-e^(-(t-Theta)/τ)).
+
+### [Text]
+\<The general second-order transfer function in the Laplace domain is:\>
+
+### [Text]
+G(s)=(K e^(-Theta s))/(τ^2 s^2+2 ζ τ s+1),
+
+### [Text]
+where ζ is the (dimensionless) damping coefficient.
+
+### [Text]
+\<For a step-response input, the time-domain response for various damping coefficients are:\>
+
+### [Text]
+Overdamped (ζ>1):
+
+### [Text]
+y(t)=K (1-e^(-ζ (t-Theta)/τ) (cosh [Sqrt[ζ^2-1] (t-Theta)/τ]+(ζ)/(Sqrt[ζ^2-1]) sinh[Sqrt[ζ^2-1] (t-Theta)/τ])).
+
+### [Text]
+Critically damped (ζ=1):
+
+### [Text]
+y(t)=K (1+(1-(t-Theta)/(τ)) e^(-(t-Theta)/τ)).
+
+### [Text]
+Underdamped (ζ<1):
+
+### [Text]
+y(t)=K (1-e^(-ζ (t-Theta)/τ) (cos[Sqrt[1-ζ^2] (t-Theta)/τ]+(ζ)/(Sqrt[1-ζ^2]) sin[Sqrt[1-ζ^2] (t-Theta)/τ])).
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] D. E. Seborg, D. A. Mellichamp, T. F. Edgar and F. J. Doyle, III, Process Dynamics and Control, 3rd ed., Hoboken: John Wiley & Sons, 2011 pp. 76, 81.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+chemical engineering
+
+### [Item]
+process control
+
+### [Item]
+process dynamics
+
+### [Item]
+FOPDT
+
+### [Item]
+SOPDT
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Item]
+Link to external information
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2017-09-08
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

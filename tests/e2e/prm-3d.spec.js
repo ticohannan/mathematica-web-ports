@@ -269,6 +269,7 @@ test.describe('prm 3d', () => {
   });
 
   test('the progress slider moves the robot along the path', async ({ page }) => {
+    test.slow(); // v0.1.37: 50 key presses, each re-rendering the 3D scene, can exceed 60 s on a loaded machine
     await openDemo(page, URL);
     const start = (await view(page)).robotq;
     expect(start).toEqual([0.25, 0.25, 0.25]);

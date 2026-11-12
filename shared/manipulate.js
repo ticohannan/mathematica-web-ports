@@ -77,11 +77,11 @@
 // (shared/ui.js `steps: 'mma'`).
 
 import { Controls } from './ui.js';
-import { addButton, addCheckbox, addCheckboxBar, addPopup, addVerticalSlider, addRow } from './ui-extra.js';
+import { addButton, addCheckbox, addCheckboxBar, addPopup, addVerticalSlider, addRow, addRadioButtons, addTrigger } from './ui-extra.js';
 import { addIntervalSlider } from './ui-interval.js';
 import { createPlot, addLocators, darkLocatorGlyph, locatorGlyph, svgNode } from './svg-plot.js';
 import { createRng, replayRng } from './random.js';
-import { absoluteTime, setClock } from './clock.js';
+import { absoluteTime, setClock, animate } from './clock.js';
 import { render, htmlOf, textOf, scaleGraphics } from './graphics.js';
 import { decorationMargins, plotDecorations, legendExtraPx } from './graphics-extras.js';
 import { frameLayout } from './svg-frame.js';
@@ -101,6 +101,10 @@ export const Checkbox = Object.freeze({ controlType: 'Checkbox' });
 export const IntervalSlider = Object.freeze({ controlType: 'IntervalSlider' });
 /** ControlType -> CheckboxBar (v0.1.33): the value is the list of the checked values (in the order they were checked). */
 export const CheckboxBar = Object.freeze({ controlType: 'CheckboxBar' });
+/** ControlType -> RadioButton (v0.1.37): radio buttons; Appearance -> 'Vertical' stacks them. */
+export const RadioButton = Object.freeze({ controlType: 'RadioButton' });
+/** ControlType -> Trigger (v0.1.37): play/pause and reset buttons that run the value from min to max (AnimationRate). */
+export const Trigger = Object.freeze({ controlType: 'Trigger' });
 /** Control(factory, options): a control built by a factory (Mathematica's Control[{x, …}] with a custom appearance). */
 export const Control = (factory, options = {}) => Object.freeze({ marker: 'Control', factory, options });
 /** Button[label, action] (in the control list): action(state, ctx) changes the state; options { name }. */
@@ -159,10 +163,12 @@ export function parseControl(spec) {
     const values = rest[0].map((v) => (v && v.rule ? { value: v.value, label: v.label } : { value: v, label: String(v) }));
     const boolean = values.length === 2 && ((values[0].value === false && values[1].value === true) || (values[0].value === true && values[1].value === false)); // {False, True} or {True, False}
     if (type === 'CheckboxBar') return { ...base, kind: 'checkboxbar', values };
+    if (type === 'RadioButton') return { ...base, kind: 'radio', values };
     const kind = type === 'PopupMenu' ? 'popup' : type === 'Checkbox' || (boolean && type !== 'SetterBar') ? 'checkbox' : 'setter';
     return { ...base, kind, values };
   }
   if (isBound(rest[0]) && isBound(rest[1])) {
+    if (type === 'Trigger') return { ...base, kind: 'trigger', min: rest[0], max: rest[1], step: rest[2] ?? 0 };
     const kind = type === 'IntervalSlider' ? 'interval' : type === 'VerticalSlider' ? 'vslider' : 'slider';
     return { ...base, kind, min: rest[0], max: rest[1], step: rest[2] ?? 0, plain: type === 'Slider' };
   }
@@ -308,7 +314,7 @@ export function Manipulate(spec) {
   let clipCount = Math.floor(Math.random() * 1e6); // clipPath ids unique in the page
   const isFramed = (o) => o && (o.AspectRatio !== undefined || o.UpdateFrame || Array.isArray(o.PlotRangePadding));
   const FRAME_OPTS = ['PlotRange', 'PlotRangePadding', 'AspectRatio', 'ImageSize', 'Background', 'Axes', 'AxesOrigin', 'Ticks',
-    'AxesLabel', 'Frame', 'FrameTicks', 'FrameLabel', 'PlotLabel', 'PlotLegends', 'LabelStyle'];
+    'AxesLabel', 'Frame', 'FrameTicks', 'FrameLabel', 'PlotLabel', 'PlotLegends', 'LabelStyle', 'GridLines', 'GridLinesStyle', 'FrameTicksStyle'];
   const frameKey = (o) => JSON.stringify(FRAME_OPTS.map((n) => o[n] ?? null));
   const elementOf = (options, k) => document.getElementById(options.id ?? g0[k]?.id ?? (k === 0 ? ids.graphic : `${ids.graphic}${k + 1}`));
   function framedPicture(options, k) {
@@ -451,6 +457,8 @@ export function Manipulate(spec) {
   if (String(spec.ControlPlacement ?? '').toLowerCase() === 'top') controlsEl?.closest('.manipulate')?.classList.add('controls-top', 'placement-top');
   const root = new Controls(controlsEl);
   const apis = new Map();
+  const dupes = []; // v0.1.37: further controls of a variable that already has one (a Trigger and a slider of the same t)
+  const visibles = []; // v0.1.37: controls with Visible(state) (Mathematica's PaneSelector around a control)
   const dynamic = []; // controls whose Enabled or range depend on the state
   const shown = new Map(); // the value each control shows (what it was set to or what the user entered)
   const byName = new Map(); // control descriptions by variable name
@@ -468,8 +476,18 @@ export function Manipulate(spec) {
     const label = c.label == null ? '' : textOf(c.label, { sep: ' ' });
     const extra = passThrough(c.opts ?? {});
     const enabled = typeof c.opts?.Enabled === 'function' ? c.opts.Enabled(state) : c.opts?.Enabled !== false;
-    if (c.name) byName.set(c.name, c);
-    const onInput = (v) => assign(c.name, v);
+    if (c.name && !byName.has(c.name)) byName.set(c.name, c);
+    // ContinuousAction -> False (v0.1.37; per control, or spec.ContinuousAction for all): while the mouse holds the
+    // control the value only moves the control; the body is evaluated when it is released (keys, typed values and
+    // animations act at once)
+    const contOff = c.opts?.ContinuousAction === false || (spec.ContinuousAction === false && c.opts?.ContinuousAction !== true);
+    let pressed = false, pending;
+    const onInput = !contOff ? (v) => assign(c.name, v) : (v) => { if (pressed) { pending = v; shown.set(c.name, v); } else assign(c.name, v); };
+    const holdUntilRelease = (node) => {
+      if (!contOff || !node) return;
+      node.addEventListener('pointerdown', () => { pressed = true; });
+      window.addEventListener('pointerup', () => { if (!pressed) return; pressed = false; if (pending !== undefined) { const v = pending; pending = undefined; assign(c.name, v); } });
+    };
     let api = null;
     switch (c.kind) {
       case 'delimiter': controls.delimiter(); return;
@@ -501,6 +519,14 @@ export function Manipulate(spec) {
         });
         setWidth(api, c.opts.ImageSize);
         markActive(api.row.querySelector('input[type=range]'));
+        holdUntilRelease(api.row);
+        break;
+      case 'trigger':
+        api = addTrigger(controls, { name: c.name, label, min: bound(c.min, state), max: bound(c.max, state), step: c.step, value: val(c.name), onInput, parent, rate: c.opts.AnimationRate, animate, ...extra });
+        break;
+      case 'radio':
+        api = addRadioButtons(controls, { name: c.name, label, options: c.values.map((o) => ({ value: o.value, label: textOf(o.label), html: htmlOf(o.label) })), value: val(c.name), onChange: onInput, parent, vertical: c.opts.Appearance === 'Vertical', ...extra });
+        if (!enabled) api.setEnabled(false);
         break;
       case 'vslider':
         api = addVerticalSlider(controls, { name: c.name, label, min: bound(c.min, state), max: bound(c.max, state), step: c.step, value: val(c.name), onInput, parent, ...extra });
@@ -547,8 +573,9 @@ export function Manipulate(spec) {
       default: return; // locator, hidden: no control here
     }
     if (extra.parent && api.row && api.row.parentNode !== extra.parent) extra.parent.append(api.row);
-    apis.set(c.name, api);
+    if (apis.has(c.name)) dupes.push([c.name, api]); else apis.set(c.name, api);
     shown.set(c.name, val(c.name));
+    if (typeof c.opts?.Visible === 'function') { visibles.push([c, api]); api.row.style.display = c.opts.Visible(state) ? '' : 'none'; }
     const html = htmlOf(c.label);
     const lab = api.row?.querySelector('.ctl-label, :scope > span');
     if (lab && html !== label) lab.innerHTML = html; // typeset label (italic, subscripts)
@@ -585,6 +612,8 @@ export function Manipulate(spec) {
     // write-back: a body that changed a variable; compared with what the control shows, not with its get(), which
     // may return a value snapped by the browser
     for (const [n, api] of apis) if (!sameValue(shown.get(n), val(n))) { api.set(val(n)); shown.set(n, val(n)); }
+    for (const [n, api] of dupes) if (!sameValue(api.get?.(), val(n))) api.set(val(n));
+    for (const [c, api] of visibles) { const d = c.opts.Visible(state) ? '' : 'none'; if (api.row.style.display !== d) api.row.style.display = d; }
   }
   // Moved(state): whether a slider shows its value as moved (machine number "1.") after a reset or setState
   // how.moved may be a list of variable names (v0.1.26: only those sliders show their value as moved, "5.")
@@ -594,6 +623,7 @@ export function Manipulate(spec) {
   };
   // resetStops: a reset or setState also stops running slider animations (the ports that did so by hand)
   const syncControls = (how, exact) => {
+    for (const [n, api] of dupes) { api.stop?.(); api.set(val(n)); }
     for (const [n, api] of apis) {
       if (spec.resetStops) api.stop?.();
       const h = howFor(n, how);

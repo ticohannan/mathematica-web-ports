@@ -1,0 +1,178 @@
+
+### [Title]
+\<Simulating Vehicle Suspension with a Simplified Quarter-Car Model\>
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+\<The simplified quarter-car suspension model is basically a mass-spring-damper system with the car serving as the mass, the suspension coil as the spring, and the shock absorber as the damper.\>
+
+### [Text]
+\<This Demonstration lets you explore the affect of different suspension parameters and road conditions on the vertical motion of the car.\>
+
+### [Text]
+The mathematics of the system are based on the differential equation of the spring-damper suspension: c t x'-c t y'+k t x-k t y+m t x''\[LongEqual]0, which, after a Laplace transform, results in the transfer function G (s)=(c s+k)/(c s+k+m s^2).\[LineSeparator]The Mathematica 8 functions TransferFunctionModel and OutputResponse were used to calculate the car movement with no need to solve the differential equation.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [CodeText]
+If you provide initialization code, include a SaveDefinitions->True option in the Manipulate.
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{model,output,top,bottom,ζ,Omegap},
+model=TransferFunctionModel[(k+c s)/(k+c s+m s^2),s];
+output=Re[OutputResponse[model,h Sin[2π fb(*bump frequency*) t],t]];
+top=First[1+output]/.t->time;bottom=-1+h Sin[2π fb time];
+ζ=NumberForm[c/2/Sqrt[m k],{3,2}];Omegap=(*resonant frequency*)NumberForm[Re[Sqrt[1-c^2/(2 k m)]Sqrt[k/m]],{3,2}];
+Column[{
+Plot[Evaluate[{h Sin[2π fb t],output}],{t,time,time+5},PlotRange->{-.2,.2},Background->LightGray,PlotStyle->{Blue,Directive[Thick,Red]},Axes->{True,False},Ticks->None,AspectRatio->.2,ImageSize->400],
+Graphics[{
+Black,Arrow[{{0,top},{-1.25,top}}],
+Thickness[.01],Line[{{0,bottom},{0,bottom+1}}],Rectangle[{-0.15,bottom+.8},{.15,bottom+1+c/5}],
+Blue,Line[{{0,top},{0,top-.5}}],Line[{{-0.2,top-.50},{.2,top-.50}}],Line[{{-0.2,top-.5},{-.2,top-1.5}}],Line[{{0.2,top-.5},{.2,top-1.5}}],
+Black,Line[{{0,bottom},{0,bottom-.48}}],Thin,Arrow[{{0,bottom},{-1.25,bottom}}],spring[top,bottom, .25k],
+Thickness[.02],Line[{{-.1,bottom},{.1,bottom}}],Circle[{0,bottom-.5},.15],Thickness[.01],
+Rectangle[{-.75,top},{.75,top+m}],
+Inset[Column[{Style["\<damping ratio ζ\>"==ζ,14],Style["\<resonant frequency\>"==Omegap,14]}],{1.75,0}],
+Inset[Style[Row[{Style["\<y\>",Italic],"\<(\>",Style["\<t\>",Italic],"\<)\>"}],14,Blue],{-1.75,-1}],Inset[Style[Row[{Style["\<x\>",Italic],"\<(\>",Style["\<t\>",Italic],"\<)\>"}],Red,14],{-1.75,1}],Plot[-1.74+h Sin[2t+2π fb time],{t,-3,3},Axes->False,PlotStyle->Darker[Green],PlotRange->{Automatic,{-2.5,2.5}},Filling->-2.5,FillingStyle->Brown][[1]]},
+PlotRange->{{-3,3},{-2.5,2}},Axes->{False,True},Ticks->{None,Join[{#,ToString[#-1]}&/@Range[.75,1.25,.25],{#,ToString[#+1]}&/@Range[-1.25,-.75,.25]]},AxesOrigin->{-1.25,0},ImageSize->475]}]],
+Style["\<car suspension
+animation\>",Bold],
+"\<start / pause / reset\>",{{time,0,"\<\>"},0,20,.25,Trigger,AnimationRate->1(*DisplayAllSteps->True*)},
+Row[{"\<elapsed time in sec = \>",Dynamic[NumberForm[time,{3,1}]]}],
+Delimiter,
+Style["\<suspension parameters\>",Bold],
+"\<\>",
+"\<damping coefficient: c\>",
+{{c,.85,"\<\>"},0,1,.001,Appearance->"\<Labeled\>",ImageSize->Tiny},
+"\<\>",
+"\<spring constant: k\>",
+{{k,.165,"\<\>"},0.01,.25,.001,Appearance->"\<Labeled\>",ImageSize->Tiny},
+"\<\>",
+"\<mass: m\>",
+{{m,1,"\<\>"},0.25,1,.001,Appearance->"\<Labeled\>",ImageSize->Tiny},Delimiter,
+Style["\<road condition\>",Bold],
+"\<\>",
+"\<road bump height\>",
+{{h,.1,"\<\>"},0,.2,.01,Appearance->"\<Labeled\>",ImageSize->Tiny},
+"\<\>",
+"\<bump frequency: fb\>",
+{{fb,1,"\<\>"},0.1,2,.01,Appearance->"\<Labeled\>",ImageSize->Tiny},
+TrackedSymbols->True,
+Initialization:>(coil[th_](*coil primitive with thickness th*):=Rotate[Plot[.5Sin[6t],{t,-π,π},PlotStyle->{Red,Opacity[.55],Thickness[th]},Axes->False][[1]],π/2,{0,0}];
+spring[t_,b_,s_:.05](*coil spring between {0,b} and {0,t}*):={Translate[Scale[coil[s],{1,( t-b)/2/π},{0,-π}],{0,π+b}]})]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Erik Mahieu
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+\<Snapshot 1: very hard suspension with a light car gives excessive shaking\>
+
+### [Text]
+Snapshot 2: the damping ratio is 1 and gives optimal comfort
+
+### [Text]
+\<Snapshot 3: at resonant frequency, a maximum car movement is obtained\>
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+mass-spring-damper system
+
+### [Item]
+quarter-car model
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Critically Damped Simple Harmonic Motion
+
+### [Text]
+OutputResponse
+
+### [Text]
+TransferFunctionModel
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2011-03-11
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+8
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

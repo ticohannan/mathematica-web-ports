@@ -77,14 +77,16 @@ export function frameLayout([[x0, x1], [y0, y1]], { imageSize, margins = {} }) {
   return { plotRange: [[x0 - left * u, x1 + right * u], [y0 - bottom * u, y1 + top * u]], padding: 0, imageSize, unitsPerPx: u };
 }
 
-const tickSpec = (axisOpts, lo, hi) => {
+/** The tick positions of one axis for framePrimitives' x / y option (automatic when none): { major, minor, labels? } (v0.1.37, for GridLines). */
+export const resolveTicks = (axisOpts, lo, hi) => tickSpec(axisOpts, lo, hi);
+function tickSpec(axisOpts, lo, hi) {
   if (axisOpts && (axisOpts.major != null || axisOpts.ticks)) {
     if (axisOpts.ticks) return labelled(axisOpts.ticks);
     return ticks(lo, hi, { major: axisOpts.major, minor: axisOpts.minor ?? 0 });
   }
   const a = automaticTicks(lo, hi);
   return { major: a.major, minor: a.minor, majorStep: a.majorStep };
-};
+}
 // explicit ticks may be [value, label] pairs (Mathematica's Ticks -> {{π/2, "π/2"}, …}); labels kept in a Map
 function labelled(t) {
   if (!t.major.some(Array.isArray) && !(t.minor ?? []).some(Array.isArray)) return t;

@@ -1,0 +1,170 @@
+
+### [Title]
+\<Performance Characteristics for Step Response of an Underdamped Process\>
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+Consider an underdamped second-order process with a transfer function (the ratio of output to input of a system), given by G(s)=(Subscript[K, g])/(τ^2 s^2+2 ζ τ s+1), where Subscript[K, g] is the steady-state gain, τ is the time constant, and ζ is the damping coefficient (with 0<ζ<1). The process is subjected to a step input U(t)=(M)/(s). This Demonstration shows plots of the response y(t)=\[ScriptCapitalL]^(-1)(G(s) U(s)) and finds its performance characteristics: overshoot a/b, decay ratio c/a, time to rise Subscript[t, r], time to first peak Subscript[t, p], and period of oscillations P. You can vary the values of M, Subscript[K, g], τ, and ζ. Here, the values of ζ are restricted to the interval[0.05,0.3] in order to clearly identify a, b, c, and P in the plot of the output function y(t).
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [CodeText]
+If you provide initialization code, include a SaveDefinitions->True option in the Manipulate.
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[Module[{Omega,yanal,sol1,sol2,sol3,p1,Overshoot,DecayRatio,P,tp,InvTau},InvTau=1/τ;Omega=Sqrt[InvTau^2-(InvTau ζ)^2];
+yanal[t_]:= Kg M+(-2 Kg M InvTau  ζ/Omega+ Kg M InvTau ζ/Omega) Exp[-ζ InvTau t] Sin[Omega t]-Kg M  Exp[-ζ InvTau t] Cos[Omega t];
+tp=Pi τ/Sqrt[1-ζ^2];
+sol1=FindRoot[yanal[t]== M Kg,{t,0,tp}]//Chop;sol2=FindMaximum[yanal[t],{t,tp,tp+0.2}];
+P=2 Pi/Omega;
+sol3=Quiet@FindMaximum[yanal[t],{t,tp+P}];
+Overshoot=Exp[-Pi ζ/Sqrt[1-ζ^2]];
+DecayRatio=Exp[-2 Pi ζ/Sqrt[1-ζ^2]];
+p1=Plot[yanal[t],{t,0,3 P},Frame->True,GridLines->Automatic,AspectRatio->1.5,FrameLabel->{Style["\<time\>",16],Style["\<output\>",16]},PlotRange->All,PlotStyle->{Red,Thick},ImageSize->400{1,1}];
+Pane[Switch[ctrl,1,Show[p1,Graphics[{{Dashed,Thickness[0.01],Blue,Line[{{0, M Kg},{3 P, M Kg}}]},Darker@Green,Arrowheads[{-.05,.05}],Arrow[{{tp,0},{tp,M Kg}}],Red,Arrowheads[{-.05,.05}],Arrow[{{tp,M Kg},{tp,sol2[[1]]}}],Blue,Arrowheads[{-.05,.05}],Arrow[{{tp,sol2[[1]] 1.05},{t/.sol3[[2]],sol2[[1]] 1.05}}],Style[Text[Style["\<P\>",Italic],{((t/.sol3[[2]])+tp)/2,sol2[[1]] 1.1},{0,0}],Blue,14,Background->White],Style[Text[Style["\<b\>",Italic],{tp 1.2,M Kg/2},{0,0}],Darker@Green,14,Background->White],Style[Text[Style["\<a\>",Italic],{tp 1.2,M Kg/2+sol2[[1]]/2},{0,0}],Red,14,Background->White],Style[Text[Style["\<c\>",Italic],{(t/.sol3[[2]]) 1.1,M Kg/2+sol3[[1]]/2},{0,0}],Black,14,Background->White],Black,Arrowheads[{-.03,.03}],Arrow[{{(t/.sol3[[2]]),M Kg},{(t/.sol3[[2]]),sol3[[1]]}}]}]],
+
+2,Text@Style[Grid[{{"\<property\>", "\<value\>"},
+{
+Row[{"\<overshoot \>",Style["\<a\>",Italic],"\</\>",Style["\<b\>",Italic]}],
+NumberForm[Overshoot,{5,4}]
+},
+{
+Row[{"\<decay ratio \>",Style["\<c\>",Italic],"\</\>",Style["\<a\>",Italic]}],
+NumberForm[DecayRatio,{5,4}]
+},
+{
+Row[{"\<period \>",Style["\<P\>",Italic]}],
+NumberForm[P,{5,4}]},
+{
+Row[{"\<rise time \>",Subscript[Style["\<t\>",Italic], "\<r\>"]}],
+NumberForm[t/.sol1,{5,4}]
+},
+{
+Row[{"\<time to first peak \>",Subscript[Style["\<t\>",Italic], "\<p\>"]}],
+NumberForm[tp,{5,4}]
+}
+},Frame->All,Background->{None,{Lighter[Blend[{Blue,Red}],.8],{Lighter[Blend[{Blue,Darker@Green}],.8],Lighter[Green,.9]}}},ItemSize-> {9.3,3.3},Frame->Darker[Gray,.6],ItemStyle->14,Spacings->{Automatic,.8}],16]],ImageSize->{350,400}]],{{Kg,5,Row[{"\<steady\[Hyphen]state gain \>",Subscript[Style["\<K\>",Italic], Style["\<g\>",Plain]]}]},0.1,10,0.1,Appearance-> "\<Labeled\>",ImageSize-> Tiny},
+{{τ,1,"\<time constant τ\>"},0.5,1.5,0.1,Appearance-> "\<Labeled\>",ImageSize-> Tiny},
+{{ζ,0.2,"\<damping coefficient ζ\>"},0.05,0.3,0.01,Appearance-> "\<Labeled\>",ImageSize-> Tiny},
+{{M,5,Row[{"\<step magnitude \>",Style["\<M\>",Italic]}]},5,10,0.5,Appearance-> "\<Labeled\>",ImageSize-> Tiny},
+"\<\>",
+Row[{Control[{{ctrl,1,"\<\>"},{1-> "\<response\>",2-> "\<performance\>"}}]}],
+ControlPlacement->Left]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Housam Binous
+
+### [Text]
+Mohammad Mozahar Hossain
+
+### [Text]
+Ahmed Bellagi
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+The overshoot is equal to a/b=exp(-π ζ/Sqrt[1-ζ^2]).
+
+### [Text]
+The decay ratio is equal to c/a=(a/b)^2=exp(-2 π ζ/Sqrt[1-ζ^2]).
+
+### [Text]
+The period of oscillation is P=2 π τ/Sqrt[1-ζ^2].
+
+### [Text]
+The time to first peak is given by Subscript[t, p]=π τ/Sqrt[1-ζ^2].
+
+### [Text]
+The rise time is the solution Subscript[t, r] of y(Subscript[t, r])=M Subscript[K, g] and 0<Subscript[t, r]<Subscript[t, p].
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] D. E. Seborg, T. F. Edgar, D. A. Mellichamp, and F. J. Doyle III, Process Dynamics and Control, 3rd ed., New York: Wiley, 2011.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+keyword 1
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Item]
+Link to external information
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2015-10-26
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

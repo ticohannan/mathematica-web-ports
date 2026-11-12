@@ -120,7 +120,11 @@ Language scripts: `wolframscript -file tools\wolfram\extra-checks.wls` and `extr
 `test-output\extra-checks*.txt`), and `wolframscript -file tools\wolfram\export-gradients.wls` (v0.1.35; writes
 `test-output\gradients.json`, the colour gradients of `ColorData["Gradients"]` for voronoi-diagrams; copy it to
 `tests/golden/voronoi-diagrams.gradients.json` and run `node tools/gradients-to-js.mjs` to regenerate the app's data,
-v0.1.36; a unit test checks that the two agree). An automated
+v0.1.36; a unit test checks that the two agree), and `wolframscript -file tools\wolfram\export-control-reference.wls`
+(v0.1.37, owner to-do; writes `test-output\control-reference.json`: reference values for the control and signal ports —
+OutputResponse, NDSolve, NIntegrate, FindMaximum, root loci, margins — to be copied to
+`tests/golden/control-reference.json` for the ports' tests). The shared numerics of v0.1.37 are tested against closed
+forms and independent routines in `tests/unit/control-numerics.test.js`. An automated
 `compare:original` (layer 5) exists only for motion planning.
 
 Numbers across engines: bit-exact comparisons only where the arithmetic is exact; elsewhere decisions are compared

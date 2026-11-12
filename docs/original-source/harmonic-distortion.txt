@@ -1,0 +1,145 @@
+
+### [Title]
+Harmonic Distortion of Nonlinear Transfer Function
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+If a sinusoidal signal is applied to a linear system, the output is a sine wave with the same frequency. Output signals at other frequencies are observed as well for nonlinear systems. This Demonstration considers nonlinear input signals of the form y=x+Subscript[c, 1]x^2+Subscript[c, 2]x^3, in which x is a sine wave with frequency 1 kHz and amplitude 1.
+
+### [Text]
+The figures show the output y and its magnitude spectrum obtained from the DFT (discrete Fourier transform). Depending on the coefficients Subscript[c, 1] and Subscript[c, 2] and the settings for clipping, the output has spectral components at either even or odd multiples of the first harmonic.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+nbr =4096;
+f0 = 1000;
+fs = 16000;
+x = Table[Sin[2 π f0 i], {i, 0, (nbr - 1)/fs, 1/fs}];
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{y, z, spectrum, t, f },
+y = x + c1 x^2+ c2 x^3;
+If[clipping == True, z = Clip[y, {-level, level}], z = y];
+spectrum= (2/nbr)Take[Abs[Fourier[z, FourierParameters->{1,-1}]], nbr/2];
+t = Table[t, {t, 0, 80/fs, 1/fs}];
+f = Table[f, {f, 0, fs (nbr-1)/(2 nbr), fs/nbr}];
+GraphicsColumn[{ListPlot[Transpose[{t, Take[z, 81]}], PlotRange->{-2, 2},Joined->True, PlotStyle->{{RGBColor[0,0,1]}},  Frame->True,FrameLabel->{{None, None}, {"\<time[s]\>","\<signal\>"}}, FrameTicks->{Automatic, Automatic}, AspectRatio->0.4, ImageSize->{400,200}],
+ListPlot[Transpose[{f, If[scale == 1, spectrum, 20 Log[10, spectrum + 2 10^(-5)]]}], Joined->True,
+ Frame->True, Axes->True, PlotRange->If[scale == 1, {-0.1, 1.5}, {-100, 3}], FrameLabel->{{None, None}, {"\<frequency[Hz]\>", "\<magnitude spectrum (DFT)\>"}}, FrameTicks->{Automatic, Automatic}, AspectRatio->0.4, PlotRangeClipping->True, ImageSize->{400,200}]}, Spacings->{-20, 10}]],
+Style["\<coefficients\>",Bold],
+{{c1, 0, Subscript[Style["\<c\>",Italic],1]}, -0.5, 0.5, 0.01,Appearance->"\<Labeled\>",ImageSize->Tiny},
+{{c2, 0, Subscript[Style["\<c\>",Italic],2]}, -0.5, 0.5, 0.01,Appearance->"\<Labeled\>",ImageSize->Tiny},
+Delimiter,
+Style["\<clipping\>",Bold],
+{{clipping,False, "\<\>"},{True,False}},
+PaneSelector[{
+True->Control@{{level, 0.8, "\<level\>"}, 0.5, 1, 0.01,Appearance->"\<Labeled\>",ImageSize->Tiny}
+},Dynamic[clipping]],
+Delimiter,
+Style["\<DFT\>",Bold],
+{{scale, 1, "\<scale\>"}, {1 ->"\<linear\>", 2 ->"\<decibel\>"}},
+ControlPlacement->Left, SaveDefinitions->True, 
+TrackedSymbols-> {c1, c2, clipping, level, scale},
+AutorunSequencing->{1,2,3}]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Item]
+Carsten Roppel
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+Details, references or citation information
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+keyword 1
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Transfer Function
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2011-03-07
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

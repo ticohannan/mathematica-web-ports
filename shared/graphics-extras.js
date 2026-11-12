@@ -24,7 +24,7 @@ import {
   AbsoluteThickness, CapForm, FontSize, Italic, Point, Rotate, Column, AbsoluteDashing, textOf, setInsetLayout,
   Graphics, Inset, bounds,
 } from './graphics.js';
-import { axesPrimitives, framePrimitives, frameLayout } from './svg-frame.js';
+import { axesPrimitives, framePrimitives, frameLayout, resolveTicks } from './svg-frame.js';
 
 import { plotUnitsPerPx } from './svg-plot.js';
 /** World units per nominal pixel of a picture with this PlotRange, ImageSize and PlotRangePadding (createPlot's arithmetic). */
@@ -129,6 +129,7 @@ export function plotDecorations(o, { range, plotRange = range, visible, unitsPer
   // scale [sx, sy] (v0.1.23, AspectRatio): range and plotRange are in data units, the world is x·sx, y·sy
   const [sx, sy] = scale ?? [1, 1];
   const sc = scale ? { scale } : {};
+  if (o.GridLines != null && o.GridLines !== 'None' && o.GridLines?.dir !== 'none') below.push(gridLines(o, range, [sx, sy]));
   if (o.Axes && !(o.Frame && o.AxesInFrame)) {
     const [ax, ay] = pair(o.Axes);
     const [tx, ty] = o.Ticks ? pair(o.Ticks) : [undefined, undefined];
@@ -141,7 +142,7 @@ export function plotDecorations(o, { range, plotRange = range, visible, unitsPer
     // a plot with a Frame keeps its axes as plain lines inside the frame (v0.1.23, AxesInFrame set by shared/plot.js)
     const { lines, texts } = framePrimitives({ range, unitsPerPx: u, x: tickOpt(tx), y: tickOpt(ty), fontPx, frameSides: frameSides(o.Frame), axes: !!o.AxesInFrame, axesOrigin: o.AxesOrigin, ...sc });
     below.push(Annotation([RGBColor(...GRAY), AbsoluteThickness(0.5), CapForm('Butt'),
-      ...lines.map((l) => Line(l.pts)), FontSize(fontPx), ...ls,
+      ...lines.map((l) => Line(l.pts)), FontSize(fontPx), ...ls, ...labelDirectives(o.FrameTicksStyle), // v0.1.37: FrameTicksStyle after LabelStyle
       ...texts.map((t) => Text(t.str, t.pos, { anchor: t.anchor }))], 'frame'));
     const [bottom, left] = o.FrameLabel ? pair(o.FrameLabel) : [null, null];
     const [[x0, x1], [y0, y1]] = range;
@@ -185,6 +186,30 @@ export function plotDecorations(o, { range, plotRange = range, visible, unitsPer
     above.push(Annotation([Black, FontSize(13), ...ls, Text(o.PlotLabel, [((x0 + x1) / 2) * sx, top - 15 * u])], 'plot-label'));
   }
   return { below, above };
+}
+
+/**
+ * GridLines (v0.1.37): Automatic = at the major ticks of the frame (or axes), Full = at the major and minor ticks, a list
+ * of values (or [value, style] pairs) per axis, None; GridLinesStyle (a directive or a list; default light gray, 1 px —
+ * GrayLevel 0.87, as measured on Mathematica 13 snapshots). A tick spec marked gridAll (log axes of shared/plot.js) gives
+ * lines at all its ticks for Automatic too, as Mathematica's log axes. Lines span the range; drawn under the curves.
+ */
+function gridLines(o, range, [sx, sy]) {
+  const [gx, gy] = pair(o.GridLines);
+  const [tx, ty] = (o.Frame ? o.FrameTicks : o.Ticks) ? pair(o.Frame ? o.FrameTicks : o.Ticks) : [undefined, undefined];
+  const [[x0, x1], [y0, y1]] = range;
+  const at = (g, t, lo, hi) => {
+    if (g == null || g === 'None' || g === false || g?.dir === 'none') return [];
+    if (Array.isArray(g)) return g.map((v) => (Array.isArray(v) ? v : [v, null]));
+    const spec = resolveTicks(tickOpt(t), lo, hi);
+    const vals = g === 'Full' || spec.gridAll ? [...spec.major, ...(spec.minor ?? [])] : spec.major;
+    return vals.map((v) => [Array.isArray(v) ? v[0] : v, null]).filter(([v]) => v >= lo - 1e-12 && v <= hi + 1e-12);
+  };
+  const base = o.GridLinesStyle != null ? [].concat(o.GridLinesStyle) : [GrayLevel(0.87), AbsoluteThickness(1)];
+  const prims = [];
+  for (const [v, st] of at(gx, tx, x0, x1)) prims.push([...(st ? [].concat(st) : []), Line([[v * sx, y0 * sy], [v * sx, y1 * sy]])]);
+  for (const [v, st] of at(gy, ty, y0, y1)) prims.push([...(st ? [].concat(st) : []), Line([[x0 * sx, v * sy], [x1 * sx, v * sy]])]);
+  return Annotation([CapForm('Butt'), ...base, ...prims], 'grid-lines');
 }
 
 /**

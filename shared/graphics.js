@@ -110,6 +110,25 @@ export const Transparent = FaceForm(None);
 export const Directive = (...ds) => directive('directive', ds);
 /** FontSize, FontFamily, FontWeight, FontSlant for Text (also usable as Style options). */
 export const FontSize = (px) => directive('fontSize', typeof px === 'string' ? fontSizeOf(px) : px);
+/**
+ * Background -> c in Style[text, …, Background -> c] (v0.1.37): a filled rectangle behind the text (its box plus 1 px),
+ * as Mathematica draws a text label with a background. Also as an option: Style(expr, { Background: White }).
+ */
+export const TextBackground = (c) => directive('textBackground', c?.rgb ?? null);
+/**
+ * Grid[{{a, b}, {c, d}}, opts] (v0.1.37) as the expression of a Text (Text[Grid[…], pos]): a table drawn in the picture,
+ * centred at pos (or with the Text's anchor). Options, Mathematica's names: Frame (True: the outer box; 'All': every
+ * cell; [cols, rows] with 'All' for one of them, e.g. Frame -> {False, All}: a box around every row), FrameStyle (a
+ * colour or a list of directives; default black, 1 px), Background (a colour, or [colSpec, rowSpec] where a spec is a
+ * list of colours whose nested list repeats: {None, {c1, {c2, c3}}}), Alignment (Center default; 'Left', 'Right', or
+ * per column a list; "=" and "." align as 'Right'), ItemSize ([w, h] in ems of the item font: minimum cell width and
+ * height), Spacings ([h, v] in ems, default [0.8, 0.4]), ItemStyle (a font size or directives for every item). A cell
+ * may be SpanFromLeft (the cell to its left extends over it). Measured in the browser (getBBox).
+ */
+export const Grid = (rows, opts = {}) => Object.freeze({ head: 'Grid', rows, opts });
+export const SpanFromLeft = Object.freeze({ head: 'SpanFromLeft' });
+/** Framed[text] (v0.1.37): a thin black frame around a text (its box plus FrameMargins px, default 3), in a Text. */
+export const Framed = (expr, { FrameMargins = 3, FrameStyle = null, Background = null } = {}) => Object.freeze({ head: 'Framed', expr, FrameMargins, FrameStyle, Background });
 export const FontFamily = (f) => directive('fontFamily', f);
 export const Italic = directive('fontSlant', 'italic');
 /**
@@ -501,7 +520,7 @@ export const FONT_SIZES = Object.freeze({ Tiny: 7, Small: 9, Medium: 12, Large: 
 const fontSizeOf = (v) => (typeof v === 'string' ? (Object.hasOwn(FONT_SIZES, v) ? FONT_SIZES[v] : 12) : v);
 export function Style(expr, ...opts) {
   const ds = opts.flatMap((o) => (typeof o === 'number' || (typeof o === 'string' && Object.hasOwn(FONT_SIZES, o)) ? [FontSize(fontSizeOf(o))] // Style[expr, 14] or Style[expr, "Medium"]
-    : o?.dir ? [o] : Object.entries(o).map(([k, v]) => ({ FontSize, FontFamily, ScriptSizeMultipliers, ScriptBaselineShifts })[k]?.(v)).filter(Boolean)));
+    : o?.dir ? [o] : Object.entries(o).map(([k, v]) => ({ FontSize, FontFamily, ScriptSizeMultipliers, ScriptBaselineShifts, Background: TextBackground })[k]?.(v)).filter(Boolean)));
   return Object.freeze({ head: 'Style', expr, ds });
 }
 /** Subscript[a, b]. */
@@ -533,6 +552,8 @@ export function textOf(e, { sep = '' } = {}) {
   if (e.head === 'Row') return e.items.map((x) => textOf(x, { sep })).join('');
   if (e.head === 'Column') return e.items.map((x) => textOf(x, { sep })).join('\n');
   if (e.head === 'Fraction') return `${textOf(e.num, { sep })}/${textOf(e.den, { sep })}`;
+  if (e.head === 'Framed') return textOf(e.expr, { sep });
+  if (e.head === 'Grid') return e.rows.map((r) => r.map((c) => textOf(c, { sep })).join('\t')).join('\n');
   return '';
 }
 
@@ -775,7 +796,12 @@ function edgePaint(st) {
 function textNode(plot, g, expr, pos, anchor, st, baseline) {
   let s = st;
   let e = expr;
-  while (e && e.head === 'Style') { s = e.ds.reduce(applyDirective, s); e = e.expr; }
+  let framed = null;
+  while (e && (e.head === 'Style' || e.head === 'Framed')) {
+    if (e.head === 'Framed') { framed = e; e = e.expr; continue; }
+    s = e.ds.reduce(applyDirective, s); e = e.expr;
+  }
+  if (e?.head === 'Grid') return gridNode(plot, g, e, pos, anchor, s, baseline);
   const scripted = e && ['Subscript', 'Superscript', 'Row', 'Column'].includes(e.head);
   const t = plot.text(g, scripted ? '' : textOf(e), pos, {
     fontPx: s.fontSize, color: s.color, anchor, italic: s.fontSlant === 'italic', weight: s.fontWeight, family: s.fontFamily,
@@ -790,7 +816,102 @@ function textNode(plot, g, expr, pos, anchor, st, baseline) {
       appendPieces(plot, span, line, s.fontSize, s);
     });
   } else if (scripted) appendPieces(plot, t, e, s.fontSize, s);
+  if (s.textBackground || framed) boxBehind(plot, g, t, s.textBackground, framed);
   return t;
+}
+// Grid as a table of texts: cells measured, columns and rows sized, then placed (world units, y up)
+const cyc = (spec, i) => { // {c1, {c2, c3}}: c1 then c2, c3, c2, … ; a plain colour: every index
+  if (!Array.isArray(spec)) return spec;
+  const k = spec.findIndex(Array.isArray);
+  if (k < 0) return spec[i];
+  if (i < k) return spec[i];
+  const rep = spec[k];
+  return rep[(i - k) % rep.length];
+};
+function gridNode(plot, g, grid, pos, anchor, st, baseline) {
+  const u = plot.unitsPerPx, o = grid.opts;
+  let cs = st;
+  if (o.ItemStyle != null) cs = [].concat(o.ItemStyle).map((x) => (typeof x === 'number' ? FontSize(x) : x)).reduce(applyDirective, cs);
+  const em = cs.fontSize * u;
+  const [spH, spV] = Array.isArray(o.Spacings) ? o.Spacings.map((x) => (typeof x === 'number' ? x : null)) : [o.Spacings ?? null, null];
+  const padX = ((spH ?? 0.8) * em) / 2, padY = ((spV ?? 0.4) * em) / 2;
+  const [isW, isH] = Array.isArray(o.ItemSize) ? o.ItemSize : [o.ItemSize, null];
+  const grp = plot.group(g, { 'data-role': 'grid' });
+  const nR = grid.rows.length, nC = Math.max(...grid.rows.map((r) => r.length));
+  const cells = grid.rows.map((r) => Array.from({ length: nC }, (_, j) => {
+    const v = r[j];
+    if (v === undefined) return { empty: true, w: 0, h: 0 };
+    if (v && v.head === 'SpanFromLeft') return { span: true, w: 0, h: 0 };
+    const t = textNode(plot, grp, v, [0, 0], 'start', cs, null);
+    let b = { width: 0, height: em };
+    try { b = t.getBBox(); } catch { /* no layout */ }
+    return { t, w: b.width, h: b.height || em };
+  }));
+  const colW = Array.from({ length: nC }, (_, j) => Math.max(typeof isW === 'number' ? isW * em : 0, ...cells.map((r) => (r[j].span ? 0 : r[j].w + 2 * padX))));
+  const rowH = cells.map((r) => Math.max(typeof isH === 'number' ? isH * em : 0, ...r.map((c) => c.h + 2 * padY)));
+  // a spanned cell wider than its columns widens its last column
+  cells.forEach((r) => r.forEach((c, j) => {
+    if (c.span || c.empty || !c.t) return;
+    let k = j + 1; while (k < nC && r[k].span) k++;
+    const have = colW.slice(j, k).reduce((a, b) => a + b, 0), need = c.w + 2 * padX;
+    if (k > j + 1 && need > have) colW[k - 1] += need - have;
+    c.cols = [j, k];
+  }));
+  const W = colW.reduce((a, b) => a + b, 0), H = rowH.reduce((a, b) => a + b, 0);
+  const left = anchor === 'start' ? pos[0] : anchor === 'end' ? pos[0] - W : pos[0] - W / 2;
+  const top = baseline === 'text-before-edge' ? pos[1] : baseline === 'text-after-edge' ? pos[1] + H : pos[1] + H / 2;
+  const xs = [left]; colW.forEach((w) => xs.push(xs.at(-1) + w));
+  const ys = [top]; rowH.forEach((h) => ys.push(ys.at(-1) - h));
+  const align = (j) => {
+    const a = Array.isArray(o.Alignment) ? (Array.isArray(o.Alignment[0]) ? o.Alignment[0][j] ?? o.Alignment[0].at(-1) : o.Alignment[0]) : o.Alignment;
+    return a === 'Left' ? 'start' : a === 'Right' || a === '=' || a === '.' ? 'end' : 'middle';
+  };
+  const under = [];
+  const bg = o.Background;
+  cells.forEach((r, i) => r.forEach((c, j) => {
+    if (c.span) return;
+    const [j0, j1] = c.cols ?? [j, j + 1];
+    let col = null;
+    if (bg?.rgb) col = bg.rgb;
+    else if (Array.isArray(bg)) { const rc = cyc(bg[1], i), cc = cyc(bg[0], j); col = (rc ?? cc)?.rgb ?? null; }
+    if (col) under.push(svgNode('rect', { x: xs[j0], y: ys[i + 1], width: xs[j1] - xs[j0], height: ys[i] - ys[i + 1], fill: css(col) }));
+    if (!c.t) return;
+    const a = align(j0), cx = a === 'start' ? xs[j0] + padX : a === 'end' ? xs[j1] - padX : (xs[j0] + xs[j1]) / 2;
+    c.t.setAttribute('transform', `translate(${cx},${(ys[i] + ys[i + 1]) / 2}) scale(1,-1)`);
+    c.t.setAttribute('text-anchor', a);
+  }));
+  for (const r of under.reverse()) grp.prepend(r);
+  // frame lines
+  const fs = [].concat(o.FrameStyle ?? []).reduce((a, d) => (d?.dir ? applyDirective(a, d) : a), { ...DEFAULT_STYLE, color: [0, 0, 0], thickness: { abs: 1 } });
+  const lw = plot.strokeWidth ? plot.strokeWidth(fs.thickness) : u;
+  const seg = (x0, y0, x1, y1) => grp.append(svgNode('line', { x1: x0, y1: y0, x2: x1, y2: y1, stroke: css(fs.color), 'stroke-width': lw, 'data-role': 'grid-frame' }));
+  const F = o.Frame;
+  const [fc, fr] = Array.isArray(F) ? F : [F === 'All', F === 'All'];
+  if (F === true || F === 'All' || fc || fr) { seg(left, ys[0], left + W, ys[0]); seg(left, ys[nR], left + W, ys[nR]); seg(left, ys[0], left, ys[nR]); seg(left + W, ys[0], left + W, ys[nR]); }
+  if (fr === 'All' || fr === true) for (let i = 1; i < nR; i++) seg(left, ys[i], left + W, ys[i]);
+  if (fc === 'All' || fc === true) {
+    for (let j = 1; j < nC; j++) {
+      for (let i = 0; i < nR; i++) if (!cells[i][j].span) seg(xs[j], ys[i], xs[j], ys[i + 1]);
+    }
+  }
+  return grp;
+}
+
+// a rectangle behind a text (Background, Framed): from the text's box in the browser (getBBox; nothing where there is
+// no layout, e.g. in Node)
+function boxBehind(plot, g, t, fill, framed) {
+  let b;
+  try { b = t.getBBox(); } catch { return; }
+  if (!b || !(b.width > 0)) return;
+  const u = plot.unitsPerPx, m = (framed ? framed.FrameMargins : 1) * u;
+  const bg = framed?.Background?.rgb ?? fill;
+  const r = svgNode('rect', {
+    x: b.x - m, y: b.y - m, width: b.width + 2 * m, height: b.height + 2 * m,
+    fill: bg ? css(bg) : 'none', stroke: framed ? css(framed.FrameStyle?.rgb ?? [0, 0, 0]) : 'none',
+    'stroke-width': framed ? 0.8 * u : 0, 'data-role': framed ? 'framed' : 'text-background',
+  });
+  if (t.getAttribute('transform')) r.setAttribute('transform', t.getAttribute('transform'));
+  g.insertBefore(r, t);
 }
 
 // The pieces of Subscript / Superscript / Row as text and <tspan>s (a script is 72 % high, 28 % down or 40 % up).
@@ -822,7 +943,14 @@ function appendPieces(plot, t, e, fontPx, st = DEFAULT_STYLE) {
     return typeof dy === 'number' ? dy : 0; // a relative (em) shift is not undone by a Row
   }
   if (e && e.head === 'Style') {
-    const span = svgNode('tspan', { 'font-style': e.ds.some((d) => d.dir === 'fontSlant') ? 'italic' : undefined });
+    const col = e.ds.find((d) => d.dir === 'color');
+    const fs = e.ds.find((d) => d.dir === 'fontSize');
+    const span = svgNode('tspan', {
+      'font-style': e.ds.some((d) => d.dir === 'fontSlant') ? 'italic' : undefined,
+      'font-weight': e.ds.some((d) => d.dir === 'fontWeight') ? 'bold' : undefined,
+      fill: col ? css(col.rgb) : undefined, 'font-size': fs ? fs.value * plot.unitsPerPx : undefined, // v0.1.37
+    });
+    if (e.expr && typeof e.expr === 'object' && e.expr.head) { appendPieces(plot, span, e.expr, fs ? fs.value : fontPx, st); t.append(span); return 0; }
     span.textContent = textOf(e.expr);
     t.append(span);
     return 0;

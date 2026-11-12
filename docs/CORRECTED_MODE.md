@@ -15,7 +15,7 @@ Since v0.1.34 the apps listed here have a switch beside "Initial settings": **er
 
 To go back to the last version without the switch: tag `pre-fixed-mode-v0.1.33` (= v0.1.33, commit `b4569b0`).
 
-Apps with the switch: 14; corrections: 32. Code version 0.1.36.
+Apps with the switch: 22; corrections: 42. Code version 0.1.37.
 
 ## Motion Planning for Robot Path around Obstacles (`demos/motion-planning/`)
 
@@ -118,3 +118,53 @@ Apps with the switch: 14; corrections: 32. Code version 0.1.36.
 | Finding | The original (kept) | Corrected |
 |---|---|---|
 | E-TS-01 | for <i>a</i> = 0 the curves <i>y</i>(<i>t</i>) = <i>x</i>(<i>a t</i> − <i>b</i>) and <i>w</i>(<i>t</i>) = <i>x</i>(<i>a t</i>) are drawn as <i>x</i> stretched 10000 times. | for <i>a</i> = 0 both are the constants they are: <i>y</i>(<i>t</i>) = <i>x</i>(−<i>b</i>) and <i>w</i>(<i>t</i>) = <i>x</i>(0), drawn as horizontal lines (at a jump of <i>x</i> the value just after the jump). Every other value of <i>a</i> is unchanged. |
+
+## Harmonic Distortion of Nonlinear Transfer Function (`demos/harmonic-distortion/`, since v0.1.37)
+
+| Finding | The original (kept) | Corrected |
+|---|---|---|
+| E-HD-01 | every bin of the magnitude spectrum is 2/<i>N</i> ∣DFT∣, the DC bin (0 Hz) included, so a constant part of the signal is drawn at twice its value: with <i>c</i><sub>1</sub> = 0.5 the mean of <i>y</i> = <i>x</i> + 0.5 <i>x</i><sup>2</sup> is 0.25, drawn as 0.5. | the DC bin is 1/<i>N</i> ∣DFT∣ (the mean of the signal, 0.25 in that example); the other bins are unchanged. |
+
+## First-Order Transfer Functions in Process Control (`demos/first-order-process-control/`, since v0.1.37)
+
+| Finding | The original (kept) | Corrected |
+|---|---|---|
+| E-FO-01 | sinusoidal input: the table gives the phase shift −ϕ = ArcTan[ω τ] with the unit "min", but it is an angle in radians (the time lag is ϕ/ω, equal to it only at ω = 1: at ω = 3.5 the table says 1.5 min, the lag is 0.43 min). | the phase shift is shown in rad, and a row "time lag ϕ/ω" gives the lag in minutes. |
+| E-FO-02 | ramp input: the table's "time constant τ" is the vertical gap between input and response at <i>t</i> = 10/<i>a</i> (7.3 at τ = 5, <i>a</i> = 3), which is neither τ nor constant, and the τ marker is drawn there. | the table shows τ (the time by which the response lags the ramp once the transient has died away), and the τ marker is the horizontal lag at the response's value at <i>t</i> = 10. |
+| E-FO-03 | sinusoidal input: "amplitude output <i>B</i>" is the first maximum of the response, which still contains the decaying transient (0.91 at the opening settings), so the amplitude ratio (0.3) is not that of the sinusoid the output settles to. | <i>B</i> = <i>K a</i>/√(ω²τ² + 1), the amplitude of the steady sinusoid (0.59), and the ratio <i>B</i>/<i>A</i> = 1/√(ω²τ² + 1) (0.2). The markers in the plot stay at the first maximum. |
+
+## Integral Error Criteria for Controller Tuning (`demos/integral-error-criteria/`, since v0.1.37)
+
+| Finding | The original (kept) | Corrected |
+|---|---|---|
+| E-IE-01 | the tuning plots use the authors' tables of IAE, ISE and ITAE at eight gains and their optima, computed with NIntegrate of Abs[…] over {<i>t</i>, 0, 5000}, which misses the kinks of ∣1 − <i>y</i>∣: several values are off (ITAE at gain 1.25: 25.529, accurately 25.678; IAE at gain 1: 5.3547, accurately 5.3448), so the IAE optimum is drawn at gain 1.488 instead of 1.452. | the three tables and their optima are computed in the page with an adaptive integration that resolves the kinks (checked against a fine midpoint sum): optimum gains 1.452 (IAE), 2.084 (ISE) and 1.033 (ITAE). |
+
+## Proportional Temperature Control (`demos/proportional-temperature-control/`, since v0.1.37)
+
+| Finding | The original (kept) | Corrected |
+|---|---|---|
+| E-PT-01 | the plot label gives the volume in m<sup>3</sup> and the water flow in m<sup>3</sup>/h, but the model uses the density ρ = 1 with <i>c</i><sub>p</sub> = 4.19 kJ/(kg °C): water in kilograms per litre. In cubic metres (ρ = 1000 kg/m<sup>3</sup>) the heat input of 2500 kJ/h would warm the tank by hundredths of a degree, not the 60 °C shown. | the label gives the volume in L and the flow in L/h, the units in which the model's numbers are right; the curves are unchanged. |
+
+## Feedback Control in a Stirred-Tank Reactor (`demos/stirred-tank-feedback/`, since v0.1.37)
+
+| Finding | The original (kept) | Corrected |
+|---|---|---|
+| E-ST-01 | the PI controller acts on the error <i>T</i><sub>set</sub> − <i>T</i><sub>r</sub>, the true tank temperature, so the temperature sensor and its 2 h lag, which the plot shows as <i>T</i><sub>sens</sub>, have no effect on the control. | the controller acts on <i>T</i><sub>set</sub> − <i>T</i><sub>sens</sub>, the measured temperature (the error and its integral both); the sensor lag now enters the loop, and the oscillations after the start and the disturbance grow. |
+
+## Simulating Vehicle Suspension with a Simplified Quarter-Car Model (`demos/quarter-car-suspension/`, since v0.1.37)
+
+| Finding | The original (kept) | Corrected |
+|---|---|---|
+| E-QC-01 | the "resonant frequency" is ω<sub>n</sub>√(1 − 2ζ²) (Re[Sqrt[1 − c²/(2 k m)] Sqrt[k/m]]), the peak of a mass–spring–damper driven by a force; the model here is driven through the spring and the damper, (<i>k</i> + <i>c s</i>)/(<i>k</i> + <i>c s</i> + <i>m s</i>²), whose peak lies elsewhere — and the formula gives 0.00 for every ζ ≥ 0.71 (the opening settings, ζ = 1.05), though the model still has a peak. | the resonant frequency is the frequency of the peak of ∣(<i>k</i> + <i>c</i> iω)/(<i>k</i> + <i>c</i> iω − <i>m</i> ω²)∣, ω<sub>n</sub>√((√(1 + 8ζ²) − 1)/(4ζ²)) (0.28 at the opening settings). |
+
+## Quarter-Car Suspension Model with Double Spring (`demos/quarter-car-double-spring/`, since v0.1.37)
+
+| Finding | The original (kept) | Corrected |
+|---|---|---|
+| E-QD-01 | the unsprung mass's angular frequency is labelled "ω<sub>2</sub> = 51.60 Hz" at the opening settings; it is in rad/s (the sprung mass's ω<sub>1</sub> has "rad/s", and <i>f</i><sub>2</sub> = ω<sub>2</sub>/(2π) = 8.22 Hz is the frequency in hertz). | the label reads "ω<sub>2</sub> = 51.60 rad/s". |
+
+## Zero-Pole Cancellation in Transfer Functions (`demos/zero-pole-cancellation/`, since v0.1.37)
+
+| Finding | The original (kept) | Corrected |
+|---|---|---|
+| E-ZP-01 | the "gain" slider has no visible effect: the option PoleZeroMarkers -> {Automatic, "ParameterValues" -> gain} draws no marker at the closed-loop poles for that gain (none in the snapshots at gain 0.628 and 0.634), so the plot never shows where the poles are for the chosen gain. | the closed-loop poles at the chosen gain are drawn as points in the colours of their branches (at 0.628 without compensation: −1.436 and 0.018 ± 0.634 i, just right of the imaginary axis). |

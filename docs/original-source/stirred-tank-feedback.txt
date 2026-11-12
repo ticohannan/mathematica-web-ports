@@ -1,0 +1,174 @@
+
+### [Title]
+Feedback Control in a Stirred-Tank Reactor
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+\<This Demonstration shows a simple feedback control for a stirred-tank reactor.\>
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [CodeText]
+If you provide initialization code, include a SaveDefinitions->True option in the Manipulate.
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[Module[{HEATER,ρc=1,Cpc=1,Tset=80,Vr=100,εrr,τQ=1,τsens=2,Qc,T0},
+εrr=Tset-TR[t];
+Qc[t_]:=Max[0,Q0+(Kp εrr)+(Kp/τI)Int[t]];
+T0[t_]:=Piecewise[{{inletT,t<120},{pertur,t>= 120}}];
+HEATER=NDSolve[{
+TR'[t]==(Flu)/(Vr)(T0[t]-TR[t])+(Q[t])/(Vr ρc Cpc),
+Q'[t]==(Qc[t]-Q[t])/τQ,
+Tsens'[t]==(TR[t]-Tsens[t])/τsens,
+Int'[t]==εrr,
+TR[0]==20,Q[0]==1,Tsens[0]==15,Int[0]==0},{TR[t],Q[t],Tsens[t],Int[t]},{t,0,200}];
+Multicolumn[{
+Plot[Evaluate[{TR[t],Tsens[t],T0[t],Tset}/.HEATER],{t,0,200},PlotRange->{10,110},PlotStyle->{Red,Blue,Black,Green},Frame-> True,FrameLabel->{"\<time (h)\>","\<temperature (°C)\>"},LabelStyle->Directive[Black,14],FrameTicksStyle->10,Exclusions->None,PlotLegends->{Subscript[Style["\<T\>",Italic],"\<r\>"],Subscript[Style["\<T\>",Italic],"\<sens\>"],"\<\!\(\*SubscriptBox[\(T\), \(0\)]\)\>",Subscript[Style["\<T\>",Italic],"\<set\>"]},PlotTheme-> "\<Detailed\>",ImageSize->1.125{300,200}],
+Plot[Evaluate[Qc[t]/.HEATER],{t,0,200},PlotStyle->Magenta,PlotRange->{-10,1100},Frame-> True,FrameTicksStyle->10,FrameLabel->{"\<time (h)\>",Row[{Subscript[Style["\<Q\>",Italic],"\<c\>"],"\< (kJ/h)\>"}]},LabelStyle->Directive[Black,14],PlotLegends->{Subscript[Style["\<Q\>",Italic],"\<c\>"]},PlotTheme-> "\<Detailed\>",ImageSize->1.125{300,200}]},1]],
+"\<proportional control constant (KJ/h °C)\>",
+{{Kp,10,"\<\>"},0,20,0.1,Appearance-> "\<Labeled\>",ImageSize-> Tiny},
+"\<\>",
+"\<integral control constant (h)\>",
+{{τI,4,"\<\>"},1,20,0.1,Appearance-> "\<Labeled\>",ImageSize-> Tiny},
+"\<\>",
+"\<heat input (KJ/h)\>",
+{{Q0,100,"\<\>"},0,500,1,Appearance-> "\<Labeled\>",ImageSize-> Tiny},
+"\<\>",
+"\<inlet temperature of water (°C)\>",
+{{inletT,20,"\<\>"},5,30,0.1,Appearance-> "\<Labeled\>",ImageSize-> Tiny},
+"\<\>",
+"\<disturbance at 120 h (°C)\>",
+{{pertur,40,"\<\>"},30,60,0.1,Appearance-> "\<Labeled\>",ImageSize-> Tiny},
+"\<\>",
+"\<water flow (\!\(\*SuperscriptBox[\(m\), \(3\)]\)/h)\>",
+{{Flu,3,"\<\>"},1,45,0.1,Appearance-> "\<Labeled\>",ImageSize-> Tiny},SynchronousUpdating->False,AutorunSequencing->{6,4,5,1},ControlPlacement->Left]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+R. Ricardo S\[AAcute]nchez
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+Nomenclature:
+
+### [Text]
+Subscript[T, r]: reactor temperature (°C)
+
+### [Text]
+Subscript[T, sens]: temperature measured by a sensor (°C)
+
+### [Text]
+Subscript[T, 0]: temperature of inlet water (°C)
+
+### [Text]
+Subscript[T, set]: setpoint temperature (°C)
+
+### [Text]
+Subscript[Q, c]: proportional-integral feedback controller model
+
+### [Text]
+\<You can create disturbances in the flow rate and inlet temperature or set the "proportional control constant" slider to 0 to disconnect the controller and observe the temperature response to these changes.\>
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] I. J. Dunn, E. Heinzle, J. Ingham and J. E. Prvenosil, Biological Reaction Engineering: Dynamic Modelling Fundamentals with Simulation Examples (2nd, completely rev. ed.), Weinheim, Germany: VCH Verlagsgesellschaft mbH, 2003.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+feedback control
+
+### [Item]
+stirred-tank reactor
+
+### [Item]
+proportional-integral feedback controller
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Continuous Stirred-Tank Reactor That Loses Cooling
+
+### [Text]
+Multiple Steady States in a Continuously Stirred Tank Reactor
+
+### [Text]
+Optimal Control of a Continuous Stirred-Tank Reactor
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2021-05-24
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

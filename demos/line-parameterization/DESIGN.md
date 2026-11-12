@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.36 |
+| Code version: | 0.1.37 |
 | Document revision | 2 (2026-11-02) — implemented after the owner's approval; compared with the owner's three screenshots of the original |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Lecture notebook "Lecture-18-lineparameterization.nb" (Aaron T. Becker, course lecture material; created with Mathematica 10.0, last saved with Mathematica 13.2 for macOS). Not a published Wolfram Demonstration: no public page, no licence statement in the file. Dr. Becker gave the notebook to the owner to convert; licensed as his Demonstrations, CC BY-NC-SA 3.0, until he says otherwise (owner, 2026-11-02). The dial and the arrow arc are the same definitions as in Dr. Becker's CC BY-NC-SA 3.0 Demonstrations. Private copy: `_internal/originals/lectures/Lecture-18-lineparameterization.nb` (SHA-256 `0116714b…7e`) |
@@ -160,6 +160,7 @@ No open proposal.
 | 5 | v0.1.34 | 2026-11-10 | version number (v0.1.34: the switch "errors of the original: kept \| corrected" for the apps with code-level findings in §11, `shared/errata.js`); no change to this app's code, behaviour or picture |
 | 6 | v0.1.35 | 2026-11-11 | version number (v0.1.35: two new apps, paths-inside-a-polygon and voronoi-diagrams; no shared code changed); no change to this app's code, behaviour or picture |
 | 7 | v0.1.36 | 2026-11-11 | version number (v0.1.36: the full colour menu of voronoi-diagrams); no change to this app's code, behaviour or picture |
+| 8 | v0.1.37 | 2026-11-12 | version number (v0.1.37: thirteen control and signal ports and the shared modules they use; the additions to shared/plot.js, graphics.js and manipulate.js are opt-in); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 
