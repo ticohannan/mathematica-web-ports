@@ -84,4 +84,4 @@ evaluate any cell. Open the port's page next to it.
 **Record** — in `_internal\test-runs\<YYYY-MM-DD>_voronoi-diagrams.md`, under the heading M-VD-08: the menu count and names; per scheme "same colours" or the difference.
 **Save** — File > Close, Don't Save.
 **Port** — the same steps on the port's page.
-**Expected / what it decides** — the port's five schemes give the same cell colours (D-VD-04: the port has only these five until the export).
+**Expected / what it decides** — the same 51 names in the same order (Mathematica 15) and the same cell colours for the five schemes.

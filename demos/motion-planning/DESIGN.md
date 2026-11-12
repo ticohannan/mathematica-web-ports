@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.35 |
+| Code version: | 0.1.36 |
 | Document revision | 21 (2026-11-01) — P-MP-08 the original's full ⊕ panel (I-MP-09); 20 (2026-11-01) — P-MP-06/07 implemented after Ryan Hembree's T-2c/T-1b; his comparison and exploration on v0.1.28 recorded; I-MP-09; 19 (2026-10-29) — PA2 fixes from Ryan Hembree's checks of the original (P-MP-02…05); earlier: 6 (2026-10-17) polygon helpers, §11, operator procedures |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Motion Planning for Robot Path around Obstacles" by Shreyas Poyrekar, Aaron T. Becker and Arifa Sultana (CC BY-NC-SA 3.0); author notebook made with Mathematica 10.2. Readable source: [`docs/original-source/motion-planning.txt`](../../docs/original-source/motion-planning.txt) |
@@ -322,6 +322,7 @@ No open proposal (P-MP-02…08 implemented in v0.1.28–v0.1.30). Template for a
 | 24 | v0.1.33 | 2026-11-06 | version number (v0.1.33: four new apps; opt-in shared additions S-1 … S-7, unused by this app, and the locators of a Locator list made after the first evaluation); no change to this app's code, behaviour or picture |
 | 25 | v0.1.34 | 2026-11-10 | A-MP-11: the switch "errors of the original: kept \| corrected" (owner request 2026-11-10); corrected mode for E-MP-01, E-MP-02, E-MP-03, E-MP-04, E-MP-06, default kept: the original's behaviour, golden data and pictures unchanged |
 | 26 | v0.1.35 | 2026-11-11 | version number (v0.1.35: two new apps, paths-inside-a-polygon and voronoi-diagrams; no shared code changed); no change to this app's code, behaviour or picture |
+| 27 | v0.1.36 | 2026-11-11 | version number (v0.1.36: the full colour menu of voronoi-diagrams); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

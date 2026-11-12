@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.35 |
+| Code version: | 0.1.36 |
 | Document revision | 6 (2026-10-18) — DH-family move: the generic code lives in `demos/common/` (re-export shims here); no feature change |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Robot Singularities in Three-Link Manipulators", contributed by Aaron T. Becker and Yitong Lu, published January 11, 2021 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/RobotSingularitiesInThreeLinkManipulators/>. Readable source: [`docs/original-source/robot-singularities.txt`](../../docs/original-source/robot-singularities.txt); snapshots: `docs/original-snapshots/robot-singularities-*.png`; saved state: `tests/golden/robot-singularities.original-state.json` |
@@ -254,6 +254,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 23 | v0.1.33 | 2026-11-06 | version number (v0.1.33: four new apps; opt-in shared additions S-1 … S-7, unused by this app, and the locators of a Locator list made after the first evaluation); no change to this app's code, behaviour or picture |
 | 24 | v0.1.34 | 2026-11-10 | A-RS-09: the switch "errors of the original: kept \| corrected" (owner request 2026-11-10); corrected mode for E-RS-01, E-RS-02, E-RS-03, default kept: the original's behaviour, golden data and pictures unchanged |
 | 25 | v0.1.35 | 2026-11-11 | version number (v0.1.35: two new apps, paths-inside-a-polygon and voronoi-diagrams; no shared code changed); no change to this app's code, behaviour or picture |
+| 26 | v0.1.36 | 2026-11-11 | version number (v0.1.36: the full colour menu of voronoi-diagrams); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

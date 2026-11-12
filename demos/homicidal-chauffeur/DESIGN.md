@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.35 |
+| Code version: | 0.1.36 |
 | Document revision | 2 (2026-10-26) |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "The Homicidal Chauffeur Problem", contributed by Aaron T. Becker and Javier Garcia, published 2018-01-22 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/TheHomicidalChauffeurProblem/> Source as text: [`docs/original-source/homicidal-chauffeur.txt`](../../docs/original-source/homicidal-chauffeur.txt); snapshots `docs/original-snapshots/homicidal-chauffeur-1…5.png`; saved states `tests/golden/homicidal-chauffeur.original-states.json` (`states[0]` the live state, `specs` the Manipulate's initial values — the same state here, `snapshots` the five snapshots' settings) |
@@ -204,6 +204,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 9 | v0.1.33 | 2026-11-06 | version number (v0.1.33: four new apps; opt-in shared additions S-1 … S-7, unused by this app, and the locators of a Locator list made after the first evaluation); no change to this app's code, behaviour or picture |
 | 10 | v0.1.34 | 2026-11-10 | version number (v0.1.34: the switch "errors of the original: kept \| corrected" for the apps with code-level findings in §11, `shared/errata.js`); no change to this app's code, behaviour or picture |
 | 11 | v0.1.35 | 2026-11-11 | version number (v0.1.35: two new apps, paths-inside-a-polygon and voronoi-diagrams; no shared code changed); no change to this app's code, behaviour or picture |
+| 12 | v0.1.36 | 2026-11-11 | version number (v0.1.36: the full colour menu of voronoi-diagrams); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

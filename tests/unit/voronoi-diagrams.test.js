@@ -8,6 +8,7 @@ import { describe, it, expect } from 'vitest';
 import { initialState, evaluate, voronoiCell, scaledValue, guardPoints, SAVED_LOC, RANGE } from '../../demos/voronoi-diagrams/model.js';
 import { GRADIENTS, GRADIENT_NAMES, gradientColor } from '../../demos/voronoi-diagrams/gradients.js';
 import { annotation, Cases } from '../../shared/graphics.js';
+import { gradientsModule } from '../../tools/gradients-to-js.mjs';
 
 const fx = JSON.parse(fs.readFileSync('tests/golden/voronoi-diagrams.original-states.json', 'utf8'));
 const area = (c) => Math.abs(c.reduce((s, p, i) => s + p[0] * c[(i + 1) % c.length][1] - p[1] * c[(i + 1) % c.length][0], 0)) / 2;
@@ -46,7 +47,13 @@ describe('voronoi-diagrams model', () => {
   });
 
   it('the gradient data', () => {
-    expect(GRADIENT_NAMES).toEqual(['BeachColors', 'DarkRainbow', 'LakeColors', 'PlumColors', 'SunsetColors']);
+    // Mathematica's ColorData["Gradients"], exported by the owner (v0.1.36), in its order; gradients.js is generated from it
+    const exp = JSON.parse(fs.readFileSync('tests/golden/voronoi-diagrams.gradients.json', 'utf8'));
+    expect(exp.count).toBe(51);
+    expect(GRADIENT_NAMES).toEqual(exp.gradients.map((g) => g.name));
+    expect(fs.readFileSync('demos/voronoi-diagrams/gradients.js', 'utf8')).toBe(gradientsModule(exp));
+    for (const g of exp.gradients) g.samples.forEach((c, i) => gradientColor(g.name, i / 64).forEach((v, j) => expect(v).toBeCloseTo(c[j], 4)));
+    expect(GRADIENT_NAMES).toContain('BeachColors');
     for (const n of GRADIENT_NAMES) {
       const s = GRADIENTS[n].samples;
       expect(s[0][0]).toBe(0);
@@ -70,9 +77,12 @@ describe('voronoi-diagrams model', () => {
       const shuffled = evaluate({ ...s, loc: [...s.loc].reverse() });
       expect(shuffled.view.fills).toEqual(r.view.fills);
     }
-    // the first cells of the five snapshots, measured on the pictures
-    const want = { 1: [218, 128, 66], 2: [75, 15, 135], 3: [61, 87, 147], 4: [0, 0, 0], 5: [0, 0, 0] };
-    for (const k of Object.keys(fx.snapshots)) expect(evaluate(fx.snapshots[k]).view.fills[0].map((v) => Math.round(v * 255))).toEqual(want[k]);
+    // every cell of the five snapshots against its colour measured on the picture (8-bit): within 3/255
+    const measured = JSON.parse(fs.readFileSync('tests/golden/voronoi-diagrams.snapshot-colours.json', 'utf8'));
+    for (const k of Object.keys(fx.snapshots)) {
+      const fills = evaluate(fx.snapshots[k]).view.fills;
+      measured[k].forEach((c, i) => fills[i].forEach((v, j) => expect(Math.abs(v * 255 - c[j]), `snapshot ${k} cell ${i + 1}`).toBeLessThanOrEqual(3)));
+    }
     expect(scaledValue(1, 10)).toBe(0);
     expect(scaledValue(10, 10)).toBe(1);
     // borders only with "show borders"

@@ -118,7 +118,9 @@ decision).
 Questions only Mathematica can answer are collected as `K-` leads in each DESIGN.md and checked with plain Wolfram
 Language scripts: `wolframscript -file tools\wolfram\extra-checks.wls` and `extra-checks-2.wls` (they write
 `test-output\extra-checks*.txt`), and `wolframscript -file tools\wolfram\export-gradients.wls` (v0.1.35; writes
-`test-output\gradients.json`, the colour gradients of `ColorData["Gradients"]` for voronoi-diagrams). An automated
+`test-output\gradients.json`, the colour gradients of `ColorData["Gradients"]` for voronoi-diagrams; copy it to
+`tests/golden/voronoi-diagrams.gradients.json` and run `node tools/gradients-to-js.mjs` to regenerate the app's data,
+v0.1.36; a unit test checks that the two agree). An automated
 `compare:original` (layer 5) exists only for motion planning.
 
 Numbers across engines: bit-exact comparisons only where the arithmetic is exact; elsewhere decisions are compared

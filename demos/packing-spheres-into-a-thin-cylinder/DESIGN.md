@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.35 |
+| Code version: | 0.1.36 |
 | Document revision | 2 (2026-10-28) |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Packing Spheres into a Thin Cylinder", contributed by Aaron T. Becker and Li Huang, published 2016-05-04 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/PackingSpheresIntoAThinCylinder/> Source as text: [`docs/original-source/packing-spheres-into-a-thin-cylinder.txt`](../../docs/original-source/packing-spheres-into-a-thin-cylinder.txt); snapshots `docs/original-snapshots/packing-spheres-into-a-thin-cylinder-1…4.png`; saved states `tests/golden/packing-spheres-into-a-thin-cylinder.original-states.json` (`states[0]` the live state, `specs` the Manipulate's initial values, `snapshots` the four snapshots' settings); the notebook's own sampled compression plot `tests/golden/packing-spheres-into-a-thin-cylinder.saved-plot.json` |
@@ -204,6 +204,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 8 | v0.1.33 | 2026-11-06 | version number (v0.1.33: four new apps; opt-in shared additions S-1 … S-7, unused by this app, and the locators of a Locator list made after the first evaluation); no change to this app's code, behaviour or picture |
 | 9 | v0.1.34 | 2026-11-10 | A-PS-08: the switch "errors of the original: kept \| corrected" (owner request 2026-11-10); corrected mode for E-PS-01, E-PS-02, default kept: the original's behaviour, golden data and pictures unchanged |
 | 10 | v0.1.35 | 2026-11-11 | version number (v0.1.35: two new apps, paths-inside-a-polygon and voronoi-diagrams; no shared code changed); no change to this app's code, behaviour or picture |
+| 11 | v0.1.36 | 2026-11-11 | version number (v0.1.36: the full colour menu of voronoi-diagrams); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

@@ -26,7 +26,9 @@ test.describe('voronoi-diagrams', () => {
     await openDemo(page, URL);
     expect(await state(page)).toEqual({ loc: fx.states[0].loc, colors: 'BeachColors', mesh: false });
     await expect(page.getByTestId('popup-colors')).toHaveCount(1);
-    expect(await page.getByTestId('popup-colors').locator('option').allTextContents()).toEqual(['BeachColors', 'DarkRainbow', 'LakeColors', 'PlumColors', 'SunsetColors']);
+    const names = JSON.parse(fs.readFileSync('tests/golden/voronoi-diagrams.gradients.json', 'utf8')).gradients.map((g) => g.name);
+    expect(await page.getByTestId('popup-colors').locator('option').allTextContents()).toEqual(names);
+    await expect(page.getByTestId('popup-colors')).toHaveValue(String(names.indexOf('BeachColors')));
     await expect(page.getByTestId('check-mesh')).not.toBeChecked();
   });
 
@@ -68,7 +70,8 @@ test.describe('voronoi-diagrams', () => {
     for (const k of Object.keys(fx.snapshots)) {
       await page.evaluate((st) => window.__demo.setState(st), fx.snapshots[k]);
       expect(await state(page)).toEqual(fx.snapshots[k]);
-      await expect(page.getByTestId('popup-colors')).toHaveValue(String(['BeachColors', 'DarkRainbow', 'LakeColors', 'PlumColors', 'SunsetColors'].indexOf(fx.snapshots[k].colors)));
+      const names = JSON.parse(fs.readFileSync('tests/golden/voronoi-diagrams.gradients.json', 'utf8')).gradients.map((g) => g.name);
+      await expect(page.getByTestId('popup-colors')).toHaveValue(String(names.indexOf(fx.snapshots[k].colors)));
       await expect(page.locator('[data-testid^="locator-loc-"]')).toHaveCount(fx.snapshots[k].loc.length);
       await reviewShot(page, testInfo, `voronoi-diagrams-snapshot-${k}`);
     }
