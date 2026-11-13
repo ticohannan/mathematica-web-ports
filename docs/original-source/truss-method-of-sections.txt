@@ -1,0 +1,523 @@
+
+### [Title]
+Method of Sections to Solve a Truss
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+This Demonstration solves a truss using the method of sections, which involves "cutting" along several selected members and taking the sum of the x forces, y forces and moment about a point.
+
+### [Text]
+Select "solve for reaction forces" to see how the reaction forces Subscript[R, A] and Subscript[R, B] are calculated. Use buttons to calculate the moment about A, do a force balance, and see the solved forces. When "calculate moment" is selected, move the mouse over the equations to see an explanation of the moment balance. Select "make cuts" to make cuts along members. See the entire truss and use buttons to select which section to make a cut along. Check "make cut" to see an isolated structure of the supports to the left of the selected cut.
+
+### [Text]
+Force and moment balances are shown with the solved member forces. When making cuts, the sign on all of the forces is positive because we assume we can determine which members are under tension and which are under compression before solving the truss. This is done by starting at joint A, seeing that the reaction force is pointing upward, and knowing that the member force must be pointing downward for the truss to remain stationary.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+var[v1_,v2_,col_]:=Style[Subscript[Style[v1,Italic],v2],col]
+
+### [Input] (init)
+xmin=Quiet@Interpolation[{{1,-2.6},{2,-3},{3,-3.2},{4,-3.8},{5,-3.8},{6,-5.3}}];
+
+### [Input] (init)
+xmax=Quiet@Interpolation[{{1,14.1},{2,15.7},{3,24.4},{4,32.8},{5,40.9},{6,48.8}}];
+
+### [Input] (init)
+ymin=Quiet@Interpolation[{{1,-5.4},{2,-5.65},{3,-6.4},{4,-6},{5,-6},{6,-6.2}}];
+
+### [Input] (init)
+ymax=Quiet@Interpolation[{{1,9.1},{2,9.6},{3,10.3},{4,15.5},{5,15.6},{6,18.5}}];
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{Theta,FD,FF,sol,RG,RA,F2,F0,F7,F3,F5,F12,F8,F4,F10,F11,F13,F16,F15,F17,F19,F20,L,color,coly,coly2,colx,colC,colT,truss,calculatemoment,forcebalance,solved,fullstructure,partialstructure,cut1,cut2,cut3,cut4,cut5,cut6,cutsolved,equations},
+Theta=ArcTan[h/w];FD=10;FF=15;
+
+sol=Quiet@Solve[N@{
+(*reactions*)3*w*FD+5*w*FF-6*w*rg==0,ra+rg-FD-FF==0,
+(*CUT 1*)ra+f0*Sin[Theta]==0,f0*Cos[Theta]+f2==0,
+(*CUT 2*)ra-f7*Sin[Theta]==0,w*ra-h*f3==0,-f3-f5-f7*Cos[Theta]==0,
+(*CUT 3*)ra+f12*Sin[Theta]==0,2*w*ra+h*f8==0,f4+f8+f12*Cos[Theta]==0,
+(*CUT 4*)ra-FD-f10*Sin[Theta]==0,3*w*ra-h*f11==0,-f10*Cos[Theta]-f11-f13==0,
+(*CUT 5*)ra-FD+f16*Sin[Theta]==0,4*w*ra-(*+*)w*FD+h*f15==0,f15+f16*Cos[Theta]+f17==0,
+(*CUT 6*)ra-FD-FF-f19*Sin[Theta]==0,f19*Cos[Theta]+f20==0
+},{ra,rg,f0,f2,f3,f4,f5,f7,f8,f10,f11,f12,f13,f15,f16,f17,f19,f20}][[1]];
+RG=rg/.sol;RA=ra/.sol;F0=f0/.sol;F2=f2/.sol;F7=f7/.sol;F3=f3/.sol;
+F5=f5/.sol;F12=f12/.sol;F8=f8/.sol;F4=f4/.sol;F10=f10/.sol;F11=f11/.sol;
+F13=f13/.sol;F16=f16/.sol;F15=f15/.sol;F17=f17/.sol;F19=f19/.sol;F20=f20/.sol;
+
+L=If[cuts>5,6,cuts]-1;
+color[col_]:=Blend[{col,White},If[moment,0.5,0]];
+coly=If[moment,Magenta,Blue];coly2=If[moment,Red,Blue];colx=If[moment,RGBColor[1,0.4,0],Blue];
+colC=RGBColor[0,0.6,0];colT=RGBColor[1,0,0.25];
+
+(*FULL TRUSS AND ROLLERS*)
+truss={
+{EdgeForm@Thick,FaceForm@None,Polygon[{{0,0},{w,h},{5*w,h},{6*w,0}}]},Line[{{w,h},{2*w,0},{3*w,h},{4*w,0},{5*w,h}}],Line[{{#*w,0},{#*w,h}}]&/@Range@5,
+If[steps==1,{EdgeForm@GrayLevel@0.6,FaceForm@GrayLevel@0.6,Disk[{#,0},0.65],Disk[{#,-0.8},0.8],Polygon[{{#-0.65,0},{#-0.8,-0.8},{#+0.8,-0.8},{#+0.65,0}}],
+Line[{{#-0.65,0},{#-0.8,-0.8}}],Line[{{#+0.65,0},{#+0.8,-0.8}}],
+Line@Table[{i,Sqrt[0.65^2-(i-#)^2]},{i,#-0.65,#+0.65,0.01}],Line@Table[{i,-Sqrt[0.8^2-(i-#)^2]-0.8},{i,#-0.8,#+0.7992,0.0001}],
+PointSize@0.015,Point@{#,0},PointSize@0.007,White,Point@{#,0}}&/@{0,6*w}]};
+
+(*SOLVING REACTION FORCES*)
+calculatemoment={
+Magenta,Arrow[{{0,-0.25*h},{3*w,-0.25*h}}],Arrow[{{3*w,1.85*h},{3*w,h}}],Text[Style[Row@{var["\<F\>","\<D\>",Magenta],"\< = \>",FD,"\<kN\>"},17,Magenta],{3*w,1.85*h},{0,-1.5}],
+RGBColor[1,0.4,0],Arrow[{{0,-0.4*h},{5*w,-0.4*h}}],Arrow[{{5*w,2.3*h},{5*w,h}}],Text[Style[Row@{var["\<F\>","\<F\>",RGBColor[1,0.4,0]],"\< = \>",FF,"\< kN\>"},17,RGBColor[1,0.4,0]],{5*w,2.3*h},{0,-1.5}],
+RGBColor[0.9,0,0],Arrow[{{0,-0.55*h},{6*w,-0.55*h}}],Arrow[{{6*w,-1.5*h},{6*w,0}}],Text[Style[var["\<R\>","\<G\>",RGBColor[0.9,0,0]],17],{6*w,-1.5*h},{0,1.5}],
+Blue,PointSize@0.015,Point@{0,0},Text[Style["\<A\>",17,Blue],{0,0},{0,-1.7}],
+
+Black,Text[Style[Row@{"\< \>",#1,Style["\< w \>",Italic]},17,Background->White],{#1*w/2,#2}]&@@@{{3,-0.25*h},{5,-0.4*h},{6,-0.55*h}},
+{Thick,Dashed,Line[{{0,0},{0,-0.5*h}}],Line[{{3*w,0},{3*w,-0.25*h}}],Line[{{5*w,0},{5*w,-0.4*h}}],Line[{{6*w,0},{6*w,-0.55*h}}]},
+Mouseover[
+Text[Style[Column[{
+Row@{"\<sum of moments about A: \[Sum] \>",var["\<M\>","\<A\>",Black],"\< = 0 = 3 \>",Style["\<w \>",Italic],var["\<F\>","\<D\>",Magenta],"\< + 5 \>",Style["\<w \>",Italic],var["\<F\>","\<F\>",RGBColor[1,0.4,0]],"\< - 6 \>",Style["\<w \>",Italic],var["\<R\>","\<G\>",RGBColor[0.9,0,0]]},
+Row@{"\<reaction force G: 6 \>",var["\<R\>","\<G\>",RGBColor[0.9,0,0]],"\< = \>",3,var["\< F\>","\<D\>",Magenta],"\< + \>",5,var["\< F\>","\<F\>",RGBColor[1,0.4,0]]},
+Style[Row@{var["\<R\>","\<G\>",RGBColor[0.9,0,0]],"\< = \>",NumberForm[RG,{3,1}],"\< kN\>"},RGBColor[0.9,0,0]]
+},Alignment->"\<=\>"],17,Black],{3*w,-9.5}],
+Text[Style[Column[{"\<the first two terms are positive because they would\>","\<cause a clockwise rotation and the third term is negative\>","\<because it would cause a counterclockwise rotation\>"},Center],18],{3*w,-9.5}]]};
+
+forcebalance={Blue,
+Arrow[{{3*w,1.85*h},{3*w,h}}],Arrow[{{5*w,2.3*h},{5*w,h}}],Text[Style[Row@{var["\<F\>",#1,Blue],"\< = \>",#2,"\< kN\>"},16,Blue],#3,{0,-1.5}]&@@@{{"\<D\>",FD,{3*w,1.85*h}},{"\<F\>",FF,{5*w,2.3*h}}},
+Arrow[{{6*w,-1.5*h},{6*w,0}}],Text[Style[Row@{var["\<R\>","\<G\>",Blue],"\< = \>",NumberForm[RG,{3,1}],"\< kN\>"},16,Blue],{6*w,-1.5*h},{0,1.5}],
+Arrow[{{0,-0.64*h},{0,0}}],Text[Style[var["\<R\>","\<A\>",Blue],17],{0,-0.64*h},{-1,1.5}],
+Text[Style[Column[{
+Row@{"\<sum of the \>",Style["\<y\>",Italic],"\< forces: \[Sum] \>",Style[Subscript["\<F\>","\<y\>"],Italic],"\< = 0 = \>",var["\<R\>","\<A\>",Blue],"\< + \>",var["\<R\>","\<G\>",Blue],"\< - \>",var["\<F\>","\<D\>",Blue],"\< - \>",var["\<F\>","\<F\>",Blue]},
+Row@{"\<reaction force A: \>",var["\<R\>","\<A\>",Blue],"\< = \>",var["\<F\>","\<D\>",Blue],"\< + \>",var["\<F\>","\<F\>",Blue],"\< - \>",var["\<R\>","\<G\>",Blue]},
+Style[Row@{var["\<R\>","\<A\>",Blue],"\< = \>",NumberForm[RA,{3,1}],"\< kN\>"},Blue]
+},Alignment->"\<=\>"],17,Black],{3*w,-8}]};
+
+solved={Blue,Arrow[{{3*w,1.85*h},{3*w,h}}],Arrow[{{5*w,2.3*h},{5*w,h}}],Text[Style[Row@{Subscript[Style["\<F\>",Italic],#2],"\< = \>",#1,"\< kN\>"},16],#3,{0,-1.5}]&@@@{{FD,"\<D\>",{3*w,1.85*h}},{FF,"\<F\>",{5*w,2.3*h}}},
+Arrow[{{0,-0.64*h},{0,0}}],Arrow[{{6*w,-1.5*h},{6*w,0}}],Text[Style[Row@{Subscript[Style["\<R\>",Italic],#2],"\< = \>",N@#1,"\< kN\>"},16],#3,{0,1.5}]&@@@{{RA,"\<A\>",{0,-0.64*h}},{RG,"\<G\>",{6*w,-1.5*h}}}};
+
+(*MAKING CUTS*)
+fullstructure={
+Text[Framed[Style[Subscript[Style["\<F\>",Italic],#1],15],Background->White,FrameStyle->None,FrameMargins->Tiny],#2]&@@@{{0,{w/2,h/2}},{1,{w,h/2}},{2,{w/2,0}},{3,{1.5*w,0}},{4,{2.5*w,0}},{5,{1.5*w,h}},{6,{2*w,h/2}},{7,{1.5*w,h/2}},{8,{2.5*w,h}},{9,{3*w,h/2}},{10,{3.5*w,h/2}},{11,{3.5*w,0}},{12,{2.5*w,h/2}},{13,{3.5*w,h}},{14,{4*w,h/2}},{15,{4.5*w,h}},{16,{4.5*w,h/2}},{17,{4.5*w,0}},{18,{5*w,h/2}},{19,{5.5*w,h/2}},{20,{5.5*w,0}}},
+Text[Framed[Style[Row@{"\< \>",#1,"\< \>"},15],RoundingRadius->15,Background->White],#2]&@@@{
+{"\<A\>",{0,0}},{"\<B\>",{w,h}},{"\<C\>",{2*w,h}},{"\<D\>",{3*w,h}},{"\<E\>",{4*w,h}},{"\<F\>",{5*w,h}},{"\<G\>",{6*w,0}},{"\<H\>",{5*w,0}},{"\<I\>",{4*w,0}},{"\<J\>",{3*w,0}},{"\<K\>",{2*w,0}},{"\<L\>",{w,0}}},
+{Red,Dashed,Line[{Sin[1.5*#]/2+(cuts-0.25)*w,#}&/@Range[-0.25*h,1.25*h,0.05]]},
+{Blue,Arrow[{{3*w,1.85*h},{3*w,1.1*h}}],Arrow[{{5*w,2.3*h},{5*w,1.1*h}}],Text[Style[Row@{#1,"\< kN\>"},16],#2,{0,-1.5}]&@@@{{FD,{3*w,1.85*h}},{FF,{5*w,2.3*h}}},
+Arrow[{{0,-0.64*h},{0,-0.05*h}}],Arrow[{{6*w,-1.5*h},{6*w,-0.05*h}}],Text[Style[Row@{N@#1,"\< kN\>"},16],#2,{0,1.5}]&@@@{{RA,{0,-0.64*h}},{RG,{6*w,-1.5*h}}}}
+};
+
+partialstructure={
+If[cuts<4,
+Text[Style[Row@{"\<Theta = \>",NumberForm[Theta*180/π,{3,1}],"\<°\>"},18],{0,0},{-1.8,-1.5}],
+Text[Style[Row@{NumberForm[Theta*180/π,{3,1}],"\<°\>"},18],{0,0},{-2.5,-1}]],
+{If[1<cuts<6,coly,Blue],Arrow[{{0,-0.5*h},{0,0}}],Text[Style[Row@{var["\<R\>","\<A\>",If[1<cuts<6,coly,Blue]],"\< = \>",NumberForm[RA,{3,1}],"\< kN\>"},18],{0,-0.5*h},{0,1.5}]},
+If[cuts>=4,{Blue,Arrow[{{3*w,1.75*h},{3*w,If[cuts==4,1.1,1]*h}}],Text[Style[Row@{var["\<F\>","\<D\>",Blue],"\< = \>",FD,"\< kN\>"},16],{3*w,1.75*h},{0,-1.5}]}],
+If[cuts==6,{Blue,Arrow[{{5*w,2*h},{5*w,h}}],Text[Style[Row@{var["\<F\>","\<F\>",Blue],"\< = \>",FF,"\< kN\>"},16],{5*w,2*h},{0,-1.5}]}],
+If[cuts>1,{Line[{{L*w,h},{w,h},{0,0},{L*w,0}}],Line[{{#*w,0},{#*w,h}}]&/@Range@L,Line@Delete[{{w,h},{2*w,0},{3*w,h},{4*w,0},{5*w,h}},{#}&/@Range[L+1,5]]}],
+Arrow[{
+{{{0,0},{w,0}},{{w,h},{0,0}}},
+{{{1.9*w,h},{1.05*w,h}},{{w,h},{1.9*w,0.1*h}},{{w,0},{1.9*w,0}}},
+{{{2.9*w,h},{2*w,h}},{{2*w,0},{2.9*w,0}},{{2.9*w,0.9*h},{2.05*w,0.05*h}}},
+{{{3.9*w,h},{3.05*w,h}},{{3*w,0},{3.9*w,0}},{{3.9*w,0.1*h},{3.05*w,0.95*h}}},
+{{{4.9*w,h},{4*w,h}},{{4*w,0},{4.9*w,0}},{{4*w,0},{4.9*w,0.9*h}}},
+{{{5*w,0},{5.9*w,0}},{{5.9*w,0.1*h},{5*w,h}}},{}
+}[[cuts]]]};
+
+(*CUTS*)
+cut1={
+{Dashed,Red,Line[{Sin[1.5*#]/2+w,#}&/@Range[-0.1*h,1.1*h,0.1]]},
+{Dashed,RGBColor[0,0.7,0],Arrow[{{w,0.5*h},{0.5*w,0.5*h}}],Arrow[{{0.5*w,h},{0.5*w,0.5*h}}]},
+Text[Style[Row@{var["\<F\>",Row@{"\<0, \>",Style["\<x\>",Italic]},RGBColor[0,0.7,0]],"\< = \>",var["\<F\>",0,Blue],"\< cos Theta\>"},18,Background->White],{w,0.5*h},{-1,0}],
+Text[Style[Row@{var["\<F\>",Row@{"\<0, \>",Style["\<y\>",Italic]},RGBColor[0,0.7,0]],"\< = \>",var["\<F\>",0,Blue],"\< sin Theta\>"},18],{0.5*w,h},{0,-1}],
+Text[Style[var["\<F\>",#1,Blue],18,Background->White],#2]&@@@{{0,0.75*{w,h}},{2,{0.75*w,0}}}};
+
+cut2={
+{Dashed,Red,Line[{Sin[1.5*#]/2+1.9*w,#}&/@Range[-0.1*h,1.1*h,0.1]]},
+If[moment,{
+{GrayLevel@0.55,Arrow[{{1.9*w,h},{1.05*w,h}}],Arrow[{{w,h},{1.9*w,0.1*h}}]},
+{Thickness@0.008,Line[{{0,0},{w,0}}],
+Magenta,Line[{{0,-0.1*h},{w,-0.1*h}}],{Thick,Line[{{#,-0.15*h},{#,-0.05*h}}]&/@{0,w}},
+RGBColor[1,0.4,0],Arrow[{{w,0},{1.9*w,0}}],Line[{{w,0},{w,h}}]},
+Text[Style["\< w \>",18,Italic,Background->White],{0.5*w,-0.1*h}],
+Text[Framed[Style["\<h\>",18,Italic],Background->White,FrameStyle->None,FrameMargins->Tiny],{w,0.5*h}]
+}],
+{Dashed,color[RGBColor[0,0.7,0]],Arrow[{{1.25*w,0.75*h},{1.75*w,0.75*h}}],Arrow[{{1.25*w,0.75*h},{1.25*w,0.25*h}}]},
+Text[Style[var["\<F\>",Row@{"\<7, \>",Style[#1,Italic]},color[RGBColor[0,0.7,0]]],18,Background->White],#2,#3]&@@@{{"\<x\>",{1.75*w,0.75*h},{-1,0}},{"\<y\>",{1.25*w,0.25*h},{0,1}}},
+Text[Style[var["\<F\>",#1,color[Blue]],18,Background->White],{1.6*w,#2}]&@@@{{5,h},{7,0.4*h}},
+Text[Style[var["\<F\>",3,colx],18,Background->White],{1.6*w,0}],
+Text[Framed[Style["\< B \>",15,GrayLevel@0.4],Background->White,RoundingRadius->15,FrameMargins->Tiny,FrameStyle->If[moment,Thick,Thin]],{w,h}]};
+
+cut3={
+{Dashed,Red,Line[{Sin[1.5*#]/2+2.9*w,#}&/@Range[-0.1*h,1.1*h,0.1]]},
+If[moment,{
+{GrayLevel@0.55,Arrow[{{2*w,0},{2.9*w,0}}],Arrow[{{2.9*w,0.9*h},{2.05*w,0.05*h}}]},
+{Thickness@0.008,Line[{{0,0},{2*w,0}}],RGBColor[1,0.4,0],Line[{{2*w,0},{2*w,h}}],Arrow[{{2.9*w,h},{2*w,h}}],
+Magenta,Line[{{0,-0.1*h},{2*w,-0.1*h}}],Thick,Line[{{#,-0.15*h},{#,-0.05*h}}]&/@{0,2*w}},
+Text[Style[Row@{"\< 2 \>",Style["\<w \>",Italic]},18,Background->White],{w,-0.1*h}],
+Text[Framed[Style["\<h\>",18,Italic],Background->White,FrameStyle->None,FrameMargins->Tiny],{2*w,0.5*h}]
+}],
+{Dashed,color@RGBColor[0,0.7,0],Arrow[{{2.75*w,0.25*h},{2.25*w,0.25*h}}],Arrow[{{2.25*w,0.75*h},{2.25*w,0.25*h}}]},
+Text[Style[var["\<F\>",Row@{"\<12, \>",Style[#1,Italic]},color@RGBColor[0,0.7,0]],18,Background->White],#2,#3]&@@@{{"\<x\>",{2.75*w,0.25*h},{-1.2,0}},{"\<y\>",{2.25*w,0.75*h},{0,-1.2}}},
+Text[Style[var["\<F\>",#1,color@Blue],18,Background->White],{2.6*w,#2}]&@@@{{4,0},{12,0.6*h}},
+Text[Style[var["\<F\>",8,colx],18,Background->White],{2.6*w,h}],
+Text[Framed[Style["\< K \>",15,GrayLevel@0.4],Background->White,RoundingRadius->15,FrameMargins->Tiny,FrameStyle->If[moment,Thick,Thin]],{2*w,0}],
+Text[Style[Column[{
+Row@{"\<\[Sum] \>",Style[Subscript["\<F\>","\<x\>"],Italic],"\< = 0 = \>",var["\<F\>",4,Blue],"\< - \>",var["\<F\>",8,Blue],"\< - \>",var["\<F\>",12,Blue],"\< cos Theta\>"},
+Row@{var["\<F\>",4,Blue],"\< = \>",var["\<F\>",8,Blue],"\< + \>",var["\<F\>",12,Blue],"\< cos Theta\>"},
+Style[Row@{var["\<F\>",4,Blue],"\< = \>",NumberForm[Abs@F4,{3,1}],"\< kN\>"},Blue]
+},Alignment->"\<=\>"],17],{12,-3.5}]};
+
+cut4={
+{Dashed,Red,Line[{Sin[1.5*#]/2+3.9*w,#}&/@Range[-0.1*h,1.1*h,0.1]]},
+If[moment,{
+{GrayLevel@0.55,Arrow[{{3.9*w,h},{3.05*w,h}}],Arrow[{{3.9*w,0.1*h},{3.05*w,0.95*h}}]},
+{Thickness@0.008,Line[{{0,0},{3*w,0}}],RGBColor[1,0.4,0],Line[{{3*w,h},{3*w,0}}],Arrow[{{3*w,0},{3.9*w,0}}],
+Magenta,Line[{{0,-0.1*h},{3*w,-0.1*h}}],Thick,Line[{{#,-0.15*h},{#,-0.05*h}}]&/@{0,3*w}},
+Text[Style[Row@{"\< 3 \>",Style["\<w \>",Italic]},18,Background->White],{3*w/2,-0.1*h}],
+Text[Framed[Style["\<h\>",18,Italic],Background->White,FrameStyle->None,FrameMargins->Tiny],{3*w,0.5*h}]
+}],
+{Dashed,color@RGBColor[0,0.7,0],Arrow[{{3.75*w,0.75*h},{3.25*w,0.75*h}}],Arrow[{{3.25*w,0.25*h},{3.25*w,0.75*h}}]},
+Text[Style[var["\<F\>",Row@{"\<10, \>",Style[#1,Italic]},color@RGBColor[0,0.7,0]],18,Background->White],#2,#3]&@@@{{"\<x\>",{3.75*w,0.75*h},{-1.2,0}},{"\<y\>",{3.25*w,0.25*h},{0,0.5}}},
+Text[Style[var["\<F\>",#1,color@Blue],18,Background->White],{3.6*w,#2}]&@@@{{10,0.4*h},{13,h}},
+Text[Style[var["\<F\>",11,colx],18,Background->White],{3.6*w,0}],
+Text[Framed[Style["\< D \>",15,GrayLevel@0.4],Background->White,RoundingRadius->15,FrameMargins->Tiny,FrameStyle->If[moment,Thick,Thin]],{3*w,h}],
+Text[Style[Column[{
+Row@{"\<\[Sum] \>",Style[Subscript["\<F\>","\<x\>"],Italic],"\< = 0 = -\>",var["\<F\>",10,Blue],"\< cos Theta + \>",var["\<F\>",11,Blue],"\< - \>",var["\<F\>",13,Blue]},
+Row@{var["\<F\>",13,Blue],"\< = -\>",var["\<F\>",10,Blue],"\< cos Theta + \>",var["\<F\>",11,Blue]},
+Style[Row@{var["\<F\>",13,Blue],"\< = \>",NumberForm[Abs@F12,{3,1}],"\< kN\>"},Blue]
+},Alignment->"\<=\>"],17],{8,11}]};
+
+cut5={
+{Dashed,Red,Line[{Sin[1.5*#]/2+4.9*w,#}&/@Range[-0.1*h,1.1*h,0.1]]},
+If[moment,{
+{GrayLevel@0.55,Arrow[{{4*w,0},{4.9*w,0}}],Arrow[{{4*w,0},{4.9*w,0.9*h}}]},
+{Thickness@0.008,Line[{{0,0},{4*w,0}}],RGBColor[1,0.4,0],Line[{{4*w,h},{4*w,0}}],Arrow[{{4.9*w,h},{4*w,h}}],
+Magenta,Line[{{0,-0.1*h},{4*w,-0.1*h}}],{Thick,Line[{{#,-0.15*h},{#,-0.05*h}}]&/@{0,4*w}},
+Red,Line[{{3*w,-0.25*h},{4*w,-0.25*h}}],Thick,Line[{{#,-0.2*h},{#,-0.3*h}}]&/@{3*w,4*w}},
+Text[Style[Row@{"\< 4 \>",Style["\<w\>",Italic]},18,Background->White],{2*w,-0.1*h}],
+Text[Style[Style["\< w \>",Italic],18,Background->White],{3.5*w,-0.25*h}],
+Text[Framed[Style["\<h\>",18,Italic],Background->White,FrameStyle->None,FrameMargins->Tiny],{4*w,0.5*h}]
+}],
+{Dashed,color@RGBColor[0,0.7,0],Arrow[{{4.25*w,0.25*h},{4.25*w,0.75*h}}],Arrow[{{4.25*w,0.25*h},{4.75*w,0.25*h}}]},
+Text[Style[var["\<F\>",Row@{"\<16, \>",Style[#1,Italic]},color@RGBColor[0,0.7,0]],18,Background->White],#2,#3]&@@@{{"\<x\>",{4.75*w,0.25*h},{-1.2,0}},{"\<y\>",{4.25*w,0.75*h},{0,-1.2}}},
+Text[Style[var["\<F\>",#1,color@Blue],18,Background->White],#2]&@@@{{16,{4.6*w,0.6*h}},{17,{4.5*w,0}}},
+Text[Style[var["\<F\>",15,colx],18,Background->White],{4.5*w,h}],
+Text[Framed[Style["\< I \>",15,GrayLevel@0.4],Background->White,RoundingRadius->15,FrameMargins->Tiny,FrameStyle->If[moment,Thick,Thin]],{4*w,0}],
+Text[Style[Column[{
+Row@{"\<\[Sum] \>",Style[Subscript["\<F\>","\<x\>"],Italic],"\< = 0 = -\>",var["\<F\>",15,Blue],"\< + \>",var["\<F\>",16,Blue],"\< cos Theta + \>",var["\<F\>",17,Blue]},
+Row@{var["\<F\>",17,Blue],"\< = \>",var["\<F\>",15,Blue],"\< - \>",var["\<F\>",16,Blue],"\< cos Theta\>"},
+Style[Row@{var["\<F\>",17,Blue],"\< = \>",NumberForm[Abs@F17,{3,1}],"\< kN\>"},Blue]
+},Alignment->"\<=\>"],17],{8,11}]};
+
+cut6={
+{Dashed,Red,Line[{Sin[1.5*#]/2+5.9*w,#}&/@Range[-0.5*h,0.75*h,0.1]]},
+{Dashed,RGBColor[0,0.7,0],Arrow[{{5.65*w,0.85*h},{5.15*w,0.85*h}}],Arrow[{{5.15*w,0.35*h},{5.15*w,0.85*h}}]},
+Text[Style[var["\<F\>",Row@{"\<19, \>",Style[#1,Italic]},RGBColor[0,0.7,0]],18,Background->White],#2,#3]&@@@{{"\<x\>",{5.65*w,0.85*h},{-1.2,0}},{"\<y\>",{5.15*w,0.35*h},{0,0.8}}},
+Text[Style[var["\<F\>",19,Blue],18,Background->White],{5.6*w,0.4*h}],
+Text[Style[var["\<F\>",20,Blue],18,Background->White],{5.5*w,0}]};
+
+cutsolved={Thick,
+Line[{{#*w,0},{#*w,h}}]&/@Range@5,
+
+{Blue,Arrow[{{3*w,1.85*h},{3*w,h}}],Arrow[{{5*w,2.3*h},{5*w,h}}],Text[Style[Row@{#1,"\< kN\>"},16],#2,{0,-1.5}]&@@@{{FD,{3*w,1.85*h}},{FF,{5*w,2.3*h}}},
+Arrow[{{0,-0.64*h},{0,0}}],Arrow[{{6*w,-1.5*h},{6*w,0}}],Text[Style[Row@{N@#1,"\< kN\>"},16],#2,{0,1.5}]&@@@{{RA,{0,-0.64*h}},{RG,{6*w,-1.5*h}}}},
+
+Flatten@{If[#1<0,{colC,Arrowheads@{-0.035,0.035}},{colT,Arrowheads@{{0.035,0.325},{-0.035,0.675}}}],#2,Text[Rotate[Style[NumberForm[Abs@#1,{3,1}],18,Background->White],#4],#3]}&@@@{
+{F0,Arrow[{{0,0},{w,h}}],{w,h}/2,Theta},{F2,Arrow[{{0,0},{w,0}}],{0.5*w,0},0},{F3,Arrow[{{w,0},{2*w,0}}],{1.5*w,0},0},{F4,Arrow[{{2*w,0},{3*w,0}}],{2.5*w,0},0},{F5,Arrow[{{w,h},{2*w,h}}],{1.5*w,h},0},{F7,Arrow[{{w,h},{2*w,0}}],{1.5*w,0.5*h},-Theta},{F8,Arrow[{{2*w,h},{3*w,h}}],{2.5*w,h},0},{F10,Arrow[{{3*w,h},{4*w,0}}],{3.5*w,0.5*h},-Theta},{F11,Arrow[{{3*w,0},{4*w,0}}],{3.5*w,0},0},{F12,Arrow[{{2*w,0},{3*w,h}}],{2.5*w,0.5*h},Theta},{F13,Arrow[{{3*w,h},{4*w,h}}],{3.5*w,h},0},{F15,Arrow[{{4*w,h},{5*w,h}}],{4.5*w,h},0},{F16,Arrow[{{4*w,0},{5*w,h}}],{4.5*w,0.5*h},Theta},{F17,Arrow[{{4*w,0},{5*w,0}}],{4.5*w,0},0},{F19,Arrow[{{5*w,h},{6*w,0}}],{5.5*w,0.5*h},-Theta},{F20,Arrow[{{5*w,0},{6*w,0}}],{5.5*w,0},0}},
+
+Text[Style[Row@{"\<all \>",Style["\<compression\>",colC],"\< and \>",Style["\<tension\>",colT],"\< forces are in kN\>"},17],{3*w,-4.5}]};
+
+equations=Graphics[{Text@Style[
+Switch[cuts,
+1,Grid[{
+{Row@{"\<\[Sum] \>",Style[Subscript["\<F\>","\<y\>"],Italic],"\< = 0 = \>",var["\<R\>","\<A\>",Blue],"\< - \>",var["\<F\>",0,Blue],"\< sin Theta\>"},
+Row@{"\<\[Sum] \>",Style[Subscript["\<F\>","\<x\>"],Italic],"\< = 0 = -\>",var["\<F\>",0,Blue],"\< cos Theta + \>",var["\<F\>",2,Blue]}},
+{Row@{var["\<F\>",0,Blue],"\< = \>",var["\<R\>","\<A\>",Blue],"\</sin Theta\>"},
+Row@{var["\<F\>",2,Blue],"\< = \>",var["\<F\>",0,Blue],"\< cos Theta\>"}},
+{Style[Row@{var["\<F\>",0,Blue],"\< = \>",NumberForm[Abs@F0,{3,1}],"\< kN\>"},Blue],
+Style[Row@{var["\<F\>",2,Blue],"\< = \>",NumberForm[Abs@F2,{3,1}],"\< kN\>"},Blue]}
+},Alignment->"\<=\>",Spacings->{5,Automatic}],
+2,Grid[{
+{Row@{"\<\[Sum] \>",Style[Subscript["\<F\>","\<y\>"],Italic],"\< = 0 = \>",var["\<R\>","\<A\>",Blue],"\< - \>",var["\<F\>",7,Blue],"\< sin Theta\>"},
+Row@{"\<\[Sum] \>",var["\<M\>","\<B\>",Black],"\< = 0 = \>",Style["\<w \>",Italic],var["\<R\>","\<A\>",coly],"\< - \>",Style["\<h \>",Italic],var["\<F\>",3,colx]},
+Row@{"\<\[Sum] \>",Style[Subscript["\<F\>","\<x\>"],Italic],"\< = 0 = \>",var["\<F\>",3,Blue],"\< - \>",var["\<F\>",5,Blue],"\< + \>",var["\<F\>",7,Blue],"\< cos Theta\>"}},
+{Row@{var["\<F\>",7,Blue],"\< = \>",var["\<R\>","\<A\>",Blue],"\</sin Theta\>"},
+Row@{var["\<F\>",3,colx],"\< = \>",Style["\<w\>",Italic],"\</\>",Style["\<h\>",Italic],var["\< R\>","\<A\>",coly]},
+Row@{var["\<F\>",5,Blue],"\< = \>"var["\<F\>",3,Blue],"\< + \>",var["\<F\>",7,Blue],"\< cos Theta\>"}},
+{Style[Row@{var["\<F\>",7,Blue],"\< = \>",NumberForm[Abs@F7,{3,1}],"\< kN\>"},Blue],
+Style[Row@{var["\<F\>",3,colx],"\< = \>",NumberForm[Abs@F3,{3,1}],"\< kN\>"},colx],
+Style[Row@{var["\<F\>",5,Blue],"\< = \>",NumberForm[Abs@F5,{3,1}],"\< kN\>"},Blue]}
+},Alignment->"\<=\>"],
+3,Grid[{
+{Row@{"\<\[Sum] \>",Style[Subscript["\<F\>","\<y\>"],Italic],"\< = 0 = \>",var["\<R\>","\<A\>",Blue],"\< - \>",var["\<F\>",12,Blue],"\< sin Theta\>"},
+Row@{"\<\[Sum] \>",var["\<M\>","\<K\>",Black],"\< = 0 = 2 \>",Style["\<w \>",Italic],var["\<R\>","\<A\>",coly],"\< - \>",Style["\<h \>",Italic],var["\<F\>",8,colx]}},
+{Row@{var["\<F\>",12,Blue],"\< = \>",var["\<R\>","\<A\>",Blue],"\</sin Theta\>"},
+Row@{var["\<F\>",8,colx],"\< = 2 \>",Style["\<w\>",Italic],"\</\>",Style["\<h\>",Italic],var["\< R\>","\<A\>",coly]}},
+{Style[Row@{var["\<F\>",12,Blue],"\< = \>",NumberForm[Abs@F12,{3,1}],"\< kN\>"},Blue],
+Style[Row@{var["\<F\>",8,colx],"\< = \>",NumberForm[Abs@F8,{3,1}],"\< kN\>"},colx]}
+},Alignment->"\<=\>",Spacings->{5,Automatic}],
+4,Grid[{
+{Row@{"\<\[Sum] \>",Style[Subscript["\<F\>","\<y\>"],Italic],"\< = 0 = \>",var["\<R\>","\<A\>",Blue],"\< - \>",var["\<F\>","\<D\>",Blue],"\< + \>",var["\<F\>",10,Blue],"\< sin Theta\>"},
+Row@{"\<\[Sum] \>",var["\<M\>","\<D\>",Black],"\< = 0 = 3 \>",Style["\<w \>",Italic],var["\<R\>","\<A\>",coly],"\< - \>",Style["\<h \>",Italic],var["\<F\>",11,colx]}},
+{Row@{var["\<F\>",10,Blue],"\< = (-\>",var["\<R\>","\<A\>",Blue],"\< + \>",var["\<F\>","\<D\>",Blue],"\<)/sin Theta\>"},
+Row@{var["\<F\>",11,colx],"\< = 3 \>",Style["\<w\>",Italic],"\</\>",Style["\<h\>",Italic],var["\< R\>","\<A\>",coly]}},
+{Style[Row@{var["\<F\>",10,Blue],"\< = \>",NumberForm[Abs@F10,{3,1}],"\< kN\>"},Blue],
+Style[Row@{var["\<F\>",11,colx],"\< = \>",NumberForm[Abs@F11,{3,1}],"\< kN\>"},colx]}
+},Alignment->"\<=\>",Spacings->{5,Automatic}],
+5,Grid[{
+{Row@{"\<\[Sum] \>",Style[Subscript["\<F\>","\<y\>"],Italic],"\< = 0 = \>",var["\<R\>","\<A\>",Blue],"\< - \>",var["\<F\>","\<D\>",Blue],"\< + \>",var["\<F\>",16,Blue],"\< sin Theta\>"},
+Row@{"\<\[Sum] \>",var["\<M\>","\<I\>",Black],"\< = 0 = 4 \>",Style["\<w \>",Italic],var["\<R\>","\<A\>",coly],"\< + \>",Style["\<w \>",Italic],var["\<F\>","\<D\>",coly2],"\< - \>",Style["\<h \>",Italic],var["\<F\>",15,colx]}},
+{Row@{var["\<F\>",16,Blue],"\< = (-\>",var["\<R\>","\<A\>",Blue],"\< + \>",var["\<F\>","\<D\>",Blue],"\<)/sin Theta\>"},
+Row@{var["\<F\>",15,colx],"\< = \>",Style["\<w\>",Italic],"\</\>",Style["\<h\>",Italic],"\< (4 \>",var["\<R\>","\<A\>",coly],"\< - \>",var["\<F\>","\<D\>",coly2],"\<)\>"}},
+{Style[Row@{var["\<F\>",16,Blue],"\< = \>",NumberForm[Abs@F16,{3,1}],"\< kN\>"},Blue],
+Style[Row@{var["\<F\>",15,colx],"\< = \>",NumberForm[Abs@F15,{3,1}],"\< kN\>"},colx]}
+},Alignment->"\<=\>",Spacings->{5,Automatic}],
+6,Grid[{
+{Row@{"\<\[Sum] \>",Style[Subscript["\<F\>","\<y\>"],Italic],"\< = 0 = \>",var["\<R\>","\<A\>",Blue],"\< - \>",var["\<F\>","\<D\>",Blue],"\< - \>",var["\<F\>","\<F\>",Blue],"\< + \>",var["\<F\>",19,Blue],"\< sin Theta\>"},
+Row@{"\<\[Sum] \>",Style[Subscript["\<F\>","\<x\>"],Italic],"\< = 0 = -\>",var["\<F\>",19,Blue],"\< cos Theta + \>",var["\<F\>",20,Blue]}},
+{Row@{var["\<F\>",19,Blue],"\< = (-\>",var["\<R\>","\<A\>",Blue],"\< + \>",var["\<F\>","\<D\>",Blue],"\< + \>",var["\<F\>","\<F\>",Blue],"\<)/sin Theta\>"},
+Row@{var["\<F\>",20,Blue],"\< = \>",var["\<F\>",19,Blue],"\< cos Theta\>"}},
+{Style[Row@{var["\<F\>",19,Blue],"\< = \>",NumberForm[Abs@F19,{3,1}],"\< kN\>"},Blue],
+Style[Row@{var["\<F\>",20,Blue],"\< = \>",NumberForm[Abs@F20,{3,1}],"\< kN\>"},Blue]}
+},Alignment->"\<=\>",Spacings->{5,Automatic}]
+],17]
+},ImageSize->{605,70}];
+
+
+(*PUT IT ALL TOGETHER*)
+Column[{
+Graphics[{Thick,Arrowheads@Large,
+(*full structure*)If[steps==1\[Or](steps==2\[And]zoom==False),truss],
+If[steps==1,
+Switch[opt,1,calculatemoment,2,forcebalance,3,solved],
+If[zoom,{If[cuts<7,partialstructure,{}],Switch[cuts,1,cut1,2,cut2,3,cut3,4,cut4,5,cut5,6,cut6,7,cutsolved]},
+If[cuts==7,cutsolved,fullstructure]]],
+If[steps==1\[Or](steps==2\[And]cuts==7),{AbsolutePointSize@9,Point@#,White,AbsolutePointSize@6,Point@#}&/@{{0,0},{w,0},{w,h},{2*w,0},{2*w,h},{3*w,0},{3*w,h},{4*w,0},{4*w,h},{5*w,0},{5*w,h},{6*w,0}}]
+},ImageSize->{605,If[steps==2\[And]zoom\[And]cuts<7,300,375]},PlotRange->If[steps==2\[And]zoom,If[cuts==7,{{-0.1,6*w},{-14.4,20.7}},{{xmin[cuts],xmax[cuts]},{ymin[cuts],ymax[cuts]}}],{{-0.85,6*w},{-14.4,20.7}}],PlotRangePadding->If[steps==2\[And]zoom\[And]cuts<7,None,{{Scaled@0.05,Scaled@0.09},None}]],
+If[steps==2\[And]zoom\[And]cuts<7,equations,Nothing]}]
+],
+Column[{
+Row@{Control[{{steps,1,"\<\>"},{1->"\< solve for reaction forces \>",2->"\< make cuts \>" },Setter}],Spacer@30,
+PaneSelector[{
+1->Control[{{opt,1,"\<\>"},{1->"\< calculate moment \>",2->"\< force balance \>",3->"\< reactions \>"},Setter}],
+2->Grid@{{
+Control[{{cuts,1,"\<cut sections\>"},{1->"\< 1 \>",2->"\< 2 \>",3->"\< 3 \>",4->"\< 4 \>",5->"\< 5 \>",6->"\< 6 \>",7->"\< solved \>"},Setter}],
+PaneSelector[{##&@@Thread[{1,2,3,4,5,6}->Control[{{zoom,False,"\<make cut\>"},{True,False}}]]},Dynamic@cuts],
+PaneSelector[{True->PaneSelector[{##&@@Thread[{2,3,4,5}->Control[{{moment,False,"\<solve moment\>"},{True,False}}]]},Dynamic@cuts]},Dynamic@zoom]
+}}},Dynamic@steps]},
+Row@{Control[{{w,8,"\<member width (m)\>"},6,8,0.1,Appearance->"\<Labeled\>",ImageSize->Small}],
+Control[{{h,8,"\<member height (m)\>"},6,8,0.1,Appearance->"\<Labeled\>",ImageSize->Small}]}
+}],
+SaveDefinitions->True]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Rachael L. Baumann
+
+### [Text]
+John L. Falconer
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+\<The method of sections is used to calculate the forces in each member of the truss. This is done by making a "cut" along three selected members. First, calculate the reactions at the supports. Taking the sum of the moments at the left support:\>
+
+### [Text]
+\[Sum]Subscript[M, A]=3 w Subscript[F, D]+5 w Subscript[F, F]-6 w Subscript[R, B]=0.
+
+### [Text]
+Next do a force balance of the y forces:
+
+### [Text]
+\[Sum]Subscript[F, y]=Subscript[R, A]+Subscript[R, B]-Subscript[F, D]-Subscript[F, F]=0,
+
+### [Text]
+where Subscript[R, A] and Subscript[R, B] are the reaction forces, and Subscript[F, D] and Subscript[F, F] are the point load forces in the negative y direction.
+
+### [Text]
+\<Begin solving for the forces of the members by making cuts. The order of the balances listed here is the order in which they should be solved. Force balances are done assuming we can figure out which members are under tension and which are under compression. A labeled truss is shown in Figure 1.\>
+
+### [Text]
+Cut 1, to the right of joint A:
+
+### [Text]
+\[Sum]Subscript[F, y]=0=-Subscript[F, 0] sin Theta+Subscript[R, A],
+
+### [Text]
+\[Sum]Subscript[F, x]=0=-Subscript[F, 0] cos Theta+Subscript[F, 2].
+
+### [Text]
+Cut 2, to the right of joints B and L:
+
+### [Text]
+\[Sum]Subscript[F, y]=0=-Subscript[F, 7] sin Theta+Subscript[R, A],
+
+### [Text]
+\[Sum]Subscript[M, B]=0=w Subscript[R, A]-h Subscript[F, 3],
+
+### [Text]
+\[Sum]Subscript[F, x]=0=Subscript[F, 3]-Subscript[F, 5]+Subscript[F, 7] cos Theta.
+
+### [Text]
+Cut 3, to the right of joints C and K:
+
+### [Text]
+\[Sum]Subscript[F, y]=0=-Subscript[F, 12] sin Theta+Subscript[R, A],
+
+### [Text]
+\[Sum]Subscript[M, K]=0=2 w Subscript[R, A]-h Subscript[F, 8],
+
+### [Text]
+\[Sum]Subscript[F, x]=0=Subscript[F, 4]-Subscript[F, 8]-Subscript[F, 12] cos Theta.
+
+### [Text]
+Cut 4, to the right of joints D and J:
+
+### [Text]
+\[Sum]Subscript[F, y]=0=Subscript[F, 10] sin Theta+Subscript[R, A]-Subscript[F, D],
+
+### [Text]
+\[Sum]Subscript[M, D]=0=3 w Subscript[R, A]-h Subscript[F, 11],
+
+### [Text]
+\[Sum]Subscript[F, x]=0=-Subscript[F, 10] cos Theta+Subscript[F, 11]-Subscript[F, 13].
+
+### [Text] (init)
+Cut 5, to the right of joints E and I:
+
+### [Text]
+\[Sum]Subscript[F, y]=0=Subscript[F, 16] sin Theta+Subscript[R, A]-Subscript[F, D],
+
+### [Text]
+\[Sum]Subscript[M, I]=0=4 w Subscript[R, A]+w Subscript[F, D]-h Subscript[F, 17],
+
+### [Text]
+\[Sum]Subscript[F, x]=0=-Subscript[F, 15]+Subscript[F, 16] cos Theta+Subscript[F, 17].
+
+### [Text]
+Cut 6, to the right of joints F and H:
+
+### [Text]
+\[Sum]Subscript[F, y]=0=Subscript[F, 19] sin Theta+Subscript[R, A]-Subscript[F, D]-Subscript[F, F],
+
+### [Text]
+\[Sum]Subscript[F, x]=0=-Subscript[F, 19] cos Theta+Subscript[F, 20].
+
+### [Text]
+\<Note that all the vertical members are zero members, which means they exert a force of 0 kN and are neither a tension nor a compression force; instead they are at rest.\>
+
+### [Text]
+<<GraphicsBox>>
+
+### [Text]
+Figure 1.
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] SkyCiv Cloud Engineering Software. "Tutorial to Solve Truss by Method of Sections." (Aug 18, 2017) skyciv.com/tutorials/tutorial-to-solve-truss-by-method-of-sections.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+mechanical engineering
+
+### [Item]
+civil engineering
+
+### [Item]
+truss
+
+### [Item]
+method of sections
+
+### [Item]
+fore balance
+
+### [Item]
+compression
+
+### [Item]
+tension
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Cremona Diagram for Truss Analysis
+
+### [Text]
+Analysis of Forces on a Truss
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2017-09-08
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

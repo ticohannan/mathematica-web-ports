@@ -99,7 +99,15 @@ export const PointSize = (d) => directive('pointSize', typeof d === 'string' && 
 const NAMED_POINT = { Tiny: 2, Small: 3, Medium: 4.4, Large: 7 };
 export const AbsolutePointSize = (px) => directive('pointSize', { abs: px });
 /** Arrowheads[s]: head length as a fraction of the plot width. */
-export const Arrowheads = (s) => directive('arrowheads', s);
+// v0.1.40: Arrowheads[Large] (a fraction of the picture's width: heads of about 17 pt in the 605-pt pictures of the truss
+// snapshots, whatever the arrow's thickness; the other named sizes are added when a port needs them and they can be
+// measured) and heads at given places: Arrowheads[{{s, pos}, …}] (pos the fraction of the arrow's length; s < 0 points
+// backwards)
+export const ARROWHEAD_SIZES = Object.freeze({ Large: 0.029 });
+export const Arrowheads = (s) => {
+  if (typeof s === 'string' && !(s in ARROWHEAD_SIZES)) throw new Error(`graphics: Arrowheads[${s}] is not measured yet (known: ${Object.keys(ARROWHEAD_SIZES).join(', ')})`);
+  return directive('arrowheads', typeof s === 'string' ? ARROWHEAD_SIZES[s] : s);
+};
 /** EdgeForm[] (no edges), EdgeForm[c], EdgeForm[Directive[c, AbsoluteThickness[t], …]]. */
 export const EdgeForm = (...ds) => directive('edge', ds.length === 0 || ds[0] === None ? null : ds.flatMap((d) => (d.dir === 'directive' ? d.value : [d])));
 /** FaceForm[c] (filled primitives only); FaceForm[None] = no fill. */
@@ -121,14 +129,16 @@ export const TextBackground = (c) => directive('textBackground', c?.rgb ?? null)
  * cell; [cols, rows] with 'All' for one of them, e.g. Frame -> {False, All}: a box around every row), FrameStyle (a
  * colour or a list of directives; default black, 1 px), Background (a colour, or [colSpec, rowSpec] where a spec is a
  * list of colours whose nested list repeats: {None, {c1, {c2, c3}}}), Alignment (Center default; 'Left', 'Right', or
- * per column a list; "=" and "." align as 'Right'), ItemSize ([w, h] in ems of the item font: minimum cell width and
+ * per column a list; "." aligns as 'Right'; v0.1.40: "=" lines up the first "=" of the cells of a column), ItemSize ([w, h] in ems of the item font: minimum cell width and
  * height), Spacings ([h, v] in ems, default [0.8, 0.4]), ItemStyle (a font size or directives for every item). A cell
  * may be SpanFromLeft (the cell to its left extends over it). Measured in the browser (getBBox).
  */
 export const Grid = (rows, opts = {}) => Object.freeze({ head: 'Grid', rows, opts });
 export const SpanFromLeft = Object.freeze({ head: 'SpanFromLeft' });
-/** Framed[text] (v0.1.37): a thin black frame around a text (its box plus FrameMargins px, default 3), in a Text. */
-export const Framed = (expr, { FrameMargins = 3, FrameStyle = null, Background = null } = {}) => Object.freeze({ head: 'Framed', expr, FrameMargins, FrameStyle, Background });
+/** Framed[text] (v0.1.37): a thin black frame around a text (its box plus FrameMargins px, default 3), in a Text.
+ * v0.1.40: RoundingRadius (px; Mathematica's rounded corners, capped at half the box height), FrameStyle: None (no frame,
+ * the Background only), FrameMargins 'Tiny' (1 px). */
+export const Framed = (expr, { FrameMargins = 3, FrameStyle = null, Background = null, RoundingRadius = 0 } = {}) => Object.freeze({ head: 'Framed', expr, FrameMargins: FrameMargins === 'Tiny' ? 1 : FrameMargins, FrameStyle, Background, RoundingRadius });
 export const FontFamily = (f) => directive('fontFamily', f);
 export const Italic = directive('fontSlant', 'italic');
 /**
@@ -235,6 +245,25 @@ export const Text = (expr, pos, offset = null) => {
   }
   return prim('Text', { expr, pos, anchor: offset?.anchor ?? 'middle', baseline: null });
 };
+/** Text[Rotate[expr, θ], pos] (v0.1.40): the label itself turned by θ (counter-clockwise, radians) about its anchor;
+ * a Background or Framed box turns with it. */
+export const RotatedText = (expr, angle) => Object.freeze({ head: 'RotatedText', expr, angle });
+/**
+ * Mouseover[a, b] (v0.1.40): shows a, and b while the pointer is over the shown part (or it has keyboard focus: the group
+ * is focusable, so the second form is reachable without a mouse). Both are drawn; the hidden one has display none.
+ */
+export const Mouseover = (a, b) => prim('Mouseover', { a, b });
+/**
+ * ImageSize -> {W, H} with AspectRatio Automatic (v0.1.40): Mathematica fits the plot range into W × H keeping its shape
+ * and centres it, the free room being background. fitPlotRange gives the range widened to W × H's shape, which drawn at
+ * width W is the same picture.
+ */
+export function fitPlotRange([[x0, x1], [y0, y1]], [W, H]) {
+  const dx = x1 - x0, dy = y1 - y0;
+  if (dy / dx > H / W) { const e = (dy * W) / H - dx; return [[x0 - e / 2, x1 + e / 2], [y0, y1]]; }
+  const e = (dx * H) / W - dy;
+  return [[x0, x1], [y0 - e / 2, y1 + e / 2]];
+}
 /** Tooltip[g, label]: g with a hover text (an SVG <title>). */
 export const Tooltip = (g, label) => prim('Tooltip', { g, label });
 /**
@@ -267,6 +296,7 @@ export function bounds(g) {
       pts.push([q.c[0] - rx, q.c[1] - ry], [q.c[0] + rx, q.c[1] + ry]);
     }
     else if (q.head === 'Annotation') add(q.g);
+    else if (q.head === 'Mouseover') add(q.a); // v0.1.40: the shown form
     else if (q.head === 'Text' && q.anchor === 'middle' && !q.baseline) pts.push(q.pos); // its box is centred on pos (v0.1.31)
     else throw new Error(`graphics: give Rotate a centre point for ${q.head}${q.head === 'Text' ? ' with an offset' : ''}`);
   };
@@ -499,6 +529,7 @@ export function scaleGraphics(g, [sx, sy]) {
       case 'ImageRaster': return prim('ImageRaster', { ...q, box: q.box.map(f) });
       case 'Clip': { const [[x0, x1], [y0, y1]] = q.range; const a = f([x0, y0]), b = f([x1, y1]); return prim('Clip', { ...q, g: tr(q.g, f, k), range: [[a[0], b[0]], [a[1], b[1]]] }); }
       case 'Annotation': case 'Tooltip': return prim(q.head, { ...q, g: tr(q.g, f, k) });
+      case 'Mouseover': return prim(q.head, { a: tr(q.a, f, k), b: tr(q.b, f, k) }); // v0.1.40
       case 'Cached': return tr(q.thunk(), f, k);
       case 'Translate': return tr(q.g, (p) => f([p[0] + q.v[0], p[1] + q.v[1]]), k);
       case 'Rotate': {
@@ -552,7 +583,7 @@ export function textOf(e, { sep = '' } = {}) {
   if (e.head === 'Row') return e.items.map((x) => textOf(x, { sep })).join('');
   if (e.head === 'Column') return e.items.map((x) => textOf(x, { sep })).join('\n');
   if (e.head === 'Fraction') return `${textOf(e.num, { sep })}/${textOf(e.den, { sep })}`;
-  if (e.head === 'Framed') return textOf(e.expr, { sep });
+  if (e.head === 'Framed' || e.head === 'RotatedText') return textOf(e.expr, { sep }); // RotatedText: v0.1.40
   if (e.head === 'Grid') return e.rows.map((r) => r.map((c) => textOf(c, { sep })).join('\t')).join('\n');
   return '';
 }
@@ -796,8 +827,9 @@ function edgePaint(st) {
 function textNode(plot, g, expr, pos, anchor, st, baseline) {
   let s = st;
   let e = expr;
-  let framed = null;
-  while (e && (e.head === 'Style' || e.head === 'Framed')) {
+  let framed = null, turn = 0;
+  while (e && (e.head === 'Style' || e.head === 'Framed' || e.head === 'RotatedText')) {
+    if (e.head === 'RotatedText') { turn += e.angle; e = e.expr; continue; } // v0.1.40
     if (e.head === 'Framed') { framed = e; e = e.expr; continue; }
     s = e.ds.reduce(applyDirective, s); e = e.expr;
   }
@@ -816,6 +848,9 @@ function textNode(plot, g, expr, pos, anchor, st, baseline) {
       appendPieces(plot, span, line, s.fontSize, s);
     });
   } else if (scripted) appendPieces(plot, t, e, s.fontSize, s);
+  if (turn) t.setAttribute('transform', `${t.getAttribute('transform')} rotate(${-deg(turn)})`); // v0.1.40, about the anchor
+  // v0.1.40: a framed or backed label keeps its outer spaces (Framed[" A "]: the frame is as wide as Mathematica's)
+  if ((s.textBackground || framed) && /^\s|\s$/.test(t.textContent)) t.setAttribute('style', 'white-space:pre');
   if (s.textBackground || framed) boxBehind(plot, g, t, s.textBackground, framed);
   return t;
 }
@@ -838,6 +873,7 @@ function gridNode(plot, g, grid, pos, anchor, st, baseline) {
   const [isW, isH] = Array.isArray(o.ItemSize) ? o.ItemSize : [o.ItemSize, null];
   const grp = plot.group(g, { 'data-role': 'grid' });
   const nR = grid.rows.length, nC = Math.max(...grid.rows.map((r) => r.length));
+  const alignOf = (j) => (Array.isArray(o.Alignment) ? (Array.isArray(o.Alignment[0]) ? o.Alignment[0][j] ?? o.Alignment[0].at(-1) : o.Alignment[0]) : o.Alignment);
   const cells = grid.rows.map((r) => Array.from({ length: nC }, (_, j) => {
     const v = r[j];
     if (v === undefined) return { empty: true, w: 0, h: 0 };
@@ -845,9 +881,16 @@ function gridNode(plot, g, grid, pos, anchor, st, baseline) {
     const t = textNode(plot, grp, v, [0, 0], 'start', cs, null);
     let b = { width: 0, height: em };
     try { b = t.getBBox(); } catch { /* no layout */ }
-    return { t, w: b.width, h: b.height || em };
+    // v0.1.40: Alignment -> "=": where the first "=" of the cell starts (its width when it has none)
+    let eq = b.width;
+    if (alignOf(j) === '=') { const i = t.textContent.indexOf('='); try { if (i >= 0) eq = t.getStartPositionOfChar(i).x - b.x; } catch { /* no layout */ } }
+    return { t, w: b.width, h: b.height || em, eq };
   }));
-  const colW = Array.from({ length: nC }, (_, j) => Math.max(typeof isW === 'number' ? isW * em : 0, ...cells.map((r) => (r[j].span ? 0 : r[j].w + 2 * padX))));
+  // "=" columns: as wide as the widest part before the "=" plus the widest part after it
+  const eqPre = Array.from({ length: nC }, (_, j) => (alignOf(j) === '=' ? Math.max(0, ...cells.map((r) => (r[j].t ? r[j].eq : 0))) : 0));
+  const eqPost = Array.from({ length: nC }, (_, j) => (alignOf(j) === '=' ? Math.max(0, ...cells.map((r) => (r[j].t ? r[j].w - r[j].eq : 0))) : 0));
+  const colW = Array.from({ length: nC }, (_, j) => Math.max(typeof isW === 'number' ? isW * em : 0, alignOf(j) === '=' ? eqPre[j] + eqPost[j] + 2 * padX : 0,
+    ...cells.map((r) => (r[j].span ? 0 : r[j].w + 2 * padX))));
   const rowH = cells.map((r) => Math.max(typeof isH === 'number' ? isH * em : 0, ...r.map((c) => c.h + 2 * padY)));
   // a spanned cell wider than its columns widens its last column
   cells.forEach((r) => r.forEach((c, j) => {
@@ -863,8 +906,8 @@ function gridNode(plot, g, grid, pos, anchor, st, baseline) {
   const xs = [left]; colW.forEach((w) => xs.push(xs.at(-1) + w));
   const ys = [top]; rowH.forEach((h) => ys.push(ys.at(-1) - h));
   const align = (j) => {
-    const a = Array.isArray(o.Alignment) ? (Array.isArray(o.Alignment[0]) ? o.Alignment[0][j] ?? o.Alignment[0].at(-1) : o.Alignment[0]) : o.Alignment;
-    return a === 'Left' ? 'start' : a === 'Right' || a === '=' || a === '.' ? 'end' : 'middle';
+    const a = alignOf(j);
+    return a === 'Left' || a === '=' ? 'start' : a === 'Right' || a === '.' ? 'end' : 'middle';
   };
   const under = [];
   const bg = o.Background;
@@ -876,7 +919,8 @@ function gridNode(plot, g, grid, pos, anchor, st, baseline) {
     else if (Array.isArray(bg)) { const rc = cyc(bg[1], i), cc = cyc(bg[0], j); col = (rc ?? cc)?.rgb ?? null; }
     if (col) under.push(svgNode('rect', { x: xs[j0], y: ys[i + 1], width: xs[j1] - xs[j0], height: ys[i] - ys[i + 1], fill: css(col) }));
     if (!c.t) return;
-    const a = align(j0), cx = a === 'start' ? xs[j0] + padX : a === 'end' ? xs[j1] - padX : (xs[j0] + xs[j1]) / 2;
+    const a = align(j0), cx = alignOf(j0) === '=' && j1 === j0 + 1 ? xs[j0] + padX + eqPre[j0] - c.eq
+      : a === 'start' ? xs[j0] + padX : a === 'end' ? xs[j1] - padX : (xs[j0] + xs[j1]) / 2;
     c.t.setAttribute('transform', `translate(${cx},${(ys[i] + ys[i + 1]) / 2}) scale(1,-1)`);
     c.t.setAttribute('text-anchor', a);
   }));
@@ -905,11 +949,14 @@ function boxBehind(plot, g, t, fill, framed) {
   if (!b || !(b.width > 0)) return;
   const u = plot.unitsPerPx, m = (framed ? framed.FrameMargins : 1) * u;
   const bg = framed?.Background?.rgb ?? fill;
+  const noFrame = framed && framed.FrameStyle === None;
+  const thick = framed?.FrameStyle?.dir === 'thickness' ? (framed.FrameStyle.v?.abs ?? 2) : 0.8; // v0.1.40: FrameStyle -> Thick
   const r = svgNode('rect', {
     x: b.x - m, y: b.y - m, width: b.width + 2 * m, height: b.height + 2 * m,
-    fill: bg ? css(bg) : 'none', stroke: framed ? css(framed.FrameStyle?.rgb ?? [0, 0, 0]) : 'none',
-    'stroke-width': framed ? 0.8 * u : 0, 'data-role': framed ? 'framed' : 'text-background',
+    fill: bg ? css(bg) : 'none', stroke: framed && !noFrame ? css(framed.FrameStyle?.rgb ?? [0, 0, 0]) : 'none',
+    'stroke-width': framed && !noFrame ? thick * u : 0, 'data-role': framed ? 'framed' : 'text-background',
   });
+  if (framed?.RoundingRadius) { const rr = Math.min(framed.RoundingRadius * u, (b.height + 2 * m) / 2); r.setAttribute('rx', rr); r.setAttribute('ry', rr); }
   if (t.getAttribute('transform')) r.setAttribute('transform', t.getAttribute('transform'));
   g.insertBefore(r, t);
 }
@@ -938,7 +985,9 @@ function appendPieces(plot, t, e, fontPx, st = DEFAULT_STYLE) {
       : typeof shift === 'string' ? (sub ? shift : `-${shift}`) : (sub ? 1 : -1) * scriptLength(shift, fontPx, u);
     const size = st.scriptSize === undefined ? fontPx * 0.72 * u : scriptLength(st.scriptSize, fontPx, u);
     const span = svgNode('tspan', { 'font-size': size, dy });
-    span.textContent = textOf(e.b);
+    // v0.1.40: a script with its own styling (Subscript[R, Row[{"A, ", Style["y", Italic]}]]) keeps it
+    if (e.b && typeof e.b === 'object' && (e.b.head === 'Row' || e.b.head === 'Style')) appendPieces(plot, span, e.b, typeof size === 'number' ? size / u : fontPx * 0.72, st);
+    else span.textContent = textOf(e.b);
     t.append(span);
     return typeof dy === 'number' ? dy : 0; // a relative (em) shift is not undone by a Row
   }
@@ -950,7 +999,8 @@ function appendPieces(plot, t, e, fontPx, st = DEFAULT_STYLE) {
       'font-weight': e.ds.some((d) => d.dir === 'fontWeight') ? 'bold' : undefined,
       fill: col ? css(col.rgb) : undefined, 'font-size': fs ? fs.value * plot.unitsPerPx : undefined, // v0.1.37
     });
-    if (e.expr && typeof e.expr === 'object' && e.expr.head) { appendPieces(plot, span, e.expr, fs ? fs.value : fontPx, st); t.append(span); return 0; }
+    // v0.1.40: a styled script (Style[Subscript[…], col] in a Row) passes its baseline shift on, so that the Row undoes it
+    if (e.expr && typeof e.expr === 'object' && e.expr.head) { const sh = appendPieces(plot, span, e.expr, fs ? fs.value : fontPx, st); t.append(span); return sh; }
     span.textContent = textOf(e.expr);
     t.append(span);
     return 0;
@@ -1035,6 +1085,20 @@ function draw(plot, g, p, st) {
       // v0.1.23: Arrowheads[{s1, s2, …}]: heads spread along the arrow; a negative size points backwards (at the start)
       const [sx0, sy0] = p.pts[0], [qx, qy] = p.pts[1];
       const l0 = Math.hypot(qx - sx0, qy - sy0) || 1, vx = (qx - sx0) / l0, vy = (qy - sy0) / l0;
+      if (st.arrowheads.some(Array.isArray)) { // v0.1.40: {{s, pos}, …} — a head at the fraction pos of the length
+        const segs = p.pts.slice(1).map((q, i) => [p.pts[i], q, Math.hypot(q[0] - p.pts[i][0], q[1] - p.pts[i][1])]);
+        const total = segs.reduce((a, x) => a + x[2], 0) || 1;
+        for (const e of st.arrowheads) {
+          const [a, pos] = Array.isArray(e) ? e : [e, 1];
+          let d = pos * total;
+          const sg = segs.find((x) => (d <= x[2] + 1e-12 ? true : ((d -= x[2]), false))) ?? segs.at(-1);
+          const [[x0, y0], [x1, y1], l] = sg, t = Math.min(1, d / (l || 1)), wx = (x1 - x0) / (l || 1), wy = (y1 - y0) / (l || 1);
+          const hx = x0 + t * (x1 - x0), hy = y0 + t * (y1 - y0), sz = Math.abs(a) * W;
+          // a head at pos points along the arrow; a backward head (a < 0) points back, its tip at pos
+          head(hx, hy, a < 0 ? -wx : wx, a < 0 ? -wy : wy, sz);
+        }
+        return grp;
+      }
       st.arrowheads.forEach((a, i, all) => {
         const at = all.length === 1 ? 1 : i / (all.length - 1);
         if (at === 0) head(sx0, sy0, a < 0 ? -vx : vx, a < 0 ? -vy : vy, Math.abs(a) * W);
@@ -1044,6 +1108,18 @@ function draw(plot, g, p, st) {
     }
     case 'Text':
       return textNode(plot, g, p.expr, p.pos, p.anchor, st, p.baseline);
+    case 'Mouseover': { // v0.1.40
+      const grp = plot.group(g, { 'data-role': 'mouseover', tabindex: 0 });
+      const a = plot.group(grp, { 'data-role': 'mouseover-a' }), b = plot.group(grp, { 'data-role': 'mouseover-b', display: 'none' });
+      walk([p.a], (q, s2) => draw(plot, a, q, s2), st);
+      walk([p.b], (q, s2) => draw(plot, b, q, s2), st);
+      const show = (over) => { a.setAttribute('display', over ? 'none' : 'inline'); b.setAttribute('display', over ? 'inline' : 'none'); };
+      grp.addEventListener?.('pointerenter', () => show(true));
+      grp.addEventListener?.('pointerleave', () => show(false));
+      grp.addEventListener?.('focus', () => show(true));
+      grp.addEventListener?.('blur', () => show(false));
+      return grp;
+    }
     case 'Tooltip': {
       let n;
       if (Array.isArray(p.g)) { n = plot.group(g); walk(p.g, (q, s2) => draw(plot, n, q, s2), st); } else n = draw(plot, g, p.g, st);

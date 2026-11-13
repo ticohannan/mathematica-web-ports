@@ -12,7 +12,11 @@ import {
 
 const tracked = execFileSync('git', ['ls-files'], { encoding: 'utf8' }).trim().split('\n');
 
-describe('classes', () => {
+// v0.1.40: these blocks run git over the whole repository; on the owner's Windows machine one plan took 5.1 s, over
+// vitest's 5 s default, so they get 60 s
+const GIT = { timeout: 60000 };
+
+describe('classes', GIT, () => {
   it('every tracked file has a class; the full-run ones are the configurations, the cross-app specs and tools/', async () => {
     const reg = await registry();
     const F = tracked.filter((f) => classify(f, reg).cls === 'F');
@@ -48,7 +52,7 @@ describe('classes', () => {
   });
 });
 
-describe('the dependency map', () => {
+describe('the dependency map', GIT, () => {
   it('every app loads its own main.js and the Manipulate layer; no import is unresolved', async () => {
     const m = await dependencyMap();
     expect(m.unresolved).toEqual([]);
@@ -70,7 +74,7 @@ describe('the dependency map', () => {
   });
 });
 
-describe('plans', () => {
+describe('plans', GIT, () => {
   it('an app file selects that app only; a shared file the apps that load it; style.css is a full run', async () => {
     const a = await plan({ base: 'HEAD', files: ['demos/forward-kinematics/model.js'] });
     expect([a.full, [...a.apps]]).toEqual([false, ['forward-kinematics']]);
@@ -105,7 +109,7 @@ describe('plans', () => {
   });
 });
 
-describe('the Playwright pattern', () => {
+describe('the Playwright pattern', GIT, () => {
   // Playwright matches --grep against "project file describe… title"
   const line = (spec, title) => `chromium ${spec} ${title}`;
   it('selects the app\'s spec and its cross-app rows, and nothing of an app whose name starts the same', async () => {

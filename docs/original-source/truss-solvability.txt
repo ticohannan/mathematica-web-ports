@@ -1,0 +1,231 @@
+
+### [Title]
+Determine if a Truss Can Be Solved
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+This Demonstration determines whether a truss can be solved or if it is statically indeterminate by calculating the number of equations and the number of unknowns. Use buttons to make joints either rollers (one reaction force) or pinned (two reaction forces). Eliminate joint B by unchecking "support at joint B". The number of members, joints and reaction forces is shown above the truss. Check "joint labels" to show labels for each joint. The point load forces are green (known forces) and the reaction forces (unknown forces) are blue.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+pin=Module[{r=1},
+Graphics[{
+{GrayLevel@0.5,{EdgeForm@Black,Disk[{0,0},r]},Polygon[{{-r,0},{-1.1*r,-1.3*r},{1.1*r,-1.3*r},{r,0}}]},
+Line[{{-r,0},{-1.1*r,-1.3*r},{1.1*r,-1.3*r},{r,0}}]
+},ImageSize->25]];
+
+### [Input] (init)
+roller=Module[{r1=1,r2=1.5},
+Graphics[{
+{GrayLevel@0.5,{EdgeForm@Black,Disk[{0,0},r1],Disk[{0,-r2},r2]},Polygon[{{-0.975,0.175},{-1.38,-0.93},{1.38,-0.93},{0.975,0.175}}]},
+Line[{{-0.975,0.175},{-1.38,-0.93}}],Line[{{0.975,0.175},{1.38,-0.93}}]
+},ImageSize->25]];
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{w,h,δ,var,eq,equations},
+w=5;h=5;δ=2;
+var=If[ADTR,13,11]+(SA+If[ADTR,SB,0]+SF);
+eq=2*If[ADTR,8,7];
+
+equations=Graphics[{
+Text[Style[Column[{
+Row@{If[ADTR,13,11],"\< members\>"},
+Row@{SA+If[ADTR,SB,0]+SF,"\< reaction forces\>"},
+Row@{If[ADTR,8,7],"\< joints × 2 balances\>"}
+},Right],17],{0.5*w,8}],
+{Thin,Line[{{5.3,8.88},{6,8.465},{5.3,8.05}}],Line[{{5.3,7.25},{6,7.25}}],Line[{{9.65,8.465},{10.35,7.833},{9.65,7.2}}]},
+Text[Style[Row@{var,"\< variables\>"},17],{6,8.465},{-1.2,0}],
+Text[Style[Row@{eq,"\< equations\>"},17],{6,7.25},{-1.2,0}],
+Text[Style[Column[{
+Row@{"\<variables - equations = \>",var-eq},
+If[var-eq<=0,Style["\<solvable\>",RGBColor[0,0.6,0]],Style["\<statically indeterminate\>",RGBColor[0.8,0,0]]]
+},Center],17],{10.35,7.833},{-1.2,0}]
+},ImageSize->600,PlotRange->{{-3,18},All}];
+
+Graphics[{Thick,
+{EdgeForm@Thick,FaceForm@None,Polygon[{{0,0},{w,0},{0.5*w,h}}],Polygon[{{w,0},{2*w,0},{1.5*w,h}}],Polygon[{{2*w,0},{3*w,0},{2.5*w,h}}]},
+If[ADTR,Line[{{0,0},{0,h},{2.5*w,h}}],Line[{{0.5*w,h},{2.5*w,h}}]],
+
+Inset[If[SA==1,roller,pin],{0,-0.25}],If[ADTR,Inset[Rotate[If[SB==1,roller,pin],-π/2],{-0.25,h}]],Inset[If[SF==1,roller,pin],{3*w,-0.25}],
+
+{Blue,
+If[SA==1,
+{Arrow[{{0,-δ},{0,0}}],Text[Style[Subscript[Style["\<R\>",Italic],Row@{"\<A, \>",Style["\<y\>",Italic]}],17],{0,-δ},{0,1}]},
+{Arrow[{{0,-δ},{0,0}}],Arrow[{{-δ,0},{0,0}}],Text[Style[Subscript[Style["\<R\>",Italic],Row@{"\<A, \>",Style[#1,Italic]}],17],#2,#3]&@@@{{"\<x\>",{-δ,0},{1,0}},{"\<y\>",{0,-δ},{0,1}}}}],
+If[ADTR,If[SB==1,
+{Arrow[{{-δ,h},{0,h}}],Text[Style[Subscript[Style["\<R\>",Italic],Row@{"\<B, \>",Style["\<x\>",Italic]}],17],{-δ,h},{1,0}]},
+{Arrow[{{-δ,h},{0,h}}],Arrow[{{0,h+δ},{0,h}}],Text[Style[Subscript[Style["\<R\>",Italic],Row@{"\<B, \>",Style[#1,Italic]}],17],#2,#3]&@@@{{"\<x\>",{-δ,h},{1,0}},{"\<y\>",{0,h+δ},{0,-1}}}}]],
+If[SF==1,
+{Arrow[{{3*w,-δ},{3*w,0}}],Text[Style[Subscript[Style["\<R\>",Italic],Row@{If[ADTR,"\<F, \>","\<E, \>"],Style["\<y\>",Italic]}],17],{3*w,-δ},{0,1}]},
+{Arrow[{{3*w,-δ},{3*w,0}}],Arrow[{{3*w+δ,0},{3*w,0}}],Text[Style[Subscript[Style["\<R\>",Italic],Row@{If[ADTR,"\<F, \>","\<E, \>"],Style[#1,Italic]}],17],#2,#3]&@@@{{"\<x\>",{3*w+δ,0},{-1,0}},{"\<y\>",{3*w,-δ},{0,1}}}}]},
+
+{RGBColor[0,0.5,0],
+Arrow[{{w,0},{w,-δ}}],Arrow[{{2*w,0},{2*w,-δ}}],
+Text[Style[Subscript[Style["\<F\>",Italic],#1],17],{#2,-δ},{0,1}]&@@@{{If[ADTR,"\<H\>","\<G\>"],w},{If[ADTR,"\<G\>","\<F\>"],2*w}},
+Arrow[{{3*w,h},{2.5*w,h}}],Text[Style[Subscript[Style["\<F\>",Italic],If[ADTR,"\<E\>","\<D\>"]],17],{3*w,h},{-1.2,0}]},
+
+Inset[equations,{1.5*w,9}],
+
+{PointSize@0.015,Point@#,White,PointSize@0.01,Point@#}&/@{{0,0},{0.5*w,h},{w,0},{1.5*w,h},{2*w,0},{2.5*w,h},{3*w,0},If[ADTR,{0,h},{}]},
+
+If[labels,Text[Framed[Style[Row@{"\< \>",#1,"\< \>"},16],Background->White,RoundingRadius->15],#2]&@@@If[ADTR,
+{{"\<A\>",{0,0}},{"\<B\>",{0,h}},{"\<C\>",{0.5*w,h}},{"\<D\>",{1.5*w,h}},{"\<E\>",{2.5*w,h}},{"\<F\>",{3*w,0}},{"\<G\>",{2*w,0}},{"\<H\>",{w,0}}},
+{{"\<A\>",{0,0}},{"\<B\>",{0.5*w,h}},{"\<C\>",{1.5*w,h}},{"\<D\>",{2.5*w,h}},{"\<E\>",{3*w,0}},{"\<F\>",{2*w,0}},{"\<G\>",{w,0}}}]]
+},ImageSize->{600,415},PlotRange->{{-3.5,19},{-2.85,All}}]
+],
+
+Grid[{
+{Control[{{ADTR,True,"\<support at joint B\>"},{True,False}}],Spacer@15,
+Control[{{labels,False,"\<joint labels\>"},{True,False}}],SpanFromLeft},
+{PaneSelector[{
+True->Row@{
+Control[{{SA,1,"\<joint A\>"},{1->"\< roller \>",2->"\< pinned \>"},Setter}],Spacer@10,
+Control[{{SB,1,"\<joint B\>"},{1->"\< roller \>",2->"\< pinned \>"},Setter}],Spacer@10,
+Control[{{SF,1,"\<joint F\>"},{1->"\< roller \>",2->"\< pinned \>"},Setter}]},
+False->Row@{
+Control[{{SA,1,"\<joint A\>"},{1->"\< roller \>",2->"\< pinned \>"},Setter}],Spacer@10,
+Control[{{SF,1,"\<joint E\>"},{1->"\< roller \>",2->"\< pinned \>"},Setter}]}
+},Dynamic@ADTR],SpanFromLeft}
+},Alignment->Left],
+SaveDefinitions->True]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Rachael L. Baumann
+
+### [Text]
+John L. Falconer
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+\<To determine if the truss can be solved or not, a degree of freedom analysis is done:\>
+
+### [Text]
+DOF=2 j-u,
+
+### [Text]
+where DOF is degrees of freedom, j is the number of joints, and u is the number of unknowns; and u=m+r, where m is the number of members, and r is the number of unknown reaction forces.
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+mechanical engineering
+
+### [Item]
+civil engineering
+
+### [Item]
+statically indeterminate
+
+### [Item]
+truss
+
+### [Item]
+truss support types
+
+### [Item]
+degrees of freedom
+
+### [Item]
+statics
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Force Balances on a Truss
+
+### [Text]
+Determine the Type of Stress in Each Member of a Truss
+
+### [Text]
+Method of Sections to Solve a Truss
+
+### [Text]
+Solving a Double Scissor Truss
+
+### [Text]
+Method of Joints to Solve a Truss Problem
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2018-01-19
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

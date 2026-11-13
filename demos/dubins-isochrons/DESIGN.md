@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.39 |
+| Code version: | 0.1.40 |
 | Document revision | 1 (2026-10-17) — first implementation |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Isochrons for a Dubins Car", contributed by Aaron T. Becker and Shiva Shahrokhi, published 2017-12-18 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/IsochronsForADubinsCar/>. Readable source: [`docs/original-source/dubins-isochrons.txt`](../../docs/original-source/dubins-isochrons.txt); snapshots: `docs/original-snapshots/dubins-isochrons-1.png` … `dubins-isochrons-5.png` (pictures 6 and 7 of the extraction are the Wolfram icon, not snapshots); golden fixture (COMMON-DECISIONS §1): `tests/golden/dubins-isochrons.original-states.json` with `states[0]` = the live output-cell state including the original's cached `ParametricPlot` output `plotReach` (raw definition notebook line 1111), `specs` = the initial settings (stored `"Variables"`, raw line 3792, equal to the live state; the output cell `"Specifications"`, line 5286, also hold the cached plot), `snapshots[1…5]` = the `"Settings"` of the five snapshot cells with their own cached plots (lines 7853, 10287, 17941, 25604, 33224; 2–4 hold the "≤" region meshes) |
@@ -286,6 +286,7 @@ Template: see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md).
 | 23 | v0.1.37 | 2026-11-12 | version number (v0.1.37: thirteen control and signal ports and the shared modules they use; the additions to shared/plot.js, graphics.js and manipulate.js are opt-in); no change to this app's code, behaviour or picture |
 | 24 | v0.1.38 | 2026-11-12 | version number (v0.1.38: one new app, forward-kinematics; shared/traditional-form.js is new, and `Lighting -> "Neutral"` in shared/mma-lighting.js and graphics3d-view.js is opt-in); no change to this app's code, behaviour or picture |
 | 25 | v0.1.39 | 2026-11-12 | version number (v0.1.39: selective testing — tools/affected.mjs and publish:tested run only the browser tests a change can affect; no app code changed); no change to this app's code, behaviour or picture |
+| 26 | v0.1.40 | 2026-11-13 | version number (v0.1.40: three truss ports; shared/truss.js is new; shared/graphics.js gains Mouseover, RotatedText, rounded and line-less Framed, Arrowheads[Large] and heads at given places, Grid alignment at "=", styled scripts and fitPlotRange — the changes to existing drawing are a styled script keeping its style and the baseline after it, and framed or backed labels keeping their outer spaces); no change to this app's code or behaviour |
 
 ## 10. Improvements to consider (not implemented)
 

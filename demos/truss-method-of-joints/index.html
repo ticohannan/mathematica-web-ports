@@ -1,0 +1,86 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstration by Rachael L. Baumann and John L. Falconer
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Method of Joints to Solve a Truss Problem</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <style>.graphic.collapsed { visibility: hidden; height: 0; overflow: hidden; margin: 0; padding: 0; border: 0; }</style>
+  <script src="../../shared/requirements.js"></script>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Method of Joints to Solve a Truss Problem</div>
+    <h1 class="demo-title">Method of Joints to Solve a Truss Problem</h1>
+
+    <section class="manipulate" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="graphic" id="graphic" data-testid="graphic">
+        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser.</div></noscript>
+      </div>
+      <div class="graphic collapsed" id="graphic2" data-testid="graphic2"></div>
+    </section>
+
+    <p class="caption">This Demonstration solves a truss using the method of joints, which involves doing force balances
+      around one joint at a time.</p>
+    <p class="caption">1. Select "reaction forces" to see how the reaction forces R<sub>A</sub> and R<sub>E</sub> are
+      calculated.<br>2. Then, under the drop-down menu, select "calculate moment" to see the moment balance around joint A
+      and calculate the reaction force at joint E. Move the mouse over the equations to see an explanation of the moment
+      balance.<br>3. Next, select "<i>x</i>-force balance" to do a force balance in the <i>x</i>-direction at joint A. Note
+      that joint A is fixed but joint E can move in the <i>x</i>-direction.<br>4. Select "<i>y</i>-force balance" to
+      determine the reaction force at joint A.<br>5. Select "balances at joints" and select joint A. Check "focus on joint"
+      to zoom in on the members around the joint and display the force balances. Note that the direction of the arrows are
+      drawn in "focus on joint" because we know the correct direction. If the arrows were drawn assuming all members were
+      under tension, then a negative force would result, indicating the direction should be reversed.<br>6. Repeat step 5
+      for the other joints.<br>7. When "solved" is selected from the joints, the compression (green) and tension (red)
+      forces are shown on the full diagram. Arrows that point outward represent the member's response to compression
+      forces, which act to shorten the member. Arrows that point inward represent the member's response to tension forces,
+      which act to lengthen the member.</p>
+    <p class="caption">When doing balances around the joints, the signs on all of the forces are positive because we assume
+      we can determine which members are under tension and which are under compression before solving the truss. This is
+      done by starting at joint A, seeing that the reaction force points upward and knowing that the member force must point
+      downward for the truss to remain stationary.</p>
+
+    <details class="details" data-testid="details">
+      <summary>Details</summary>
+      <p>First, calculate the reaction forces by doing a moment balance around joint A and force balances in the <i>x</i>
+        and <i>y</i> directions:</p>
+      <p class="formula">∑<i>M</i><sub>A</sub> = 0 = <i>w</i> <i>F</i><sub>C</sub> − 2 <i>w</i> <i>R</i><sub>E</sub>,<br>∑<i>F</i><sub>x</sub> = 0 = <i>R</i><sub>A, x</sub>,<br>∑<i>F</i><sub>y</sub> = 0 = <i>R</i><sub>A, y</sub> − <i>F</i><sub>C</sub> + <i>R</i><sub>E</sub>,</p>
+      <p>where <i>R</i><sub>A, x</sub> and <i>R</i><sub>A, y</sub> are the reaction forces at joint A in the <i>x</i> and <i>y</i> directions,
+        <i>R</i><sub>E</sub> is the reaction force at joint E, <i>w</i> is the width of the members and <i>F</i><sub>C</sub> is the point load force
+        at joint C.</p>
+      <p>Next, do force balances at the joints. The order of the calculations shown is the order that the joints are solved
+        in. Calculations are done assuming we know which members are under tension and which are under compression. View the
+        labeled truss in Figure 1 below.</p>
+      <p>Joint A</p>
+      <p class="formula">∑<i>F</i><sub>y</sub> = 0 = −<i>F</i><sub>AB</sub> sin <i>θ</i> + <i>R</i><sub>A</sub>,<br>∑<i>F</i><sub>x</sub> = 0 = −<i>F</i><sub>AB</sub> cos <i>θ</i> + <i>F</i><sub>AC</sub>.</p>
+      <p>Joint B</p>
+      <p class="formula">∑<i>F</i><sub>y</sub> = 0 = <i>F</i><sub>AB</sub> sin <i>θ</i> − <i>F</i><sub>BC</sub> sin <i>θ</i>,<br>∑<i>F</i><sub>x</sub> = 0 = <i>F</i><sub>AB</sub> cos <i>θ</i> + <i>F</i><sub>BC</sub> cos <i>θ</i> − <i>F</i><sub>BD</sub>.</p>
+      <p>Joint C</p>
+      <p class="formula">∑<i>F</i><sub>y</sub> = 0 = <i>F</i><sub>BC</sub> sin <i>θ</i> + <i>F</i><sub>CD</sub> sin <i>θ</i> − <i>F</i><sub>C</sub>,<br>∑<i>F</i><sub>x</sub> = 0 = −<i>F</i><sub>AC</sub> − <i>F</i><sub>BC</sub> cos <i>θ</i> + <i>F</i><sub>CD</sub> cos <i>θ</i> + <i>F</i><sub>CE</sub>.</p>
+      <p>Joint D</p>
+      <p class="formula">∑<i>F</i><sub>y</sub> = 0 = −<i>F</i><sub>CD</sub> sin <i>θ</i> + <i>F</i><sub>DE</sub> sin <i>θ</i>.</p>
+      <p>Figure 1: the labeled truss — select "balances at joints" with "focus on joint" unchecked to see it.</p>
+      <p>[1] R. C. Hibbeler, <i>Engineering Mechanics: Statics</i>, 12th ed., Upper Saddle River, NJ: Prentice Hall, 2010.</p>
+      <p>[2] D. Morrell. Truss Example-Method of Joints (Edited)[Video]. (Jun 6, 2012) www.youtube.com/watch?v=56eTM36Z9-A.</p>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. All computation runs in your browser.</p>
+    <div class="credits" data-testid="credits">
+      Adapted from <a href="https://demonstrations.wolfram.com/MethodOfJointsToSolveATrussProblem/">"Method of Joints to Solve a Truss Problem"</a>
+      by Rachael L. Baumann and John L. Falconer, Wolfram Demonstrations Project (published 2017-09-08), licensed
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+      This JavaScript translation by Tico Hannan (© 2026; produced with an AI code-generation tool) is released under the
+      same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

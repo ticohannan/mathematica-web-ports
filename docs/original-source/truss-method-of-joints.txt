@@ -1,0 +1,441 @@
+
+### [Title]
+Method of Joints to Solve a Truss Problem
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+\<This Demonstration solves a truss using the method of joints, which involves doing force balances around one joint at a time.\>
+
+### [Text]
+1. Select "reaction forces" to see how the reaction forces Subscript[R, A] and Subscript[R, E] are calculated.
+
+### [Text]
+2. Then, under the drop-down menu, select "calculate moment" to see the moment balance around joint A and calculate the reaction force at joint E. Move the mouse over the equations to see an explanation of the moment balance.
+
+### [Text]
+3. Next, select "x-force balance" to do a force balance in the x-direction at joint A. Note that joint A is fixed but joint E can move in the x-direction.
+
+### [Text]
+4. Select "y-force balance" to determine the reaction force at joint A.
+
+### [Text]
+5. Select "balances at joints" and select joint A. Check "focus on joint" to zoom in on the members around the joint and display the force balances. Note that the direction of the arrows are drawn in "focus on joint" because we know the correct direction. If the arrows were drawn assuming all members were under tension, then a negative force would result, indicating the direction should be reversed.
+
+### [Text]
+6. Repeat step 5 for the other joints.
+
+### [Text]
+\<7. When "solved" is selected from the joints, the compression (green) and tension (red) forces are shown on the full diagram. Arrows that point outward represent the member's response to compression forces, which act to shorten the member. Arrows that point inward represent the member's response to tension forces, which act to lengthen the member.\>
+
+### [Text]
+When doing balances around the joints, the signs on all of the forces are positive because we assume we can determine which members are under tension and which are under compression before solving the truss. This is done by starting at joint A, seeing that the reaction force points upward and knowing that the member force must point downward for the truss to remain stationary.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+var[c1_,c2_,col_]:=Style[Subscript[Style[c1,Italic],c2],col]
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{w,h,Theta,δ,FC,sol,RA,RE,F1,F2,F3,F4,F5,F6,F7,colC,colT,colA,truss,calculatemoment,Xforcebalance,Yforcebalance,solved,fullstructure,partialstructure,jointA,jointB,jointC,jointD,jointssolved,equations},
+w=1;h=w/2*Tan[Theta];Theta=60°;δ=0.25*h;FC=1;
+
+sol=Quiet@Solve[N@{
+(*reactions*)w*FC-2*w*re==0,ra-FC+re==0,
+(*A*)f1*Sin[Theta]+ra==0,f1*Cos[Theta]+f2==0,
+(*B*)-f1*Sin[Theta]-f3*Sin[Theta]==0,-f1*Cos[Theta]+f3*Cos[Theta]+f4==0,
+(*C*)f3*Sin[Theta]+f5*Sin[Theta]-FC==0,-f2-f3*Cos[Theta]+f5*Cos[Theta]+f6==0,
+(*D*)-f5*Sin[Theta]-f7*Sin[Theta]==0
+},{ra,re,f1,f2,f3,f4,f5,f6,f7}][[1]];
+RE=re/.sol;RA=ra/.sol;F1=f1/.sol;F2=f2/.sol;
+F3=f3/.sol;F4=f4/.sol;F5=f5/.sol;F6=f6/.sol;
+F7=f7/.sol;
+
+colC=RGBColor[0,0.6,0];colT=RGBColor[1,0,0.25];colA=RGBColor[0.55,0,1];
+
+
+(*FULL TRUSS WITH SUPPORTS*)
+truss={
+{CapForm@"\<Round\>",Thickness@#1,#2,Line[{{0,0},{2*w,0},{1.5*w,h},{0.5*w,h},{0,0}}],Line[{{0.5*w,h},{w,0},{1.5*w,h}}]}&@@@{{0.022,Black},{0.015,GrayLevel@0.6}},
+{GrayLevel@0.7,Polygon[{{-0.07,-0.1},{0.07,-0.1},{0.035,0},{-0.035,0}}],Disk[{0,0},0.035],
+Disk[{2*w,0},0.035],Disk[{2*w,-0.05},0.05],Polygon[{{2*w-0.0345,0.0045},{2*w-0.044,-0.027},{2*w+0.044,-0.027},{2*w+0.0345,0.0045}}]},
+{Thin,Line[{{-0.035,0},{-0.07,-0.1},{0.07,-0.1},{0.035,0}}],Line[{#,Sqrt[0.035^2-#^2]}&/@Range[-0.035,0.035,0.001]],
+Line[{{2*w+#*0.0345,0.006},{2*w+#*0.044,-0.027}}]&/@{-1,1},
+Line[{#,Sqrt[0.035^2-(#-2*w)^2]}&/@Range[2*w-0.0345,2*w+0.0345,0.0001]],Line[{#,-Sqrt[0.05^2-(#-2*w)^2]-0.05}&/@Range[2*w-0.999*0.05,2*w+0.05,0.001]],
+Line[{#,Sqrt[0.05^2-(#-2*w)^2]-0.05}&/@Range[2*w-0.9999*0.05,2*w-0.044,0.0001]],Line[{#,Sqrt[0.05^2-(#-2*w)^2]-0.05}&/@Range[2*w+0.044,2*w+1.019*0.05,0.001]]},
+
+{Blue,Arrow[{{-0.25*h,0},{0,0}}],Arrow[{{0,-0.25*h},{0,0}}],Text[Style[var["\<R\>",Row@{"\<A, \>",Style[#1,Italic]},Blue],18],#2,#3]&@@@{{"\<x\>",{-0.25*h,0},{1,0}},{"\<y\>",{0,-0.25*h},{0,1.5}}}},
+{RGBColor[1,0.4,0],Arrow[{{2*w,-0.25*h},{2*w,0}}],Text[Style[var["\<R\>","\<E\>",RGBColor[1,0.4,0]],18],{2*w,-0.25*h},{0,1.5}]},
+{Magenta,Arrow[{{w,0},{w,-0.5*h}}],Text[Style[Row@{var["\<F\>","\<C\>",Magenta],"\< = \>",NumberForm[FC,{2,2}],"\< kN\>"},18],{w,-0.5*h},{0,1.2}]}};
+
+(*SOLVE FOR REACTION FORCES*)
+calculatemoment={
+{Thin,Dashed,GrayLevel@0.4,Line[{{0,0},{0,-0.25*h}}]},
+{Magenta,Arrow[{{w,0},{w,-0.5*h}}],Text[Style[Row@{var["\<F\>","\<C\>",Magenta],"\< = \>",NumberForm[FC,{2,2}],"\< kN\>"},18,Magenta],{w,-0.5*h},{0,1.2}]},
+{Blue,Point@{0,0},Text[Style["\<A\>",18],{0,0},{0,-1.7}]},
+{RGBColor[1,0.4,0],Arrow[{{2*w,-0.25*h},{2*w,0}}],Text[Style[var["\<R\>","\<E\>",RGBColor[1,0.4,0]],18],{2*w,-0.25*h},{0,1.5}],
+Arrow[{{0,-0.25*h},{2*w,-0.25*h}}]},
+{Magenta,Arrow[{{0,-0.15*h},{w,-0.15*h}}]},
+Text[Style["\< w \>",17,Italic,Background->White],{w/2,-0.15*h}],
+Text[Style[Row@{"\< 2 \>",Style["\<w \>",Italic]},17,Background->White],{w,-0.25*h},{-1.5,0}],
+Mouseover[
+Text[Style[Column[{
+Row@{"\<sum of the moments about A: \[Sum] \>",var["\<M\>","\<A\>",Black],"\< = 0 = \>",Style["\<w \>",Italic],var["\<F\>","\<C\>",Magenta],"\< - 2 \>",Style["\<w \>",Italic],var["\<R\>","\<E\>",RGBColor[1,0.4,0]]},
+Row@{"\<reaction force E: \>",var["\<R\>","\<E\>",RGBColor[1,0.4,0]],"\< = \>",1/2,var["\<F\>","\<C\>",Magenta]},
+Style[Row@{var["\<R\>","\<E\>",RGBColor[1,0.4,0]],"\< = \>",NumberForm[RE,{4,2}],"\< kN\>"},RGBColor[1,0.4,0]]
+},Alignment->"\<=\>"],18],{w,-0.95*h}],
+Text[Style[Column[{"\<the first term is positive because it would cause a\>","\<clockwise rotation and the second term is negative\>","\<because it would cause a counterclockwise rotation\>"},Center],18],{w,-0.9*h}]
+]};
+
+Xforcebalance={
+{Blue,Arrow[{{-0.25*h,0},{0,0}}],Arrow[{{0,-0.25*h},{0,0}}],Arrow[{{w,0},{w,-0.5*h}}],Arrow[{{2*w,-0.25*h},{2*w,0}}]},
+Text[Style[var["\<R\>",Row@{"\<A, \>",Style[#1,Italic]},Blue],18],#2,#3]&@@@{{"\<x\>",{-0.25*h,0},{1,0}},{"\<y\>",{0,-0.25*h},{0,1}}},
+Text[Style[Row@{var["\<R\>","\<E\>",Blue],"\< = \>",NumberForm[RE,{2,2}],"\< kN\>"},18,Blue],{2*w,-0.25*h},{0,1.5}],
+Text[Style[Row@{var["\<F\>","\<C\>",Blue],"\< = \>",NumberForm[FC,{2,2}],"\< kN\>"},18,Blue],{w,-0.5*h},{0,1.5}],
+Text[Style[Column[{
+Row@{"\<sum of the \>",Style["\<x\>",Italic],"\< forces: \[Sum] \>",Style[Subscript["\<F\>","\<x\>"],Italic],"\< = 0 = \>",var["\<R\>",Row@{"\<A, \>",Style["\<x\>",Italic]},Blue]},
+Row@{Style["\<x\>",Italic],"\< component of reaction force A: \>",Style[Row@{var["\<R\>",Row@{"\<A, \>",Style["\<x\>",Italic]},Blue],"\< = 0 kN\>"},Blue]}
+},Alignment->"\<=\>"],18],{w,-0.9*h}]};
+
+Yforcebalance={
+Blue,Arrow[{{2*w,-0.25*h},{2*w,0}}],Arrow[{{w,0},{w,-0.5*h}}],Arrow[{{0,-0.25*h},{0,0}}],
+Text[Style[Row@{var["\<F\>","\<C\>",Blue],"\< = \>",NumberForm[FC,{2,2}],"\< kN\>"},18,Blue],{w,-0.5*h},{0,1.5}],
+Text[Style[var["\<R\>","\<A\>",Blue],18,Blue],{0,-0.25*h},{0,1.5}],
+Text[Style[Row@{var["\<R\>","\<E\>",Blue],"\< = \>",NumberForm[RE,{2,2}],"\< kN\>"},18,Blue],{2*w,-0.25*h},{0,1.5}],
+Text[Style[Column[{
+Row@{"\<sum of the \>",Style["\<y\>",Italic],"\< forces: \[Sum] \>",Style[Subscript["\<F\>","\<y\>"],Italic],"\< = 0 = \>",var["\<R\>","\<A\>",Blue],"\< - \>",var["\<F\>","\<C\>",Blue],"\< + \>",var["\<R\>","\<E\>",Blue]},
+Row@{Style["\<y\>",Italic],"\< component of reaction force A: \>",var["\<R\>",Row@{"\<A, \>",Style["\<y\>",Italic]},Blue] ,"\< = \>",var["\<F\>","\<C\>",Blue],"\< - \>",var["\<R\>","\<E\>",Blue]},
+Style[Row@{var["\<R\>","\<A\>",Blue],"\< = \>",NumberForm[RA,{4,2}],"\< kN\>"},Blue]
+},Alignment->"\<=\>"],18,Black],{w,-0.95*h}]};
+
+solved={
+Blue,Arrow[{{0,-0.25*h},{0,0}}],Arrow[{{w,0},{w,-0.5*h}}],Arrow[{{2*w,-0.25*h},{2*w,0}}],
+Text[Style[Row@{var["\<F\>","\<C\>",Blue],"\< = \>",NumberForm[FC,{2,2}],"\< kN\>"},18,Blue],{w,-0.5*h},{0,1.5}],
+Text[Style[Row@{var["\<R\>",#1,Blue],"\< = \>",NumberForm[#2,{2,2}],"\< kN\>"},18,Blue],#3,{0,1.5}]&@@@{{"\<A\>",RA,{0,-0.25*h}},{"\<E\>",RE,{2*w,-0.25*h}}}};
+
+(**********************************************************************)
+
+(*DO BALANCES AT JOINTS*)
+fullstructure={
+Text[Framed[Style[Subscript[Style["\<F\>",Italic],#1],18],Background->White,FrameStyle->None,FrameMargins->Tiny],#2]&@@@{{"\<AB\>",{w/4,h/2}},{"\<AC\>",{w/2,0}},{"\<BC\>",{0.75*w,h/2}},{"\<BD\>",{w,h}},{"\<CD\>",{1.25*w,h/2}},{"\<CE\>",{1.5*w,0}},{"\<DE\>",{1.75*w,h/2}}},
+
+Text[Framed[Style[Row@{"\< \>",#1,"\< \>"},15],Background->White,RoundingRadius->15],#2]&@@@{{"\<A\>",{0,0}},{"\<B\>",{0.5*w,h}},{"\<C\>",{w,0}},{"\<D\>",{1.5*w,h}},{"\<E\>",{2*w,0}}},
+{Red,Dashed,Circle[Switch[joints,1,{0,0},2,{0.5*w,h},3,{w,0},4,{1.5*w,h},5,{2*w,0}],0.2]}};
+
+partialstructure={
+If[joints==1,{Arrow[{{w/2,h},{0,0.05*h}}],Arrow[{{0,0},{w/2,0}}],
+Blue,Arrow[{{0,-0.25*h},{0,-0.05*h}}],Text[Style[Row@{var["\<R\>","\<A\>",Blue],"\< = \>",NumberForm[RA,{2,2}],"\< kN\>"},18],{0,-0.25*h},{0,1.5}]}],
+If[joints==2,{Arrow[{{0,0},0.96*{w/2,h}}],Arrow[{{w/2,h},{w,0}}],Arrow[{{w,h},{1.07*w/2,h}}]}],
+If[joints==3,{Arrow[{{w,0},{0,0}}],Arrow[{{w,0},{2*w,0}}],Arrow[{{w,0},{0.5*w,h}}],Arrow[{{w,0},{1.5*w,h}}],
+Blue,Arrow[{{w,0},{w,-0.5*h}}],Text[Style[Row@{var["\<F\>","\<C\>",Blue],"\< = \>",NumberForm[FC,{2,2}],"\< kN\>"},18],{w,-0.5*h},{0,1.2}]}],
+If[joints==4,{Arrow[{{0.5*w,h},{0.96*1.5*w,h}}],Arrow[{{1.5*w,h},{w,0}}],Arrow[{{2*w,0},{1.01*1.5*w,0.96*h}}]}]};
+
+(*INDIVIDUAL JOINTS*)
+jointA={
+{Thick,Dashed,Circle[{0,0},0.1,{0,Theta}]},
+Text[Style[Row@{"\<Theta = \>",Theta},17],{0,0},{-2.2,-1}],
+Text[Style[var["\<F\>",#1,Blue],18],#2,#3]&@@@{{"\<AB\>",{w/2,h},{-1.5,-1.5}},{"\<AC\>",{w/2,0},{-1.5,0}}},
+{Dashed,colA,Arrow[{{0.25*w,0.52*h+δ},{0.25*w,0.52*h}}],Arrow[{{0.25*w+δ,0.52*h},{0.25*w,0.52*h}}]},
+Text[Style[Row@{var["\<F\>",Row@{"\<AB, \>",Style[#1,Italic]},colA],"\< = \>",var["\<F\>","\<AB\>",Blue],"\< \>",#2,"\< Theta\>"},18,Background->White],#3,#4]&@@@{{"\<x\>","\<cos\>",{0.25*w+δ,0.5*h},{-1,0}},{"\<y\>","\<sin\>",{0.25*w,0.52*h+δ},{0,-1.2}}},
+Text[Framed[Style["\< A \>",15,GrayLevel@0.4],Background->White,RoundingRadius->15],{0,0}]};
+
+jointB={
+{Thick,Dashed,Circle[{0.5*w,h},0.1,{-Theta,0}]},
+Text[Style[Row@{"\<Theta = \>",N@Theta*180/π,"\<°\>"},18],{0.5*w,h},{-2.2,3}],
+Text[Style[Row@{var["\<F\>","\<AB\>",Blue],"\< = \>",NumberForm[Abs@F1,{3,2}],"\< kN\>"},18,Blue],{0,0},{0,1.2}],
+Text[Style[var["\<F\>",#1,Blue],18],#2,#3]&@@@{{"\<BC\>",{w,0},{0,1.2}},{"\<BD\>",{w,h},{-1.2,0}}},
+{Dashed,colA,Arrow[{{0.25*w,0.25*h},{0.25*w,0.25*h+δ}}],Arrow[{{0.25*w-δ,0.5*h},{0.25*w,0.5*h}}],
+Arrow[{{0.75*w,0.5*h},{0.75*w,0.5*h-δ}}],Arrow[{{0.75*w,0.5*h},{0.75*w+δ,0.5*h}}]},
+Text[Style[Row@{var["\<F\>",Row@{"\<AB, \>",Style[#1,Italic]},colA],"\< = \>",NumberForm[Abs@F1*#2,{3,2}],"\< kN\>"},18,colA,Background->White],#3,#4]&@@@{{"\<x\>",Cos[Theta],{0.25*w-δ,0.5*h},{1,0}},{"\<y\>",Sin[Theta],{0.25*w,0.25*h},{0,1.2}}},
+Text[Style[Row@{var["\<F\>",Row@{"\<BC, \>",Style[#1,Italic]},colA],"\< = \>",var["\<F\>","\<BC\>",Blue],"\< \>",#2,"\< Theta\>"},18,Background->White],#3,#4]&@@@{{"\<x\>","\<cos\>",{0.75*w+δ,0.5*h},{-1,0}},{"\<y\>","\<sin\>",{0.75*w,0.5*h-δ},{0,1.2}}},
+Text[Framed[Style["\< B \>",15,GrayLevel@0.4],Background->White,RoundingRadius->15],{w/2,h}]};
+
+jointC={
+{Thick,Dashed,Circle[{w,0},0.1,{0,Theta}]},
+Text[Style[Row@{"\<Theta = \>",N@Theta*180/π,"\<°\>"},18],{w,0},{-2,-1}],
+Text[Style[Row@{var["\<F\>",#1,Blue],"\< = \>",NumberForm[Abs@#2,{3,2}],"\< kN\>"},18,Blue],#3,#4]&@@@{{"\<AC\>",F2,{0,0},{1.2,0}},{"\<BC\>",F3,{0.5*w,h},{1,-1.2}}},
+Text[Style[var["\<F\>",#1,Blue],18],#2,#3]&@@@{{"\<CD\>",{1.5*w,h},{-1,-1.2}},{"\<CE\>",{2*w,0},{-1,0}}},
+{Dashed,colA,Arrow[{{0.75*w,0.5*h},{0.75*w-δ,0.5*h}}],Arrow[{{0.75*w,0.5*h},{0.75*w,0.5*h+δ}}],
+Arrow[{{1.25*w,0.5*h},{1.25*w+δ,0.5*h}}],Arrow[{{1.25*w,0.5*h},{1.25*w,0.5*h+δ}}]},
+Text[Style[Row@{var["\<F\>",Row@{"\<BC, \>",Style[#1,Italic]},colA],"\< = \>",NumberForm[Abs@F3*#2,{3,2}],"\< kN\>"},18,colA,Background->White],#3,#4]&@@@{{"\<x\>",Cos[Theta],{0.75*w-δ,0.5*h},{1,0}},{"\<y\>",Sin[Theta],{0.75*w,0.5*h+δ},{0.5,-1.2}}},
+Text[Style[Row@{var["\<F\>",Row@{"\<CD, \>",Style[#1,Italic]},colA],"\< = \>",var["\<F\>","\<CD\>",Blue],"\< \>",#2,"\< Theta\>"},18,Background->White],#3,#4]&@@@{{"\<x\>","\<cos\>",{1.25*w+δ,0.5*h},{-1,0}},{"\<y\>","\<sin\>",{1.25*w,0.5*h+δ},{-0.5,-1.2}}},
+Text[Framed[Style["\< C \>",15,GrayLevel@0.4],Background->White,RoundingRadius->15],{w,0}]};
+
+jointD={
+{Thick,Dashed,Circle[{1.5*w,h},0.1,{180°,180°+Theta}]},
+Text[Style[Row@{"\<Theta = \>",N@Theta*180/π,"\<°\>"},18],{1.5*w,h},{2.2,2}],
+Text[Style[Row@{var["\<F\>",#1,Blue],"\< = \>",NumberForm[Abs@#2,{3,2}],"\< kN\>"},18,Blue],#3,#4]&@@@{{"\<BD\>",F4,{0.5*w,h},{1.2,0}},{"\<CD\>",F5,{w,0},{1,1.2}}},
+Text[Style[var["\<F\>","\<DE\>",Blue],18],{2*w,0},{-1,1.2}],
+{Dashed,colA,Arrow[{{1.25*w,0.5*h},{1.25*w,0.5*h-δ}}],Arrow[{{1.25*w,0.5*h},{1.25*w-δ,0.5*h}}],
+Arrow[{{1.75*w,0.5*h-δ},{1.75*w,0.5*h}}],Arrow[{{1.75*w+δ,0.5*h},{1.75*w,0.5*h}}]},
+Text[Style[Row@{var["\<F\>",Row@{"\<CD, \>",Style[#1,Italic]},colA],"\< = \>",NumberForm[Abs@F5*#2,{3,2}],"\< kN\>"},18,colA,Background->White],#3,#4]&@@@{{"\<x\>",Cos[Theta],{1.25*w-δ,0.5*h},{1,0}},{"\<y\>",Sin[Theta],{1.25*w,0.5*h-δ},{0.5,1.2}}},
+Text[Style[Row@{var["\<F\>",Row@{"\<DE, \>",Style[#1,Italic]},colA],"\< = \>",var["\<F\>","\<DE\>",Blue],"\< \>",#2,"\< Theta\>"},18,Background->White],#3,#4]&@@@{{"\<x\>","\<cos\>",{1.75*w+δ,0.5*h},{-1,0}},{"\<y\>","\<sin\>",{1.75*w,0.5*h-δ},{-0.5,1.2}}},
+Text[Framed[Style["\< D \>",15,GrayLevel@0.4],Background->White,RoundingRadius->15],{1.5*w,h}]};
+
+jointssolved={
+Flatten@{If[#1<0,{colC,Arrowheads@{-0.05,0.05}},{colT,Arrowheads@{{0.05,0.275},{-0.05,0.725}}}],#3,
+Text[Rotate[Style[Row@{Subscript[Style["\< F\>",Italic],#2],"\< = \>",NumberForm[Abs@#1,{2,2}],"\< \>"},18,Background->White],#5],#4]}&@@@{
+{F1,"\<AB\>",Arrow[{{0,0},{0.5*w,h}}],{0.25*w,0.5*h},Theta},{F2,"\<AC\>",Arrow[{{0,0},{w,0}}],{0.5*w,0},0},{F3,"\<BC\>",Arrow[{{0.5*w,h},{w,0}}],{0.75*w,0.5*h},-Theta},{F4,"\<BD\>",Arrow[{{0.5*w,h},{1.5*w,h}}],{w,h},0},{F5,"\<CD\>",Arrow[{{w,0},{1.5*w,h}}],{1.25*w,0.5*h},Theta},{F6,"\<CE\>",Arrow[{{w,0},{2*w,0}}],{1.5*w,0},0},{F7,"\<DE\>",Arrow[{{1.5*w,h},{2*w,0}}],{1.75*w,0.5*h},-Theta}},
+
+{Blue,Arrow[{{0,-0.25*h},{0,0}}],Arrow[{{w,0},{w,-0.5*h}}],Arrow[{{2*w,-0.25*h},{2*w,0}}],
+Text[Style[Row@{var["\<R\>",#1,Blue],"\< = \>",NumberForm[N@#2,{3,2}],"\< kN\>"},18],#3,{0,1.5}]&@@@{{"\<A\>",RA,{0,-0.25*h}},{"\<E\>",RE,{2*w,-0.25*h}}},
+Text[Style[Row@{var["\<F\>","\<C\>",Blue],"\< = \>",NumberForm[N@FC,{3,2}],"\< kN\>"},18],{w,-0.5*h},{0,1.5}]},
+
+Text[Style[Row@{"\<all \>",Style["\<compression\>",colC],"\< and \>",Style["\<tension\>",colT],"\< forces are in kN\>"},17,GrayLevel@0.4],{w,-0.86*h}]};
+
+(**********************************************************************)
+
+(*SOLVING FORCE BALANCES AT JOINTS*)
+equations=Graphics[{Text@Style[
+Switch[joints,
+1,Grid[{
+{Row@{"\<\[Sum] \>",Style[Subscript["\<F\>","\<y\>"],Italic],"\< = 0 = \>",var["\<R\>","\<A\>",Blue],"\< - \>",var["\<F\>","\<AB\>",Blue],"\< sin Theta\>"},
+Row@{"\<\[Sum] \>",Style[Subscript["\<F\>","\<x\>"],Italic],"\< = 0 = -\>",var["\<F\>","\<AB\>",Blue],"\< cos Theta + \>",var["\<F\>","\<AC\>",Blue]}},
+{Row@{var["\<F\>","\<AB\>",Blue],"\< = \>",var["\<R\>","\<A\>",Blue],"\</sin Theta\>"},
+Row@{var["\<F\>","\<AC\>",Blue],"\< = \>",var["\<F\>","\<AB\>",Blue],"\< cos Theta\>"}},
+{Style[Row@{var["\<F\>","\<AB\>",Blue],"\< = \>",NumberForm[Abs@F1,{4,2}],"\< kN (compression)\>"},Blue],
+Style[Row@{var["\<F\>","\<AC\>",Blue],"\< = \>",NumberForm[Abs@F2,{4,2}],"\< kN (tension)\>"},Blue]}
+},Alignment->"\<=\>",Spacings->{5,Automatic}],
+2,Grid[{
+{Row@{"\<\[Sum] \>",Style[Subscript["\<F\>","\<y\>"],Italic],"\< = 0 = \>",var["\<F\>","\<AB\>",Blue],"\< sin Theta - \>",var["\<F\>","\<BC\>",Blue],"\< sin Theta\>"},
+Row@{"\<\[Sum] \>",Style[Subscript["\<F\>","\<x\>"],Italic],"\< = 0 = \>",var["\<F\>","\<AB\>",Blue],"\< cos Theta + \>",var["\<F\>","\<BC\>",Blue],"\< cos Theta - \>",var["\<F\>","\<BD\>",Blue]}},
+{Row@{var["\<F\>","\<BC\>",Blue],"\< = \>",var["\<F\>","\<AB\>",Blue]},
+Row@{var["\<F\>","\<BD\>",Blue],"\< = (\>",var["\<F\>","\<AB\>",Blue],"\< + \>",var["\<F\>","\<BC\>",Blue],"\<) cos Theta\>"}},
+{Style[Row@{var["\<F\>","\<BC\>",Blue],"\< = \>",NumberForm[Abs@F3,{4,2}],"\< kN (tension)\>"},Blue],
+Style[Row@{var["\<F\>","\<BD\>",Blue],"\< = \>",NumberForm[Abs@F4,{4,2}],"\< kN (compression)\>"},Blue]}
+},Alignment->"\<=\>",Spacings->{2,Automatic}],
+3,Grid[{
+{Row@{"\<\[Sum] \>",Style[Subscript["\<F\>","\<y\>"],Italic],"\< = -\>",var["\<F\>","\<C\>",Blue],"\< + \>",var["\<F\>","\<BC\>",Blue],"\< sin Theta + \>",var["\<F\>","\<CD\>",Blue],"\< sin Theta\>"},
+Row@{"\<\[Sum] \>",Style[Subscript["\<F\>","\<x\>"],Italic],"\< = -\>",var["\<F\>","\<AC\>",Blue],"\< - \>",var["\<F\>","\<BC\>",Blue],"\< cos Theta + \>",var["\<F\>","\<CD\>",Blue],"\< cos Theta + \>",var["\<F\>","\<CE\>",Blue]}},
+{Row@{var["\<F\>","\<CD\>",Blue],"\< = \>",var["\<F\>","\<C\>",Blue],"\</sin Theta - \>",var["\<F\>","\<BC\>",Blue]},
+Row@{var["\<F\>","\<CE\>",Blue],"\< = \>",var["\<F\>","\<AC\>",Blue],"\< + (\>",var["\<F\>","\<BC\>",Blue],"\< - \>",var["\<F\>","\<CD\>",Blue],"\<) cos Theta\>"}},
+{Style[Row@{var["\<F\>","\<CD\>",Blue],"\< = \>",NumberForm[Abs@F5,{4,2}],"\< kN (tension)\>"},Blue],
+Style[Row@{var["\<F\>","\<CE\>",Blue],"\< = \>",NumberForm[Abs@F6,{4,2}],"\< kN (tension)\>"},Blue]}
+},Alignment->"\<=\>",Spacings->{1,Automatic}],
+4,Column[{
+Row@{"\<\[Sum] \>",Style[Subscript["\<F\>","\<y\>"],Italic],"\< = 0 = -\>",var["\<F\>","\<CD\>",Blue],"\< sin Theta + \>",var["\<F\>","\<DE\>",Blue],"\< sin Theta\>"},
+Row@{var["\<F\>","\<DE\>",Blue],"\< = \>",var["\<F\>","\<CD\>",Blue]},
+Style[Row@{var["\<F\>","\<DE\>",Blue],"\< = \>",NumberForm[Abs@F7,{4,2}],"\< kN (compression)\>"},Blue]
+},Alignment->"\<=\>"]
+],17]
+},ImageSize->{605,70}];
+
+(**********************************************************************)
+
+Column[{
+Graphics[{Thick,Arrowheads@Large,
+If[(steps==2\[And]focus\[And]joints<5)\[Or](steps==1\[And]opt==0),{},{EdgeForm@Thick,FaceForm@None,Polygon[{{0,0},{0.5*w,h},{w,0}}],Polygon[{{0.5*w,h},{1.5*w,h},{w,0}}],Polygon[{{1.5*w,h},{2*w,0},{w,0}}]}],
+If[steps==1,
+Switch[opt,0,truss,1,calculatemoment,2,Xforcebalance,3,Yforcebalance,4,solved],
+If[focus,{partialstructure,Switch[joints,1,jointA,2,jointB,3,jointC,4,jointD,5,jointssolved]},
+If[joints==5,jointssolved,fullstructure]]],
+If[steps==1\[Or](steps==2\[And]joints==5),{PointSize@0.015,Point@#,White,PointSize@0.01,Point@#}&/@{{0,0},{0.5*w,h},{w,0},{1.5*w,h},{2*w,0}}]
+},ImageSize->{600,If[steps==2\[And]focus\[And]joints<5,300,395]},
+PlotRange->If[steps==1,{{-0.37*w,2.25*w},{If[steps==1\[And](opt==0\[Or]opt==4),-0.64*h,-1.2*h],1.1*h}},If[joints==5,All,If[focus,All,{{-0.21*w,2.21*w},{-0.25*h,1.27*h}}]]]],
+If[steps==2\[And]focus\[And]joints<5,equations,Nothing]},Spacings->2]
+],
+Grid@{{
+Control[{{steps,1,"\<\>"},{1->"\< reaction forces \>",2->"\< balances at joints \>" },Setter}],Spacer@10,
+PaneSelector[{
+1->Control[{{opt,0,"\<\>"},{0->"\<truss\>",1->"\<calculate moment\>",2->Row@{Style["\<x\>",Italic],"\<-force balance\>"},3->Row@{Style["\<y\>",Italic],"\<-force balance\>"},4->"\<solved\>"},PopupMenu}],
+2->Grid@{{
+Control[{{joints,1,"\<joints\>"},{1->"\< A \>",2->"\< B \>",3->"\< C \>",4->"\< D \>",5->"\< solved \>"},Setter}],Spacer@10,
+PaneSelector[{##&@@Thread[{1,2,3,4}->Control[{{focus,False,"\<focus on joint\>"},{True,False}}]]},Dynamic@joints]}}
+},Dynamic@steps]
+}},
+SaveDefinitions->True]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Rachael L. Baumann
+
+### [Text]
+John L. Falconer
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+First, calculate the reaction forces by doing a moment balance around joint A and force balances in the x and y directions:
+
+### [Text]
+\[Sum]Subscript[M, A]=0=w Subscript[F, C]-2 w Subscript[R, E],
+
+### [Text]
+\[Sum]Subscript[F, x]=0=Subscript[R, A, x],
+
+### [Text]
+\[Sum]Subscript[F, y]=0=Subscript[R, A, y]-Subscript[F, C]+Subscript[R, E],
+
+### [Text]
+where Subscript[R, A, x] and Subscript[R, A, y] are the reaction forces at joint A in the x and y directions, Subscript[R, E] is the reaction force at joint E, w is the width of the members and Subscript[F, C] is the point load force at joint C.
+
+### [Text]
+\<Next, do force balances at the joints. The order of the calculations shown is the order that the joints are solved in. Calculations are done assuming we know which members are under tension and which are under compression. View the labeled truss in Figure 1 below.\>
+
+### [Text]
+Joint A
+
+### [Text]
+\[Sum]Subscript[F, y]=0=-Subscript[F, AB] sin Theta+Subscript[R, A],
+
+### [Text]
+\[Sum]Subscript[F, x]=0=-Subscript[F, AB] cos Theta+Subscript[F, AC].
+
+### [Text]
+
+
+### [Text]
+Joint B
+
+### [Text]
+\[Sum]Subscript[F, y]=0=Subscript[F, AB] sin Theta-Subscript[F, BC] sin Theta,
+
+### [Text]
+\[Sum]Subscript[F, x]=0=Subscript[F, AB] cos Theta+Subscript[F, BC] cos Theta-Subscript[F, BD].
+
+### [Text]
+
+
+### [Text]
+Joint C
+
+### [Text]
+\[Sum]Subscript[F, y]=0=Subscript[F, BC] sin Theta+Subscript[F, CD] sin Theta-Subscript[F, C],
+
+### [Text]
+\[Sum]Subscript[F, x]=0=-Subscript[F, AC]-Subscript[F, BC] cos Theta+Subscript[F, CD] cos Theta+Subscript[F, CE].
+
+### [Text]
+
+
+### [Text]
+Joint D
+
+### [Text]
+\[Sum]Subscript[F, y]=0=-Subscript[F, CD] sin Theta+Subscript[F, DE] sin Theta.
+
+### [Text]
+
+
+### [Text]
+Figure 1
+
+### [Text]
+<<GraphicsBox>>
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] R. C. Hibbeler, Engineering Mechanics: Statics, 12th ed., Upper Saddle River, NJ: Prentice Hall, 2010.
+
+### [Text]
+[2] D. Morrell. Truss Example-Method of Joints (Edited)[Video]. (Jun 6, 2012) www.youtube.com/watch?v=56eTM36Z9-A.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+mechanical engineering
+
+### [Item]
+civil engineering
+
+### [Item]
+truss
+
+### [Item]
+force balance
+
+### [Item]
+moment balance
+
+### [Item]
+tension
+
+### [Item]
+compression
+
+### [Item]
+method of joints
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Item]
+Link to external information
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2017-09-08
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

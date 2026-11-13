@@ -1,0 +1,56 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstration by Rachael L. Baumann and John L. Falconer
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Determine If a Truss Can Be Solved</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <script src="../../shared/requirements.js"></script>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Determine If a Truss Can Be Solved</div>
+    <h1 class="demo-title">Determine If a Truss Can Be Solved</h1>
+
+    <section class="manipulate" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="graphic" id="graphic" data-testid="graphic">
+        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser.</div></noscript>
+      </div>
+    </section>
+
+    <p class="caption">This Demonstration determines whether a truss can be solved or if it is statically indeterminate by
+      calculating the number of equations and the number of unknowns. Use buttons to make joints either rollers (one reaction
+      force) or pinned (two reaction forces). Eliminate joint B by unchecking "support at joint B". The number of members,
+      joints and reaction forces is shown above the truss. Check "joint labels" to show labels for each joint. The point load
+      forces are green (known forces) and the reaction forces (unknown forces) are blue.</p>
+
+    <details class="details" data-testid="details">
+      <summary>Details</summary>
+      <p>To determine if the truss can be solved or not, a degree of freedom analysis is done:</p>
+      <p class="formula"><i>DOF</i> = 2 <i>j</i> − <i>u</i>,</p>
+      <p>where <i>DOF</i> is degrees of freedom, <i>j</i> is the number of joints, and <i>u</i> is the number of unknowns; and
+        <i>u</i> = <i>m</i> + <i>r</i>, where <i>m</i> is the number of members, and <i>r</i> is the number of unknown
+        reaction forces.</p>
+      <p>References for demonstration.</p>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. All computation runs in your browser.</p>
+    <div class="credits" data-testid="credits">
+      Adapted from <a href="https://demonstrations.wolfram.com/DetermineIfATrussCanBeSolved/">"Determine If a Truss Can Be Solved"</a>
+      by Rachael L. Baumann and John L. Falconer, Wolfram Demonstrations Project (published 2018-01-19), licensed
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+      This JavaScript translation by Tico Hannan (© 2026; produced with an AI code-generation tool) is released under the
+      same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

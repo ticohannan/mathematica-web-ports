@@ -15,7 +15,7 @@ Since v0.1.34 the apps listed here have a switch beside "Initial settings": **er
 
 To go back to the last version without the switch: tag `pre-fixed-mode-v0.1.33` (= v0.1.33, commit `b4569b0`).
 
-Apps with the switch: 23; corrections: 43. Code version 0.1.39.
+Apps with the switch: 26; corrections: 47. Code version 0.1.40.
 
 ## Motion Planning for Robot Path around Obstacles (`demos/motion-planning/`)
 
@@ -174,3 +174,22 @@ Apps with the switch: 23; corrections: 43. Code version 0.1.39.
 | Finding | The original (kept) | Corrected |
 |---|---|---|
 | E-FK-01 | the table is headed "local rotation matrix", but its entries are 4×4 homogeneous transformations: each holds a rotation and a translation (the 20 of link 2 and the end-effector), and a rotation matrix is the 3×3 block alone. | the header reads "local transformation matrix". |
+
+## Determine If a Truss Can Be Solved (`demos/truss-solvability/`, since v0.1.40)
+
+| Finding | The original (kept) | Corrected |
+|---|---|---|
+| E-TD-01 | the verdict is "solvable" whenever variables − equations ≤ 0. Without the support at joint B and with rollers at A and E there are 14 equations but only 13 unknowns (difference −1): the truss is a mechanism (it rolls sideways) and cannot be solved, yet it is called "solvable". Counting alone also cannot tell a well-placed set of supports from a badly placed one. | the verdict comes from the rank of the joint-balance equations (shared/truss.js): "solvable" when the equations determine every member force and reaction, "statically indeterminate" when there are more unknowns than independent equations, and "unstable (a mechanism)" when the supports or members cannot hold the truss still. The counts above stay as in the original. |
+
+## Method of Sections to Solve a Truss (`demos/truss-method-of-sections/`, since v0.1.40)
+
+| Finding | The original (kept) | Corrected |
+|---|---|---|
+| E-TX-01 | cut 4 ("make cut" checked): the result line under the x balance reads "F13 = 10.6 kN" at w = h = 8, but the number printed is the magnitude of F12 (NumberForm[Abs@F12, …]), the force of member 12 from cut 3. The x balance above it gives a magnitude of 20.0 kN for F13, which is also what the solved truss shows for member 13. | the line shows the magnitude of F13 (20.0 kN at w = h = 8). |
+| E-TX-02 | cut 5 with "solve moment": the moment balance about I is written "4 w RA + w FD − h F15 = 0". The load FD at D turns the cut piece the other way from RA, so its term has the opposite sign; the original's own Solve uses 4 w RA − w FD (its "+" is commented out), and the line below divides F15 = w/h (4 RA − FD), so the numbers shown are right and only this line is wrong. | the line reads "4 w RA − w FD − h F15 = 0". |
+
+## Method of Joints to Solve a Truss Problem (`demos/truss-method-of-joints/`, since v0.1.40)
+
+| Finding | The original (kept) | Corrected |
+|---|---|---|
+| E-TJ-01 | joint C in focus: the two balances read "∑ Fy = −FC + FBC sin θ + FCD sin θ" and "∑ Fx = −FAC − …" — they lack the "= 0" that the balances of the other joints have, so they do not say what is set to zero. | they read "∑ Fy = 0 = −FC + …" and "∑ Fx = 0 = −FAC − …", as at the other joints. |

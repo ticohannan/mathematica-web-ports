@@ -67,6 +67,9 @@ it is verified:
 | Zero-Pole Cancellation in Transfer Functions | [`demos/zero-pole-cancellation/DESIGN.md`](../demos/zero-pole-cancellation/DESIGN.md) | `demos/zero-pole-cancellation/` |
 | Simulation of Feedback Control System with Controller and Second-Order Plant | [`demos/feedback-control-simulation/DESIGN.md`](../demos/feedback-control-simulation/DESIGN.md) | `demos/feedback-control-simulation/` |
 | Forward Kinematics | [`demos/forward-kinematics/DESIGN.md`](../demos/forward-kinematics/DESIGN.md) | `demos/forward-kinematics/` |
+| Determine If a Truss Can Be Solved | [`demos/truss-solvability/DESIGN.md`](../demos/truss-solvability/DESIGN.md) | `demos/truss-solvability/` |
+| Method of Sections to Solve a Truss | [`demos/truss-method-of-sections/DESIGN.md`](../demos/truss-method-of-sections/DESIGN.md) | `demos/truss-method-of-sections/` |
+| Method of Joints to Solve a Truss Problem | [`demos/truss-method-of-joints/DESIGN.md`](../demos/truss-method-of-joints/DESIGN.md) | `demos/truss-method-of-joints/` |
 
 The originals came without design documents. Version 0.1.6 added best-effort design documents
 reconstructed from the original notebooks (their code, captions and details text) and from the

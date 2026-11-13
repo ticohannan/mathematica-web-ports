@@ -1,0 +1,45 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-License-Identifier: MIT -->
+<!-- tests/e2e/fixtures/graphics-v040.html — a test page (not an app, not linked from the site) for
+     tests/e2e/graphics-v040.spec.js: the v0.1.40 additions to shared/graphics.js drawn in one picture — heads at given
+     places along an arrow, a rounded frame and a frame without a line, a turned label, a styled script, a Grid aligned at
+     "=", Mouseover. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Graphics v0.1.40 (test page)</title>
+  <link rel="stylesheet" href="../../../shared/style.css">
+</head>
+<body>
+<main class="page">
+  <section class="manipulate">
+    <div class="panel-tools"><button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button></div>
+    <div class="controls" id="controls"></div>
+    <div class="graphic" id="graphic" data-testid="graphic"></div>
+  </section>
+</main>
+<script type="module">
+  import { Manipulate } from '../../../shared/manipulate.js';
+  import { Arrow, Arrowheads, Text, Style, Framed, RotatedText, Subscript, Row, Grid, Italic, Red, Blue, White, None, Disk, Mouseover, Annotation } from '../../../shared/graphics.js';
+  Manipulate({
+    name: 'graphics-v040',
+    body: ({ a }) => ({
+      view: { a },
+      graphics: [
+        Annotation([Red, Arrowheads([[0.05, 0.3], [-0.05, 0.7]]), Arrow([[-4, -3], [4, -3]])], 'two-heads'),
+        Annotation([Text(Framed(Style(' A ', 15), { Background: White, RoundingRadius: 15 }), [-3, 2])], 'rounded'),
+        Annotation([Text(Framed(Style('F', 15), { Background: White, FrameStyle: None, FrameMargins: 'Tiny' }), [-1, 2])], 'no-line'),
+        Annotation([Text(RotatedText(Style('turned', 15), a), [2, 2])], 'turned'),
+        Annotation([Text(Style(Subscript(Style('R', Italic), Row(['A, ', Style('y', Italic)])), 18), [-3, 0])], 'script'),
+        Annotation([Text(Style(Grid([[Row(['long left side = ', 1])], [Row(['x = ', 22])]], { Alignment: '=' }), 15), [2, 0])], 'eq-grid'),
+        Annotation(Mouseover([Blue, Disk([0, -1.2], 0.5)], [Red, Disk([0, -1.2], 0.8)]), 'hover'),
+      ],
+    }),
+    graphics: { id: 'graphic', PlotRange: [[-5, 5], [-4, 3]], ImageSize: 400 },
+    controls: [[['a', 0.5, 'angle'], 0, 1.5, 0.1]],
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstration by Rachael L. Baumann and John L. Falconer
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Method of Sections to Solve a Truss</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <style>.graphic.collapsed { visibility: hidden; height: 0; overflow: hidden; margin: 0; padding: 0; border: 0; }</style>
+  <script src="../../shared/requirements.js"></script>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Method of Sections to Solve a Truss</div>
+    <h1 class="demo-title">Method of Sections to Solve a Truss</h1>
+
+    <section class="manipulate" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="graphic" id="graphic" data-testid="graphic">
+        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser.</div></noscript>
+      </div>
+      <div class="graphic collapsed" id="graphic2" data-testid="graphic2"></div>
+    </section>
+
+    <p class="caption">This Demonstration solves a truss using the method of sections, which involves "cutting" along several
+      selected members and taking the sum of the <i>x</i> forces, <i>y</i> forces and moment about a point.</p>
+    <p class="caption">Select "solve for reaction forces" to see how the reaction forces R<sub>A</sub> and R<sub>B</sub> are
+      calculated. Use buttons to calculate the moment about A, do a force balance, and see the solved forces. When "calculate
+      moment" is selected, move the mouse over the equations to see an explanation of the moment balance. Select "make
+      cuts" to make cuts along members. See the entire truss and use buttons to select which section to make a cut along.
+      Check "make cut" to see an isolated structure of the supports to the left of the selected cut.</p>
+    <p class="caption">Force and moment balances are shown with the solved member forces. When making cuts, the sign on all
+      of the forces is positive because we assume we can determine which members are under tension and which are under
+      compression before solving the truss. This is done by starting at joint A, seeing that the reaction force is pointing
+      upward, and knowing that the member force must be pointing downward for the truss to remain stationary.</p>
+
+    <details class="details" data-testid="details">
+      <summary>Details</summary>
+      <p>The method of sections is used to calculate the forces in each member of the truss. This is done by making a "cut"
+        along three selected members. First, calculate the reactions at the supports. Taking the sum of the moments at the
+        left support:</p>
+      <p class="formula">∑<i>M</i><sub>A</sub> = 3 <i>w</i> <i>F</i><sub>D</sub> + 5 <i>w</i> <i>F</i><sub>F</sub> − 6 <i>w</i> <i>R</i><sub>B</sub> = 0.</p>
+      <p>Next do a force balance of the <i>y</i> forces:</p>
+      <p class="formula">∑<i>F</i><sub>y</sub> = <i>R</i><sub>A</sub> + <i>R</i><sub>B</sub> − <i>F</i><sub>D</sub> − <i>F</i><sub>F</sub> = 0,</p>
+      <p>where <i>R</i><sub>A</sub> and <i>R</i><sub>B</sub> are the reaction forces, and <i>F</i><sub>D</sub> and <i>F</i><sub>F</sub> are the point load forces in the
+        negative <i>y</i> direction.</p>
+      <p>Begin solving for the forces of the members by making cuts. The order of the balances listed here is the order in
+        which they should be solved. Force balances are done assuming we can figure out which members are under tension and
+        which are under compression. A labeled truss is shown in Figure 1.</p>
+      <p>Cut 1, to the right of joint A:</p>
+      <p class="formula">∑<i>F</i><sub>y</sub> = 0 = −<i>F</i><sub>0</sub> sin <i>θ</i> + <i>R</i><sub>A</sub>,<br>∑<i>F</i><sub>x</sub> = 0 = −<i>F</i><sub>0</sub> cos <i>θ</i> + <i>F</i><sub>2</sub>.</p>
+      <p>Cut 2, to the right of joints B and L:</p>
+      <p class="formula">∑<i>F</i><sub>y</sub> = 0 = −<i>F</i><sub>7</sub> sin <i>θ</i> + <i>R</i><sub>A</sub>,<br>∑<i>M</i><sub>B</sub> = 0 = <i>w</i> <i>R</i><sub>A</sub> − <i>h</i> <i>F</i><sub>3</sub>,<br>∑<i>F</i><sub>x</sub> = 0 = <i>F</i><sub>3</sub> − <i>F</i><sub>5</sub> + <i>F</i><sub>7</sub> cos <i>θ</i>.</p>
+      <p>Cut 3, to the right of joints C and K:</p>
+      <p class="formula">∑<i>F</i><sub>y</sub> = 0 = −<i>F</i><sub>12</sub> sin <i>θ</i> + <i>R</i><sub>A</sub>,<br>∑<i>M</i><sub>K</sub> = 0 = 2 <i>w</i> <i>R</i><sub>A</sub> − <i>h</i> <i>F</i><sub>8</sub>,<br>∑<i>F</i><sub>x</sub> = 0 = <i>F</i><sub>4</sub> − <i>F</i><sub>8</sub> − <i>F</i><sub>12</sub> cos <i>θ</i>.</p>
+      <p>Cut 4, to the right of joints D and J:</p>
+      <p class="formula">∑<i>F</i><sub>y</sub> = 0 = <i>F</i><sub>10</sub> sin <i>θ</i> + <i>R</i><sub>A</sub> − <i>F</i><sub>D</sub>,<br>∑<i>M</i><sub>D</sub> = 0 = 3 <i>w</i> <i>R</i><sub>A</sub> − <i>h</i> <i>F</i><sub>11</sub>,<br>∑<i>F</i><sub>x</sub> = 0 = −<i>F</i><sub>10</sub> cos <i>θ</i> + <i>F</i><sub>11</sub> − <i>F</i><sub>13</sub>.</p>
+      <p>Cut 5, to the right of joints E and I:</p>
+      <p class="formula">∑<i>F</i><sub>y</sub> = 0 = <i>F</i><sub>16</sub> sin <i>θ</i> + <i>R</i><sub>A</sub> − <i>F</i><sub>D</sub>,<br>∑<i>M</i><sub>I</sub> = 0 = 4 <i>w</i> <i>R</i><sub>A</sub> + <i>w</i> <i>F</i><sub>D</sub> − <i>h</i> <i>F</i><sub>17</sub>,<br>∑<i>F</i><sub>x</sub> = 0 = −<i>F</i><sub>15</sub> + <i>F</i><sub>16</sub> cos <i>θ</i> + <i>F</i><sub>17</sub>.</p>
+      <p>Cut 6, to the right of joints F and H:</p>
+      <p class="formula">∑<i>F</i><sub>y</sub> = 0 = <i>F</i><sub>19</sub> sin <i>θ</i> + <i>R</i><sub>A</sub> − <i>F</i><sub>D</sub> − <i>F</i><sub>F</sub>,<br>∑<i>F</i><sub>x</sub> = 0 = −<i>F</i><sub>19</sub> cos <i>θ</i> + <i>F</i><sub>20</sub>.</p>
+      <p>Note that all the vertical members are zero members, which means they exert a force of 0 kN and are neither a
+        tension nor a compression force; instead they are at rest.</p>
+      <p>Figure 1: the labeled truss — select "make cuts" with "make cut" unchecked to see it.</p>
+      <p>[1] SkyCiv Cloud Engineering Software. "Tutorial to Solve Truss by Method of Sections." (Aug 18, 2017)
+        skyciv.com/tutorials/tutorial-to-solve-truss-by-method-of-sections.</p>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. All computation runs in your browser.</p>
+    <div class="credits" data-testid="credits">
+      Adapted from <a href="https://demonstrations.wolfram.com/MethodOfSectionsToSolveATruss/">"Method of Sections to Solve a Truss"</a>
+      by Rachael L. Baumann and John L. Falconer, Wolfram Demonstrations Project (published 2017-09-08), licensed
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+      This JavaScript translation by Tico Hannan (© 2026; produced with an AI code-generation tool) is released under the
+      same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

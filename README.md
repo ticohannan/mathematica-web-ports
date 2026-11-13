@@ -68,6 +68,9 @@ plain HTML + JavaScript (ES modules, no build step), SVG for 2D, three.js/WebGL 
 | Zero-Pole Cancellation in Transfer Functions | `demos/zero-pole-cancellation/` | SVG | gain slider, three transfer functions; root locus; errors switch |
 | Simulation of Feedback Control System with Controller and Second-Order Plant | `demos/feedback-control-simulation/` | SVG | run / stop, time and speed, plant and P/PI/PD/PID controller; step, Bode, Nyquist, poles |
 | Forward Kinematics | `demos/forward-kinematics/` | WebGL 2 | 4 joint sliders (π/32), show frames; 3D arm with its frames and the exact local matrices; errors switch |
+| Determine If a Truss Can Be Solved | `demos/truss-solvability/` | SVG | support at B, joint labels, roller or pin at each support; counts and verdict; errors switch |
+| Method of Sections to Solve a Truss | `demos/truss-method-of-sections/` | SVG | reactions (moment with Mouseover, force balance), six cuts with balances, solved truss; member width and height; errors switch |
+| Method of Joints to Solve a Truss Problem | `demos/truss-method-of-joints/` | SVG | reaction views (popup, Mouseover), balances at joints A … D in focus, solved truss; errors switch |
 
 The apps came in groups: the first three (motion planning, rotations, Euler angles); seven more from the
 seven-link PRM to robot singularities, added in v0.1.12 as further proofs of concept (developed first in a separate,

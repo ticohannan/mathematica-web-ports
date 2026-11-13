@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.39 |
+| Code version: | 0.1.40 |
 | Document revision | 1 (2026-10-18) — first implementation |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Common Robot Arm Configurations", contributed by Mohammad Sultan and Aaron T. Becker, published 2017-06-28 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/CommonRobotArmConfigurations/>. Readable source: [`docs/original-source/arm-configurations.txt`](../../docs/original-source/arm-configurations.txt); snapshots: `docs/original-snapshots/arm-configurations-1.png` … `-6.png` (pictures 1 and 2 are identical, N-AC-01); golden data: `tests/golden/arm-configurations.original-states.json` (written with `tools/extract_state.py --snapshots` from the raw notebook, COMMON-DECISIONS §1: `states[0]` = output-cell state, raw notebook line 1948; `snapshots[1…6]` = the snapshot cells' Settings, raw lines 5256, 7471, 9130, 10505, 12137, 13574; `specs` = the stored Specifications) |
@@ -288,6 +288,7 @@ Template: [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md).
 | 23 | v0.1.37 | 2026-11-12 | version number (v0.1.37: thirteen control and signal ports and the shared modules they use; the additions to shared/plot.js, graphics.js and manipulate.js are opt-in); no change to this app's code, behaviour or picture |
 | 24 | v0.1.38 | 2026-11-12 | version number (v0.1.38: one new app, forward-kinematics; shared/traditional-form.js is new, and `Lighting -> "Neutral"` in shared/mma-lighting.js and graphics3d-view.js is opt-in); no change to this app's code, behaviour or picture |
 | 25 | v0.1.39 | 2026-11-12 | version number (v0.1.39: selective testing — tools/affected.mjs and publish:tested run only the browser tests a change can affect; no app code changed); no change to this app's code, behaviour or picture |
+| 26 | v0.1.40 | 2026-11-13 | version number (v0.1.40: three truss ports; shared/truss.js is new; shared/graphics.js gains Mouseover, RotatedText, rounded and line-less Framed, Arrowheads[Large] and heads at given places, Grid alignment at "=", styled scripts and fitPlotRange — the changes to existing drawing are a styled script keeping its style and the baseline after it, and framed or backed labels keeping their outer spaces); no change to this app's code or behaviour |
 
 ## 10. Improvements to consider (not implemented)
 

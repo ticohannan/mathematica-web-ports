@@ -58,4 +58,10 @@ export const SCENARIOS = {
   'zero-pole-cancellation': { state: { gain: 0.628 }, probe: '(v) => v.parameterPoints', original: 0, corrected: 3 },
   // E-FK-01: the table's header
   'forward-kinematics': { probe: '(v) => v.header', original: 'local rotation matrix', corrected: 'local transformation matrix' },
+  // E-TD-01: no support at B, rollers at A and E: 13 unknowns, 14 equations — a mechanism (rank of the balances, shared/truss.js; by hand: nothing resists a sideways load)
+  'truss-solvability': { state: { ADTR: false, SA: 1, SF: 1 }, probe: '(v) => v.verdictText', original: 'solvable', corrected: 'unstable (a mechanism)' },
+  // E-TX-01: cut 4 at w = h = 8: |F13| = |−F10 cos θ − F11| = |2.5 − 22.5| = 20 kN (by hand; the original prints |F12| = 10.6)
+  'truss-method-of-sections': { state: { steps: 2, cuts: 4, zoom: true }, probe: '(v) => v.printedF13', original: 10.606602, corrected: 20, digits: 4 },
+  // E-TJ-01: joint C's balances get the "= 0" of the other joints' balances
+  'truss-method-of-joints': { state: { steps: 2, joints: 3, focus: true }, probe: '(v) => v.jointCBalanceHasZero', original: false, corrected: true },
 };

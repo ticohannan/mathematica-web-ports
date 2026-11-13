@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.39 |
+| Code version: | 0.1.40 |
 | Document revision | 1 (2026-10-17) — first implementation |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Distance Norms in Robot Workspace and Phase Space", contributed by Aaron T. Becker and Benedict Isichei, published 2017-12-13 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/DistanceNormsInRobotWorkspaceAndPhaseSpace/>. Readable source: [`docs/original-source/distance-norms.txt`](../../docs/original-source/distance-norms.txt); saved states: `tests/golden/distance-norms.original-states.json` (`states[0]` = the output cell's saved state, `snapshots[1…6]` = the six snapshot cells' `Settings`, raw notebook lines 2407, 3613, 4818, 6021, 7213, 8429; `specs` = the initial settings; exact values kept as `{"wl": …}`); snapshots: `docs/original-snapshots/distance-norms-1…6.png` (the notebook's snapshot cells 7 and 8 are the Wolfram icon placeholder, N-DN-05) |
@@ -310,6 +310,7 @@ Open proposal (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
 | 23 | v0.1.37 | 2026-11-12 | version number (v0.1.37: thirteen control and signal ports and the shared modules they use; the additions to shared/plot.js, graphics.js and manipulate.js are opt-in); no change to this app's code, behaviour or picture |
 | 24 | v0.1.38 | 2026-11-12 | version number (v0.1.38: one new app, forward-kinematics; shared/traditional-form.js is new, and `Lighting -> "Neutral"` in shared/mma-lighting.js and graphics3d-view.js is opt-in); no change to this app's code, behaviour or picture |
 | 25 | v0.1.39 | 2026-11-12 | version number (v0.1.39: selective testing — tools/affected.mjs and publish:tested run only the browser tests a change can affect; no app code changed); no change to this app's code, behaviour or picture |
+| 26 | v0.1.40 | 2026-11-13 | version number (v0.1.40: three truss ports; shared/truss.js is new; shared/graphics.js gains Mouseover, RotatedText, rounded and line-less Framed, Arrowheads[Large] and heads at given places, Grid alignment at "=", styled scripts and fitPlotRange — the changes to existing drawing are a styled script keeping its style and the baseline after it, and framed or backed labels keeping their outer spaces); no change to this app's code or behaviour |
 
 ## 10. Improvements to consider (not implemented)
 

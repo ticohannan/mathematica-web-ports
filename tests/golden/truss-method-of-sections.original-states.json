@@ -1,0 +1,89 @@
+{
+ "source": "MethodOfSectionsToSolveATruss.nb",
+ "note": "Manipulate states saved in the ORIGINAL notebook, computed by the original Mathematica code: states[0] = the live state of the output cell, specs = the initial settings (the Manipulate's stored \"Variables\"), snapshots = the Settings stored with each snapshot cell. Extracted with tools/extract_state.py --snapshots. Golden parity fixture (CC BY-NC-SA 3.0, as the original).",
+ "format": "Numbers: a JSON integer is an exact Wolfram integer (|x| <= 2^53 - 1; larger ones are {\"wl\": digits}); a JSON number written with a decimal point or an exponent is a machine real (the shortest text that reads back as the identical double); any other exact number (Rational, rational multiple of Pi, arbitrary-precision real, an unevaluated Sin[...], Infinity) is {\"wl\": a Wolfram-readable form (not necessarily InputForm: compare exact values by value), \"n\": its double} - \"n\" is the correctly rounded double for a Rational or rational multiple of Pi, Python's double evaluation otherwise, and absent for Infinity. Symbols are {\"sym\": name}, other expressions {\"head\": name, \"args\": [...]}; variable names without context and $$, Greek letters as Unicode. packedTypes maps the JSON pointer of a decoded packed array that was stored with a narrower element type (CompressedData tag b) to that type. snapshots[\"k\"] belongs to the picture docs/original-snapshots/<dir>-k.png (cells in file order).",
+ "specs": {
+  "cuts": 1,
+  "h": 8,
+  "moment": false,
+  "opt": 1,
+  "steps": 1,
+  "w": 8,
+  "zoom": false
+ },
+ "states": [
+  {
+   "cuts": 1,
+   "h": 8,
+   "moment": false,
+   "opt": 1,
+   "steps": 1,
+   "w": 8,
+   "zoom": false
+  }
+ ],
+ "snapshots": {
+  "1": {
+   "steps": 1,
+   "opt": 1,
+   "cuts": 1,
+   "zoom": false,
+   "moment": false,
+   "w": 8,
+   "h": 8
+  },
+  "2": {
+   "steps": 1,
+   "opt": 2,
+   "cuts": 1,
+   "zoom": false,
+   "moment": false,
+   "w": 8,
+   "h": 6.3
+  },
+  "3": {
+   "steps": 1,
+   "opt": 3,
+   "cuts": 1,
+   "zoom": false,
+   "moment": false,
+   "w": 6.8,
+   "h": 8.0
+  },
+  "4": {
+   "steps": 2,
+   "opt": 3,
+   "cuts": 1,
+   "zoom": false,
+   "moment": false,
+   "w": 8.0,
+   "h": 8.0
+  },
+  "5": {
+   "steps": 2,
+   "opt": 3,
+   "cuts": 1,
+   "zoom": true,
+   "moment": false,
+   "w": 8.0,
+   "h": 8.0
+  },
+  "6": {
+   "steps": 2,
+   "opt": 3,
+   "cuts": 3,
+   "zoom": true,
+   "moment": true,
+   "w": 8.0,
+   "h": 8.0
+  }
+ },
+ "snapshotCellIds": {
+  "1": 755116373,
+  "2": 1354021936,
+  "3": 162471093,
+  "4": 1199944714,
+  "5": 451879221,
+  "6": 1231891555
+ }
+}

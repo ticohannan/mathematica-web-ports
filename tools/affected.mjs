@@ -171,7 +171,8 @@ export function classify(file, { APPS, fixtureSpecs, e2eSupport = new Set() }) {
 }
 
 // ---- git helpers -----------------------------------------------------------------------------------------------------
-const git = (args, root = ROOT) => execFileSync('git', args, { cwd: root, encoding: 'utf8', maxBuffer: 64 << 20 }).trim();
+// stderr not inherited (v0.1.40): `git show <tag>:<file>` of a file new since the tag fails by design (showAt → null)
+const git = (args, root = ROOT) => execFileSync('git', args, { cwd: root, encoding: 'utf8', maxBuffer: 64 << 20, stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 const gitOk = (args, root = ROOT) => spawnSync('git', args, { cwd: root, encoding: 'utf8' }).status === 0;
 const showAt = (ref, file, root = ROOT) => { try { return git(['show', `${ref}:${file}`], root); } catch { return null; } };
 
