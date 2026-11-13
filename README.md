@@ -110,7 +110,8 @@ npm test                              :: unit + golden parity tests (Node, no br
 npx playwright install firefox chromium webkit  :: one-time
 npm run test:e2e                      :: browser tests in Firefox, Chromium and WebKit
 npm run bundle -- --all               :: every app as its own deployable folder in dist\ (see below)
-npm run publish:tested                :: run everything, then tag + push to GitHub
+npm run publish:tested                :: unit tests + the browser tests the change can affect (docs/TESTING.md), then tag + push
+node tools\affected.mjs --explain     :: which browser tests a change selects, and why
 node tools\explore-motion.mjs 300 1   :: randomized investigation of the motion planner
 npm run compare:original              :: motion planning: port vs the ORIGINAL code run in local Mathematica
 npm run test-run -- car-paths         :: fill-in file _internal\test-runs\<date>_car-paths.md for the manual checks of one app

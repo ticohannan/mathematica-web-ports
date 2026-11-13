@@ -108,16 +108,3 @@ details.errata-note li { margin: 4px 0; }
 .ctl-trigger button:active, .ctl-trigger button[aria-pressed="true"] { background: var(--btn-on); }
 .ctl.ctl-radiobar { flex-direction: row; align-items: center; gap: 8px; flex-wrap: wrap; }
 .ctl-radio-item { font-size: 0.85rem; cursor: pointer; }
-/* v0.1.38: TraditionalForm matrices (shared/traditional-form.js): tall parentheses, centred entries, built-up π fractions */
-.tf-matrix { display: inline-block; position: relative; padding: 0 5px; vertical-align: middle; }
-.tf-matrix::before, .tf-matrix::after { content: ""; position: absolute; top: 1px; bottom: 1px; width: 5px; border: 1px solid currentColor; }
-.tf-matrix::before { left: 0; border-right: 0; border-radius: 6px 0 0 6px / 50% 0 0 50%; }
-.tf-matrix::after { right: 0; border-left: 0; border-radius: 0 6px 6px 0 / 0 50% 50% 0; }
-.tf-matrix table { border-collapse: collapse; }
-.tf-matrix td { padding: 0 0.3em; text-align: center; line-height: 1.15; }
-.tf-entry { display: inline-flex; align-items: center; white-space: nowrap; }
-.tf-fn { margin-right: 1px; }
-.tf-paren { font-size: 1.7em; line-height: 1; font-weight: 300; }
-.tf-frac { display: inline-flex; flex-direction: column; align-items: center; margin: 0 1px; }
-.tf-frac .tf-num { border-bottom: 1px solid currentColor; padding: 0 1px; line-height: 1.1; }
-.tf-frac .tf-den { padding: 0 1px; line-height: 1.1; }

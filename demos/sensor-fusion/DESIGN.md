@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.38 |
+| Code version: | 0.1.39 |
 | Document revision | 2 (2026-10-25) |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Sensor Fusion with Normally Distributed Noise", contributed by Aaron Becker, published 2015-06-04 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/SensorFusionWithNormallyDistributedNoise/> Source as text: [`docs/original-source/sensor-fusion.txt`](../../docs/original-source/sensor-fusion.txt); snapshots `docs/original-snapshots/sensor-fusion-1…4.png`; saved states `tests/golden/sensor-fusion.original-states.json` |
@@ -147,6 +147,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 15 | v0.1.36 | 2026-11-11 | version number (v0.1.36: the full colour menu of voronoi-diagrams); no change to this app's code, behaviour or picture |
 | 16 | v0.1.37 | 2026-11-12 | version number (v0.1.37: thirteen control and signal ports and the shared modules they use; the additions to shared/plot.js, graphics.js and manipulate.js are opt-in); no change to this app's code, behaviour or picture |
 | 17 | v0.1.38 | 2026-11-12 | version number (v0.1.38: one new app, forward-kinematics; shared/traditional-form.js is new, and `Lighting -> "Neutral"` in shared/mma-lighting.js and graphics3d-view.js is opt-in); no change to this app's code, behaviour or picture |
+| 18 | v0.1.39 | 2026-11-12 | version number (v0.1.39: selective testing — tools/affected.mjs and publish:tested run only the browser tests a change can affect; no app code changed); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

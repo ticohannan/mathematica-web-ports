@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.38 |
+| Code version: | 0.1.39 |
 | Document revision | 3 (2026-10-18) — harness run 2 evaluated (K-MS-01/02/03/04/07/08 resolved, P-MS-01 proposed, K-MS-11 new) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Minkowski Sum of Convex Robot and Obstacle", contributed by Shreyas Poyrekar, Arifa Sultana and Aaron T. Becker, published 2019-04-23 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/MinkowskiSumOfConvexRobotAndObstacle/>. Readable source: `docs/original-source/minkowski-sum.txt`; snapshots: `docs/original-snapshots/minkowski-sum-1.png` … `-5.png` (the extraction's pictures 6 and 7 are the Wolfram logo, not snapshots); golden data (`tests/golden/minkowski-sum.original-states.json`, COMMON-DECISIONS §1): the live state, the Settings of the five snapshot cells (raw notebook lines 4386, 5542, 6194, 7236, 7866) and the initial settings |
@@ -348,6 +348,7 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 | 22 | v0.1.36 | 2026-11-11 | version number (v0.1.36: the full colour menu of voronoi-diagrams); no change to this app's code, behaviour or picture |
 | 23 | v0.1.37 | 2026-11-12 | version number (v0.1.37: thirteen control and signal ports and the shared modules they use; the additions to shared/plot.js, graphics.js and manipulate.js are opt-in); no change to this app's code, behaviour or picture |
 | 24 | v0.1.38 | 2026-11-12 | version number (v0.1.38: one new app, forward-kinematics; shared/traditional-form.js is new, and `Lighting -> "Neutral"` in shared/mma-lighting.js and graphics3d-view.js is opt-in); no change to this app's code, behaviour or picture |
+| 25 | v0.1.39 | 2026-11-12 | version number (v0.1.39: selective testing — tools/affected.mjs and publish:tested run only the browser tests a change can affect; no app code changed); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

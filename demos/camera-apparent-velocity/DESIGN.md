@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.38 |
+| Code version: | 0.1.39 |
 | Document revision | 2 (2026-10-27) |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Maximizing Apparent Velocity in a Camera's Frame", contributed by Mohammad Sultan and Aaron T. Becker, published 2018-11-07 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/MaximizingApparentVelocityInACamerasFrame/> Source as text: [`docs/original-source/camera-apparent-velocity.txt`](../../docs/original-source/camera-apparent-velocity.txt); snapshots `docs/original-snapshots/camera-apparent-velocity-1…8.png`; saved states `tests/golden/camera-apparent-velocity.original-states.json` (`states[0]` the live state, equal to `specs`, the Manipulate's initial values; `snapshots` the eight snapshots' settings) |
@@ -243,6 +243,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 12 | v0.1.36 | 2026-11-11 | version number (v0.1.36: the full colour menu of voronoi-diagrams); no change to this app's code, behaviour or picture |
 | 13 | v0.1.37 | 2026-11-12 | version number (v0.1.37: thirteen control and signal ports and the shared modules they use; the additions to shared/plot.js, graphics.js and manipulate.js are opt-in); no change to this app's code, behaviour or picture |
 | 14 | v0.1.38 | 2026-11-12 | version number (v0.1.38: one new app, forward-kinematics; shared/traditional-form.js is new, and `Lighting -> "Neutral"` in shared/mma-lighting.js and graphics3d-view.js is opt-in); no change to this app's code, behaviour or picture |
+| 15 | v0.1.39 | 2026-11-12 | version number (v0.1.39: selective testing — tools/affected.mjs and publish:tested run only the browser tests a change can affect; no app code changed); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

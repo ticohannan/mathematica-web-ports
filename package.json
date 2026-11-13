@@ -1,6 +1,6 @@
 {
   "name": "mathematica-web-ports",
-  "version": "0.1.38",
+  "version": "0.1.39",
   "private": true,
   "description": "Browser ports of Wolfram Demonstrations (robot motion planning, rotations, Euler angles, probabilistic roadmaps, car paths, p-norm unit balls, art gallery, robot singularities, two-link kinematics, robot motion with obstacles, breadth-first search planning, distance norms, Dubins car paths and isochrons, RRT and RRT*, camera and lasers, Minkowski sums, four-bar linkage, Denavit-Hartenberg parameters, torus chart, manipulability ellipsoid, arm configurations, manipulator workspaces, PRM in 3D, Graham scan, sensor fusion, ensemble control, segment distance, swarm in a circle, steering RC cars with one joystick, visibility region, wall friction, drone reachable set, 3D Dubins reachability, probabilistic robot motion, the homicidal chauffeur, apparent velocity in a camera frame, packing spheres into a thin cylinder, the normal form of a line, lowpass filter design, time shifting and scaling, defects in an optical fiber, even and odd synthesis, paths inside a polygon, Voronoi diagrams; control theory and signals: link budget, harmonic distortion, first-order and first- and second-order transfer functions, underdamped step performance, integral error criteria, proportional and PI temperature control, active shock absorbers, two quarter-car suspensions, zero-pole cancellation, a feedback control dashboard, forward kinematics of a three-link arm). Static site: all computation runs in the browser.",
   "author": "Tico Hannan",
@@ -24,6 +24,7 @@
     "test:all": "vitest run && playwright test --project=firefox --project=chromium --project=webkit",
     "report": "playwright show-report test-output/html-report",
     "publish:tested": "node tools/publish-tested.mjs",
+    "test:affected": "node tools/affected.mjs --run",
     "explore": "node tools/explore-motion.mjs",
     "compare:original": "node tools/compare-with-original.mjs",
     "harness": "node tools/run-harness.mjs",

@@ -134,7 +134,44 @@ exactly (collision yes/no, chosen path word, graph edges) and coordinates with a
 
 Starts `tools/serve.mjs` on port 8090 automatically and runs `tests/e2e/*.spec.js` in Firefox,
 Chromium AND WebKit (three Playwright projects; `npm run test:e2e:firefox` / `test:e2e:chromium` /
-`test:e2e:webkit` run one). `npm run publish:tested` requires all three to pass (WebKit since v0.1.10).
+`test:e2e:webkit` run one). `npm run publish:tested` requires all three to pass (WebKit since v0.1.10) — since v0.1.39
+for the tests the change can affect (next section).
+
+### Selective testing (v0.1.39, `tools/affected.mjs`)
+
+Owner decision 2026-11-12 (the internal proposal "selective testing", Q-1 … Q-5): the unit and golden tests always run in
+full (about 10 s); **the browser tests run only where the change can matter**. The change is the difference from the
+newest `tested-…` tag reachable from HEAD. Each changed file has a class:
+
+| Class | Files | Browser tests |
+|---|---|---|
+| D documentation | `*.md`, `LICENSES/`, `docs/original-*`, `docs/third-party/`, `REUSE.toml`, `tools/wolfram/`, `package.json` / `package-lock.json` with only the version or description changed | none; a DESIGN.md whose UI inventory (§5) changed: that app's UI-inventory test; `docs/NEW_APP.md`: the test of its example |
+| T unit tests | `tests/unit/`, `tests/harness/`, golden data of no app, `tests/support/` helpers no browser test loads, `vitest.config.js` | none |
+| A one app | `demos/<app>/`, its spec, `tests/golden/<app>.*`; a shared-code spec and its fixture page; entries appended to `tests/e2e/apps.js` or `tests/support/errata-scenarios.js` | the app's spec and its rows in site, bundle and errata-mode specs |
+| S shared code | `shared/`, `demos/common/`, `vendor/` | every app (and fixture page) that loads the file; a file every app loads (`manipulate.js` and its imports, `style.css`) means a full run |
+| L landing page | `index.html`, an app's `thumbnail.webp` | the landing-page tests |
+| F everything else | configurations, `tests/e2e/helpers.js`, the cross-app specs, `tools/` outside `tools/wolfram/`, a deleted shared file, any unknown path | **all** |
+
+Which apps load a file comes from each `index.html` (scripts, stylesheets, inline imports, the three import map) and
+the static imports from there; `node tools/affected.mjs --explain` prints the plan and why. A **full run** is due anyway
+a week after the last one, at every 5th release, and when the Playwright or Node version changed (each tag records an
+`env:` line). Feature styles go into their own stylesheet (e.g. `shared/traditional-form.css`), not into
+`shared/style.css`, which every app loads (Q-4).
+
+```bat
+node tools\affected.mjs --explain            :: the plan against the last tested-… tag, file by file
+npm run test:affected                         :: unit tests + the selected browser tests (no tag, no push)
+npm run publish:tested                        :: the same, then tag + push (a full run when one is due)
+npm run publish:tested -- --full              :: every browser test
+npm run publish:tested -- --plan              :: print the plan and stop
+npm run publish:tested -- --retest-failed     :: after a failed run and a fix in the failing specs only: rerun the failed tests
+```
+
+During `publish:tested` a failed browser test is retried once; one that passes on the retry is reported as **flaky**
+(in the output and the tag message) and does not block. After a real failure the run is recorded in
+`test-output\publish-failure.json`; if the fix changes only the failing tests' spec files (and documentation or unit
+tests), commit it and run `--retest-failed`: it reruns just those tests and tags. The unit test `e2e-lint` rejects a
+known timing mistake (moving the fixed page clock before an animation's first frame).
 
 **WebKit** (the engine of Safari): `npm run test:e2e:webkit` runs the same tests in Playwright's WebKit
 build (since v0.1.9). It is not Safari: on Windows and Linux it is a separate WebKit port with its own

@@ -17,7 +17,8 @@
 //   matrixElement(rows, { doc, testid, className })
 //                                      a <span class="tf-matrix"> holding a table of the entries in tall parentheses,
 //                                      each trig argument as a built-up fraction (3π over 16) in parentheses, as the
-//                                      front end draws TraditionalForm[{{…}, …}]; styles in shared/style.css (.tf-*).
+//                                      front end draws TraditionalForm[{{…}, …}]; styles in shared/traditional-form.css (.tf-*,
+//                                      v0.1.39; the page links it).
 // Generic Wolfram Language semantics (no Demonstration code). Pure except matrixElement (DOM).
 import { octantForm, cosPi, sinPi } from './exact-pi.js';
 

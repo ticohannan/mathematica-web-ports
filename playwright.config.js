@@ -22,8 +22,12 @@ export default defineConfig({
   // workers; override with the PW_WORKERS environment variable (e.g. set PW_WORKERS=1 to debug).
   fullyParallel: true,
   workers: Number(process.env.PW_WORKERS || 6),
-  retries: 0,
-  reporter: [['list'], ['html', { outputFolder: 'test-output/html-report', open: 'never' }]],
+  // v0.1.39 (selective testing, tools/affected.mjs): PW_RETRIES (publish:tested sets 1: a test that passes on its retry is
+  // reported as flaky and does not block), PW_GREP (the selected tests, a regular expression; passed in the environment
+  // because Command Prompt would mangle | and ^ on the command line), PW_JSON (also write a JSON report to that file)
+  retries: Number(process.env.PW_RETRIES || 0),
+  ...(process.env.PW_GREP ? { grep: new RegExp(process.env.PW_GREP) } : {}),
+  reporter: [['list'], ['html', { outputFolder: 'test-output/html-report', open: 'never' }], ...(process.env.PW_JSON ? [['json', { outputFile: process.env.PW_JSON }]] : [])],
   use: {
     baseURL: `http://127.0.0.1:${PORT}`,
     viewport: { width: 1100, height: 900 },
