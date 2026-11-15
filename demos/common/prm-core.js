@@ -113,7 +113,7 @@ export function pathOKT(ps, pe, collides, delta) {
  * circlePoints has closed forms for n = 3…6 (n = 5 is correctly rounded, n = 4 is 1/Sqrt[2] in machine arithmetic,
  * 1 ulp below the correctly rounded value, as Mathematica evaluates it); for n = 7 it falls back to Math.cos /
  * Math.sin, which are off in the last bit. Mathematica's machine values for n = 7 are the correctly rounded ones
- * (computed with mpmath at 50 digits; reproduces the 7-gon of owner state 1 bit for bit), in the same vertex order
+ * (computed with mpmath at 50 digits; reproduces the 7-gon of saved state 1 bit for bit), in the same vertex order
  * (first vertex at angle -π/2 + π/7, counter-clockwise).
  */
 const CIRCLE_POINTS_7 = [

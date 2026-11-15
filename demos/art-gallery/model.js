@@ -32,7 +32,7 @@ export const IMAGE_SIZE = 450;
 export const GUARD_RADIUS = 0.1; // Disk[pts[[i+2]], 0.1]
 /**
  * cval = ColorData[100, "ColorList"] (guard i and its region use colour i; s <= 8, so only the first eight are used).
- * Exact RGBColor values from extra-checks.wls, Mathematica 15.0.1, owner run 2026-10-06 (K-AG-04 resolved).
+ * Exact RGBColor values from extra-checks.wls, Mathematica 15.0.1, Tico's run 2026-10-06 (K-AG-04 resolved).
  */
 export const GUARD_COLORS = Object.freeze([
   [0.0684356, 0.645252, 0.782123], [0.98993, 0.699651, 0.0271887], [0.450866, 0.379481, 1], [0.369422, 0.7, 0.229826],

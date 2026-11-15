@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Tico Hannan
 // SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // tests/support/pre-graphics.js — compare a model's Graphics data with the drawing output frozen before the model
-// returned its picture itself (tests/unit/fixtures/<app>-drawing.pre-graphics.json, v0.1.21, owner decision D2).
+// returned its picture itself (tests/unit/fixtures/<app>-drawing.pre-graphics.json, v0.1.21, decision D2).
 //
 //   const fx = preGraphics('camera-lasers');            // { about, states: [{ name, steps, graphics, state, model? }] }
 //   const { replaced } = sameDrawing(newGraphics, fx.states[0].graphics);   // throws on any other difference

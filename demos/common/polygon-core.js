@@ -98,7 +98,7 @@ export function discretizeLineRev1([p1, p2], step) {
 }
 
 /** SameQ of two machine reals: equal if they differ in at most their last binary digit (Wolfram Language reference,
- *  SameQ; confirmed for SameQ, MatchQ and Position by extra-checks.wls, Mathematica 15.0.1, owner run 2026-10-06). */
+ *  SameQ; confirmed for SameQ, MatchQ and Position by extra-checks.wls, Mathematica 15.0.1, Tico's run 2026-10-06). */
 const dvA = new DataView(new ArrayBuffer(8));
 const ordinal = (x) => { dvA.setFloat64(0, x + 0); const b = dvA.getBigInt64(0); return b < 0n ? -(b & 0x7fffffffffffffffn) : b; };
 export const sameRealQ = (x, y) => x === y || (Number.isFinite(x) && Number.isFinite(y) && Math.abs(Number(ordinal(x) - ordinal(y))) <= 1);

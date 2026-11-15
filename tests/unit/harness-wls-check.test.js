@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 // tests/unit/harness-wls-check.test.js — the structural checker of Wolfram Language scripts (tools/harness/check-wls.mjs)
 // passes on the harness and on mp-original.wls, and FAILS on deliberately broken copies of the harness. The harness
-// cannot be run here (no Mathematica), so this check stands between a typo and the owner's first run.
+// cannot be run here (no Mathematica), so this check stands between a typo and Tico's first run.
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import { checkWls } from '../../tools/harness/check-wls.mjs';
@@ -23,7 +23,7 @@ describe('check-wls on the real scripts', () => {
     expect(r.warnings).toEqual([]);
     expect(r.statements).toBeGreaterThan(300);
   });
-  it('mp-original.wls (ran on the owner\'s Mathematica 15.0.1): no errors', () => {
+  it('mp-original.wls (ran on Tico\'s Mathematica 15.0.1): no errors', () => {
     expect(checkWls(MP).errors).toEqual([]);
   });
   it('the other Wolfram scripts in tools/wolfram/: no errors', () => {

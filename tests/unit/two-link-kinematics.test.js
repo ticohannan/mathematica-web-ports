@@ -290,7 +290,7 @@ describe('two-link-kinematics: drawing data', () => {
   });
 });
 
-// ---- v0.1.21 (owner decision D2): scene() returns the Graphics list as shared/graphics.js data. The drawing output
+// ---- v0.1.21: scene() returns the Graphics list as shared/graphics.js data. The drawing output
 // before that change is frozen in tests/unit/fixtures/two-link-kinematics-drawing.pre-graphics.json (commit f04c973):
 // the Graphics data the page drew and the model's scene list (19 kinds of part) it drew them from.
 describe('two-link-kinematics: Graphics data = the drawing before v0.1.21', () => {

@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Tico Hannan
 // SPDX-License-Identifier: MIT
-// tests/unit/bundle-app.test.js — tools/bundle-app.mjs (owner rule R-A: every app can be deployed on its own):
+// tests/unit/bundle-app.test.js — tools/bundle-app.mjs (rule 7: every app can be deployed on its own):
 // the reference scanners, the collector on a small synthetic site (temporary folders, removed afterwards), the
 // licence lookup, the bundle and zip writer, tools/serve.mjs with a root folder, and the contents table of each
 // app's DESIGN.md §6.1 against the collector.

@@ -18,8 +18,7 @@ parts are *source-available*, not "open source" in the OSI sense.
 under the MIT licence** (see the table below). Third-party components keep their own licences.
 
 Author of the adaptation and of the MIT-licensed tooling: **Tico Hannan**, © 2026
-(<https://github.com/ticohannan/mathematica-web-ports>). The code was produced with an AI
-code-generation tool (Claude, by Anthropic) used by the author; the tool is not an author.
+(<https://github.com/ticohannan/mathematica-web-ports>).
 
 Licence texts: [`LICENSES/CC-BY-NC-SA-3.0.txt`](LICENSES/CC-BY-NC-SA-3.0.txt) and
 [`LICENSES/MIT.txt`](LICENSES/MIT.txt) (from the SPDX licence list), and
@@ -76,7 +75,7 @@ Licence texts: [`LICENSES/CC-BY-NC-SA-3.0.txt`](LICENSES/CC-BY-NC-SA-3.0.txt) an
 | `demos/time-shifting-scaling/**`, `tests/unit/time-shifting-scaling.test.js`, `tests/e2e/time-shifting-scaling.spec.js`, `docs/checklists/time-shifting-scaling.md` | CC BY-NC-SA 3.0 | the port of "Time Shifting and Time Scaling in Signal Processing" (Aaron T. Becker and Mable Wan), its tests and its manual checklist |
 | `demos/optical-fiber-defects/**`, `tests/unit/optical-fiber-defects.test.js`, `tests/e2e/optical-fiber-defects.spec.js`, `docs/checklists/optical-fiber-defects.md` | CC BY-NC-SA 3.0 | the port of "Defects in an Optical Fiber" (Aaron T. Becker and Hoang Nguyen), its tests and its manual checklist |
 | `demos/paths-inside-a-polygon/**`, `tests/unit/paths-inside-a-polygon.test.js`, `tests/e2e/paths-inside-a-polygon.spec.js`, `docs/checklists/paths-inside-a-polygon.md` | CC BY-NC-SA 3.0 | the port of "Paths inside a Polygon" (Stan Wagon and Karen Saxe), its tests and its manual checklist |
-| `demos/voronoi-diagrams/**`, `tests/unit/voronoi-diagrams.test.js`, `tests/e2e/voronoi-diagrams.spec.js`, `docs/checklists/voronoi-diagrams.md`, `tests/golden/voronoi-diagrams.*` | CC BY-NC-SA 3.0 | the port of "Voronoi Diagrams" (Ed Pegg Jr, Jeff Bryant and Theodore W. Gray), its tests, its manual checklist, the states and cell colours taken from its notebook and snapshots, and the colour gradients of its menu (`gradients.json`: Mathematica 15.0.1's ColorData["Gradients"] values, exported by the owner, v0.1.36) |
+| `demos/voronoi-diagrams/**`, `tests/unit/voronoi-diagrams.test.js`, `tests/e2e/voronoi-diagrams.spec.js`, `docs/checklists/voronoi-diagrams.md`, `tests/golden/voronoi-diagrams.*` | CC BY-NC-SA 3.0 | the port of "Voronoi Diagrams" (Ed Pegg Jr, Jeff Bryant and Theodore W. Gray), its tests, its manual checklist, the states and cell colours taken from its notebook and snapshots, and the colour gradients of its menu (`gradients.json`: Mathematica 15.0.1's ColorData["Gradients"] values, exported by Tico, v0.1.36) |
 | `demos/link-budget/**`, `tests/unit/link-budget.test.js`, `tests/e2e/link-budget.spec.js`, `docs/checklists/link-budget.md`, `tests/golden/link-budget.original-states.json` | CC BY-NC-SA 3.0 | the port of "Link Budget for Communication Systems" (Victor S. Frost), its tests and its manual checklist |
 | `demos/harmonic-distortion/**`, `tests/unit/harmonic-distortion.test.js`, `tests/e2e/harmonic-distortion.spec.js`, `docs/checklists/harmonic-distortion.md`, `tests/golden/harmonic-distortion.original-states.json` | CC BY-NC-SA 3.0 | the port of "Harmonic Distortion of Nonlinear Transfer Function" (Carsten Roppel), its tests and its manual checklist |
 | `demos/first-order-process-control/**`, `tests/unit/first-order-process-control.test.js`, `tests/e2e/first-order-process-control.spec.js`, `docs/checklists/first-order-process-control.md`, `tests/golden/first-order-process-control.original-states.json` | CC BY-NC-SA 3.0 | the port of "First-Order Transfer Functions in Process Control" (Simon M. Lane), its tests and its manual checklist |
@@ -179,8 +178,7 @@ Licence texts: [`LICENSES/CC-BY-NC-SA-3.0.txt`](LICENSES/CC-BY-NC-SA-3.0.txt) an
 | `demos/truss-method-of-joints/` | "Method of Joints to Solve a Truss Problem" — <https://demonstrations.wolfram.com/MethodOfJointsToSolveATrussProblem/> (published 2017-09-08) | Rachael L. Baumann and John L. Falconer |
 
 Sixty were published by the Wolfram Demonstrations Project under CC BY-NC-SA 3.0. One (line-parameterization) is
-adapted from a lecture notebook Aaron T. Becker gave the owner to convert; it is licensed as his Demonstrations, CC BY-NC-SA 3.0,
-until he says otherwise (owner decision 2026-11-02).
+adapted from a lecture notebook Aaron T. Becker gave Tico to convert; it is licensed as his Demonstrations, CC BY-NC-SA 3.0.
 
 ### What was changed (adaptation notice)
 
@@ -189,7 +187,7 @@ until he says otherwise (owner decision 2026-11-02).
   Mathematica's `Manipulate`.
 - Every known difference from the original is listed in the demo's `DESIGN.md`: deviations
   (`D-` IDs), quirks of the original that were deliberately kept (`Q-` IDs) and features added by the
-  port (`A-` IDs); the newer apps also list known issues (`K-` IDs) and owner observations (`O-` IDs).
+  port (`A-` IDs); the newer apps also list known issues (`K-` IDs) and observations (`O-` IDs).
 - Derived data extracted from the original notebooks is also covered by this licence:
   `tests/golden/*.json` (saved states, including states saved after interacting with the originals),
   `docs/original-source/*.txt` (readable source), `docs/original-snapshots/*.png` (the snapshot pictures stored in

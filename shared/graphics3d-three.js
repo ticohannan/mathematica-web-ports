@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 // shared/graphics3d-three.js — browser renderer of the flattened Graphics3D primitives of shared/graphics3d.js into
 // three.js groups, and a SphericalRegion-like camera fit. Browser only (three.js).
-// Generic: moved to shared/ under MIT in v0.1.21 (owner decision D1) from demos/common/g3d-three.js (v0.1.16), unchanged.
+// Generic: moved to shared/ under MIT in v0.1.21 from demos/common/g3d-three.js (v0.1.16), unchanged.
 //
 // API
 //   addPrims(group, prims, ctx)   ctx: {viewer, clip (THREE.Plane[] or null), box (plot range, for InfinitePlane),

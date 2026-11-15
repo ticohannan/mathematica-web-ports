@@ -7,7 +7,6 @@
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Forward and Inverse Kinematics for Two-Link Arm", contributed by Aaron T. Becker and Lillian Lin, published 2016-06-20 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ForwardAndInverseKinematicsForTwoLinkArm/>. Readable source: [`docs/original-source/two-link-kinematics.txt`](../../docs/original-source/two-link-kinematics.txt); saved states: `tests/golden/two-link-kinematics.original-states.json` (`states[0]` = the output cell's saved state, `snapshots[1…4]` = the four snapshot cells' `Settings`, raw notebook lines 3580, 5050, 6589, 8110; `specs` = the initial settings (stored `"Variables"`); exact values kept as `{"wl": …}` next to their double); snapshots: `docs/original-snapshots/two-link-kinematics-1…4.png` (the notebook's snapshot cells 5 and 6 are the Wolfram icon placeholder, N-TK-06) |
 | Port files | `model.js` (initial values, one evaluation of the Manipulate body including the Jacobian, `Theta2inv`/`Theta1inv`, `svd2`, the pseudoinverse and the Graphics list (`scene`, with the `loc` icons) as `shared/graphics.js` data; pure), `velocity-pad.js` (the original's `make2VelControl`; browser-only), `main.js` (the Manipulate on `shared/manipulate.js`: controls, locators, test hook; v0.1.21), `index.html`; common modules owned by this app (COMMON-DECISIONS §3, all CC BY-NC-SA 3.0): `demos/common/two-link.js` (arm geometry; users TK, DN, robot-motion-obstacles, bfs-motion-planning), `demos/common/arrow-arcs.js` (arc arrows; TK, DN, RM, BFS, torus chart, four-bar, manipulability ellipsoid, camera-lasers), `demos/common/dial-control.js` (every `makeDialControl` variant; TK, DN, torus chart, manipulability ellipsoid, camera-lasers); shared module owned by this app (MIT, COMMON-DECISIONS §6): `shared/mma-text.js` (`piFraction` and the text of exact numbers; users: dial-control.js, camera-lasers, torus chart, manipulability ellipsoid, dh-parameters, arm-configurations) |
-| Role in the project | further demonstration (batch A) |
 
 ## 1. Purpose and background
 
@@ -93,8 +92,8 @@ velocities, the commented-out code of the original (`Text[{q}, {0, 1.5}]`, the 2
 | A-TK-04 | "All demos" link | site navigation | v0.1.15 | inventory; M-GEN-01 |
 | A-TK-05 | Credit footer: original title, authors, licence, adaptation notice | required by CC BY-NC-SA 3.0 | v0.1.15 | e2e "attribution on" |
 | A-TK-06 | Start-up notice (watchdog, `<noscript>`) when the page cannot start (DEC-22) | a clear message instead of an empty page | v0.1.15 | e2e "start-up notice when" |
-| A-TK-07 | standalone bundle (owner rule R-A): `npm run bundle -- two-link-kinematics` builds `dist/two-link-kinematics/` with exactly the files the app imports, the licences, a generated README and a root `index.html` (§6, "Building and deploying this app alone") | anyone can host this one app elsewhere without the rest of the site (owner rule R-A, 2026-10-17) | v0.1.15 | e2e "bundle: two-link-kinematics runs from its own folder" |
-| A-TK-08 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | owner request 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
+| A-TK-07 | standalone bundle (rule 7): `npm run bundle -- two-link-kinematics` builds `dist/two-link-kinematics/` with exactly the files the app imports, the licences, a generated README and a root `index.html` (§6, "Building and deploying this app alone") | anyone can host this one app elsewhere without the rest of the site (rule 7, 2026-10-17) | v0.1.15 | e2e "bundle: two-link-kinematics runs from its own folder" |
+| A-TK-08 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | requested 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
 
 ## 5. UI inventory
 
@@ -128,7 +127,7 @@ gets `check-IsElbowUp` because that is the testid `shared/ui-extra.js` `addCheck
   `svd2`, `pseudoInverse2`, `loc` (Jacobian, IK and SVD stay in this app, COMMON-DECISIONS §3), `evaluate(state)` = exactly one
   evaluation of the Manipulate body (F-TK-09…F-TK-15) returning `{state, locals}` with the Module locals the harness
   records (`Theta1`, `Theta2`, `r2`, `J`, `U`, `Sigma`, `V`, `q`, `vNorm`, which branches ran), and `scene(state,
-  locals)` = the Graphics list as `shared/graphics.js` data in the original's order (v0.1.21, owner decision D2; before,
+  locals)` = the Graphics list as `shared/graphics.js` data in the original's order (v0.1.21, decision D2; before,
   a list of 19 kinds of part that `main.js` translated): disks (the hole-on-edge rule of D-TK-04 included), the
   ellipse as `Rotate[Disk[pEnd, {Σ11, Σ22}], …]`, arrows (`arrowheadPolygon` of `shared/graphics-extras.js`), the
   stadiums as rotated rounded `Rectangle`s, points, the B-spline arcs with their heads (`arcArrowGraphics`; `data-kind`
@@ -257,7 +256,7 @@ fidelity risks are `SingularValueDecomposition` (exact zero vs tiny σ2), `Pseud
 
 ### 6.1 Building and deploying this app alone
 
-Owner rule R-A (2026-10-17): this one app can be taken out of the repository and hosted anywhere. One command builds it:
+Rule 7 of docs/DESIGN_PROCESS.md: this one app can be taken out of the repository and hosted anywhere. One command builds it:
 
 ```
 npm run bundle -- two-link-kinematics
@@ -325,35 +324,30 @@ Verified by e2e "bundle: two-link-kinematics runs from its own folder" (A-TK-07)
 
 ## 8. Proposed changes
 
-Template: see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md).
-
-| ID | Status | Requested by / date | Change | Reason | Acceptance criteria |
-|----|--------|---------------------|--------|--------|---------------------|
-| P-TK-01 | proposed | harness run 2, 2026-10-18 | Accept a dial setter result (0, 0) (a press exactly at the dial centre) for the two-link dials instead of ignoring it: p1 or p2 becomes {0., 0.}, θ = 0, the arm turns to that angle | H-TK-13: `ArcTan[0., 0.]` is 0. without a message; the original runs FK with θ1 = 0 (pEnd {2., 0.}, pVel {2., 1.}); the port's model does the same, but `demos/common/dial-control.js` drops the (0, 0) result (shared with torus chart K-TC-03 and the other dial apps, so an owner decision per app) | golden "harness H-TK-13" and an e2e press at the exact dial centre show the arm at θ = 0 |
-| P-TK-02 | proposed | harness run 2, 2026-10-18 | Reproduce LAPACK's 2×2 SVD (dgesvd) bits in svd2 | H-TK-14/H-TK-15: the port's U, V differ from Mathematica's in the last bit (e.g. 0.8506508083520399 and 0.85065080835204 swapped between U and V), so jointVel differs by 1–2 ulps although the Dot order is the original's (K-TK-10); invisible, a large change | golden "harness H-TK-14"/"H-TK-15" compare the port's own jointVel bit for bit |
+Proposals for this app are tracked separately.
 
 ## 9. Revision history
 
 | Doc rev. | Code version | Date | Change |
 |----------|--------------|------|--------|
-| 1 | v0.1.15 | 2026-10-17 | first implementation of the design draft approved by the owner on 2026-10-17 (DEC-17; draft of 2026-10-12 with COMMON-DECISIONS §5, §6 and owner rules R-A/R-B/R-C applied); decided while implementing: K-TK-13 (pad pointer limited to its plot range), N-TK-08 (three TESTPLAN corrections), the σ1 formula of `svd2` and the drawing sizes of D-TK-04; harness checks are golden tests "harness H-TK-nn" that skip until `tests/golden/two-link-kinematics.harness.json` exists; review fixes |
-| 2 | v0.1.16 | 2026-10-18 | DH-family move (COMMON-DECISIONS §6): `matrixRank` is imported from `demos/common/svd3.js` (robot-singularities' module, moved unchanged) instead of `demos/robot-singularities/svd3.js` — in `model.js` and the unit and golden tests; §6 text and §6.1 bundle table updated (the bundle carries `demos/common/svd3.js` and `demos/common/g3d.js`); no feature change |
+| 1 | v0.1.15 | 2026-10-17 | first implementation of the design draft; decided while implementing: K-TK-13 (pad pointer limited to its plot range), N-TK-08 (three TESTPLAN corrections), the σ1 formula of `svd2` and the drawing sizes of D-TK-04; harness checks are golden tests "harness H-TK-nn" that skip until `tests/golden/two-link-kinematics.harness.json` exists; review fixes |
+| 2 | v0.1.16 | 2026-10-18 | DH-family move: `matrixRank` is imported from `demos/common/svd3.js` (robot-singularities' module, moved unchanged) instead of `demos/robot-singularities/svd3.js` — in `model.js` and the unit and golden tests; §6 text and §6.1 bundle table updated (the bundle carries `demos/common/svd3.js` and `demos/common/g3d.js`); no feature change |
 | 3 | v0.1.17 | 2026-10-18 | harness run 2 accepted, no change to the app code: K-TK-01, K-TK-04, K-TK-07, K-TK-10, K-TK-11 resolved with the recorded values, K-TK-08 and K-TK-09 updated, K-TK-03 not decided by the record (decisive pose proposed); D-TK-07 decided; P-TK-01 (dial press at the centre), P-TK-02 (LAPACK SVD bits) proposed. Golden tests: H-TK-13 asserts the recorded θ1 = 0 without messages, H-TK-14/H-TK-15 jointVel bit for bit from the recorded U, Σ, V (the port's own within 2 ulps, P-TK-02), H-TK-05 jointVel within 4 ulps of max \|pEnd\|·‖J⁺‖ (cancellation, K-TK-08), H-TK-23 PseudoInverse against the recorded truncated SVD and MatrixRank through svd2 |
 | 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 5 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
 | 6 | v0.1.20 | 2026-10-21 | `main.js` rewritten on the shared Manipulate layer (`shared/manipulate.js`, `shared/graphics.js`): control specs in Mathematica's form, the picture as Graphics data; no change to behaviour or picture (all unit, golden and browser tests unchanged and passing; screenshots and Manipulate state identical to v0.1.19 at sample settings) |
-| 7 | v0.1.21 | 2026-10-23 | the model builds the picture as `shared/graphics.js` Graphics data (owner decision D2) and the body returns {state, view, graphics}; `main.js` shortened; hook `scene()` replaced by the layer's `graphics(0)` (browser tests moved, same checks); the old drawing output frozen in `tests/unit/fixtures/two-link-kinematics-drawing.pre-graphics.json` and tests that read the old format now read the same numbers through `annotations()`/`Cases()`; no change to behaviour or picture (screenshots and Manipulate state identical to v0.1.20 at sample settings) |
+| 7 | v0.1.21 | 2026-10-23 | the model builds the picture as `shared/graphics.js` Graphics data and the body returns {state, view, graphics}; `main.js` shortened; hook `scene ` replaced by the layer's `graphics (0)` (browser tests moved, same checks); the old drawing output frozen in `tests/unit/fixtures/two-link-kinematics-drawing.pre-graphics.json` and tests that read the old format now read the same numbers through `annotations `/`Cases `; no change to behaviour or picture (screenshots and Manipulate state identical to v0.1.20 at sample settings) |
 | 8 | v0.1.22 | 2026-10-25 | version number; bundle table (`shared/manipulate.js` now also loads `shared/graphics-extras.js` and `shared/svg-frame.js` for the new Graphics options `Axes`/`Frame`/`PlotLabel`); no change to this app's code, behaviour or picture (pixel parity with v0.1.21) |
-| 9 | v0.1.23 | 2026-10-25 | version number; the jointVel1 point's `PointSize[Large]` is written as `PointSize(0.013)` in `model.js` — the same size as before, because the shared `PointSize` names became absolute pixel sizes (Mathematica's) for new apps; no change to behaviour or picture (pixel parity with v0.1.22; the size expression is identical) |
+| 9 | v0.1.23 | 2026-10-25 | version number; the jointVel1 point's `PointSize[Large]` is written as `PointSize (0.013)` in `model.js` — the same size as before, because the shared `PointSize` names became absolute pixel sizes (Mathematica's) for new apps; no change to behaviour or picture (pixel parity with v0.1.22; the size expression is identical) |
 | 10 | v0.1.24 | 2026-10-26 | version number; the shared code gained a clock for bodies that read the time, Locator variables that change between one point and a list, sector disks and Opacity on points and text (v0.1.24); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.23) |
 | 11 | v0.1.25 | 2026-10-26 | version number; the shared code gained one page clock (`shared/clock.js`: slider animations and app animations read it, tests fix it), tolerant `Equal`/`Unequal` in `shared/wl.js` and exact slider texts from saved states (v0.1.25); the readable source re-extracted with the exponent grouping (a Details formula); no change to this app's code, behaviour or picture (pixel parity with v0.1.24) |
 | 12 | v0.1.26 | 2026-10-27 | version number; the shared code gained region and density plots (`RegionPlot`, two-parameter `ParametricPlot`, `DensityPlot`), `BSplineCurve`, decorated insets, textures on polygons, `settleInterval` for bodies that pause between evaluations, typeset control headings and fixes found by the seven new ports (v0.1.26); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.25) |
 | 13 | v0.1.27 | 2026-10-28 | version number; the shared code gained spans with a step, a cyclic `Riffle`, `EvenQ`/`OddQ`, `ArcCos`/`ArcSin`, `DeleteCases`, `ToString` and `StringForm` (`shared/wl.js`), legend labels that are pictures and Mathematica's `Placed[…, {pos, align}]` form, `Automatic` in PlotStyle lists, `Fraction` labels, 3D `Line` with several polylines, and View3D's `Epilog` and `SphericalRegion: false` (v0.1.27); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.26) |
-| 14 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default; motion planning, PA2 fix F-02) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.27) |
+| 14 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.27) |
 | 15 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.28) |
 | 16 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
 | 17 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
-| 18 | v0.1.32 | 2026-11-05 | A-TK-08: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
+| 18 | v0.1.32 | 2026-11-05 | A-TK-08: landing-page thumbnail (`tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 | 19 | v0.1.33 | 2026-11-06 | version number (v0.1.33: four new apps; opt-in shared additions S-1 … S-7, unused by this app, and the locators of a Locator list made after the first evaluation); no change to this app's code, behaviour or picture |
 | 20 | v0.1.34 | 2026-11-10 | version number (v0.1.34: the switch "errors of the original: kept \| corrected" for the apps with code-level findings in §11, `shared/errata.js`); no change to this app's code, behaviour or picture |
 | 21 | v0.1.35 | 2026-11-11 | version number (v0.1.35: two new apps, paths-inside-a-polygon and voronoi-diagrams; no shared code changed); no change to this app's code, behaviour or picture |
@@ -376,7 +370,7 @@ Template: see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md).
 
 ## 11. Errors in the original (conceptual and mathematical)
 
-Owner rule R-C (2026-10-17). Checked: every formula of the body and the Initialization against Spong, Hutchinson and
+Rule 9 of docs/DESIGN_PROCESS.md. Checked: every formula of the body and the Initialization against Spong, Hutchinson and
 Vidyasagar [1] — `Theta2inv`/`Theta1inv` (θ2 = atan2(±√(1 − D²), D), θ1 = atan2(y, x) − atan2(r2 sin θ2, r1 + r2 cos θ2):
 correct), the Jacobian (correct), the ellipse `Ellipsoid[{0, 0}, Σ^2]` under `{U, pEnd}` (semi-axes σ1, σ2 along u1, u2:
 correct, since `Ellipsoid[p, M]` with a matrix M has semi-axes √eig M), the inverse velocity V Σ⁻¹ Uᵀ, the radial scaling

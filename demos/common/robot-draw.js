@@ -20,7 +20,7 @@ const π = Math.PI;
  * drawZArrow[jr_] := Line[{{{0,0,0},{0,0,2jr}}, {{0,0,2jr},{1/32,0,3/2jr}}, ... 4 head strokes}]
  * exactJr: the caller's jr is the originals' exact 1/5, so 3/2 jr is the exact 3/10, drawn as N[3/10] = 0.3 (harness
  * H-DH-01 … H-DH-10 %g3d and DrawGripper captures, H-AC-15; the double product (3/2)·0.2 is 0.30000000000000004).
- * Off by default: robot-singularities' outputs stay as pinned (its jr is the exact 1/5 too — see its owner's notes).
+ * Off by default: robot-singularities' outputs stay as pinned (its jr is the exact 1/5 too — see its Tico's notes).
  */
 export const drawZArrow = (jr, exactJr = false) => {
   if (exactJr && jr !== 1 / 5) throw new Error('drawZArrow: exactJr is for the exact jr = 1/5');

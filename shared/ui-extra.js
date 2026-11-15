@@ -81,7 +81,7 @@ export function addPopup(controls, { name, label = '', options, value, onChange,
 /**
  * VerticalSlider — data-testid "vslider-<name>"; value shown below.
  * Home = minimum, End = maximum in every engine (WAI-ARIA slider pattern). WebKit's native vertical range input maps
- * Home to the TOP, i.e. the maximum (found in the owner's WebKit run of v0.1.16: Home put prm-3d's blue_z at 2, not 0),
+ * Home to the TOP, i.e. the maximum (found in Tico's WebKit run of v0.1.16: Home put prm-3d's blue_z at 2, not 0),
  * so the two keys are handled here; arrows and PageUp/PageDown stay native (they agree in all three engines).
  */
 export function addVerticalSlider(controls, { name, label = '', min, max, step = 0, value, onInput, parent }) {

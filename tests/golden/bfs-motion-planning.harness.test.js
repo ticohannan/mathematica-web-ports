@@ -5,7 +5,7 @@
 // (tests/harness/bfs-motion-planning.scenarios.json) and is compared with what Mathematica 15.0.1 recorded
 // (tests/golden/bfs-motion-planning.harness.json, written by `npm run harness -- bfs-motion-planning --accept`).
 // One test per H- id titled `harness "H-BF-nn"` (HW-65); without harness data every test is skipped with the reason
-// "no harness data (owner run pending)" (HW-67). Start state: the initial settings (`specs` of the fixture = the live
+// "no harness data (harness run pending)" (HW-67). Start state: the initial settings (`specs` of the fixture = the live
 // state); `set` assigns the variables and evaluates the body once; `setFrom` loads snapshot k's Settings and
 // evaluates once; `controlActive` per step. Captures are compared bit for bit by value; Mathematica-only captures
 // (%text, %messages) are not compared here; costmapcolor holds colours recorded as Wolfram expressions and is compared
@@ -90,7 +90,7 @@ describe('bfs harness (Mathematica 15.0.1 records)', () => {
   it('harness "H-BF-23"', (ctx) => check(ctx, 'H-BF-23'));
   it('every scenario of the scenario file has a test above; the replay runs without Mathematica data', () => {
     expect(scenarios.map((s) => s.id)).toEqual(Array.from({ length: 23 }, (_, i) => `H-BF-${String(i + 1).padStart(2, '0')}`));
-    // the replay itself works now (its results are compared once the owner's harness run is accepted); reference
+    // the replay itself works now (its results are compared once Tico's harness run is accepted); reference
     // values of the TESTPLAN (Python reference, to be confirmed by Mathematica)
     const r01 = replay(scenarios[0]);
     expect(same(r01.state.costmap, plain(fx.live).costmap)).toBe(true);
@@ -104,6 +104,6 @@ describe('bfs harness (Mathematica 15.0.1 records)', () => {
     const r20 = replay(scenarios.find((s) => s.id === 'H-BF-20'));
     expect([r20.state.freeConfigSpace.length, r20.state.lS, r20.state.lE, r20.state.path.length, r20.state.highRes]).toEqual([8, [4, 4], [4, 6], 3, false]);
     expect(replay(scenarios.find((s) => s.id === 'H-BF-23')).view.resolution).toBeUndefined();
-    expect(NO_DATA).toBe('no harness data (owner run pending)');
+    expect(NO_DATA).toBe('no harness data (harness run pending)');
   });
 });

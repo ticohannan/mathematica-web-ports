@@ -10,7 +10,7 @@ import { ORIGIN, LINK_LEN } from '../../demos/prm-seven-link/model.js';
 import { loadStates, plain } from '../../tools/lib/wl-json.mjs';
 
 const saved = JSON.parse(fs.readFileSync('tests/golden/prm-seven-link.original-state.json', 'utf8')).state;
-// Owner state 1: the owner's working copy, saved in Mathematica 15.0.1 on 2026-10-06 after playing goal 7 (132 collisions).
+// Saved state 1: Tico's working copy, saved in Mathematica 15.0.1 on 2026-10-06 after playing goal 7 (132 collisions).
 const owner = JSON.parse(fs.readFileSync('tests/golden/prm-seven-link.owner-state-1.json', 'utf8')).state;
 
 describe('seven-link golden', () => {
@@ -36,7 +36,7 @@ describe('seven-link golden', () => {
     expect(roundTenth(view.worstError)).toBeCloseTo(669.7, 9);
   });
 
-  it('seven-link: owner state 1 keeps every link 140 long and the port finds no collision, as saved', () => {
+  it('seven-link: saved state 1 keeps every link 140 long and the port finds no collision, as saved', () => {
     // Independent facts from Mathematica's own state: link lengths (computed there with Cos/Sin) and isCollide = False.
     const chain = [[445, 846], ...owner.loc];
     for (let k = 1; k < chain.length; k++) {
@@ -46,7 +46,7 @@ describe('seven-link golden', () => {
     expect(state.isCollide).toBe(owner.isCollide);
     expect(state.collideState).toBe(owner.collideState);
   });
-  it('seven-link: evaluating owner state 1 again changes nothing and keeps the count of 132 collisions', () => {
+  it('seven-link: evaluating saved state 1 again changes nothing and keeps the count of 132 collisions', () => {
     const { state, view } = evaluate({ ...owner });
     expect(state.loc).toEqual(owner.loc);
     expect(state.locOld).toEqual(owner.locOld);

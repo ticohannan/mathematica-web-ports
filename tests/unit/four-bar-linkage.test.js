@@ -214,7 +214,7 @@ describe('four-bar-linkage model', () => {
   });
 });
 
-// ---- v0.1.21 (owner decision D2): fourbar.js returns both pictures as shared/graphics.js data. The drawing output of
+// ---- v0.1.21: fourbar.js returns both pictures as shared/graphics.js data. The drawing output of
 // the page before that change is frozen in tests/unit/fixtures/four-bar-linkage-drawing.pre-graphics.json (f04c973).
 describe('four-bar-linkage: Graphics data = the drawing before v0.1.21', () => {
   const fx = preGraphics('four-bar-linkage');

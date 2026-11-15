@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Tico Hannan
 // SPDX-License-Identifier: MIT
-// tests/e2e/bundle.spec.js — owner rule R-A: every app can be deployed on its own. For each app of tests/e2e/apps.js
+// tests/e2e/bundle.spec.js — rule 7: every app can be deployed on its own. For each app of tests/e2e/apps.js
 // (new apps are picked up automatically) the app is bundled with tools/bundle-app.mjs into
 // test-output/bundle-e2e/<browser>/<dir>/, that folder ALONE is served by tools/serve.mjs on a free port, and the
 // bundle's root page is opened: it must open the app, the app must start (window.__demo.ready) without page errors,

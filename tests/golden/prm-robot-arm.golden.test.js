@@ -65,18 +65,18 @@ describe('robot arm golden (saved state of the original)', () => {
   });
 });
 
-// Owner state 1 (Mathematica 15.0.1, saved 2026-10-06): 200 samples, moved spheres, r = rold = 1.52, obstacles shown
+// Saved state 1 (Mathematica 15.0.1, saved 2026-10-06): 200 samples, moved spheres, r = rold = 1.52, obstacles shown
 const owner = JSON.parse(fs.readFileSync('tests/golden/prm-robot-arm.owner-state-1.json', 'utf8')).state;
 
-describe('robot arm golden (owner state 1, Mathematica 15.0.1)', () => {
+describe('robot arm golden (saved state 1, Mathematica 15.0.1)', () => {
   const pObs3 = [[owner.obstaxy[0], owner.obstaxy[1], owner.obstaz], [owner.obstbxy[0], owner.obstbxy[1], owner.Obstbz]];
-  it('robot arm owner state: detCollision reproduces the 179 free and 21 colliding samples in order', () => {
+  it('robot arm saved state: detCollision reproduces the 179 free and 21 colliding samples in order', () => {
     expect(owner.obstOld).toEqual(pObs3);
     expect(owner.pts.filter((p) => !detCollision(p[0], p[1], pObs3, OBS_RAD, WIDTHA))).toEqual(owner.goodPts);
     expect(owner.pts.filter((p) => detCollision(p[0], p[1], pObs3, OBS_RAD, WIDTHA))).toEqual(owner.badPts);
   });
 
-  it('robot arm owner state: radius 1.52 and the final spheres before two batches of 100 reproduce the 1173 edges and the adjacency in order', () => {
+  it('robot arm saved state: radius 1.52 and the final spheres before two batches of 100 reproduce the 1173 edges and the adjacency in order', () => {
     const rng = replayRng({ reals: owner.pts.flat() });
     let st = evaluate({ ...initialState(), obstaxy: owner.obstaxy, obstaz: owner.obstaz, obstbxy: owner.obstbxy, Obstbz: owner.Obstbz, r: 1.52 }, rng).state;
     for (let batch = 1; batch <= 2; batch++) st = evaluate({ ...st, addPoints: true }, rng).state;
@@ -84,13 +84,13 @@ describe('robot arm golden (owner state 1, Mathematica 15.0.1)', () => {
     for (const k of ['pts', 'goodPts', 'badPts', 'edgesNN', 'edgesNNadj', 'r', 'rold', 'obstOld']) expect(st[k], k).toEqual(owner[k]);
   });
 
-  it('robot arm owner state: the saved Manipulate path stays -1 (shadowing quirk)', () => {
+  it('robot arm saved state: the saved Manipulate path stays -1 (shadowing quirk)', () => {
     const { state } = evaluate({ ...owner }, replayRng({}));
     expect(owner.path).toBe(-1);
     expect(state.path).toBe(owner.path); // never written (Q-PA-03)
   });
 
-  it('robot arm owner state: regression pin of the port path label (not yet compared with the original)', () => {
+  it('robot arm saved state: regression pin of the port path label (not yet compared with the original)', () => {
     // REGRESSION PIN, not an independent expectation: the value comes from the port itself; the original's label for
     // this state still has to be read in Mathematica (O-PA-03, M-PA-06)
     const { view } = evaluate({ ...owner }, replayRng({}));

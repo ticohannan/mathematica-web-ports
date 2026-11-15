@@ -21,7 +21,7 @@ const CALLER = RGBColor(0.1, 0.2, 0.3);
 const oldForm = (car) => carRecords(car, CALLER.rgb);
 
 describe('car-icon', () => {
-  // D3 (owner, 2026-10-22): the test that compared drawCar with car-paths' re-export of the same function (since
+  // D3 (Tico, 2026-10-22): the test that compared drawCar with car-paths' re-export of the same function (since
   // v0.1.20) could not fail; it is replaced by the two tests below.
   it('car-icon: default options reproduce car-paths\' own drawCar of v0.1.19 bit for bit (fixture recorded from a80af87)', () => {
     expect(PRE_MOVE.rows).toHaveLength(6);

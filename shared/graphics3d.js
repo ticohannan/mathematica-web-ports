@@ -5,7 +5,7 @@
 // within the same list; nested lists scope directives; Show combines graphics (each keeps its own styles, options of the
 // first graphic win); ParametricPlot3D curves/surfaces are kept as functions + ranges. `flatten` resolves a graphic into
 // a list of styled primitives (drawn in three.js by shared/graphics3d-three.js). No DOM, no three.js.
-// Generic (no code of a Demonstration): moved to shared/ under MIT in v0.1.21 (owner decision D1) from
+// Generic (no code of a Demonstration): moved to shared/ under MIT in v0.1.21 from
 // demos/common/g3d.js (first written for robot-singularities, v0.1.16 DH-family move), unchanged except mul4Fma (moved
 // here from demos/common/dh-chain.js). Notes kept from there:
 //   - EdgeForm[] / EdgeForm[c]: directive `EdgeForm(c)` (EdgeForm() = no edges); a flattened primitive carries

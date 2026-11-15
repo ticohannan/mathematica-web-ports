@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 // shared/svd3.js — SingularValueDecomposition of a 3x3 real matrix (one-sided Jacobi), MatrixRank with its
 // tolerance, dot3 / cross3. Pure: no DOM.
-// Generic: moved to shared/ under MIT in v0.1.21 (owner decision D1) from demos/common/svd3.js (first written for
+// Generic: moved to shared/ under MIT in v0.1.21 from demos/common/svd3.js (first written for
 // robot-singularities), unchanged; the manipulability-ellipsoid graphic manipEllip (a transcription of the original)
 // stays in demos/common/svd3.js. Option `zeroTol` (COMMON-DECISIONS §5): singular values <= zeroTol·σ1 become exactly 0
 // (Mathematica's SingularValueDecomposition zeroes values <= 100·10^-p·σ1, i.e. zeroTol = 100 * 2 ** -53 ≈ 1.11e-14 at
@@ -15,7 +15,7 @@ const fromCols = (c) => [0, 1, 2].map((i) => [c[0][i], c[1][i], c[2][i]]);
 /**
  * Relative tolerance below which a singular value counts as zero (MatrixRank, completing U): max(dims) · eps =
  * 3 · 2^-52 ≈ 6.7e-16 times the largest singular value. Consistent with Mathematica 15.0.1 (extra-checks.wls,
- * owner run 2026-10-06): MatrixRank[DiagonalMatrix[{1, 1e-13, 0.5}]] = 3, MatrixRank[DiagonalMatrix[{1, 1e-17, 0.5}]] = 2
+ * Tico's run 2026-10-06): MatrixRank[DiagonalMatrix[{1, 1e-13, 0.5}]] = 3, MatrixRank[DiagonalMatrix[{1, 1e-17, 0.5}]] = 2
  * (Tolerance option of https://reference.wolfram.com/language/ref/MatrixRank.html). Rounding-level singular values of
  * the 32 Jacobians at singular slider positions stay below 1.5e-16 relative. The data only bound Mathematica's tolerance
  * between 1e-17 and 1e-13; 3 eps is the port's choice (K-RS-05, partly resolved).

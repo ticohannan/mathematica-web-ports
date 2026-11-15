@@ -9,7 +9,7 @@
 //  * what only the pictures docs/original-snapshots/manipulator-workspaces-1.png … -8.png show: the width of the ground
 //    disc (pixels of the snapshots at 2 px per pt);
 //  * the Mathematica-harness records H-MW-01 … H-MW-23 (tests/golden/manipulator-workspaces.harness.json, read through
-//    tests/support/harness-json.js). These SKIP with the documented reason until the owner's harness run exists.
+//    tests/support/harness-json.js). These SKIP with the documented reason until Tico's harness run exists.
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import { harnessCase, captureOf, toJS, asHeadArgs, exactDouble, isMachineReal, sameDouble } from '../support/harness-json.js';

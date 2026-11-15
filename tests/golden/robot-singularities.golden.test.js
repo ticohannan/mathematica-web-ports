@@ -18,7 +18,7 @@ const saved = JSON.parse(fs.readFileSync('tests/golden/robot-singularities.origi
 const jac = JSON.parse(fs.readFileSync('tests/golden/robot-singularities.jacobians.json', 'utf8'));
 // snapshot 3's stored singularspace3D (offset spherical wrist): the GraphicsComplex vertices computed by the original
 const snap3 = JSON.parse(fs.readFileSync('tests/golden/robot-singularities.snapshot3-vertices.json', 'utf8'));
-// owner state 1 (Mathematica 15.0.1, saved 2026-10-06)
+// saved state 1 (Mathematica 15.0.1, saved 2026-10-06)
 const owner = JSON.parse(fs.readFileSync('tests/golden/robot-singularities.owner-state-1.json', 'utf8')).state;
 
 /** Evaluate a Wolfram expression with Sin, Cos, + - * / and implicit products at q = [q1, q2, q3]. */
@@ -156,19 +156,19 @@ describe('robot singularities golden (saved state of the original)', () => {
     expect(maxDistanceToSurfaces(snap3.vertices, surfs)).toBeLessThan(1e-7);
   });
 
-  // ---- owner state 1 (Mathematica 15.0.1, saved 2026-10-06): offset PUMA arm, robot and ellipsoid shown ----
-  it('robot singularities: owner state 1 joint values are slider values min + k step bit for bit (k = 60, 18, 149)', () => {
+  // ---- saved state 1 (Mathematica 15.0.1, saved 2026-10-06): offset PUMA arm, robot and ellipsoid shown ----
+  it('robot singularities: saved state 1 joint values are slider values min + k step bit for bit (k = 60, 18, 149)', () => {
     const min = -Math.PI * 1.01, step = 0.01 * Math.PI;
     expect(owner.params).toEqual([60, 18, 149].map((k) => min + k * step));
   });
-  it('robot singularities: owner state 1 evaluated by the port keeps its variables (no wrap, no recompute)', () => {
+  it('robot singularities: saved state 1 evaluated by the port keeps its variables (no wrap, no recompute)', () => {
     const st = { iType: owner.iType, params: owner.params, showRobot: owner.showRobot, showManipulability: owner.showManipulability, isJLinearVel: owner.isJLinearVel, iTypeOld: owner.iTypeOld, isJLinearVelOld: owner.isJLinearVelOld, singularLabel: 'Phase Space' };
     const { state, view } = evaluate(st);
     expect(state).toEqual(st);
     expect(view.recomputed).toBe(false);
     expect(view.manip).not.toBe(null);
   });
-  it('robot singularities: owner state 1 singularphasespace3D equals the offset PUMA Linear phase recipe exactly, label Phase Space', () => {
+  it('robot singularities: saved state 1 singularphasespace3D equals the offset PUMA Linear phase recipe exactly, label Phase Space', () => {
     const orig = fromSaved(owner.singularphasespace3D);
     expect(flatten(singularphasespace3D(4, 'Linear', {}))).toEqual(flatten(orig));
     const mine = phaseOpt(typeOf(4));
@@ -176,7 +176,7 @@ describe('robot singularities golden (saved state of the original)', () => {
     expect(orig.options.PlotRange).toEqual(mine.PlotRange);
     expect(orig.options.AxesLabel).toEqual(mine.AxesLabel.map((l) => ({ sym: l.sym, sub: l.sub })));
   });
-  it('robot singularities: owner state 1 workspace rings equal the port Table points to 1 ulp (red, thick)', () => {
+  it('robot singularities: saved state 1 workspace rings equal the port Table points to 1 ulp (red, thick)', () => {
     // Mathematica's and the browser's Cos/Sin may differ in the last bit: 9 of 243 coordinates differ by 1 ulp
     const savedLines = owner.singularspace3D.args[0][0].filter((e) => e.head === 'Line').map((e) => e.args[0]);
     const mine = flatten(singularspace3D(4, 'Linear', makeO3coords(typeOf(4)))).filter((p) => p.type === 'line');
@@ -187,7 +187,7 @@ describe('robot singularities golden (saved state of the original)', () => {
       p.points.forEach((q, k) => q.forEach((v, c) => expect(Math.abs(v - savedLines[i][k][c])).toBeLessThanOrEqual(Number.EPSILON)));
     });
   });
-  it('robot singularities: owner state 1 stored o3coords surfaces of the offset PUMA arm lie on the port surfaces (2030 vertices within 1e-7)', { timeout: 30000 }, () => {
+  it('robot singularities: saved state 1 stored o3coords surfaces of the offset PUMA arm lie on the port surfaces (2030 vertices within 1e-7)', { timeout: 30000 }, () => {
     const gc = owner.singularspace3D.args[0][1][0];
     expect(gc.head).toBe('GraphicsComplex');
     const surfs = flatten(singularspace3D(4, 'Linear', makeO3coords(typeOf(4)))).filter((p) => p.type === 'parametricSurface');
@@ -196,7 +196,7 @@ describe('robot singularities golden (saved state of the original)', () => {
     expect(maxDistanceToSurfaces(gc.args[0], surfs)).toBeLessThan(1e-7);
   });
 
-  // ---- extra-checks.wls, Mathematica 15.0.1, owner run 2026-10-06 ----
+  // ---- extra-checks.wls, Mathematica 15.0.1, Tico's run 2026-10-06 ----
   it('robot singularities: CNC Jacobian SVD as in Mathematica up to column signs (U = diag(-1,-1,1), V = {{0,0,1},{-1,0,0},{0,-1,0}})', () => {
     const Umma = [[-1, 0, 0], [0, -1, 0], [0, 0, 1]], Vmma = [[0, 0, 1], [-1, 0, 0], [0, -1, 0]];
     const d = svd3(myJacob(12, 0.5, 0.5, 0.5));

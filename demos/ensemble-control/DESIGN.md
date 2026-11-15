@@ -7,7 +7,6 @@
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Ensemble Control of Robots with Unicycle Kinematics", contributed by Aaron Becker, published 2014-10-03 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/EnsembleControlOfRobotsWithUnicycleKinematics/> Source as text: [`docs/original-source/ensemble-control.txt`](../../docs/original-source/ensemble-control.txt); snapshots `docs/original-snapshots/ensemble-control-1…4.png`; saved states `tests/golden/ensemble-control.original-states.json` |
 | Port files | `model.js` (the Manipulate body: re-randomization, error, best command, both pictures as Graphics data; the button's action; pure), `main.js` (the Manipulate on `shared/manipulate.js`), `index.html` |
-| Role in the project | new demonstration, ported in simple mode (v0.1.23): generator, `shared/wl.js`, `shared/plot.js`, plain arithmetic |
 
 ## 1. Purpose and background
 
@@ -50,9 +49,9 @@ Out of scope: anything the original does not do; port additions are the A- featu
 | A-EC-03 | Start-up notice when the browser cannot run the page (DEC-22) | no empty page | v0.1.23 | e2e "start-up notice when" |
 | A-EC-04 | Breadcrumb link to all demos | navigation | v0.1.23 | inventory |
 | A-EC-05 | Credits footer (authors, title, source, licence, adaptation notice) | required by the licence (CC BY-NC-SA 3.0 §4) | v0.1.23 | e2e "attribution on" |
-| A-EC-06 | This app can be bundled and served alone (§6.1) | owner rule R-A | v0.1.23 | e2e "bundle: ensemble-control runs from its own folder" |
+| A-EC-06 | This app can be bundled and served alone (§6.1) | rule 7 | v0.1.23 | e2e "bundle: ensemble-control runs from its own folder" |
 | A-EC-07 | `?seed=N` in the address makes new robots and turns reproducible (seeded random source) | repeatable examples and tests | v0.1.23 | e2e "the number of robots slider makes n new robots"; unit "a new n (nold ≠ n)" |
-| A-EC-08 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | owner request 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
+| A-EC-08 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | requested 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
 
 ## 5. UI inventory
 
@@ -94,7 +93,7 @@ matches any text. Checked by the browser test "every control on … is specified
 
 ### 6.1 Building and deploying this app alone
 
-Owner rule R-A (2026-10-17): this one app can be taken out of the repository and hosted anywhere.
+Rule 7 of docs/DESIGN_PROCESS.md: this one app can be taken out of the repository and hosted anywhere.
 
 - Command, in the repository folder: `npm run bundle -- ensemble-control` → `dist/ensemble-control/`.
 - Contents (generated with `node tools/bundle-app.mjs ensemble-control --update-docs`):
@@ -130,10 +129,7 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 
 ## 8. Proposed changes
 
-No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
-
-| ID | Status | Requested by / date | Change | Reason | Acceptance criteria |
-|----|--------|---------------------|--------|--------|---------------------|
+Proposals for this app are tracked separately.
 
 ## 9. Revision history
 
@@ -145,11 +141,11 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 4 | v0.1.25 | 2026-10-26 | version number; the shared code gained one page clock (`shared/clock.js`: slider animations and app animations read it, tests fix it), tolerant `Equal`/`Unequal` in `shared/wl.js` and exact slider texts from saved states (v0.1.25); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.24) |
 | 5 | v0.1.26 | 2026-10-27 | version number; the shared code gained region and density plots (`RegionPlot`, two-parameter `ParametricPlot`, `DensityPlot`), `BSplineCurve`, decorated insets, textures on polygons, `settleInterval` for bodies that pause between evaluations, typeset control headings and fixes found by the seven new ports (v0.1.26); no change to this app's code, behaviour or picture (DOM parity with v0.1.25) |
 | 6 | v0.1.27 | 2026-10-28 | version number; the shared code gained spans with a step, a cyclic `Riffle`, `EvenQ`/`OddQ`, `ArcCos`/`ArcSin`, `DeleteCases`, `ToString` and `StringForm` (`shared/wl.js`), legend labels that are pictures and Mathematica's `Placed[…, {pos, align}]` form, `Automatic` in PlotStyle lists, `Fraction` labels, 3D `Line` with several polylines, and View3D's `Epilog` and `SphericalRegion: false` (v0.1.27); no change to this app's code, behaviour or picture (DOM parity with v0.1.26) |
-| 7 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default; motion planning, PA2 fix F-02) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (DOM parity with v0.1.27) |
+| 7 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (DOM parity with v0.1.27) |
 | 8 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (DOM parity with v0.1.28) |
 | 9 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
 | 10 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
-| 11 | v0.1.32 | 2026-11-05 | A-EC-08: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
+| 11 | v0.1.32 | 2026-11-05 | A-EC-08: landing-page thumbnail (`tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 | 12 | v0.1.33 | 2026-11-06 | version number (v0.1.33: four new apps; opt-in shared additions S-1 … S-7, unused by this app, and the locators of a Locator list made after the first evaluation); no change to this app's code, behaviour or picture |
 | 13 | v0.1.34 | 2026-11-10 | version number (v0.1.34: the switch "errors of the original: kept \| corrected" for the apps with code-level findings in §11, `shared/errata.js`); no change to this app's code, behaviour or picture |
 | 14 | v0.1.35 | 2026-11-11 | version number (v0.1.35: two new apps, paths-inside-a-polygon and voronoi-diagrams; no shared code changed); no change to this app's code, behaviour or picture |
@@ -169,7 +165,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 
 ## 11. Errors in the original (conceptual and mathematical)
 
-Checked when porting (owner rule R-C): the error S(v) is a quadratic in v with leading coefficient (1/n) Σ (cos² θᵢ +
+Checked when porting (rule 9): the error S(v) is a quadratic in v with leading coefficient (1/n) Σ (cos² θᵢ +
 sin² θᵢ) = 1, so its minimum is at v = (1/n) Σ (x_Goal − xᵢ) cos θᵢ + (y_Goal − yᵢ) sin θᵢ, which is the code's
 distBest (unit "the best command"). The Details' formulas are those of the code.
 

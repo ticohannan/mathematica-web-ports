@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // tests/e2e/apps.js — every app of the site (used by site.spec.js and the design-doc test).
 // spec: its browser-test file; notice: the page has the start-up notice / WebGL 2 notice of DEC-22 (the seven apps added
-// in v0.1.12 have it, all later apps too, and since v0.1.21 also the first three: owner decision 2026-10-23, DEC-37);
+// in v0.1.12 have it, all later apps too, and since v0.1.21 also the first three: decision 2026-10-23, DEC-37);
 // webgl: the page needs WebGL 2.
 export const APPS = [
   { dir: 'motion-planning', prefix: 'MP', spec: 'motion-planning.spec.js', url: '/demos/motion-planning/', slug: 'MotionPlanningForRobotPathAroundObstacles', title: 'Motion Planning for Robot Path around Obstacles', authors: ['Shreyas Poyrekar', 'Aaron T. Becker', 'Arifa Sultana'], webgl: false, notice: true },

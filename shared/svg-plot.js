@@ -174,7 +174,7 @@ export const darkLocatorGlyph = (plot) => locatorGlyph(plot, { color: [0, 0, 0],
  *     "by default directs any click to the nearest locator" (Wolfram Language reference, LocatorPane, Details): a press
  *     away from every locator makes the nearest one jump to the press point and drags it. PORT DEVIATION: a press
  *     within hitPx of a locator grabs it without a jump (the offset between pointer and locator is kept while
- *     dragging); the distance at which Mathematica grabs a locator without a jump is not known (owner check
+ *     dragging); the distance at which Mathematica grabs a locator without a jump is not known (check by Tico,
  *     M-CP-08). pickAnywhere = false: presses away from all locators are ignored (the behaviour of v0.1.0).
  *   A press that grabs a locator also gives it keyboard focus, so a value typed into a control field is committed
  *   (its change event fires) before the drag starts.

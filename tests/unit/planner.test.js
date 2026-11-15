@@ -203,7 +203,7 @@ describe('computeScene vs independent reference planner (seeded random scenes)',
 export { samePointSet };
 
 describe('configuration-space boundary vs the original run in Mathematica 15.0.1', () => {
-  // configBoundary recorded by `npm run compare:original -- --trace=C2,C3,R016` (owner's run, v0.1.6).
+  // configBoundary recorded by `npm run compare:original -- --trace=C2,C3,R016` (Tico's run, v0.1.6).
   // Before v0.1.8 the port divided with `/`; Mathematica computes a/b as a * b^-1, so the last bits differed.
   const cases = [
     ['C2', { r1: [2.28, -2.71], n: 5, x: 4 }, [[3.0600056477851605, 3.0355339059327373], [-3.060005647785161, 3.0355339059327373], [-3.060005647785161, -3.1310254087452636], [3.0600056477851605, -3.1310254087452636]]],

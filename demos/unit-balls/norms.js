@@ -189,7 +189,7 @@ export const BOX_RATIOS = { '2D': [1, 1, 0.4], '3D': [1, 1, 1] };
 /**
  * K-UB-01 (lead L-D22-01, resolved in v0.1.1) — the z range of the 2D-mode Plot3D for each p, WITHOUT padding,
  * MEASURED in Mathematica: `PlotRange /. AbsoluteOptions[Plot3D[…], PlotRange]` (extra-checks.wls, Mathematica
- * 15.0.1, owner run 2026-10-06). Key = pText(p): exact setter values "1/4" … "16", "∞"; machine reals "0.1", "0.5".
+ * 15.0.1, Tico's run 2026-10-06). Key = pText(p): exact setter values "1/4" … "16", "∞"; machine reals "0.1", "0.5".
  * No clipping for any p: zmax is the corner value times (1 − 1.43e-7). zmin was printed as |zmin| < 4e-15 (e.g.
  * 5.55e-17 for 1/4, -1.39e-17 for 1/2, 3.55e-15 for 0.1: rounding noise around the minimum 0 at the origin) and is
  * entered as 0. Values of p not in the table use plotRangeZ2DRule, which agrees with every measured row to 2e-7.

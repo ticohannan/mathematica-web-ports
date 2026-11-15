@@ -4,7 +4,7 @@
 (* tools/wolfram/extra-checks.wls — answers to leads (K- entries in the seven DESIGN.md files) that only Mathematica
    can settle. Plain Wolfram Language expressions; the only one taken from a Demonstration is ubPlot (K-UB-01), which
    repeats the Plot3D settings of the unit-balls original so that its automatic plot range can be measured.
-   Round 1 (run by the owner in Mathematica 15.0.1 on 2026-10-06; follow-up checks are in extra-checks-2.wls).
+   Round 1 (run by Tico in Mathematica 15.0.1 on 2026-10-06; follow-up checks are in extra-checks-2.wls).
    Run from the repository folder (writes test-output\extra-checks.txt and test-output\arc-test.png):
        wolframscript -file tools\wolfram\extra-checks.wls
    NOT RUN by the author's tool (no Mathematica available there): if a check prints $Failed or an unevaluated

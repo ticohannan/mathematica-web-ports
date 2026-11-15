@@ -1,6 +1,6 @@
 # Manual checks — Ensemble Control of Robots with Unicycle Kinematics (`demos/ensemble-control/`)
 
-Each item compares the original in Mathematica with the port, as an operator procedure (owner rule R-B); the general
+Each item compares the original in Mathematica with the port, as an operator procedure (rule 8); the general
 procedure is in [`docs/MATHEMATICA_CHECKS.md`](../MATHEMATICA_CHECKS.md). Record every result in the test-run file
 `_internal\test-runs\<YYYY-MM-DD>_ensemble-control.md` (create it with `npm run test-run -- ensemble-control`).
 

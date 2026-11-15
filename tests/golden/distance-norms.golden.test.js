@@ -4,7 +4,7 @@
 // tests/golden/distance-norms.golden.test.js — the port against the ORIGINAL notebook: its saved state and the six
 // snapshot cells' Settings (tests/golden/distance-norms.original-states.json, raw notebook lines 2407, 3613, 4818, 6021,
 // 7213, 8429), the region the original drew in the snapshot pictures (docs/original-snapshots/distance-norms-1…6.png,
-// measured here with a small PNG reader), and — once the owner has run it — the Mathematica harness
+// measured here with a small PNG reader), and — once Tico has run it — the Mathematica harness
 // (tests/golden/distance-norms.harness.json; these tests SKIP with the documented reason until it exists).
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';

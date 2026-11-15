@@ -7,7 +7,6 @@
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Breadth-First Search Robot Motion Planning", contributed by Aaron T. Becker, Benedict Isichei and Praveen Reddy Padala, published 2017-12-12 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/BreadthFirstSearchRobotMotionPlanning/>. Readable source: `docs/original-source/bfs-motion-planning.txt`; snapshots: `docs/original-snapshots/bfs-motion-planning-1.png` … `-4.png` (the extraction's pictures 5 and 6 are the Wolfram logo); stored output cell (initial settings = stored `"Variables"`, Body, Specifications, Initialization): raw definition notebook lines 2373, 2749, 2949, 3336; fixture `tests/golden/bfs-motion-planning.original-states.json` (`states[0]` live state; `snapshots[1…4]` the snapshot Settings, raw lines 4456, 5720, 7383, 13618; `specs` the initial settings) |
 | Port files | `demos/bfs-motion-planning/model.js` (`bfsTorus`, `getShortestPath`, the cell rule, one evaluation of the Manipulate body; pure), `main.js` (the Manipulate on `shared/manipulate.js`: Q and P sliders, locators, Graphics data; v0.1.19), `index.html`; shared with "Robot Motion with Obstacles": `demos/common/arm-grid.js` (new, pure) and `demos/common/arm-view.js` (new; Graphics data since v0.1.19), which compose `demos/common/two-link.js` (`armSegments`, `armGeometry`) and `demos/common/arrow-arcs.js` (`arrowArc`); `LOC_ICON` from `demos/common/prm-core.js` — API in `demos/robot-motion-obstacles/DESIGN.md` §6 |
-| Role in the project | further demonstration (batch A) |
 
 ## 1. Purpose and background
 
@@ -84,9 +83,9 @@ Out of scope (would need a design entry first): other search algorithms or metri
 | A-BF-04 | "All demos" link | site navigation | v0.1.15 | inventory; M-GEN-01 |
 | A-BF-05 | Credit footer: original title, authors, licence, adaptation notice | required by CC BY-NC-SA 3.0 | v0.1.15 | e2e "attribution on" |
 | A-BF-06 | Start-up notice (watchdog, `<noscript>`) when the page cannot start (DEC-22) | a clear message instead of an empty page | v0.1.15 | e2e "start-up notice when" |
-| A-BF-07 | standalone bundle (owner rule R-A): `npm run bundle -- bfs-motion-planning` builds `dist/bfs-motion-planning/` with exactly the files the app imports, the licences, a generated README and a root `index.html` (§6, "Building and deploying this app alone") | anyone can host this one app elsewhere without the rest of the site (owner rule R-A, 2026-10-17) | v0.1.15 | e2e "bundle: bfs-motion-planning runs from its own folder"; unit "bundle contents listed in DESIGN.md match the collector" |
-| A-BF-08 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | owner request 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
-| A-BF-09 | Switch "errors of the original: kept \| corrected" beside "Initial settings" (variable `errata`, default kept = the original's behaviour). "corrected" changes only E-BF-02, E-BF-03, E-BF-04, E-BF-05, E-BF-07 (§11; `errata-mode.js`); the differences are listed on the page under "Errors of the original: what "corrected" changes" | owner request 2026-11-10: every code-level error of the original can be switched between the original's behaviour and its correction | v0.1.34 | unit "corrected mode (E-BF)"; e2e "errata switch on bfs-motion-planning: kept is the original, corrected changes the listed result" |
+| A-BF-07 | standalone bundle (rule 7): `npm run bundle -- bfs-motion-planning` builds `dist/bfs-motion-planning/` with exactly the files the app imports, the licences, a generated README and a root `index.html` (§6, "Building and deploying this app alone") | anyone can host this one app elsewhere without the rest of the site (rule 7, 2026-10-17) | v0.1.15 | e2e "bundle: bfs-motion-planning runs from its own folder"; unit "bundle contents listed in DESIGN.md match the collector" |
+| A-BF-08 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | requested 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
+| A-BF-09 | Switch "errors of the original: kept \| corrected" beside "Initial settings" (variable `errata`, default kept = the original's behaviour). "corrected" changes only E-BF-02, E-BF-03, E-BF-04, E-BF-05, E-BF-07 (§11; `errata-mode.js`); the differences are listed on the page under "Errors of the original: what "corrected" changes" | requested 2026-11-10: every code-level error of the original can be switched between the original's behaviour and its correction | v0.1.34 | unit "corrected mode (E-BF)"; e2e "errata switch on bfs-motion-planning: kept is the original, corrected changes the listed result" |
 
 ## 5. UI inventory
 
@@ -150,7 +149,7 @@ in `demos/robot-motion-obstacles/DESIGN.md` §6 . `bfsTorus`, `getShortestPath` 
 `tests/golden/bfs-motion-planning.golden.test.js` (saved states and snapshot pictures; `tests/support/png.js` reads the
 pictures), `tests/golden/bfs-motion-planning.harness.test.js` (one test `harness "H-BF-nn"` per harness scenario: replays
 `tests/harness/bfs-motion-planning.scenarios.json` on the model and compares with
-`tests/golden/bfs-motion-planning.harness.json`; skipped with "no harness data (owner run pending)" until the owner's
+`tests/golden/bfs-motion-planning.harness.json`; skipped with "no harness data (harness run pending)" until Tico's
 Mathematica run is accepted; the replay is checked now against the TESTPLAN's reference values), `tests/e2e/bfs-motion-planning.spec.js`.
 The automation hook also counts the searches and path walks (`view().searches`, `view().walks`) and returns the cost map
 (`costmap()`).
@@ -171,7 +170,7 @@ Manipulate's obstacle locator glyphs on top.
 
 ### 6.1 Building and deploying this app alone
 
-Owner rule R-A (2026-10-17): this one app can be taken out of the repository and hosted anywhere.
+Rule 7 of docs/DESIGN_PROCESS.md: this one app can be taken out of the repository and hosted anywhere.
 
 - Command, in the repository folder: `npm run bundle -- bfs-motion-planning` → `dist/bfs-motion-planning/` (with `--zip` also
   `dist/bfs-motion-planning.zip`; `npm run bundle -- --all` bundles every app). `tools/bundle-app.mjs` follows every file the page
@@ -244,19 +243,15 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 
 ## 8. Proposed changes
 
-No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
-
-| ID | Status | Requested by / date | Change | Reason | Acceptance criteria |
-|----|--------|---------------------|--------|--------|---------------------|
-| P-BF-01 | approved (owner request 2026-11-10), implemented in v0.1.34 as A-BF-09 | owner / 2026-11-10 | Switch "errors of the original: kept \| corrected": mark the current version, then offer each logical error of the original as a gated correction; the corrected mode changes only the code needed for E-BF-02, E-BF-03, E-BF-04, E-BF-05, E-BF-07 | the errors of the original were reproduced bug for bug; the owner wants to compare the original with a corrected version and to be able to go back | the default is the original (golden data, harness replays and parity unchanged); each correction has a unit test with an independently derived expected value and the browser test of the switch; the page documents the differences |
+Proposals for this app are tracked separately.
 
 ## 9. Revision history
 
 | Doc rev. | Code version | Date | Change |
 |----------|--------------|------|--------|
-| 1 | v0.1.15 | 2026-10-17 | first implementation, from the design draft of 2026-10-12 approved by the owner on 2026-10-17 (DEC-17; draft revised after review r2, COMMON-DECISIONS §3–§6 and owner rules R-A/R-B/R-C). Built as specified, on the shared `demos/common/arm-grid.js` and `arm-view.js` of robot-motion-obstacles; decided while building: the provisional out-of-grid handling of D-BF-07 (the draft left it to the harness), the harness test file (§6 Tests); review fixes |
+| 1 | v0.1.15 | 2026-10-17 | first implementation, from the design draft of 2026-10-12. Built as specified, on the shared `demos/common/arm-grid.js` and `arm-view.js` of robot-motion-obstacles; decided while building: the provisional out-of-grid handling of D-BF-07 (the draft left it to the harness), the harness test file (§6 Tests); review fixes |
 | 2 | v0.1.16 | 2026-10-18 | version number only (batch B release); no change to this app |
-| 3 | v0.1.17 | 2026-10-18 | harness run 2 accepted (Mathematica 15.0.1): all 23 records match the port, no app code changed. Golden test adapter: an unassigned local recorded as null (H-BF-23, N-BF-07). K-BF-03 resolved (a·(1/b), row 1; D-BF-07 updated); evidence added to K-BF-01, 02, 04, 05, 06, 08, 09 (01, 02, 09 not decided by the record) |
+| 3 | v0.1.17 | 2026-10-18 | harness run 2 accepted (Mathematica 15.0.1): all 23 records match the port, no app code changed. Golden test adapter: an unassigned local recorded as null (H-BF-23, N-BF-07). K-BF-03 resolved (a· (1/b), row 1; D-BF-07 updated); evidence added to K-BF-01, 02, 04, 05, 06, 08, 09 (01, 02, 09 not decided by the record) |
 | 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 5 | v0.1.19 | 2026-10-21 | main.js rewritten on the new shared Manipulate layer (`shared/manipulate.js`, `shared/graphics.js`): the controls are written as Manipulate control specs and the picture as Graphics data; no change to behaviour or picture (all unit, golden and browser tests unchanged and passing; screenshots and Manipulate state identical to v0.1.18 at sample settings); `demos/common/arm-view.js` now returns Graphics data (§6) |
 | 6 | v0.1.20 | 2026-10-21 | bundle table only (the Manipulate layer now also loads `shared/ui-extra.js`, `ui-interval.js`, `random.js`); no change to this app |
@@ -267,13 +262,13 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 11 | v0.1.25 | 2026-10-26 | version number; the shared code gained one page clock (`shared/clock.js`: slider animations and app animations read it, tests fix it), tolerant `Equal`/`Unequal` in `shared/wl.js` and exact slider texts from saved states (v0.1.25); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.24) |
 | 12 | v0.1.26 | 2026-10-27 | version number; the shared code gained region and density plots (`RegionPlot`, two-parameter `ParametricPlot`, `DensityPlot`), `BSplineCurve`, decorated insets, textures on polygons, `settleInterval` for bodies that pause between evaluations, typeset control headings and fixes found by the seven new ports (v0.1.26); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.25) |
 | 13 | v0.1.27 | 2026-10-28 | version number; the shared code gained spans with a step, a cyclic `Riffle`, `EvenQ`/`OddQ`, `ArcCos`/`ArcSin`, `DeleteCases`, `ToString` and `StringForm` (`shared/wl.js`), legend labels that are pictures and Mathematica's `Placed[…, {pos, align}]` form, `Automatic` in PlotStyle lists, `Fraction` labels, 3D `Line` with several polylines, and View3D's `Epilog` and `SphericalRegion: false` (v0.1.27); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.26) |
-| 14 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default; motion planning, PA2 fix F-02) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.27) |
+| 14 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.27) |
 | 15 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.28) |
 | 16 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
 | 17 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
-| 18 | v0.1.32 | 2026-11-05 | A-BF-08: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
+| 18 | v0.1.32 | 2026-11-05 | A-BF-08: landing-page thumbnail (`tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 | 19 | v0.1.33 | 2026-11-06 | version number (v0.1.33: four new apps; opt-in shared additions S-1 … S-7, unused by this app, and the locators of a Locator list made after the first evaluation); no change to this app's code, behaviour or picture |
-| 20 | v0.1.34 | 2026-11-10 | A-BF-09: the switch "errors of the original: kept \| corrected" (owner request 2026-11-10); corrected mode for E-BF-02, E-BF-03, E-BF-04, E-BF-05, E-BF-07, default kept: the original's behaviour, golden data and pictures unchanged |
+| 20 | v0.1.34 | 2026-11-10 | A-BF-09: the switch "errors of the original: kept \| corrected"; corrected mode for E-BF-02, E-BF-03, E-BF-04, E-BF-05, E-BF-07, default kept: the original's behaviour, golden data and pictures unchanged |
 | 21 | v0.1.35 | 2026-11-11 | version number (v0.1.35: two new apps, paths-inside-a-polygon and voronoi-diagrams; no shared code changed); no change to this app's code, behaviour or picture |
 | 22 | v0.1.36 | 2026-11-11 | version number (v0.1.36: the full colour menu of voronoi-diagrams); no change to this app's code, behaviour or picture |
 | 23 | v0.1.37 | 2026-11-12 | version number (v0.1.37: thirteen control and signal ports and the shared modules they use; the additions to shared/plot.js, graphics.js and manipulate.js are opt-in); no change to this app's code, behaviour or picture |
@@ -294,7 +289,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 
 ## 11. Errors in the original (conceptual and mathematical)
 
-Owner rule R-C (2026-10-17). Checked: `bfsTorus` against breadth-first search and against shortest-path algorithms, the
+Rule 9 of docs/DESIGN_PROCESS.md. Checked: `bfsTorus` against breadth-first search and against shortest-path algorithms, the
 step costs, `getShortestPath`, the cell rule `Round[{.5 + pS[[2]], Max[1, pS[[1]] + .5]}]` at every edge value the
 torus wrap can produce, the angle of a cell (θ1 = (2c − 1)π/L, θ2 = −(2r − 1)π/L, consistent with the grid's link 2 at
 a1 − a2), the label `Round[(2.0π/L) cost, 0.01]`, the glyph colours, caption and Details against the code, and the

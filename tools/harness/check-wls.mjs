@@ -6,8 +6,8 @@
 //   node tools/harness/check-wls.mjs <file.wls> [...]        exit 1 if any error is found
 //
 // The harness scripts are written by someone who cannot run them (HARNESS-WL §13); an earlier delivery failed on the
-// owner's machine with a syntax error. This checker catches the mistakes that make a script unreadable or silently
-// different, before the owner runs it:
+// Tico's machine with a syntax error. This checker catches the mistakes that make a script unreadable or silently
+// different, before Tico runs it:
 //   * brackets [ ] { } ( ) balanced and correctly nested, strings and (nested) comments terminated
 //   * no string literal spans lines (the scripts' convention; it catches a missing closing quote at its line)
 //   * string escapes limited to \\ \" \n \t \r \b \f \: \. \| \[Name] and line continuation

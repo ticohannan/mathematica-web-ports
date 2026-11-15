@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // tests/e2e/line-parameterization.spec.js — browser tests of the "Line Parameterization" page (attribution, start-up
 // notice, UI inventory and bundle are in site.spec.js and bundle.spec.js). Review screenshots at the settings of the
-// owner's screenshots of the original (docs/original-snapshots/line-parameterization-1…3.png).
+// Tico's screenshots of the original (docs/original-snapshots/line-parameterization-1…3.png).
 import { test, expect } from '@playwright/test';
 import { openDemo, reviewShot } from './helpers.js';
 
@@ -85,7 +85,7 @@ test.describe('line-parameterization', () => {
     await reviewShot(page, testInfo, 'line-parameterization-saved-state'); // compare: docs/original-snapshots/line-parameterization-1.png
   });
 
-  test('ρ = 1.8 and θ = 9π/32 (the owner\u2019s screenshot 2): the line crosses the axes at 2.84 and 2.33 + screenshot for review', async ({ page }, testInfo) => {
+  test('ρ = 1.8 and θ = 9π/32 (Tico\u2019s screenshot 2): the line crosses the axes at 2.84 and 2.33 + screenshot for review', async ({ page }, testInfo) => {
     await openDemo(page, URL);
     const a = (9 * Math.PI) / 32;
     await page.evaluate((p1) => window.__demo.setState({ rho: 1.8, p1 }), [Math.cos(a), Math.sin(a)]);

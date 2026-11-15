@@ -7,7 +7,6 @@
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Chart for a Torus", contributed by Aaron T. Becker and Haoran Zhao, published 2016-05-02 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ChartForATorus/>. Readable source: [`docs/original-source/torus-chart.txt`](../../docs/original-source/torus-chart.txt); snapshots: `docs/original-snapshots/torus-chart-1.png` … `-4.png` (files 5 and 6 of the extraction are 96 × 100 placeholder icons); golden data: `tests/golden/torus-chart.original-states.json` (COMMON-DECISIONS §1: `states[0]` = the live state, `snapshots[1…4]` = the snapshot cells' Settings, raw notebook lines 2311, 6086, 9212, 12067, `specs` = the initial settings; λ read from the raw notebook by `tools/extract_state.py --snapshots`, N-TC-01) |
 | Port files | app: `model.js` (TorusToPlane, the dial angles, the plot label, one evaluation of the body, the style constants; pure), `surface.js` (sampling of the manifold: grid, front-face orientation and normals, boundary curves, the 15 z contours of the mesh; pure), `view3d.js` (the three.js picture as a renderer of the Manipulate layer, `TorusView`: its own two-sided light shader and back-to-front triangle order, box, ticks, plot label), `main.js` (the Manipulate on `shared/manipulate.js`: the λ slider, the two dials as `Control(makeDialControl, …)`, the body `evaluate`, the test hook; v0.1.21), `index.html`; common (CC BY-NC-SA, owner two-link-kinematics, COMMON-DECISIONS §3): `demos/common/dial-control.js` (`makeDialControl` with `setter: 'normalize'`, `arc: 'arrowArcCircle'`, `imageSize: 160`, `labels: 'stacked'`; no app-level dial) and through it `demos/common/arrow-arcs.js` (`arrowArc`); shared (MIT): `shared/manipulate.js` (controls, state, Initial settings, hook), `shared/three-helpers.js` (square viewer, fat lines, CSS2D labels, ink), `shared/ui.js` (λ slider, `mmaSliderText`), `shared/mma.js` (tolerant comparisons), `shared/mma-exact.js` (`arcTan`), `shared/mma-colors.js`; through dial-control.js: `shared/mma-extra.js` (`normalizeCR`), `shared/mma-text.js` (`piFraction`), `shared/exact-pi.js`, `shared/svg-plot.js` |
-| Role in the project | further demonstration (batch B) |
 
 ## 1. Purpose and background
 
@@ -77,8 +76,8 @@ showing the cut lines on the torus.
 | A-TC-05 | Credit footer: original title, authors, licence, adaptation notice | required by CC BY-NC-SA 3.0 | v0.1.16 | e2e "attribution on" |
 | A-TC-06 | Start-up notice (watchdog, `<noscript>`) and WebGL 2 notice (DEC-22); without WebGL 2 the dials still work | a clear message instead of an empty page | v0.1.16 | e2e "start-up notice when"; e2e "WebGL 2 notice on"; e2e "without WebGL 2 the notice is shown and the dials still work" |
 | A-TC-07 | The view redraws itself after a WebGL context loss and restore (shared viewer) | robustness | v0.1.16 | e2e "the view redraws after a WebGL context loss" |
-| A-TC-08 | standalone bundle (owner rule R-A): `npm run bundle -- torus-chart` builds `dist/torus-chart/` with exactly the files the app imports, the licences, a generated README and a root `index.html` (§6, "Building and deploying this app alone") | anyone can host this one app elsewhere without the rest of the site (owner rule R-A, 2026-10-17) | v0.1.16 | e2e "bundle: torus-chart runs from its own folder" |
-| A-TC-09 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | owner request 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
+| A-TC-08 | standalone bundle (rule 7): `npm run bundle -- torus-chart` builds `dist/torus-chart/` with exactly the files the app imports, the licences, a generated README and a root `index.html` (§6, "Building and deploying this app alone") | anyone can host this one app elsewhere without the rest of the site (rule 7, 2026-10-17) | v0.1.16 | e2e "bundle: torus-chart runs from its own folder" |
+| A-TC-09 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | requested 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
 
 ## 5. UI inventory
 
@@ -164,7 +163,7 @@ matches any text. Checked by the browser test "every control on … is specified
 
 ### 6.1 Building and deploying this app alone
 
-Owner rule R-A (2026-10-17): this one app can be taken out of the repository and hosted anywhere. One command builds it:
+Rule 7 of docs/DESIGN_PROCESS.md: this one app can be taken out of the repository and hosted anywhere. One command builds it:
 
 ```
 npm run bundle -- torus-chart
@@ -226,35 +225,30 @@ Verified by e2e "bundle: torus-chart runs from its own folder" (A-TC-08): the te
 
 ## 8. Proposed changes
 
-Open proposals (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
-
-| ID | Status | Requested by / date | Change | Reason | Acceptance criteria |
-|----|--------|---------------------|--------|--------|---------------------|
-| P-TC-01 | proposed 2026-10-18 (awaiting the owner) | harness run 2, K-TC-01 / 2026-10-18 | replace the fitted white lights of D-TC-02 by the recorded "Business" lights: ambient GrayLevel 0.35, three directional GrayLevel 0.37 from ImageScaled {2, 0, 2}, {2, 2, 2}, {0, 2, 2} (fixed to the view box), Specularity[GrayLevel[0.5], 30] (`shared/mma-lighting.js` style light model) | the lights are now known from the original (H-TC-01 … H-TC-05) instead of fitted to the snapshot colours | the four snapshots compared side by side (colour of the flat square, highlights, back faces) look at least as close as now; golden "H-TC-01" then compares the port's light list with the record |
-| P-TC-02 | proposed 2026-10-18 (awaiting the owner; affects two-link-kinematics and distance-norms, owner of `dial-control.js`: two-link-kinematics) | harness run 2, K-TC-03 / 2026-10-18 | let a dial press at the exact centre through: `dial-control.js` drops its (0, 0) guard (D-TK-07), the body gives θ = 0 as `ArcTan[0., 0.] = 0.` | H-TC-11 and H-DN-11 record ArcTan[0., 0.] = 0. without a message; the guard was a guess for an indeterminate result | a press exactly at the centre of the θ dial moves the ball to θ = 0 (λ = 2: (φ, 2π, 0)); e2e of the three dial apps |
+Proposals for this app are tracked separately.
 
 ## 9. Revision history
 
 | Doc rev. | Code version | Date | Change |
 |----------|--------------|------|--------|
-| 1 | v0.1.16 | 2026-10-18 | first implementation from the approved design draft (2026-10-12; COMMON-DECISIONS §5, §6, owner rules R-A/R-B/R-C applied 2026-10-17). Decided at implementation: the "Business" lighting and mesh fitted to the snapshots (D-TC-02), back-to-front triangle order (D-TC-03), boundary 2.5 px (D-TC-04), "2." shown (D-TC-06), framing and omitted front box edges (D-TC-07, D-TC-08), label sizes (D-TC-10), exact contours (N-TC-06), operation order lead K-TC-09 |
+| 1 | v0.1.16 | 2026-10-18 | first implementation from the approved design draft (2026-10-12). Decided at implementation: the "Business" lighting and mesh fitted to the snapshots (D-TC-02), back-to-front triangle order (D-TC-03), boundary 2.5 px (D-TC-04), "2." shown (D-TC-06), framing and omitted front box edges (D-TC-07, D-TC-08), label sizes (D-TC-10), exact contours (N-TC-06), operation order lead K-TC-09 |
 | 2 | v0.1.16 | 2026-10-18 | review fixes: E-TC-03 counterexample and reason corrected (constant map, (cos u, cos v); compactness and invariance of domain); golden harness balls compared bit for bit (K-TC-09), H-TC-13 expectation written out; e2e λ drag to 0 moves past the end of the track |
 | 3 | v0.1.17 | 2026-10-18 | harness run 2: `TorusToPlane` in Mathematica's order of operations (K-TC-09 resolved, all 14 recorded balls bit for bit); a dial point (0, 0) is evaluated (ArcTan[0., 0.] = 0., K-TC-03, H-TC-11); K-TC-01 answered (lights recorded, P-TC-01 proposed), K-TC-02 resolved (15 equally spaced z contours), K-HW-03 answered (ResolvePlotTheme exists); P-TC-02 proposed (dial centre); golden harness tests read the record as encoded (`{"sym": "Pi"}`, the Sphere and GraphicsComplex arguments, `wl:-0.` inside the set object) (N-TC-07) |
 | 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 5 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
 | 6 | v0.1.20 | 2026-10-21 | version number only (Manipulate layer extended, eleven more apps migrated to it); no change to this app |
-| 7 | v0.1.21 | 2026-10-23 | `main.js` rewritten on the shared Manipulate layer (`shared/manipulate.js`: controls, state, reset, hook) with the app's own three.js renderer object for its picture; generic parts moved to MIT shared modules (owner decision D1) (drawing code moved unchanged into `view3d.js`); no change to behaviour or picture (all unit, golden and browser tests passing; three.js scene graph, full-page pixels (SwiftShader) and Manipulate state identical to v0.1.20 at sample settings) |
+| 7 | v0.1.21 | 2026-10-23 | `main.js` rewritten on the shared Manipulate layer (`shared/manipulate.js`: controls, state, reset, hook) with the app's own three.js renderer object for its picture; generic parts moved to MIT shared modules (drawing code moved unchanged into `view3d.js`); no change to behaviour or picture (all unit, golden and browser tests passing; three.js scene graph, full-page pixels (SwiftShader) and Manipulate state identical to v0.1.20 at sample settings) |
 | 8 | v0.1.22 | 2026-10-25 | version number; bundle table (`shared/manipulate.js` now also loads `shared/graphics-extras.js` and `shared/svg-frame.js` for the new Graphics options `Axes`/`Frame`/`PlotLabel`); no change to this app's code, behaviour or picture (pixel parity with v0.1.21) |
 | 9 | v0.1.23 | 2026-10-25 | version number; the shared code gained plot functions, a geometry kit, 3D text and tube primitives and fixes for new apps (v0.1.23); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.22) |
 | 10 | v0.1.24 | 2026-10-26 | version number; the shared code gained a clock for bodies that read the time, Locator variables that change between one point and a list, sector disks and Opacity on points and text (v0.1.24); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.23) |
 | 11 | v0.1.25 | 2026-10-26 | version number; the shared code gained one page clock (`shared/clock.js`: slider animations and app animations read it, tests fix it), tolerant `Equal`/`Unequal` in `shared/wl.js` and exact slider texts from saved states (v0.1.25); the ⊕ animation test now fixes the page clock and checks the exact value; no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.24) |
 | 12 | v0.1.26 | 2026-10-27 | version number; the shared code gained region and density plots (`RegionPlot`, two-parameter `ParametricPlot`, `DensityPlot`), `BSplineCurve`, decorated insets, textures on polygons, `settleInterval` for bodies that pause between evaluations, typeset control headings and fixes found by the seven new ports (v0.1.26); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.25) |
 | 13 | v0.1.27 | 2026-10-28 | version number; the shared code gained spans with a step, a cyclic `Riffle`, `EvenQ`/`OddQ`, `ArcCos`/`ArcSin`, `DeleteCases`, `ToString` and `StringForm` (`shared/wl.js`), legend labels that are pictures and Mathematica's `Placed[…, {pos, align}]` form, `Automatic` in PlotStyle lists, `Fraction` labels, 3D `Line` with several polylines, and View3D's `Epilog` and `SphericalRegion: false` (v0.1.27); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.26) |
-| 14 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default; motion planning, PA2 fix F-02) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.27) |
+| 14 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.27) |
 | 15 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.28) |
 | 16 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
 | 17 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
-| 18 | v0.1.32 | 2026-11-05 | A-TC-09: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
+| 18 | v0.1.32 | 2026-11-05 | A-TC-09: landing-page thumbnail (`tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 | 19 | v0.1.33 | 2026-11-06 | version number (v0.1.33: four new apps; opt-in shared additions S-1 … S-7, unused by this app, and the locators of a Locator list made after the first evaluation); no change to this app's code, behaviour or picture |
 | 20 | v0.1.34 | 2026-11-10 | version number (v0.1.34: the switch "errors of the original: kept \| corrected" for the apps with code-level findings in §11, `shared/errata.js`); no change to this app's code, behaviour or picture |
 | 21 | v0.1.35 | 2026-11-11 | version number (v0.1.35: two new apps, paths-inside-a-polygon and voronoi-diagrams; no shared code changed); no change to this app's code, behaviour or picture |
@@ -276,7 +270,7 @@ Open proposals (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
 
 ## 11. Errors in the original (conceptual and mathematical)
 
-Owner rule R-C (2026-10-17). Checked: `TorusToPlane` at the three stages by hand — λ = 0: a torus about (π, π) with
+Rule 9 of docs/DESIGN_PROCESS.md. Checked: `TorusToPlane` at the three stages by hand — λ = 0: a torus about (π, π) with
 major radius 2π/3 and a tube of horizontal semi-axis π/3 and vertical semi-axis 1 (a slightly elliptic tube; still a
 torus, not listed); λ = 1: the cylinder of radius π and height 2π from both branches (continuous at λ = 1); λ = 2: the
 square [0, 2π]² at z = 0 with the ball at (φ, 2π − θ, 0) — correct; the cut "along its longest circumference" (v = 0, the

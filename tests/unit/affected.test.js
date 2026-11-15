@@ -12,7 +12,7 @@ import {
 
 const tracked = execFileSync('git', ['ls-files'], { encoding: 'utf8' }).trim().split('\n');
 
-// v0.1.40: these blocks run git over the whole repository; on the owner's Windows machine one plan took 5.1 s, over
+// v0.1.40: these blocks run git over the whole repository; on Tico's Windows machine one plan took 5.1 s, over
 // vitest's 5 s default, so they get 60 s
 const GIT = { timeout: 60000 };
 

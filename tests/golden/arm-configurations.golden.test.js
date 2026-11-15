@@ -9,7 +9,7 @@
 //  * what only the pictures docs/original-snapshots/arm-configurations-1.png … -6.png show: value texts, check box,
 //    popup, DH table, the H strings and the width of the ground disc (716 px at 2 px per pt in pictures 2–6);
 //  * the Mathematica-harness records H-AC-01 … H-AC-18 (tests/golden/arm-configurations.harness.json, read through
-//    tests/support/harness-json.js). These SKIP with the documented reason until the owner's harness run exists.
+//    tests/support/harness-json.js). These SKIP with the documented reason until Tico's harness run exists.
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import { parseLexical } from '../../tools/lib/json-lexical.mjs';

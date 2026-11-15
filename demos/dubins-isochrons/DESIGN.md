@@ -7,7 +7,6 @@
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Isochrons for a Dubins Car", contributed by Aaron T. Becker and Shiva Shahrokhi, published 2017-12-18 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/IsochronsForADubinsCar/>. Readable source: [`docs/original-source/dubins-isochrons.txt`](../../docs/original-source/dubins-isochrons.txt); snapshots: `docs/original-snapshots/dubins-isochrons-1.png` … `dubins-isochrons-5.png` (pictures 6 and 7 of the extraction are the Wolfram icon, not snapshots); golden fixture (COMMON-DECISIONS §1): `tests/golden/dubins-isochrons.original-states.json` with `states[0]` = the live output-cell state including the original's cached `ParametricPlot` output `plotReach` (raw definition notebook line 1111), `specs` = the initial settings (stored `"Variables"`, raw line 3792, equal to the live state; the output cell `"Specifications"`, line 5286, also hold the cached plot), `snapshots[1…5]` = the `"Settings"` of the five snapshot cells with their own cached plots (lines 7853, 10287, 17941, 25604, 33224; 2–4 hold the "≤" region meshes) |
 | Port files | `isochrons.js` (the original's `mRS`, `mLS`, `mRL`, `mLR`, the car state and path graphics of the `Piecewise`, Mathematica's `Table` iterator, the grey polygons, the sampled isochrons and region meshes, the plot-cache rule, one evaluation of the Manipulate body, `epiGraphics` as `shared/graphics.js` data (v0.1.21); pure), `main.js` (the Manipulate on `shared/manipulate.js`: controls on the left, plotReach and axes as Graphics data; v0.1.20), `index.html`; shared car icon `demos/common/car-icon.js` (owned by dubins-path, CC BY-NC-SA 3.0, §6); axes and ticks from `shared/svg-frame.js` (owner distance-norms, MIT) |
-| Role in the project | further demonstration (batch A) |
 
 ## 1. Purpose and background
 
@@ -89,8 +88,8 @@ start headings, an animation of the set growing with *t* beyond the ⊕ panel of
 | A-DI-03 | "All demos" link | site navigation | v0.1.15 | inventory; M-GEN-01 |
 | A-DI-04 | Credit footer: original title, authors, licence, adaptation notice | required by CC BY-NC-SA 3.0 | v0.1.15 | e2e "attribution on" |
 | A-DI-05 | Start-up notice (watchdog, `<noscript>`) when the page cannot start (DEC-22) | a clear message instead of an empty page | v0.1.15 | e2e "start-up notice when" |
-| A-DI-06 | standalone bundle (owner rule R-A): `npm run bundle -- dubins-isochrons` builds `dist/dubins-isochrons/` with exactly the files the app imports, the licences, a generated README and a root `index.html` (§6, "Building and deploying this app alone") | anyone can host this one app elsewhere without the rest of the site (owner rule R-A, 2026-10-17) | v0.1.15 | e2e "bundle: dubins-isochrons runs from its own folder" |
-| A-DI-07 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | owner request 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
+| A-DI-06 | standalone bundle (rule 7): `npm run bundle -- dubins-isochrons` builds `dist/dubins-isochrons/` with exactly the files the app imports, the licences, a generated README and a root `index.html` (§6, "Building and deploying this app alone") | anyone can host this one app elsewhere without the rest of the site (rule 7, 2026-10-17) | v0.1.15 | e2e "bundle: dubins-isochrons runs from its own folder" |
+| A-DI-07 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | requested 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
 
 ## 5. UI inventory
 
@@ -185,7 +184,7 @@ of the graphic (the grey bands carry their point count as `data-points`): `isoch
 
 ### 6.1 Building and deploying this app alone
 
-Owner rule R-A (2026-10-17): this one app can be taken out of the repository and hosted anywhere. One command builds it:
+Rule 7 of docs/DESIGN_PROCESS.md: this one app can be taken out of the repository and hosted anywhere. One command builds it:
 
 ```
 npm run bundle -- dubins-isochrons
@@ -251,34 +250,30 @@ Verified by e2e "bundle: dubins-isochrons runs from its own folder" (A-DI-06, `t
 
 ## 8. Proposed changes
 
-Template: see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md).
-
-| ID | Status | Requested by / date | Change | Reason | Acceptance criteria |
-|----|--------|---------------------|--------|--------|---------------------|
-| P-DI-01 | proposed | harness run 2, 2026-10-18 | Decide which Mathematica version's plot style the port follows. Now: the style of the notebook's saved plots (ColorData[97] 1–4: (0.368417, 0.506779, 0.709798), (0.880722, 0.611041, 0.142051), (0.560181, 0.691569, 0.194885), (0.922526, 0.385626, 0.209179), `AbsoluteThickness[1.6]`), for every plot. Option: after the first recomputation use 15.0.1's style | Mathematica 15.0.1 recomputes the plots (after *t*, *r* or set changed: H-DI-01, -02, -11…-19, -21, -23) in its new default style, (0.24, 0.6, 0.8), (0.95, 0.627, 0.1425), (0.455, 0.7, 0.21), (0.922526, 0.385626, 0.209179) with `AbsoluteThickness[2]` (regions with `Opacity[0.3]`), while the opening shows the saved plot in the old style (H-DI-22, H-DI-14 steps 1–4). In 15.0.1 the curve colours change at the first drag of *t* or *r*; the path colours (N-DI-03) no longer match | golden "harness H-DI-nn" assert the recorded style of each plot (new style after a recomputation, the saved style before) |
+Proposals for this app are tracked separately.
 
 ## 9. Revision history
 
 | Doc rev. | Code version | Date | Change |
 |----------|--------------|------|--------|
-| 1 | v0.1.15 | 2026-10-17 | first implementation of the approved design draft (2026-10-12, owner approval 2026-10-17, DEC-17): `isochrons.js`, `main.js`, `index.html`, the car icon from `demos/common/car-icon.js` (owner dubins-path), axes from `shared/svg-frame.js`; harness references cited as the golden tests that replay them; D-DI-11 (extremes of the sampled curves), D-DI-02 completed (fold lines), N-DI-09; review fixes |
+| 1 | v0.1.15 | 2026-10-17 | first implementation of the approved design draft: `isochrons.js`, `main.js`, `index.html`, the car icon from `demos/common/car-icon.js`, axes from `shared/svg-frame.js`; harness references cited as the golden tests that replay them; D-DI-11 (extremes of the sampled curves), D-DI-02 completed (fold lines), N-DI-09; review fixes |
 | 2 | v0.1.16 | 2026-10-18 | version number only (batch B release); no change to this app |
-| 3 | v0.1.17 | 2026-10-18 | harness run 2 accepted: `mRS`/`mLS` multiply `t (τ-1) X` from left to right, `(t*(s-1))*X`, as Mathematica 15.0.1 (K-DI-04 resolved, N-DI-07 superseded; car states bit-identical in all 23 scenarios, grey polygons except K-DI-03's last bits); K-DI-01, K-DI-05, K-DI-07 resolved, K-DI-03 updated with the evidence; P-DI-01 proposed (15.0.1's plot style). Golden tests: the `{"h", "a"}` encoding read, scenario values converted to doubles, a fresh state per step, the symbol `Pi` in Circle angles (`toJSNumeric`), a point-on-curve search that also finds the nearest arc of curves with many turns and cusps, polygon tolerance one ulp of max(*t*, *r*) with ≥ 95 % identical (≥ 90 % for the saved cache) |
+| 3 | v0.1.17 | 2026-10-18 | harness run 2 accepted: `mRS`/`mLS` multiply `t (τ-1) X` from left to right, `(t* (s-1))*X`, as Mathematica 15.0.1 (K-DI-04 resolved, N-DI-07 superseded; car states bit-identical in all 23 scenarios, grey polygons except K-DI-03's last bits); K-DI-01, K-DI-05, K-DI-07 resolved, K-DI-03 updated with the evidence; P-DI-01 proposed (15.0.1's plot style). Golden tests: the `{"h", "a"}` encoding read, scenario values converted to doubles, a fresh state per step, the symbol `Pi` in Circle angles (`toJSNumeric`), a point-on-curve search that also finds the nearest arc of curves with many turns and cusps, polygon tolerance one ulp of max (*t*, *r*) with ≥ 95 % identical (≥ 90 % for the saved cache) |
 | 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 5 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
 | 6 | v0.1.20 | 2026-10-21 | `main.js` rewritten on the shared Manipulate layer (`shared/manipulate.js`, `shared/graphics.js`): control specs in Mathematica's form, the picture as Graphics data; no change to behaviour or picture (all unit, golden and browser tests unchanged and passing; screenshots and Manipulate state identical to v0.1.19 at sample settings) |
-| 7 | v0.1.21 | 2026-10-23 | the model builds the picture as `shared/graphics.js` Graphics data (owner decision D2) and the body returns {state, view, graphics}; `main.js` shortened; path pieces are `Circle`/`Line` data (hook `view().pathGraphics.pieces` in that form); the car icon is Graphics data; the old drawing output frozen in `tests/unit/fixtures/dubins-isochrons-drawing.pre-graphics.json` and tests that read the old format now read the same numbers through `annotations()`/`Cases()`; no change to behaviour or picture (screenshots and Manipulate state identical to v0.1.20 at sample settings) |
+| 7 | v0.1.21 | 2026-10-23 | the model builds the picture as `shared/graphics.js` Graphics data and the body returns {state, view, graphics}; `main.js` shortened; path pieces are `Circle`/`Line` data (hook `view .pathGraphics.pieces` in that form); the car icon is Graphics data; the old drawing output frozen in `tests/unit/fixtures/dubins-isochrons-drawing.pre-graphics.json` and tests that read the old format now read the same numbers through `annotations `/`Cases `; no change to behaviour or picture (screenshots and Manipulate state identical to v0.1.20 at sample settings) |
 | 8 | v0.1.22 | 2026-10-25 | version number; bundle table (`shared/manipulate.js` now also loads `shared/graphics-extras.js` and `shared/svg-frame.js` for the new Graphics options `Axes`/`Frame`/`PlotLabel`); no change to this app's code, behaviour or picture (pixel parity with v0.1.21) |
 | 9 | v0.1.23 | 2026-10-25 | version number; the shared code gained plot functions, a geometry kit, 3D text and tube primitives and fixes for new apps (v0.1.23); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.22) |
 | 10 | v0.1.24 | 2026-10-26 | version number; the shared code gained a clock for bodies that read the time, Locator variables that change between one point and a list, sector disks and Opacity on points and text (v0.1.24); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.23) |
 | 11 | v0.1.25 | 2026-10-26 | version number; the shared code gained one page clock (`shared/clock.js`: slider animations and app animations read it, tests fix it), tolerant `Equal`/`Unequal` in `shared/wl.js` and exact slider texts from saved states (v0.1.25); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.24) |
 | 12 | v0.1.26 | 2026-10-27 | version number; the shared code gained region and density plots (`RegionPlot`, two-parameter `ParametricPlot`, `DensityPlot`), `BSplineCurve`, decorated insets, textures on polygons, `settleInterval` for bodies that pause between evaluations, typeset control headings and fixes found by the seven new ports (v0.1.26); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.25) |
 | 13 | v0.1.27 | 2026-10-28 | version number; the shared code gained spans with a step, a cyclic `Riffle`, `EvenQ`/`OddQ`, `ArcCos`/`ArcSin`, `DeleteCases`, `ToString` and `StringForm` (`shared/wl.js`), legend labels that are pictures and Mathematica's `Placed[…, {pos, align}]` form, `Automatic` in PlotStyle lists, `Fraction` labels, 3D `Line` with several polylines, and View3D's `Epilog` and `SphericalRegion: false` (v0.1.27); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.26) |
-| 14 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default; motion planning, PA2 fix F-02) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.27) |
+| 14 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.27) |
 | 15 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.28) |
 | 16 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
 | 17 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
-| 18 | v0.1.32 | 2026-11-05 | A-DI-07: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
+| 18 | v0.1.32 | 2026-11-05 | A-DI-07: landing-page thumbnail (`tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 | 19 | v0.1.33 | 2026-11-06 | version number (v0.1.33: four new apps; opt-in shared additions S-1 … S-7, unused by this app, and the locators of a Locator list made after the first evaluation); no change to this app's code, behaviour or picture |
 | 20 | v0.1.34 | 2026-11-10 | version number (v0.1.34: the switch "errors of the original: kept \| corrected" for the apps with code-level findings in §11, `shared/errata.js`); no change to this app's code, behaviour or picture |
 | 21 | v0.1.35 | 2026-11-11 | version number (v0.1.35: two new apps, paths-inside-a-polygon and voronoi-diagrams; no shared code changed); no change to this app's code, behaviour or picture |
@@ -300,7 +295,7 @@ Template: see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md).
 
 ## 11. Errors in the original (conceptual and mathematical)
 
-Owner rule R-C (2026-10-17). Checked: `mRS`, `mLS`, `mRL`, `mLR` against the motion of a car that starts at the origin
+Rule 9 of docs/DESIGN_PROCESS.md. Checked: `mRS`, `mLS`, `mRL`, `mLR` against the motion of a car that starts at the origin
 heading up (+y) and turns for the fraction τ of the time, then goes straight or turns the other way — derived by hand
 (right turn about (r, 0): r{1 − cos α, sin α}, heading π/2 − α, straight direction {sin α, cos α}; second centre
 r{1 − 2 cos α, 2 sin α} for RL; mirror images for LS, LR) and by the RK4 integration of N-DI-02 (agreement 2.4·10⁻¹²):

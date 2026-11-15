@@ -4,7 +4,7 @@
 // tests/golden/dubins-path.golden.test.js — the port against the ORIGINAL notebook: the live state, the initial
 // settings and the four snapshot Settings (tests/golden/dubins-path.original-states.json, written with
 // `python3 tools/extract_state.py --snapshots`), the snapshot pictures (docs/original-snapshots/dubins-path-<k>.png) and
-// the Mathematica-harness records (tests/golden/dubins-path.harness.json; these tests skip until the owner's run exists).
+// the Mathematica-harness records (tests/golden/dubins-path.harness.json; these tests skip until Tico's run exists).
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import { initialState, evaluate } from '../../demos/dubins-path/dubins.js';

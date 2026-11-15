@@ -1,6 +1,6 @@
 # Manual checks — Rapidly exploring random tree (`demos/rrt/`)
 
-Each item compares the original in Mathematica with the port, as an operator procedure (owner rule R-B). The general
+Each item compares the original in Mathematica with the port, as an operator procedure (rule 8). The general
 procedure — starting Mathematica, Enable Dynamics, the ⊕ menu, invisible locators, waiting, recording, saving,
 sending results back — is in [`docs/MATHEMATICA_CHECKS.md`](../MATHEMATICA_CHECKS.md). Record every result in the
 test-run file `_internal\test-runs\<YYYY-MM-DD>_rrt.md` (create it with `npm run test-run -- rrt`).
@@ -78,7 +78,7 @@ cell (no Shift+Enter).
      wall edge.
 **Record** — in `_internal\test-runs\<YYYY-MM-DD>_rrt.md`, under the heading M-RT-04: per tree type a one-line description (blob, spreads, straighter branches); resets yes/no; step 4: any edge
 touching or lying along an obstacle edge (where).
-**Save** — File > Close, Don't Save (the owner state is made in M-RT-12).
+**Save** — File > Close, Don't Save (the saved state is made in M-RT-12).
 **Port** — the same on the page (`setter-treeType-*`, `popup-obstacles`, `button-add-200`).
 **Expected / what it decides** — F-RT-01, F-RT-02; edges along clockwise-obstacle edges are possible (Q-RT-01, E-RT-01).
 
@@ -109,7 +109,7 @@ press the Right arrow key until the value reads 0.9 (18 presses); "goal radius" 
 2. Zoom on the goal: count the visible points near it; read the label.
 **Record** — in `_internal\test-runs\<YYYY-MM-DD>_rrt.md`, under the heading M-RT-06: the node count in the label; whether the tree runs straight to the goal; whether the count rose although
 no new points appear; whether the green newest point sits on the goal.
-**Save** — File > Close, Don't Save (the owner state is made in M-RT-12).
+**Save** — File > Close, Don't Save (the saved state is made in M-RT-12).
 **Port** — the same on the page (`slider-explorationBias`, `button-add-100`, `popup-obstacles`).
 **Expected / what it decides** — duplicate nodes on the goal (Q-RT-02, E-RT-02).
 

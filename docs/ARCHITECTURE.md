@@ -2,7 +2,7 @@
 
 What each app does and why is specified in its design document (`demos/<app>/DESIGN.md`);
 how features are added is described in [`DESIGN_PROCESS.md`](DESIGN_PROCESS.md). Each design document ends with §11
-*Errors in the original*: where the original is probably wrong, kept in the code until the owner decides (the
+*Errors in the original*: where the original is probably wrong, kept in the code until Tico decides (the
 model files reproduce the original, errors included). Manual checks against the original in Mathematica follow
 [`MATHEMATICA_CHECKS.md`](MATHEMATICA_CHECKS.md).
 
@@ -86,7 +86,7 @@ Manipulate({
 | `tools/gradients-to-js.mjs` | v0.1.36: writes `demos/voronoi-diagrams/gradients.js` from `tests/golden/voronoi-diagrams.gradients.json` (the output of `tools/wolfram/export-gradients.wls`, Mathematica's `ColorData["Gradients"]`); `--check` for the unit test |
 | `shared/graphics3d.js` | `Graphics3D` as data (v0.1.21, from `demos/common/g3d.js`): directives and list scoping, `Sphere`, `Cylinder`, `Cuboid`, `Polygon`, `Line`, `Point`, `Arrow`, `Ellipsoid`, `InfinitePlane`, `GeometricTransformation`, `Rotate`, `Show`, `ParametricPlot3D`, `GraphicsComplex`, `Group3D` (cached parts), `flatten`, bounds, `mul4`/`mul4Fma`, frame/tick/clip helpers; v0.1.23: `Tube`, `Cone`, `InfiniteLine`, `Text` (CSS2D labels, `FontSize`), `InfinitePlane[p, {v1, v2}]`, collinear planes drawn as nothing; v0.1.26: `Texture` on polygons with `VertexTextureCoordinates` (a canvas texture in the renderer); v0.1.27: `Line` with several polylines |
 | `shared/graphics3d-three.js`, `shared/graphics3d-view.js` | the three.js renderer of flattened Graphics3D (`addPrims`, `fitViewer`, `disposeGroup`) and `View3D(options)`, a picture renderer for `Manipulate` (`{ id, renderer: View3D({...}) }`): one viewer kept across evaluations, `ImageSize`, `ViewPoint`, `ViewAngle`, `PlotRange` (refit or clipping), `BoxRatios`, `Boxed`/`Axes`/`Ticks`/`AxesLabel`/`PlotLabel`, `Lighting`, WebGL 2 fallback, plus port options; v0.1.26: textured polygons, the 3D text labels redrawn together with the scene; v0.1.27: `Epilog` (2D text over the image at scaled or named positions) and `SphericalRegion: false` (the box's corners fit the image, Mathematica's default; the library keeps the bounding-sphere fit as its default) |
-| `shared/svd3.js`, `shared/plot3d.js`, `shared/region-plot3d.js` | 3×3 SVD and MatrixRank; a Plot3D box/ticks/lighting-shader frame; RegionPlot3D-style marching tetrahedra (v0.1.21, generic parts moved out of the apps, owner decision D1) |
+| `shared/svd3.js`, `shared/plot3d.js`, `shared/region-plot3d.js` | 3×3 SVD and MatrixRank; a Plot3D box/ticks/lighting-shader frame; RegionPlot3D-style marching tetrahedra (v0.1.21, generic parts moved out of the apps, decision D1) |
 
 They build on `shared/ui.js` and `shared/svg-plot.js`, which are unchanged; apps not yet migrated keep using those
 directly. Migrated in v0.1.19: robot-motion-obstacles, bfs-motion-planning, dubins-path, art-gallery; in v0.1.20 the other
@@ -163,7 +163,7 @@ check, and a `<noscript>` message). The first three apps do not have the notice 
 
 Code used by several apps lives once, in `shared/` (MIT), `demos/common/` (CC BY-NC-SA 3.0) and `vendor/three/`; the
 apps import it by relative paths (`../../shared/ui.js`) and through the import map, never by absolute URLs. That keeps
-one app deployable on its own (owner rule R-A): `npm run bundle -- <dir>` (`tools/bundle-app.mjs`) follows the page's
+one app deployable on its own (rule 7): `npm run bundle -- <dir>` (`tools/bundle-app.mjs`) follows the page's
 imports and references and copies exactly the files it loads into `dist/<dir>/`, with the repository's layout, plus a
 root page, README and licence texts; any static host can serve that folder. Rules for app code that follow from this:
 reference files only by literal relative paths (a computed `import(…)` or `new URL(…, import.meta.url)` makes the

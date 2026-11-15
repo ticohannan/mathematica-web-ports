@@ -17,7 +17,7 @@ import zlib from 'node:zlib';
 import { parseLexical, LexNumber, isLexReal, isLexInteger } from '../../tools/lib/json-lexical.mjs';
 import { scenarioSha256 } from '../../tools/harness/scenario-schema.mjs';
 
-export const NO_DATA = 'no harness data (owner run pending)';
+export const NO_DATA = 'no harness data (harness run pending)';
 const cache = new Map();
 
 /** Parsed golden file of an app, or null. opts.root = repository root (default: cwd), opts.file = explicit path. */

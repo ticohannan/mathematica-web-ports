@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Tico Hannan
 // SPDX-License-Identifier: MIT
 // tests/unit/new-test-run.test.js — the test-run template generator (tools/new-test-run.mjs) and the form of the
-// manual checklist items it reads (owner rule R-B, docs/DESIGN_PROCESS.md rule 8): every item that opens an original
+// manual checklist items it reads (rule 8, docs/DESIGN_PROCESS.md rule 8): every item that opens an original
 // notebook has the fixed headings Open, Prepare, Do, Record, Save, Port, Expected in this order; browser-only items
 // have Steps, Record, Expected. Writes only into a temporary folder, which is removed afterwards.
 import { describe, it, expect, afterAll } from 'vitest';

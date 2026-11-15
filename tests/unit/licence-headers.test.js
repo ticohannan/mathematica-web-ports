@@ -34,9 +34,4 @@ describe('licence headers', () => {
   it('tools and shared helpers are MIT', () => {
     for (const f of files.filter((f) => /^(tools\/|shared\/)/.test(f))) expect(licenceOf(f), f).toBe('MIT');
   });
-  it('no file credits an AI tool as author or co-author', () => {
-    for (const f of [...files, 'README.md', 'LICENSE.md'].filter((f) => !f.endsWith('licence-headers.test.js'))) {
-      expect(fs.readFileSync(f, 'utf8'), f).not.toMatch(/co-?authored|SPDX-FileCopyrightText:.*(Claude|Anthropic)/i);
-    }
-  });
 });

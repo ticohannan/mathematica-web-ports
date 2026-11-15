@@ -369,7 +369,7 @@ describe('minkowski-sum model', () => {
   });
 });
 
-// ---- v0.1.21 (owner decision D2): the model returns the drawn picture (minkowski.js picture). Before, the model's
+// ---- v0.1.21: the model returns the drawn picture (minkowski.js picture). Before, the model's
 // view.scene described the picture but was not what main.js drew; both are frozen in
 // tests/unit/fixtures/minkowski-sum-drawing.pre-graphics.json (commit f04c973): graphics = what the page drew, model =
 // the old view.scene.

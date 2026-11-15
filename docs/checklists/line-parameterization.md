@@ -1,6 +1,6 @@
 # Manual checks — Line Parameterization (`demos/line-parameterization/`)
 
-Each item compares the original in Mathematica with the port, as an operator procedure (owner rule R-B); the general
+Each item compares the original in Mathematica with the port, as an operator procedure (rule 8); the general
 procedure is in [`docs/MATHEMATICA_CHECKS.md`](../MATHEMATICA_CHECKS.md). Record every result in the test-run file
 `_internal\test-runs\<YYYY-MM-DD>_line-parameterization.md` (create it with `npm run test-run -- line-parameterization`). The notebook is a
 lecture notebook (not a published Demonstration); it opens in its saved state ρ = 1.8, θ = π/4 — use ⊕ > Initial

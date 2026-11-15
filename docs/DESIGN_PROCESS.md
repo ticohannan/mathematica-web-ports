@@ -82,8 +82,8 @@ v0.1.1 refer to that repository).
 
 1. **No feature without a design entry.** A new or changed user-visible behaviour (a control, a
    view, an output, a computation, a keyboard or mouse interaction, a URL parameter, text on the page)
-   is first written into the app's design document under *Proposed changes*, with a requested-by,
-   a reason and acceptance criteria. Code is written only after the owner has marked it *approved*.
+   is first written up as a proposal (tracked separately from the design document), with a requested-by,
+   a reason and acceptance criteria. Code is written only after Tico has marked it *approved*.
 2. **Every feature has an ID and a reason.** `F-xx-nn` = feature of the original Demonstration;
    `A-xx-nn` = addition made by the port. The *Why* column says what the feature is for. IDs are
    never reused; a removed feature keeps its row with status *removed in vX*.
@@ -104,14 +104,14 @@ v0.1.1 refer to that repository).
    describes (`Code version:`), which must equal `version` in `package.json`; every feature row says
    since which version it exists; the revision history lists what changed in each version.
 
-Rules 7–9 are the owner's rules of 2026-10-17 (R-A, R-B, R-C). They apply to every app, existing and new.
+Rules 7–9 apply to every app, existing and new.
 
-7. **Every app can be built and deployed on its own (R-A).** `tools/bundle-app.mjs <dir>` (`npm run bundle`)
+7. **Every app can be built and deployed on its own.** `tools/bundle-app.mjs <dir>` (`npm run bundle`)
    copies one app with exactly the files it needs into `dist/<dir>/`, with the licence texts, a generated README and
    a root `index.html`. Each design document describes this in a subsection of §6, *6.x Building and deploying this
    app alone* (the command, the list of bundled files, requirements such as WebGL 2); a test bundles every app and
    opens it from the bundle folder alone.
-8. **Every check done by a person in Mathematica is an operator procedure (R-B).** A manual checklist item that
+8. **Every check done by a person in Mathematica is an operator procedure.** A manual checklist item that
    involves the original notebook ([`MANUAL_TEST_CHECKLIST.md`](MANUAL_TEST_CHECKLIST.md), [`checklists/`](checklists/))
    is written so that someone who has never seen the project can follow it, under these headings, in this order:
    - **Open** — the exact notebook by its path in the repository (e.g.
@@ -134,10 +134,10 @@ Rules 7–9 are the owner's rules of 2026-10-17 (R-A, R-B, R-C). They apply to e
    send results back) is written once in [`MATHEMATICA_CHECKS.md`](MATHEMATICA_CHECKS.md); the items refer to it but
    still name every file and control. Items that involve only the browser port keep their own short form but are
    equally concrete.
-9. **Errors in the original are listed, not silently kept or fixed (R-C).** Section 11 of each design document,
+9. **Errors in the original are listed, not silently kept or fixed.** Section 11 of each design document,
    *Errors in the original (conceptual and mathematical)*, is its last section. It lists where the original is
    probably wrong — as distinct from quirks that are merely unusual (`Q-`) and from the port's own deviations
-   (`D-`) — and leaves each as an open question for the owner. One row per finding:
+   (`D-`) — and leaves each as an open question for Tico. One row per finding:
 
    | ID | Kind | Where in the original | What is (probably) wrong | What the port does | Effect of correcting it | Status |
    |----|------|-----------------------|--------------------------|--------------------|-------------------------|--------|
@@ -149,13 +149,13 @@ Rules 7–9 are the owner's rules of 2026-10-17 (R-A, R-B, R-C). They apply to e
      expression), `numerical` (tolerance, precision or rounding problems that give wrong answers in reachable cases),
      `text` (the title, caption, Details or a label states something false).
    - **Where in the original**: the function or expression, quoted, and the Details sentence if relevant.
-   - **What the port does**: by default it keeps the original's behaviour (faithful port, DEC-04/DEC-19) and cites
+   - **What the port does**: by default it keeps the original's behaviour (faithful port) and cites
      the `Q-` entry that documents it; where the port already deviates on purpose, the `D-` entry.
    - **Effect of correcting it**: what would visibly or numerically change for the user; which golden data,
      snapshot comparisons and tests would no longer match the original (to be re-baselined or kept as an "original
      mode"); whether the correction could be offered as an option (an `I-` entry); risks.
-   - **Status**, exactly one of: `open` (the default: an open question for the owner), `kept` (the owner decided to
-     keep the original's behaviour), `corrected in vX.Y.Z` (the owner approved a correction through a `P-` proposal,
+   - **Status**, exactly one of: `open` (the default: an open question for Tico), `kept` (Tico decided to
+     keep the original's behaviour), `corrected in vX.Y.Z` (Tico approved a correction through a `P-` proposal,
      named in the row), `switchable since vX.Y.Z` (both behaviours are in the port: the switch
      "errors of the original: kept | corrected" of `shared/errata.js` chooses, the default is the original's; the
      correction is listed in the app's `errata-mode.js` and in [`CORRECTED_MODE.md`](CORRECTED_MODE.md)).
@@ -179,10 +179,10 @@ and references that the tests accept, for a new app to fill in.
 
 | Status | Meaning | Who |
 |--------|---------|-----|
-| proposed | entry written in *Proposed changes* (P-xx-nn): request, reason, acceptance criteria | anyone |
-| approved | owner agrees; may get a target version | owner |
+| proposed | proposal written (P-xx-nn): request, reason, acceptance criteria | anyone |
+| approved | Tico agrees; may get a target version | Tico |
 | implemented | code + tests done; the entry moves to the feature table with its new F-/A- ID and *Since* version | developer |
-| rejected / withdrawn | stays in the table with the reason; a worthwhile idea moves to section 10 | owner |
+| rejected / withdrawn | stays in the table with the reason; a worthwhile idea moves to section 10 | Tico |
 
 ## What the tests enforce
 

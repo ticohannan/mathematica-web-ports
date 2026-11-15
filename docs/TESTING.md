@@ -139,7 +139,7 @@ for the tests the change can affect (next section).
 
 ### Selective testing (v0.1.39, `tools/affected.mjs`)
 
-Owner decision 2026-11-12 (the internal proposal "selective testing", Q-1 … Q-5): the unit and golden tests always run in
+Decision 2026-11-12 (the internal proposal "selective testing", Q-1 … Q-5): the unit and golden tests always run in
 full (about 10 s); **the browser tests run only where the change can matter**. The change is the difference from the
 newest `tested-…` tag reachable from HEAD. Each changed file has a class:
 
@@ -176,11 +176,11 @@ known timing mistake (moving the fixed page clock before an animation's first fr
 **WebKit** (the engine of Safari): `npm run test:e2e:webkit` runs the same tests in Playwright's WebKit
 build (since v0.1.9). It is not Safari: on Windows and Linux it is a separate WebKit port with its own
 graphics stack, fonts and WebGL, so a pass means "works in the WebKit engine", not "works in Safari on a
-Mac or iPhone" — report it as *WebKit (Playwright)*. It passed 45/45 on its first run on the owner's
+Mac or iPhone" — report it as *WebKit (Playwright)*. It passed 45/45 on its first run on Tico's
 machine (v0.1.9) and is required by `publish:tested` since v0.1.10. A real-Safari check (macOS/iOS)
 remains a manual test.
 
-**Writing browser tests that hold in all three engines** (lessons of the owner's Firefox and WebKit runs, v0.1.15 and
+**Writing browser tests that hold in all three engines** (lessons of Tico's Firefox and WebKit runs, v0.1.15 and
 v0.1.16; Chromium alone passed every time):
 - Pointer moves are applied once per animation frame (`shared/svg-plot.js` locators; apps that evaluate in
   `requestAnimationFrame`). After `page.mouse.move` or a typed value, wait for the frame with `expect.poll(…)` instead
@@ -204,7 +204,7 @@ v0.1.16; Chromium alone passed every time):
   `set PW_WORKERS=1` to debug one test at a time.
 - Headed (watch it happen): `npm run test:e2e:headed`.
 
-**Standalone bundles** (`tests/e2e/bundle.spec.js`, owner rule R-A, since v0.1.15): one test per app of
+**Standalone bundles** (`tests/e2e/bundle.spec.js`, rule 7, since v0.1.15): one test per app of
 `tests/e2e/apps.js` (new apps are included automatically), titled "bundle: <dir> runs from its own folder". It bundles
 the app with `tools/bundle-app.mjs` into `test-output/bundle-e2e/<browser>/<dir>/`, serves that folder **alone** with
 `tools/serve.mjs` on a free port (a second server, next to the one on port 8090), opens the bundle's root page and
@@ -218,14 +218,14 @@ the zip writer, `tools/serve.mjs` with a root folder, and check that the content
 current (after a change of imports: `npm run bundle -- --update-docs`).
 
 > Status: v0.1.0 was first run in Firefox (Playwright's Firefox 155) on Windows 10 on 2026-10-03 —
-> 38/38 passed. It had previously been run only in Chromium in the AI tool's sandbox. Any later
+> 38/38 passed. Any later
 > failure is a finding — record it.
 
 ## Layer 4: manual testing
 
 The items are in `docs/MANUAL_TEST_CHECKLIST.md` (general items and the first three apps) and
 `docs/checklists/<dir>.md` (the seven newer apps). Every item that involves the original notebook is an operator
-procedure with the fixed headings Open / Prepare / Do / Record / Save / Port / Expected (owner rule R-B,
+procedure with the fixed headings Open / Prepare / Do / Record / Save / Port / Expected (rule 8,
 `docs/DESIGN_PROCESS.md` rule 8); the general procedure — starting Mathematica 15.0.1, Enable Dynamics, the ⊕ menu
 and Initial Settings, invisible locators, how long to wait, saving states as golden data, what to do on errors, how
 to send results back — is written once in [`docs/MATHEMATICA_CHECKS.md`](MATHEMATICA_CHECKS.md).
@@ -361,18 +361,18 @@ before it reads the first notebook, the other apps are not started: that is a pr
 Results go to `test-output\harness\`: `<dir>.smoke.json`, `<dir>.self-check.json`, `<dir>.harness.json` (with
 `<dir>.harness.partial.jsonl` written scenario by scenario, so a crash keeps everything finished), a console log per
 run (`<dir>.<mode>.log`) and `summary.<mode>.txt`. **Zip the whole `test-output\harness` folder and send it back**,
-also (especially) when something fails. `--accept` (run by the AI in a later delivery) copies a checked run to
+also (especially) when something fails. `--accept` copies a checked run to
 `tests/golden/<dir>.harness.json` (gzipped above 10 MB) and refuses unless a self-check with the same harness, notebook
 and Mathematica version passed and every echoed input number is bit-identical to the scenario file.
 
-**Status (v0.1.18).** Harness run 2 (owner, Mathematica 15.0.1, 2026-10-18) is accepted for all 16 batch A/B apps:
+**Status (v0.1.18).** Harness run 2 (Tico, Mathematica 15.0.1, 2026-10-18) is accepted for all 16 batch A/B apps:
 `tests/golden/<dir>.harness.json`; H-ME-11, rewritten after a prelude failure in run 2, was recorded in run 3 (the same
 day), so all 314 scenarios have data. Every `harness "H-…"` golden test now compares the port with the original's recorded values; where
 the port still differs on purpose, the test asserts the recorded difference and names the proposal (P-) in the app's
 DESIGN.md. The numerics rules the run settled (division, sums, Dot, N of exact angles, Normalize, Total, Chop, Nearest,
 Sort) are listed in each app's K- entries.
 
-### What the AI checks without Mathematica
+### What is checked without Mathematica
 
 `npx vitest run` covers the lexical JSON, the extractor, the schema of every scenario file, the runner's wire format,
 echo check, summaries and diffs, the golden-data helper, and the `.wls` structure check (which must pass on the harness

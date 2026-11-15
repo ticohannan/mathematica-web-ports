@@ -140,7 +140,7 @@ export function normalizeExtended(v) {
 
 /**
  * The numerics of Normalize and EuclideanDistance (K-RT-02, resolved by harness run 2):
- *  MODEL_1501 — Mathematica 15.0.1 (the owner's version; the port's default): Normalize[v] = v·(1/extended-precision
+ *  MODEL_1501 — Mathematica 15.0.1 (Tico's version; the port's default): Normalize[v] = v·(1/extended-precision
  *    length) (normalizeExtended), EuclideanDistance[u, v] = Sqrt[(u1 - v1)^2 + (u2 - v2)^2] rounded step by step in
  *    doubles (`euclidean`); every random-draw replay (H-RT-02, H-RT-04 … H-RT-12, H-RT-16, H-RT-17) is reproduced
  *    bit for bit with it;

@@ -5,8 +5,8 @@
 // = snapshot 1's Settings) and the Settings of snapshots 2–4 stored in the notebook, with the original's Plot samples
 // (tests/golden/four-bar-linkage.original-states.json, tools/extract_state.py --snapshots); what the snapshot pictures
 // show (docs/original-snapshots/four-bar-linkage-k.png); and the Mathematica harness records
-// (tests/golden/four-bar-linkage.harness.json; until the owner's run exists those tests skip with the reason
-// "no harness data (owner run pending)").
+// (tests/golden/four-bar-linkage.harness.json; until Tico's run exists those tests skip with the reason
+// "no harness data (harness run pending)").
 // The correctly rounded Cos, Sin and ArcCos below (BigInt fixed point, 200 bits, rounded once) are an independent
 // reference used to show which arithmetic order reproduces the stored values (DESIGN §6.4).
 import { describe, it, expect } from 'vitest';

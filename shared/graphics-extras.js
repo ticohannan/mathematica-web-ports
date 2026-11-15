@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Tico Hannan
 // SPDX-License-Identifier: MIT
 // shared/graphics-extras.js — picture parts as shared/graphics.js data that the Manipulate layer does not offer as
-// options (yet). Generic (no code of a Demonstration): moved to shared/ under MIT in v0.1.21 (owner decisions D1, D4)
+// options (yet). Generic (no code of a Demonstration): moved to shared/ under MIT in v0.1.21
 // from demos/common/plot-extras.js and demos/common/arrow-graphics.js (v0.1.20), unchanged. Each one draws exactly the
 // elements the ports drew before by hand (same pixels):
 //   plotUnitsPerPx / pxSize(PlotRange, ImageSize, PlotRangePadding)  world units per pixel (shared/svg-plot.js createPlot)

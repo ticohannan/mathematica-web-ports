@@ -12,7 +12,7 @@ import { Cases, Orange } from '../../shared/graphics.js';
 import { loadStates, plain, isIntegerLiteral } from '../../tools/lib/wl-json.mjs';
 
 const saved = JSON.parse(fs.readFileSync('tests/golden/car-paths.original-state.json', 'utf8')).state;
-// owner state 1 (Mathematica 15.0.1, saved 2026-10-06): non-integer poses, so the original computed with machine numbers
+// saved state 1 (Mathematica 15.0.1, saved 2026-10-06): non-integer poses, so the original computed with machine numbers
 const owner1 = JSON.parse(fs.readFileSync('tests/golden/car-paths.owner-state-1.json', 'utf8')).state;
 const exact = JSON.parse(fs.readFileSync('tests/unit/fixtures/car-paths-python-reference.json', 'utf8')).exactDefault;
 const ulp = (x) => { const b = new Float64Array([Math.abs(x)]); const i = new BigInt64Array(b.buffer); i[0] += 1n; return b[0] - Math.abs(x); };
@@ -84,7 +84,7 @@ describe('car-paths golden', () => {
     expect(rs.state.optPath.map((e) => e[1]).filter((s) => s === 0)).toEqual([]);
     expect(rs.state.optPath.length).toBe(4);
   });
-  it('car-paths: owner state 1 (machine-number poses, r_min 6.318) gives the saved optPath bit for bit', () => {
+  it('car-paths: saved state 1 (machine-number poses, r_min 6.318) gives the saved optPath bit for bit', () => {
     const { state, view } = evaluate({ ...owner1 });
     expect(state.optPath).toEqual(owner1.optPath); // every parameter, steering and gear bit-identical
     // the saved state is a fixed point of the body: locators, settings and the cache variable stay as saved

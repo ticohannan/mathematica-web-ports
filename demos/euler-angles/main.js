@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // demos/euler-angles/main.js — the Manipulate: the three angle sliders, the bookmarks and the gyroscope (a three.js
 // scene built once, the picture's renderer), on shared/manipulate.js (browser only).
-// On the shared Manipulate layer since v0.1.21; lighting as the other 3D ports since then (owner decision 2026-10-23,
+// On the shared Manipulate layer since v0.1.21; lighting as the other 3D ports since then (
 // DEC-36, D-EA-05).
 import { animate } from '../../shared/clock.js';
 import { Manipulate } from '../../shared/manipulate.js';
@@ -21,7 +21,7 @@ function Gyroscope(element) {
     box: [[-G.plotRange, G.plotRange], [-G.plotRange, G.plotRange], [-G.plotRange, G.plotRange]],
     viewPoint: G.viewPoint, viewAngle: G.viewAngle, size: 400, maxSize: 520,
   });
-  // Lighting -> Automatic as View3D draws it (D-EA-05, owner decision 2026-10-23, DEC-36): Mathematica's documented
+  // Lighting -> Automatic as View3D draws it (D-EA-05, decision 2026-10-23, DEC-36): Mathematica's documented
   // default lights (shared/mma-lighting.js) on the displayed colour values (linear output, no sRGB encoding)
   viewer.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
   addMathematicaLighting(viewer.camera);

@@ -3,12 +3,11 @@
 | | |
 |---|---|
 | Code version: | 0.1.40 |
-| Document revision | 2 (2026-11-02) — implemented after the owner's approval; compared with the owner's three screenshots of the original |
+| Document revision | 2 (2026-11-02) — implemented after Tico's approval; compared with Tico's three screenshots of the original |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
-| Original | Lecture notebook "Lecture-18-lineparameterization.nb" (Aaron T. Becker, course lecture material; created with Mathematica 10.0, last saved with Mathematica 13.2 for macOS). Not a published Wolfram Demonstration: no public page, no licence statement in the file. Dr. Becker gave the notebook to the owner to convert; licensed as his Demonstrations, CC BY-NC-SA 3.0, until he says otherwise (owner, 2026-11-02). The dial and the arrow arc are the same definitions as in Dr. Becker's CC BY-NC-SA 3.0 Demonstrations. Private copy: `_internal/originals/lectures/Lecture-18-lineparameterization.nb` (SHA-256 `0116714b…7e`) |
+| Original | Lecture notebook "Lecture-18-lineparameterization.nb" (Aaron T. Becker, course lecture material; created with Mathematica 10.0, last saved with Mathematica 13.2 for macOS). Not a published Wolfram Demonstration: no public page, no licence statement in the file. Dr. Becker gave the notebook to Tico to convert; licensed as his Demonstrations, CC BY-NC-SA 3.0, until he says otherwise (Tico, 2026-11-02). The dial and the arrow arc are the same definitions as in Dr. Becker's CC BY-NC-SA 3.0 Demonstrations. Private copy: `_internal/originals/lectures/Lecture-18-lineparameterization.nb` (SHA-256 `0116714b…7e`) |
 | Port files | `model.js` (one evaluation of the Manipulate body; pure), `main.js` (the Manipulate on `shared/manipulate.js`, the dial from `demos/common/dial-control.js`), `index.html` |
 | Mode | simple (P), as v0.1.23–v0.1.27; the dial's exact π/32 grid comes with the shared dial (as in camera-lasers and manipulability-ellipsoid) |
-| Role in the project | new app (not a Demonstration) |
 
 ## 1. Purpose and background
 
@@ -27,10 +26,10 @@ In scope: the notebook's `Manipulate` — the ρ slider, the θ dial, the pictur
 (PG-R-21). Out of scope: `splineCircle` (defined in the initialization cell, never used); the dead four-argument
 `makeDialControl` in the saved definitions (N-LP-02).
 
-**Licence (owner, 2026-11-02):** "Dr Becker gave me this file to convert -- lets stick with his existing license norms
-he's used elsewhere until he says otherwise": CC BY-NC-SA 3.0 as his Demonstrations, credit "Aaron T. Becker, ECE 6311
+**Licence:** Dr Becker provided this notebook for conversion; it is licensed as his Demonstrations,
+CC BY-NC-SA 3.0, credit "Aaron T. Becker, ECE 6311
 Lecture 18 notebook". The source text (`docs/original-source/line-parameterization.txt`), the saved state and the
-owner's screenshots (`docs/original-snapshots/line-parameterization-1…3.png`) are published under the same terms.
+screenshots (`docs/original-snapshots/line-parameterization-1…3.png`) are published under the same terms.
 
 ## 3. Users and use cases
 
@@ -57,15 +56,15 @@ direction), n = {−sin θ, cos θ} (along the line).
 | F-LP-10 | Purple point, PointSize Large, at ρu | the foot point | v0.1.31 | unit "the picture at the saved state" |
 | F-LP-11 | Picture: Axes with italic labels *x*, *y*, PlotRange ±3 in both directions, default ImageSize (Medium, 360 px, D-LP-02: measured on the screenshots), controls on the left | the frame of reference | v0.1.31 | e2e "loads without errors and draws the picture" |
 | F-LP-12 | Opening state ρ = 1, p1 = {1, 0} (θ = 0) | the Manipulate's initial values | v0.1.31 | unit "the opening state"; e2e "has its controls with their defaults" |
-| F-LP-13 | The notebook's saved state ρ = 1.8, p1 = {1/√2, 1/√2} (θ = π/4) — the state the notebook opens in — loads through the hook and gives the picture of the owner's screenshot 1 | golden check against the original's own values | v0.1.31 | unit "the picture at the saved state"; e2e "the saved state of the notebook" |
+| F-LP-13 | The notebook's saved state ρ = 1.8, p1 = {1/√2, 1/√2} (θ = π/4) — the state the notebook opens in — loads through the hook and gives the picture of Tico's screenshot 1 | golden check against the original's own values | v0.1.31 | unit "the picture at the saved state"; e2e "the saved state of the notebook" |
 | A-LP-01 | "Initial settings" button restores the opening state | Manipulate's Initial Settings | v0.1.31 | e2e "Initial settings restores the opening state" |
 | A-LP-02 | Test and automation hook `window.__demo` (getState, setState, view, graphics) from the Manipulate layer | automated tests | v0.1.31 | e2e "the slider moves the line" |
 | A-LP-03 | Start-up notice when the browser cannot run the page (DEC-22) | no empty page | v0.1.31 | e2e "start-up notice when" |
 | A-LP-04 | Breadcrumb link to all demos | navigation | v0.1.31 | inventory |
 | A-LP-05 | Credits footer: author, title, source (a lecture notebook, §2), licence, adaptation notice | required by the licence of the shared dial code (CC BY-NC-SA 3.0 §4) and fair credit | v0.1.31 | e2e "attribution on" |
-| A-LP-06 | This app can be bundled and served alone (§6.1) | owner rule R-A | v0.1.31 | e2e "bundle: line-parameterization runs from its own folder" |
+| A-LP-06 | This app can be bundled and served alone (§6.1) | rule 7 | v0.1.31 | e2e "bundle: line-parameterization runs from its own folder" |
 | A-LP-07 | A two-sentence caption explaining the normal form (the notebook has none), marked as the port's text | the page needs a caption | v0.1.31 | M-LP-01 |
-| A-LP-08 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | owner request 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
+| A-LP-08 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | requested 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
 
 ## 5. UI inventory
 
@@ -97,7 +96,7 @@ direction), n = {−sin θ, cos θ} (along the line).
 
 ### 6.1 Building and deploying this app alone
 
-Owner rule R-A (2026-10-17): this one app can be taken out of the repository and hosted anywhere.
+Rule 7 of docs/DESIGN_PROCESS.md: this one app can be taken out of the repository and hosted anywhere.
 
 - Command, in the repository folder: `npm run bundle -- line-parameterization` → `dist/line-parameterization/`.
 - Contents (generated with `node tools/bundle-app.mjs line-parameterization --update-docs`):
@@ -128,15 +127,15 @@ font sizes, `PointSize[Large]` and `Axes`/`AxesLabel` exist.
 | ID | Kind | Description |
 |----|------|-------------|
 | D-LP-01 | deviation | Line widths, fonts, arrowheads and the B-spline arc are drawn as in the shared code (D-TK-04): approximations of Mathematica's, not measured for this notebook. |
-| D-LP-02 | deviation | The picture's size: the notebook gives no ImageSize; Mathematica's default is Medium (360 px). Measured on the owner's screenshots at 100 % (a 2× display): 6 plot units = 678 device px, i.e. 56.5 px per unit at 1× (port: 360 px with 2 % padding = 57.7), the dial circle 172 px (port: automatic, 180 px), the ρ slider track 120 px. As every port, the page may show the picture up to 1.25× its ImageSize (shared/svg-plot.js). |
+| D-LP-02 | deviation | The picture's size: the notebook gives no ImageSize; Mathematica's default is Medium (360 px). Measured on Tico's screenshots at 100 % (a 2× display): 6 plot units = 678 device px, i.e. 56.5 px per unit at 1× (port: 360 px with 2 % padding = 57.7), the dial circle 172 px (port: automatic, 180 px), the ρ slider track 120 px. As every port, the page may show the picture up to 1.25× its ImageSize (shared/svg-plot.js). |
 | D-LP-03 | deviation | Credits: the original is a lecture notebook without a public page; the footer names the author and the notebook, licensed as his Demonstrations (owner 2026-11-02; generator option `--source`, S-2). |
 | D-LP-04 | deviation | Controls as in every port (shared layer): the ρ label above the slider and an editable value field after it; the original puts ρ left of the slider and shows the value as text after its ⊞ button. The notebook opens in its saved state (ρ = 1.8, θ = π/4), the port at the initial settings (ρ = 1, θ = 0), as every port. |
-| Q-LP-01 | quirk kept | θ ∈ [0, 2π) in the picture, but the dial shows angles in (−π, π] (labels −3π/4 … π; its own arc runs clockwise for negative angles): for a dial position below the x-axis the dial's arc and the picture's arc show different angles (E-LP-01; the owner's screenshot 3: the dial at −π/2 with a clockwise arc, the picture's θ = 3π/2). |
+| Q-LP-01 | quirk kept | θ ∈ [0, 2π) in the picture, but the dial shows angles in (−π, π] (labels −3π/4 … π; its own arc runs clockwise for negative angles): for a dial position below the x-axis the dial's arc and the picture's arc show different angles (E-LP-01; Tico's screenshot 3: the dial at −π/2 with a clockwise arc, the picture's θ = 3π/2). |
 | Q-LP-02 | quirk kept | The equation is rotated by θ − π/2, so it is upside down for θ in (π, 2π) (screenshot 3). |
 | Q-LP-03 | quirk kept | The right-angle mark's second corner is (ρ − 0.2)u: for ρ < 0.2 the mark reaches past the origin (E-LP-02). |
 | Q-LP-04 | quirk kept | The dial's `ang` is a `Dynamic` object, so its `myArrowArc2` always draws an arrow (also at 0), as in the other dial apps (Q-TK-05). |
 | K-LP-01 | known issue (lead) | ρ = 0: the arc has radius 0 and the blue arrow length 0. What Mathematica draws then (nothing, or lone arrowheads) is not known; the port draws nothing for empty and zero-length primitives (PG-R-25). Check on a screenshot. |
-| K-LP-02 | known issue (resolved 2026-11-02) | The notebook saves no picture (no snapshot cells, the output is a live DynamicModule). The owner took three screenshots in Mathematica (`docs/original-snapshots/line-parameterization-1.png` the saved state ρ = 1.8, θ = π/4 at 200 % zoom; `-2.png` ρ = 1.8, θ = 9π/32 at 100 % — the dial one step on, as the blue arrow's angle 50.6° and the line's axis crossings (about 2.9 and 2.33; 2.84 and 2.33 computed) show; `-3.png` ρ = 0.1, θ = 3π/2). The port's review screenshots at the same three settings agree in every element (lines, marker, arc, arrows, labels and their places, the upside-down equation, the dial); differences are the control layout (D-LP-04), drawing details (D-LP-01) and K-LP-03. |
+| K-LP-02 | known issue (resolved 2026-11-02) | The notebook saves no picture (no snapshot cells, the output is a live DynamicModule). Tico took three screenshots in Mathematica (`docs/original-snapshots/line-parameterization-1.png` the saved state ρ = 1.8, θ = π/4 at 200 % zoom; `-2.png` ρ = 1.8, θ = 9π/32 at 100 % — the dial one step on, as the blue arrow's angle 50.6° and the line's axis crossings (about 2.9 and 2.33; 2.84 and 2.33 computed) show; `-3.png` ρ = 0.1, θ = 3π/2). The port's review screenshots at the same three settings agree in every element (lines, marker, arc, arrows, labels and their places, the upside-down equation, the dial); differences are the control layout (D-LP-04), drawing details (D-LP-01) and K-LP-03. |
 | K-LP-03 | known issue (lead) | At ρ = 0.1, θ = 3π/2 (screenshot 3) Mathematica draws the red arc's arrowhead large, above the axis right of the origin, pointing up and right; the port's sits left of the origin and points left and down. Both draw the head on a B-spline of radius 0.05; how Mathematica places and orients a head on so short a curve is not known. Only visible for ρ below about 0.3. |
 | N-LP-01 | note | Lines through the origin (ρ = 0) have two parameters (θ and θ + π); every other line exactly one, since ρ ≥ 0. |
 | N-LP-02 | note | The saved definitions (`Initialization :>` of the output cell) also hold an older four-argument `makeDialControl[Dynamic[ang], Dynamic[pt], cent, color]` with the `Normalize` setter, which never matches the three-argument call; leftover symbols `a[1] … a[6] = 0` and `FE`θ$$578`; and `splineCircle` is defined but unused. None of them changes the app. |
@@ -144,18 +143,15 @@ font sizes, `PointSize[Large]` and `Axes`/`AxesLabel` exist.
 
 ## 8. Proposed changes
 
-No open proposal.
-
-| ID | Status | Requested by / date | Change | Reason | Acceptance criteria |
-|----|--------|---------------------|--------|--------|---------------------|
+Proposals for this app are tracked separately.
 
 ## 9. Revision history
 
 | Doc rev. | Code version | Date | Change |
 |----------|--------------|------|--------|
-| 1 | v0.1.30 | 2026-11-02 | generated by `tools/new-app.mjs`, then the design written from the notebook (owner request 2026-11-02) |
-| 2 | v0.1.31 | 2026-11-02 | implemented after the owner's approval (licence and credit as above); S-1 `Rotate` of a centred Text, S-2 generator option `--source`; compared with the owner's three screenshots (K-LP-02 resolved, D-LP-02 measured, D-LP-04) |
-| 3 | v0.1.32 | 2026-11-05 | A-LP-08: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
+| 1 | v0.1.30 | 2026-11-02 | generated by `tools/new-app.mjs`, then the design written from the notebook |
+| 2 | v0.1.31 | 2026-11-02 | implemented (licence and credit as above); S-1 `Rotate` of a centred Text, S-2 generator option `--source`; compared with Tico's three screenshots (K-LP-02 resolved, D-LP-02 measured, D-LP-04) |
+| 3 | v0.1.32 | 2026-11-05 | A-LP-08: landing-page thumbnail (`tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 | 4 | v0.1.33 | 2026-11-06 | version number (v0.1.33: four new apps; opt-in shared additions S-1 … S-7, unused by this app, and the locators of a Locator list made after the first evaluation); no change to this app's code, behaviour or picture |
 | 5 | v0.1.34 | 2026-11-10 | version number (v0.1.34: the switch "errors of the original: kept \| corrected" for the apps with code-level findings in §11, `shared/errata.js`); no change to this app's code, behaviour or picture |
 | 6 | v0.1.35 | 2026-11-11 | version number (v0.1.35: two new apps, paths-inside-a-polygon and voronoi-diagrams; no shared code changed); no change to this app's code, behaviour or picture |

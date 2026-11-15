@@ -213,7 +213,7 @@ const HW73_EXPECTED = {
   rrt: { initial: 'treeTypeOld = 0 differs from treeType: the tree is reset' },
   'minkowski-sum': { initial: 'pts clamped; dl, rl, ol set' },
   'prm-3d': { '*': 'freeConfigSpacea/b rebuilt as RegionPlot3D[False, …] when showConfigObs is False' },
-  // classified after owner run 1 (2026-10-16): behaviour of the original, not of the harness
+  // classified after Tico's run 1 (2026-10-16): behaviour of the original, not of the harness
   prm: { initial: 'initial settings have restart = True and empty roadmap: the Body rebuilds it (run 1)' },
   'prm-robot-arm': { initial: 'restart = True in the initial settings: rebuild (run 1)',
     '*': 'freeConfigSpace is recomputed by RegionPlot each evaluation when !highRes; 15.0.1 output differs from the stored one (run 1)' },

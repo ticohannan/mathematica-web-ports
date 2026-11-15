@@ -97,21 +97,21 @@ describe('prm golden (saved state of the original)', () => {
   });
 });
 
-// Owner state 1 (Mathematica 15.0.1, saved 2026-10-06): 200 samples, polySides {4, 5, 5, 7}, r = rold = 0.29
+// Saved state 1 (Mathematica 15.0.1, saved 2026-10-06): 200 samples, polySides {4, 5, 5, 7}, r = rold = 0.29
 const owner = JSON.parse(fs.readFileSync('tests/golden/prm.owner-state-1.json', 'utf8')).state;
 
-describe('prm golden (owner state 1, Mathematica 15.0.1)', () => {
-  it('prm owner state: polygons including the 7-gon are polyXY + CirclePoints, bit for bit', () => {
+describe('prm golden (saved state 1, Mathematica 15.0.1)', () => {
+  it('prm saved state: polygons including the 7-gon are polyXY + CirclePoints, bit for bit', () => {
     expect(owner.polySides).toEqual([4, 5, 5, 7]);
     expect(makePolys(owner.polySides, owner.polyXY)).toEqual(owner.polys);
   });
 
-  it('prm owner state: ptInPolys reproduces the 162 free and 38 colliding samples in order', () => {
+  it('prm saved state: ptInPolys reproduces the 162 free and 38 colliding samples in order', () => {
     expect(owner.pts.filter((p) => !ptInPolys(owner.polys, p))).toEqual(owner.goodPts);
     expect(owner.pts.filter((p) => ptInPolys(owner.polys, p))).toEqual(owner.badPts);
   });
 
-  it('prm owner state: radius 0.29 before the first batch, then four batches, reproduces the 98 edges and the adjacency in order', () => {
+  it('prm saved state: radius 0.29 before the first batch, then four batches, reproduces the 98 edges and the adjacency in order', () => {
     // replay through the Manipulate body: the first batch is connected and rebuilt (r 0.29 != rold -1), the next
     // three are connected incrementally (Q-PR-07); a single rebuild of all 162 points would order them differently
     const rng = replayRng({ integers: owner.polySides, reals: [...owner.polyXY.flat(), ...owner.pts.flat()] });
@@ -123,15 +123,15 @@ describe('prm golden (owner state 1, Mathematica 15.0.1)', () => {
     expect(same(full, owner.edgesNN)).toBe(false);
   });
 
-  it('prm owner state: path -1 and "no path possible" as saved', () => {
-    // weak evidence on its own: the owner's copy always showed "no path possible" (O-PR-01); the classification and
+  it('prm saved state: path -1 and "no path possible" as saved', () => {
+    // weak evidence on its own: Tico's copy always showed "no path possible" (O-PR-01); the classification and
     // edge replays above are the strong comparisons
     const { state, view } = evaluate({ ...owner, qs: [...owner.qs], qf: [...owner.qf] }, replayRng({}));
     expect(state.path).toBe(owner.path);
     expect(view.label).toBe('no path possible');
   });
 
-  it('prm owner state: regression pin of why there is no path (both ends connect, the roadmap does not join them)', () => {
+  it('prm saved state: regression pin of why there is no path (both ends connect, the roadmap does not join them)', () => {
     // REGRESSION PIN: qsn / qfn are not saved by the original; these values come from the port itself
     const { view } = evaluate({ ...owner, qs: [...owner.qs], qf: [...owner.qf] }, replayRng({}));
     expect(view.qsInObstacle || view.qfInObstacle).toBe(false);

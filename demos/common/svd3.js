@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Original Wolfram Demonstrations "Robot Singularities in Three-Link Manipulators" by Aaron T. Becker and Yitong Lu and "Denavit-Hartenberg Parameters for a Three-Link Robot" by Aaron T. Becker and Mary Burbage
 // SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // demos/common/svd3.js — robot-singularities' manipulability-ellipsoid graphic (manipEllip) as data; re-exports the
-// generic 3x3 SingularValueDecomposition / MatrixRank of shared/svd3.js (MIT since v0.1.21, owner decision D1). Pure: no DOM.
+// generic 3x3 SingularValueDecomposition / MatrixRank of shared/svd3.js (MIT since v0.1.21, decision D1). Pure: no DOM.
 // Moved unchanged from demos/robot-singularities/svd3.js (v0.1.16, DH-family move; robot-singularities keeps a
 // re-export shim there). manipEllip passes its option `zeroTol` (COMMON-DECISIONS §5) to
 // svd3 (shared/svd3.js, where it is described); the default 0 keeps robot-singularities' results bit for bit. manipEllip's halving is the option `scale` (default 1/2, as robot-singularities).

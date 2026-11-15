@@ -30,8 +30,7 @@ const args = process.argv.slice(2);
 const has = (k) => args.includes(k);
 const dry = has('--dry');
 const OUT = 'test-output';
-// PUBLISH_PROJECTS (comma-separated) narrows the engines for trying this script where not all three are installed (the
-// authoring sandbox); a publish always uses all three
+// PUBLISH_PROJECTS (comma-separated) narrows the engines for trying this script where not all three are installed; a publish always uses all three
 const PROJECTS = (process.env.PUBLISH_PROJECTS || 'firefox,chromium,webkit').split(',').map((x) => `--project=${x}`).join(' ');
 const RESULTS = `${OUT}/publish-results.json`, FAILURE = `${OUT}/publish-failure.json`, LAST_RUN = `${OUT}/e2e-artifacts/.last-run.json`;
 const run = (cmd, opts = {}) => {

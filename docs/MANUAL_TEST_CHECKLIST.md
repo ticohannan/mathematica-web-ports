@@ -3,7 +3,7 @@
 Checks done by a person: the general items `M-GEN-…` (browser only) and the items of the first three apps
 (`M-MP-…`, `M-TP-…`, `M-EA-…`). The seven newer apps have their own files in [`checklists/`](checklists/).
 
-Items that involve the original notebook are operator procedures (owner rule R-B,
+Items that involve the original notebook are operator procedures (rule 8,
 [`DESIGN_PROCESS.md`](DESIGN_PROCESS.md) rule 8) with the fixed headings **Open**, **Prepare**, **Do**, **Record**,
 **Save**, **Port**, **Expected / what it decides**. How to start Mathematica, Enable Dynamics, use the ⊕ menu, find
 invisible locators, how long to wait, where files go and how to send results back is written once in
