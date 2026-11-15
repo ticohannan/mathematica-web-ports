@@ -9,7 +9,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const PORT = Number(process.env.PORT || 8090);
-// Optional: point at a specific Chromium binary (used in the authoring sandbox; normally unset).
+// Optional: point at a specific Chromium binary (normally unset).
 const chromiumPath = process.env.PW_CHROMIUM_PATH;
 const chromiumArgs = process.env.PW_CHROMIUM_ARGS ? process.env.PW_CHROMIUM_ARGS.split(' ') : [];
 
