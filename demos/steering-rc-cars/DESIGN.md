@@ -7,7 +7,6 @@
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Steering Multiple Radio Control (RC) Cars with One Joystick", contributed by Aaron T. Becker and Javier Garcia, published 2018-03-14 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/SteeringMultipleRadioControlRCCarsWithOneJoystick/> Source as text: [`docs/original-source/steering-rc-cars.txt`](../../docs/original-source/steering-rc-cars.txt); snapshots `docs/original-snapshots/steering-rc-cars-1…5.png`; saved states `tests/golden/steering-rc-cars.original-states.json` (`states[0]` the live state, `specs` the Manipulate's initial values, `snapshots` the five snapshots' settings) |
 | Port files | `model.js` (the Initialization definitions — collision radius and meeting points, the three robot pictures — and one evaluation of the Manipulate body; pure), `main.js` (the Manipulate on `shared/manipulate.js`), `index.html` |
-| Role in the project | new demonstration, ported in simple mode (v0.1.24): generator, `shared/wl.js`, `shared/graphics.js`, plain arithmetic; the first port whose body reads the clock |
 
 ## 1. Purpose and background
 
@@ -59,9 +58,9 @@ A- features.
 | A-SR-03 | Start-up notice when the browser cannot run the page (DEC-22) | no empty page | v0.1.24 | e2e "start-up notice when" |
 | A-SR-04 | Breadcrumb link to all demos | navigation | v0.1.24 | inventory |
 | A-SR-05 | Credits footer (authors, title, source, licence, adaptation notice) | required by the licence (CC BY-NC-SA 3.0 §4) | v0.1.24 | e2e "attribution on" |
-| A-SR-06 | This app can be bundled and served alone (§6.1) | owner rule R-A | v0.1.24 | e2e "bundle: steering-rc-cars runs from its own folder" |
+| A-SR-06 | This app can be bundled and served alone (§6.1) | rule 7 | v0.1.24 | e2e "bundle: steering-rc-cars runs from its own folder" |
 | A-SR-07 | `?seed=N` in the address makes new random robots reproducible (seeded random source) | repeatable examples and tests | v0.1.24 | e2e "the n slider makes new random cars (seeded)"; unit "a new n (n ≠ nold, setup)" |
-| A-SR-08 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | owner request 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
+| A-SR-08 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | requested 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
 
 ## 5. UI inventory
 
@@ -122,7 +121,7 @@ matches any text. Checked by the browser test "every control on … is specified
 
 ### 6.1 Building and deploying this app alone
 
-Owner rule R-A (2026-10-17): this one app can be taken out of the repository and hosted anywhere.
+Rule 7 of docs/DESIGN_PROCESS.md: this one app can be taken out of the repository and hosted anywhere.
 
 - Command, in the repository folder: `npm run bundle -- steering-rc-cars` → `dist/steering-rc-cars/`.
 - Contents (generated with `node tools/bundle-app.mjs steering-rc-cars --update-docs`):
@@ -173,10 +172,7 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 
 ## 8. Proposed changes
 
-No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
-
-| ID | Status | Requested by / date | Change | Reason | Acceptance criteria |
-|----|--------|---------------------|--------|--------|---------------------|
+Proposals for this app are tracked separately.
 
 ## 9. Revision history
 
@@ -187,11 +183,11 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 3 | v0.1.25 | 2026-10-26 | `model.js` compares with `Unequal` of `shared/wl.js` (the same tolerant function as before, now under its Mathematica name); exact slider values from saved states shown as in Mathematica (N-SR-02, I-SR-03 done); the review screenshots set the snapshots' exact values; no change to behaviour or picture |
 | 4 | v0.1.26 | 2026-10-27 | version number; the shared code gained region and density plots (`RegionPlot`, two-parameter `ParametricPlot`, `DensityPlot`), `BSplineCurve`, decorated insets, textures on polygons, `settleInterval` for bodies that pause between evaluations, typeset control headings and fixes found by the seven new ports (v0.1.26); no change to this app's code, behaviour or picture (DOM parity with v0.1.25, except that a `Line` with no points is now an empty group instead of an empty polyline: nothing is drawn either way) |
 | 5 | v0.1.27 | 2026-10-28 | version number; the shared code gained spans with a step, a cyclic `Riffle`, `EvenQ`/`OddQ`, `ArcCos`/`ArcSin`, `DeleteCases`, `ToString` and `StringForm` (`shared/wl.js`), legend labels that are pictures and Mathematica's `Placed[…, {pos, align}]` form, `Automatic` in PlotStyle lists, `Fraction` labels, 3D `Line` with several polylines, and View3D's `Epilog` and `SphericalRegion: false` (v0.1.27); no change to this app's code, behaviour or picture (DOM parity with v0.1.26) |
-| 6 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default; motion planning, PA2 fix F-02) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (DOM parity with v0.1.27) |
+| 6 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (DOM parity with v0.1.27) |
 | 7 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (DOM parity with v0.1.28) |
 | 8 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
 | 9 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
-| 10 | v0.1.32 | 2026-11-05 | A-SR-08: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
+| 10 | v0.1.32 | 2026-11-05 | A-SR-08: landing-page thumbnail (`tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 | 11 | v0.1.33 | 2026-11-06 | version number (v0.1.33: four new apps; opt-in shared additions S-1 … S-7, unused by this app, and the locators of a Locator list made after the first evaluation); no change to this app's code, behaviour or picture |
 | 12 | v0.1.34 | 2026-11-10 | version number (v0.1.34: the switch "errors of the original: kept \| corrected" for the apps with code-level findings in §11, `shared/errata.js`); no change to this app's code, behaviour or picture |
 | 13 | v0.1.35 | 2026-11-11 | version number (v0.1.35: two new apps, paths-inside-a-polygon and voronoi-diagrams; no shared code changed); no change to this app's code, behaviour or picture |
@@ -211,7 +207,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 
 ## 11. Errors in the original (conceptual and mathematical)
 
-Checked when porting (owner rule R-C): the meeting point p<sub>i,j</sub> of the code equals the Details' formula, the
+Checked when porting (rule 9): the meeting point p<sub>i,j</sub> of the code equals the Details' formula, the
 running-mode meeting point is p₁ − R(θ₁)(R(θ<sub>j</sub>) − R(θ<sub>i</sub>))⁻¹(p<sub>j</sub> − p<sub>i</sub>) as the
 original's FullSimplify comment derives it, and the collision radius 2r/|R(θ<sub>i</sub>) − R(θ<sub>j</sub>)| =
 2r/√(2 − 2 cos(θ<sub>i</sub> − θ<sub>j</sub>)) is right for disk robots of radius r (unit tests "collisionDelta",

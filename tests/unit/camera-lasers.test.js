@@ -303,7 +303,7 @@ describe('drawing: lines clipped to the plot range (D-CL-08)', () => {
   });
 });
 
-// ---- v0.1.21 (owner decision D2): the model returns both pictures as Graphics data. The drawing output of the page
+// ---- v0.1.21: the model returns both pictures as Graphics data. The drawing output of the page
 // before that change is frozen in tests/unit/fixtures/camera-lasers-drawing.pre-graphics.json (commit f04c973): the
 // Graphics data the page drew and the model's own primitive lists (top, cam) it drew them from.
 describe('camera-lasers: Graphics data = the drawing before v0.1.21', () => {

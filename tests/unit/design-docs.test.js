@@ -29,7 +29,7 @@ export function tableRows(md) {
   }
   return rows;
 }
-// Section 11 (owner rule R-C): title, table header, Kind vocabulary.
+// Section 11 (rule 9): title, table header, Kind vocabulary.
 const ERRORS_TITLE = '11. Errors in the original (conceptual and mathematical)';
 const ERRORS_HEADER = ['ID', 'Kind', 'Where in the original', 'What is (probably) wrong', 'What the port does', 'Effect of correcting it', 'Status'];
 const ERROR_KINDS = ['conceptual', 'mathematical', 'numerical', 'text'];
@@ -56,7 +56,7 @@ describe.each(APPS)('design document of $dir', ({ dir, prefix, spec }) => {
       expect(md, s).toContain(`## ${s}`);
     }
   });
-  // owner rule R-A: every app can be bundled alone; tools/bundle-app.mjs --update-docs rewrites the table in this subsection
+  // rule 7: every app can be bundled alone; tools/bundle-app.mjs --update-docs rewrites the table in this subsection
   it('section 6 has the subsection "### 6.n Building and deploying this app alone" with the bundle-contents table', () => {
     const sec = section(md, '6. Design');
     const m = sec.match(/^### 6\.\d+ Building and deploying this app alone$/m);
@@ -126,7 +126,7 @@ describe.each(APPS)('design document of $dir', ({ dir, prefix, spec }) => {
     const rows = tableRows(section(md, '9. Revision history'));
     expect(rows.some((r) => r[1] === `v${version}`)).toBe(true);
   });
-  // Owner rule R-C (2026-10-17, docs/DESIGN_PROCESS.md rule 9): errors in the original, the last section.
+  // Rule 9 (2026-10-17, docs/DESIGN_PROCESS.md rule 9): errors in the original, the last section.
   it(`has "## ${ERRORS_TITLE}" as its last section, after section 10`, () => {
     const heads = md.split('\n').filter((l) => l.startsWith('## '));
     expect(heads[heads.length - 1]).toBe(`## ${ERRORS_TITLE}`);

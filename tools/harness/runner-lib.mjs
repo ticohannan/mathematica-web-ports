@@ -44,7 +44,7 @@ export function wireFile(file, { only = null, timeLimit = null, initTimeLimit = 
 }
 export const wireText = (w) => stringifyLexical(w, { ascii: true });
 
-// ---------------------------------------------------------------- finding things on the owner's machine
+// ---------------------------------------------------------------- finding things on Tico's machine
 /** Find a notebook by file name: explicit path, the originals folders, then one level of sub-folders. */
 export function findNotebook(name, { root, nb = null, originals = [] }) {
   if (nb) return fs.existsSync(nb) ? path.resolve(nb) : null;

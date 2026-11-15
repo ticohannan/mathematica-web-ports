@@ -7,7 +7,7 @@
 //    expected angles and balls from an independent Python evaluation (TESTPLAN N-TC-03, N-TC-05);
 //  * the picture of snapshot 1 where the Settings cannot hold it (docs/original-snapshots/torus-chart-1.png, 2× pixels);
 //  * the Mathematica-harness records H-TC-01 … H-TC-14 (tests/golden/torus-chart.harness.json, read through
-//    tests/support/harness-json.js). These SKIP with the documented reason until the owner's harness run exists.
+//    tests/support/harness-json.js). These SKIP with the documented reason until Tico's harness run exists.
 import { describe, it, expect } from 'vitest';
 import { loadStates, plain } from '../../tools/lib/wl-json.mjs';
 import { harnessCase, captureOf, toJS, toJSNumeric, sameDouble } from '../support/harness-json.js';

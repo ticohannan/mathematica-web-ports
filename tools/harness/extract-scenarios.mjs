@@ -12,7 +12,7 @@
 // "definitions"; a leading "wl:" of each entry is stripped (COMMON-DECISIONS §6).
 //
 // Where the TESTPLAN is looked for, in order: --testplan=FILE (one app), <design-root>/<dir>/TESTPLAN.md,
-// demos/<dir>/TESTPLAN.md, _internal/batch-ab/design/<dir>/TESTPLAN.md (the owner's private drafts).
+// demos/<dir>/TESTPLAN.md, _internal/batch-ab/design/<dir>/TESTPLAN.md (Tico's private drafts).
 // "motion-planning" is special: its parity scenarios (HW-72) are generated from
 // tests/golden/motion-planning.original-states.json, the five states mp-original.wls reproduces.
 //
@@ -151,7 +151,7 @@ export function findTestplan(dir, { testplan, designRoot } = {}) {
   return cands.find((f) => fs.existsSync(f)) ?? null;
 }
 
-/** Name recorded in "source": repo-relative when inside the repository, else the owner's private-draft location. */
+/** Name recorded in "source": repo-relative when inside the repository, else Tico's private-draft location. */
 export function sourceNameFor(file, dir) {
   const rel = path.relative(ROOT, file);
   if (!rel.startsWith('..') && !path.isAbsolute(rel)) return rel.split(path.sep).join('/');

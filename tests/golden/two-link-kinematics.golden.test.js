@@ -6,7 +6,7 @@
 //    (written by `python tools/extract_state.py --snapshots <notebook> …`; raw notebook lines 3580, 5050, 6589, 8110);
 //  * the drawing of snapshot 1 where Settings cannot hold it (docs/original-snapshots/two-link-kinematics-1.png);
 //  * the Mathematica-harness records H-TK-01 … H-TK-24 (tests/golden/two-link-kinematics.harness.json, read through
-//    tests/support/harness-json.js). These SKIP with the documented reason until the owner's harness run exists.
+//    tests/support/harness-json.js). These SKIP with the documented reason until Tico's harness run exists.
 import { describe, it, expect } from 'vitest';
 import { loadStates, plain } from '../../tools/lib/wl-json.mjs';
 import { harnessCase, captureOf, stepRecord, toJS, realOf } from '../support/harness-json.js';

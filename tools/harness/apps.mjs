@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 // tools/harness/apps.mjs — which original notebook belongs to which app (Mathematica harness, HARNESS-WL §7).
 //
-// `notebook` is the FILE NAME only: the owner keeps the pristine downloads in the git-ignored folders
+// `notebook` is the FILE NAME only: Tico keeps the pristine downloads in the git-ignored folders
 // _internal/originals/ and _internal/originals/batch-ab/ (tools/run-harness.mjs searches both). `sha256` is the
 // hash of the download the scenario files were written against (a different download gives a warning, not an
 // error). `start` is the scenario file's default start state when the TESTPLAN does not say (COMMON-DECISIONS §6).

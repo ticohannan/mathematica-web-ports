@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // SPDX-FileCopyrightText: 2026 Tico Hannan
 // SPDX-License-Identifier: MIT
-// tools/affected.mjs — which browser tests a change can affect (selective testing, v0.1.39; owner decision 2026-11-12,
+// tools/affected.mjs — which browser tests a change can affect (selective testing, v0.1.39; decision 2026-11-12,
 // internal proposal "selective testing" Q-1…Q-5). The unit and golden tests always run in full (about 10 s); only the
 // browser tests are selected.
 //

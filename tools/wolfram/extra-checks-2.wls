@@ -1,7 +1,7 @@
 #!/usr/bin/env wolframscript
 (* SPDX-FileCopyrightText: 2026 Tico Hannan
    SPDX-License-Identifier: MIT *)
-(* tools/wolfram/extra-checks-2.wls — round 2 of the lead checks (v0.1.1), after the owner's first run of
+(* tools/wolfram/extra-checks-2.wls — round 2 of the lead checks (v0.1.1), after Tico's first run of
    extra-checks.wls. Plain Wolfram Language expressions only; contains no code from the Demonstrations (the elbow
    manipulator's Jacobian for K-RS-05 is written out from standard kinematics, unit link lengths).
    Run from the repository folder (writes test-output\extra-checks-2.txt):

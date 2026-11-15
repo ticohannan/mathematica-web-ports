@@ -1,6 +1,6 @@
 # Manual checks — Seven-link robot (`demos/prm-seven-link/`)
 
-Each item compares the original in Mathematica with the port, as an operator procedure (owner rule R-B). The general
+Each item compares the original in Mathematica with the port, as an operator procedure (rule 8). The general
 procedure — starting Mathematica, Enable Dynamics, the ⊕ menu, invisible locators, waiting, recording, saving,
 sending results back — is in [`docs/MATHEMATICA_CHECKS.md`](../MATHEMATICA_CHECKS.md). Record every result in the
 test-run file `_internal\test-runs\<YYYY-MM-DD>_prm-seven-link.md` (create it with
@@ -64,7 +64,7 @@ one only, or keep climbing (the number after 3 s); (c) is **movement** disabled 
 **Port** — the same steps; then tick **mute beep** and repeat. Expected in the port: red robot, the count rises by
 one, **movement** disabled, further moves into the obstacle are undone, one beep (a plain tone; Mathematica plays the
 system alert sound, D-SL-02); with **mute beep**: no sound, the count still rises by one.
-**Expected / what it decides** — owner, 2026-10-12: (b) the count rises once per push in the original — K-SL-02
+**Expected / what it decides** — Tico, 2026-10-12: (b) the count rises once per push in the original — K-SL-02
 resolved (one evaluation per update, as the port, O-SL-03); (a), (c) and (d) are still to be recorded.
 
 ### M-SL-04 Relative vs absolute (O-SL-01)
@@ -120,7 +120,7 @@ number.
 **Expected / what it decides** — records the original's grab distance (a), tie rule (b) and the after-collision case
 (c) (K-SL-03, D-SL-05).
 
-### M-SL-07 Owner state 1 status text (O-SL-02)
+### M-SL-07 Saved state 1 status text (O-SL-02)
 **Open** — `_internal\originals\saved\prm-seven-link_owner-state-1_2026-10-06.nb` (the working copy saved on
 2026-10-06 after playing goal 7, 132 collisions; copy it there under this name first if it is elsewhere) with
 Mathematica 15.0.1 (File > Open…); Enable Dynamics if offered; do not evaluate any cell.

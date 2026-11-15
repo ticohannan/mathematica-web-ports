@@ -8,7 +8,7 @@
 //    TaggingRules), including the visible regions the original computed. Extracted from Art-Gallery-Problem.nb with
 //    the parser of tools/extract_state.py (data of the original, CC BY-NC-SA 3.0); `picture` = number of the
 //    corresponding docs/original-snapshots/art-gallery-<n>.png;
-//  * owner state 1 (Mathematica 15.0.1, saved 2026-10-06): tests/golden/art-gallery.owner-state-1.json;
+//  * saved state 1 (Mathematica 15.0.1, saved 2026-10-06): tests/golden/art-gallery.owner-state-1.json;
 //  * colours read from the snapshot pictures.
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
@@ -147,18 +147,18 @@ describe('art-gallery golden: the five snapshots saved in 2019', () => {
   });
 });
 
-describe('art-gallery golden: owner state 1 (Mathematica 15.0.1, saved 2026-10-06)', () => {
-  it('art-gallery: owner state 1, movable obstacles with five guards: every visible region is bit-identical with the defaults', () => {
+describe('art-gallery golden: saved state 1 (Mathematica 15.0.1, saved 2026-10-06)', () => {
+  it('art-gallery: saved state 1, movable obstacles with five guards: every visible region is bit-identical with the defaults', () => {
     expect(owner.s).toBe(5);
     expect(owner.reg).toBe('movable obstacles');
     const polys = environment(owner.reg, owner.pts).listofPoly;
     for (let i = 0; i < owner.s; i++) expect(visiblePolys(polys, owner.pts[i + 2]), `guard ${i + 1}`).toEqual(owner.visibleRegion[i]);
   });
-  it('art-gallery: owner state 1, the square around a guard inside it matches the original bit for bit', () => {
+  it('art-gallery: saved state 1, the square around a guard inside it matches the original bit for bit', () => {
     const env = environment(owner.reg, owner.pts);
     sameSet(owner.visibleRegion[2], env.poly1); // guard 3 stands inside the square
   });
-  it('art-gallery: owner state 1, evaluating it again recomputes nothing and keeps the cached regions', () => {
+  it('art-gallery: saved state 1, evaluating it again recomputes nothing and keeps the cached regions', () => {
     const { state, view } = evaluate(JSON.parse(JSON.stringify(owner)));
     expect(view.recomputed).toEqual([]);
     expect(state.visibleRegion).toEqual(owner.visibleRegion);

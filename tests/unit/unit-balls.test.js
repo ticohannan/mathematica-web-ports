@@ -275,7 +275,7 @@ describe('unit-balls 2D surface', () => {
   });
 
   it('the 2D plot range agrees with the PlotRange measured in Mathematica (K-UB-01)', () => {
-    // extra-checks.wls, Mathematica 15.0.1, owner run 2026-10-06: PlotRange /. AbsoluteOptions[Plot3D[…], PlotRange]
+    // extra-checks.wls, Mathematica 15.0.1, Tico's run 2026-10-06: PlotRange /. AbsoluteOptions[Plot3D[…], PlotRange]
     // (zmin printed as |zmin| < 4e-15, i.e. 0 up to rounding). Independent of the port's code.
     const measured = [
       ['1/4', 5.55e-17, 23.99999657142858], ['1/2', -1.39e-17, 5.999999142857142], ['1', 1.39e-17, 2.9999995714285714],

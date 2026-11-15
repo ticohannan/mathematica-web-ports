@@ -6,7 +6,7 @@
 // with their own cached plots (snapshots 2–4: the "≤" region meshes), all in
 // tests/golden/dubins-isochrons.original-states.json (`python3 tools/extract_state.py --snapshots`); the snapshot
 // pictures docs/original-snapshots/dubins-isochrons-<k>.png; and the Mathematica-harness records
-// (tests/golden/dubins-isochrons.harness.json; these tests skip until the owner's run exists).
+// (tests/golden/dubins-isochrons.harness.json; these tests skip until Tico's run exists).
 import { describe, it, expect } from 'vitest';
 import {
   initialState, evaluate, greyPolygons, isochronCurves, reachRegions, carState, FORMULAS, PLOT_ORDER, PLOT_COLOURS,

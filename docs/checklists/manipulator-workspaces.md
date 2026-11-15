@@ -1,6 +1,6 @@
 # Manual checks — Robot Manipulator Workspaces (`demos/manipulator-workspaces/`)
 
-Each item compares the original in Mathematica with the port, as an operator procedure (owner rule R-B). The general
+Each item compares the original in Mathematica with the port, as an operator procedure (rule 8). The general
 procedure — starting Mathematica, Enable Dynamics, the ⊕ menu, waiting, recording, saving, sending results back — is in
 [`docs/MATHEMATICA_CHECKS.md`](../MATHEMATICA_CHECKS.md). Record every result in the test-run file
 `_internal\test-runs\<YYYY-MM-DD>_manipulator-workspaces.md` (create it with `npm run test-run -- manipulator-workspaces`;

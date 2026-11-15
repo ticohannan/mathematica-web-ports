@@ -6,7 +6,7 @@
 // PlotRange -> {1.5{-1,1}, 1.5{-1,1}, {-0.1, 2.4}}, Lighting -> Automatic, ImageSize -> 280] in three.js.
 // The returned object is the renderer of the Manipulate's second picture (main.js): draw(w) with
 // w = { qs, qf, robotq, inCollision, pObs3, viewAng } is called after every evaluation. Browser only. When WebGL 2 is not available, the inset shows a notice and the rest of the page keeps working
-// (owner's choice for this page: no data-needs-webgl2 page requirement).
+// (a choice for this page: no data-needs-webgl2 page requirement).
 import { createViewer, THREE, cylinderBetween, inkFraction } from '../../shared/three-helpers.js';
 import { NAMED } from '../../shared/mma-colors.js';
 import { addMathematicaLighting } from '../../shared/mma-lighting.js';

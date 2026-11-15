@@ -4,7 +4,7 @@
 // demos/harmonic-distortion/errata-mode.js — what the switch "errors of the original: corrected" changes in this app
 // (shared/errata.js; DESIGN.md §11). Shown on the page and in docs/CORRECTED_MODE.md.
 // v0.1.37: this app was ported with its switch (tools/errata-docs.mjs reads the version and request from here)
-export const SWITCH = Object.freeze({ since: 'v0.1.37', date: '2026-11-12', request: 'owner request 2026-11-12' });
+export const SWITCH = Object.freeze({ since: 'v0.1.37', date: '2026-11-12', request: 'requested 2026-11-12' });
 export const CORRECTIONS = [
   {
     id: 'E-HD-01',

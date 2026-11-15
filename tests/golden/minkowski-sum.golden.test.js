@@ -4,8 +4,8 @@
 // tests/golden/minkowski-sum.golden.test.js — the port against the ORIGINAL: the live state, the initial settings and
 // the Settings of the five snapshot cells stored in the notebook (tests/golden/minkowski-sum.original-states.json,
 // tools/extract_state.py --snapshots), what the snapshot pictures show (docs/original-snapshots/minkowski-sum-k.png),
-// and the Mathematica harness records (tests/golden/minkowski-sum.harness.json; until the owner's run exists those
-// tests skip with the reason "no harness data (owner run pending)").
+// and the Mathematica harness records (tests/golden/minkowski-sum.harness.json; until Tico's run exists those
+// tests skip with the reason "no harness data (harness run pending)").
 import { annotation, Cases } from '../../shared/graphics.js';
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';

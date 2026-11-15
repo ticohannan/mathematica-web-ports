@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Tico Hannan
 // SPDX-License-Identifier: MIT
-// tools/new-test-run.mjs — writes the fill-in test-run file for one app and day (owner rule R-B,
+// tools/new-test-run.mjs — writes the fill-in test-run file for one app and day (rule 8,
 // docs/DESIGN_PROCESS.md rule 8; procedure in docs/MATHEMATICA_CHECKS.md):
 //
 //   node tools/new-test-run.mjs <dir> [--date=YYYY-MM-DD] [--out=FOLDER] [--force]

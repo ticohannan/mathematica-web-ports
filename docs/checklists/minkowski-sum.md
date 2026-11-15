@@ -1,6 +1,6 @@
 # Manual checks — Minkowski sum (`demos/minkowski-sum/`)
 
-Each item compares the original in Mathematica with the port, as an operator procedure (owner rule R-B). The general
+Each item compares the original in Mathematica with the port, as an operator procedure (rule 8). The general
 procedure — starting Mathematica, Enable Dynamics, the ⊕ menu, invisible locators, waiting, recording, saving,
 sending results back — is in [`docs/MATHEMATICA_CHECKS.md`](../MATHEMATICA_CHECKS.md). Record every result in the
 test-run file `_internal\test-runs\<YYYY-MM-DD>_minkowski-sum.md` (create it with `npm run test-run -- minkowski-sum`).

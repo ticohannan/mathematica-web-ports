@@ -10,7 +10,7 @@ import { makeDialControl } from '../common/dial-control.js';
 import { initialState, evaluate } from './model.js';
 
 // makeDialControl[Dynamic[pt_], cent_, color_] as saved with the output cell: the Nearest-π/32 setter, myArrowArc2 in
-// the dial's colour, no ImageSize (automatic: 180 px, as manipulability-ellipsoid; the dial circle measures about 172 px on the owner's screenshot)
+// the dial's colour, no ImageSize (automatic: 180 px, as manipulability-ellipsoid; the dial circle measures about 172 px on Tico's screenshot)
 const DIAL_OPTIONS = { color: NAMED.Red, imageSize: 'automatic', setter: 'nearest32', arc: 'myArrowArc2', keyStep: 'grid', labels: 'stacked' };
 
 Manipulate({

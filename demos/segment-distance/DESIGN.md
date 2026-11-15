@@ -7,7 +7,6 @@
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Shortest Distance between Two Line Segments", contributed by Aaron T. Becker, Victor M. Baez and Nikhil Navkar, published 2023-05-26 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ShortestDistanceBetweenTwoLineSegments/> Source as text: [`docs/original-source/segment-distance.txt`](../../docs/original-source/segment-distance.txt); snapshots `docs/original-snapshots/segment-distance-1…4.png`; saved states `tests/golden/segment-distance.original-states.json` |
 | Port files | `model.js` (the original's six functions and the Manipulate body; picture as Graphics3D data; pure), `main.js` (the Manipulate on `shared/manipulate.js`, picture by `View3D`), `index.html` (ControlPlacement {Top, Left} as page-level CSS) |
-| Role in the project | new demonstration, ported in simple mode (v0.1.23): generator, `shared/wl.js`, plain arithmetic, new 3D primitives Tube, InfiniteLine, Text |
 
 ## 1. Purpose and background
 
@@ -51,10 +50,10 @@ not do; port additions are the A- features.
 | A-SD-03 | Start-up notice when the browser cannot run the page (DEC-22, WebGL 2 required) | no empty page | v0.1.23 | e2e "start-up notice when" |
 | A-SD-04 | Breadcrumb link to all demos | navigation | v0.1.23 | inventory |
 | A-SD-05 | Credits footer (authors, title, source, licence, adaptation notice) | required by the licence (CC BY-NC-SA 3.0 §4) | v0.1.23 | e2e "attribution on" |
-| A-SD-06 | This app can be bundled and served alone (§6.1) | owner rule R-A | v0.1.23 | e2e "bundle: segment-distance runs from its own folder" |
+| A-SD-06 | This app can be bundled and served alone (§6.1) | rule 7 | v0.1.23 | e2e "bundle: segment-distance runs from its own folder" |
 | A-SD-07 | Hidden number fields of the 2D sliders (`value-…-x`, `value-…-y`, layer default; hidden by the page as Appearance -> Tiny has none) | the layer's 2D slider | v0.1.23 | e2e "has the controls of the original" |
-| A-SD-08 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | owner request 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
-| A-SD-09 | Switch "errors of the original: kept \| corrected" beside "Initial settings" (variable `errata`, default kept = the original's behaviour). "corrected" changes only E-SD-01 (§11; `errata-mode.js`); the differences are listed on the page under "Errors of the original: what "corrected" changes" | owner request 2026-11-10: every code-level error of the original can be switched between the original's behaviour and its correction | v0.1.34 | unit "corrected mode (E-SD)"; e2e "errata switch on segment-distance: kept is the original, corrected changes the listed result" |
+| A-SD-08 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | requested 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
+| A-SD-09 | Switch "errors of the original: kept \| corrected" beside "Initial settings" (variable `errata`, default kept = the original's behaviour). "corrected" changes only E-SD-01 (§11; `errata-mode.js`); the differences are listed on the page under "Errors of the original: what "corrected" changes" | requested 2026-11-10: every code-level error of the original can be switched between the original's behaviour and its correction | v0.1.34 | unit "corrected mode (E-SD)"; e2e "errata switch on segment-distance: kept is the original, corrected changes the listed result" |
 
 ## 5. UI inventory
 
@@ -99,7 +98,7 @@ matches any text. Checked by the browser test "every control on … is specified
 
 ### 6.1 Building and deploying this app alone
 
-Owner rule R-A (2026-10-17): this one app can be taken out of the repository and hosted anywhere.
+Rule 7 of docs/DESIGN_PROCESS.md: this one app can be taken out of the repository and hosted anywhere.
 
 - Command, in the repository folder: `npm run bundle -- segment-distance` → `dist/segment-distance/`.
 - Contents (generated with `node tools/bundle-app.mjs segment-distance --update-docs`):
@@ -142,11 +141,7 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 
 ## 8. Proposed changes
 
-No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
-
-| ID | Status | Requested by / date | Change | Reason | Acceptance criteria |
-|----|--------|---------------------|--------|--------|---------------------|
-| P-SD-01 | approved (owner request 2026-11-10), implemented in v0.1.34 as A-SD-09 | owner / 2026-11-10 | Switch "errors of the original: kept \| corrected": mark the current version, then offer each logical error of the original as a gated correction; the corrected mode changes only the code needed for E-SD-01 | the errors of the original were reproduced bug for bug; the owner wants to compare the original with a corrected version and to be able to go back | the default is the original (golden data, harness replays and parity unchanged); each correction has a unit test with an independently derived expected value and the browser test of the switch; the page documents the differences |
+Proposals for this app are tracked separately.
 
 ## 9. Revision history
 
@@ -158,13 +153,13 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 4 | v0.1.25 | 2026-10-26 | version number; the shared code gained one page clock (`shared/clock.js`: slider animations and app animations read it, tests fix it), tolerant `Equal`/`Unequal` in `shared/wl.js` and exact slider texts from saved states (v0.1.25); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.24) |
 | 5 | v0.1.26 | 2026-10-27 | version number; the shared code gained region and density plots (`RegionPlot`, two-parameter `ParametricPlot`, `DensityPlot`), `BSplineCurve`, decorated insets, textures on polygons, `settleInterval` for bodies that pause between evaluations, typeset control headings and fixes found by the seven new ports (v0.1.26); no change to this app's code, behaviour or picture (DOM parity with v0.1.25) |
 | 6 | v0.1.27 | 2026-10-28 | version number; the shared code gained spans with a step, a cyclic `Riffle`, `EvenQ`/`OddQ`, `ArcCos`/`ArcSin`, `DeleteCases`, `ToString` and `StringForm` (`shared/wl.js`), legend labels that are pictures and Mathematica's `Placed[…, {pos, align}]` form, `Automatic` in PlotStyle lists, `Fraction` labels, 3D `Line` with several polylines, and View3D's `Epilog` and `SphericalRegion: false` (v0.1.27); no change to this app's code, behaviour or picture (DOM parity with v0.1.26) |
-| 7 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default; motion planning, PA2 fix F-02) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (DOM parity with v0.1.27) |
+| 7 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (DOM parity with v0.1.27) |
 | 8 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (DOM parity with v0.1.28) |
 | 9 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
 | 10 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
-| 11 | v0.1.32 | 2026-11-05 | A-SD-08: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
+| 11 | v0.1.32 | 2026-11-05 | A-SD-08: landing-page thumbnail (`tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 | 12 | v0.1.33 | 2026-11-06 | version number (v0.1.33: four new apps; opt-in shared additions S-1 … S-7, unused by this app, and the locators of a Locator list made after the first evaluation); no change to this app's code, behaviour or picture |
-| 13 | v0.1.34 | 2026-11-10 | A-SD-09: the switch "errors of the original: kept \| corrected" (owner request 2026-11-10); corrected mode for E-SD-01, default kept: the original's behaviour, golden data and pictures unchanged |
+| 13 | v0.1.34 | 2026-11-10 | A-SD-09: the switch "errors of the original: kept \| corrected"; corrected mode for E-SD-01, default kept: the original's behaviour, golden data and pictures unchanged |
 | 14 | v0.1.35 | 2026-11-11 | version number (v0.1.35: two new apps, paths-inside-a-polygon and voronoi-diagrams; no shared code changed); no change to this app's code, behaviour or picture |
 | 15 | v0.1.36 | 2026-11-11 | version number (v0.1.36: the full colour menu of voronoi-diagrams); no change to this app's code, behaviour or picture |
 | 16 | v0.1.37 | 2026-11-12 | version number (v0.1.37: thirteen control and signal ports and the shared modules they use; the additions to shared/plot.js, graphics.js and manipulate.js are opt-in); no change to this app's code, behaviour or picture |
@@ -183,7 +178,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 
 ## 11. Errors in the original (conceptual and mathematical)
 
-Checked when porting (owner rule R-C).
+Checked when porting (rule 9).
 
 | ID | Kind | Where in the original | What is (probably) wrong | What the port does | Effect of correcting it | Status |
 |----|------|-----------------------|--------------------------|--------------------|-------------------------|--------|

@@ -7,7 +7,6 @@
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Denavit-Hartenberg Parameters for a Three-Link Robot", contributed by Aaron T. Becker and Mary Burbage, published 2016-06-16 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/DenavitHartenbergParametersForAThreeLinkRobot/>. Readable source: [`docs/original-source/dh-parameters.txt`](../../docs/original-source/dh-parameters.txt); snapshots: `docs/original-snapshots/dh-parameters-1.png` … `-5.png`; saved state: `tests/golden/dh-parameters.original-states.json` (written with `tools/extract_state.py --snapshots` from the raw notebook: live state, initial settings and the five snapshot `Settings`) |
 | Port files | app: `model.js` (T1, T2, T3, the Graphics3D content in the original's order, one evaluation of the body, the plot-range box and the framing helpers; pure), `main.js` (the Manipulate on `shared/manipulate.js`: 13 labelled sliders with ⊕ panels, 3 setter bars, 3 delimiters, the 3D picture as `View3D` of `shared/graphics3d-view.js`, hook extras; v0.1.21), `index.html`; common (CC BY-NC-SA; this app owns the DH-family move from robot-singularities, §6.5): `demos/common/dh-chain.js` (`dhTransform` — machine path by default, exact-angle path by an explicit argument), `demos/common/robot-draw.js` (`drawZArrow`, `drawCoordAxes`, `GROUND`, `drawJoint` variant `'dh'`, `drawGripper` shared with "Common Robot Arm Configurations"), `shared/graphics3d.js`, `shared/graphics3d-three.js` (and `demos/common/svd3.js`, moved but not used here); shared (MIT): `shared/exact-pi.js` (integer-angle trig, through `dh-chain.js`), `shared/mma-text.js` (`piFraction`, `parsePiFraction`), `shared/ui.js` (`Controls.slider` with `steps:'mma'` and `format`/`parse` hooks, `setterBar`, `delimiter`, `mmaSliderText`), `shared/mma-lighting.js`, `shared/three-helpers.js`, `shared/mma.js`, `shared/mma-colors.js` |
-| Role in the project | further demonstration (batch B) |
 
 ## 1. Purpose and background
 
@@ -79,8 +78,8 @@ extended"), numeric display of the transforms, presets for the robots of the Det
 | A-DH-04 | Credit footer: original title, authors, licence, adaptation notice | required by CC BY-NC-SA 3.0 | v0.1.16 | e2e "attribution on" |
 | A-DH-05 | Start-up notice (watchdog, `<noscript>`) and WebGL 2 notice when the page cannot start (DEC-22) | a clear message instead of an empty page | v0.1.16 | e2e "start-up notice when"; e2e "WebGL 2 notice on" |
 | A-DH-07 | Redraw after a WebGL context loss (as A-EA-06, unit-balls, prm-robot-arm) | the picture comes back after a GPU reset or sleep | v0.1.16 | e2e "redraws after a WebGL context loss (port addition)" |
-| A-DH-06 | standalone bundle (owner rule R-A): `npm run bundle -- dh-parameters` builds `dist/dh-parameters/` with exactly the files the app imports, the licences, a generated README and a root `index.html` (§6, "Building and deploying this app alone") | anyone can host this one app elsewhere without the rest of the site (owner rule R-A, 2026-10-17) | v0.1.16 | e2e "bundle: dh-parameters runs from its own folder" |
-| A-DH-08 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | owner request 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
+| A-DH-06 | standalone bundle (rule 7): `npm run bundle -- dh-parameters` builds `dist/dh-parameters/` with exactly the files the app imports, the licences, a generated README and a root `index.html` (§6, "Building and deploying this app alone") | anyone can host this one app elsewhere without the rest of the site (rule 7, 2026-10-17) | v0.1.16 | e2e "bundle: dh-parameters runs from its own folder" |
+| A-DH-08 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | requested 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
 
 ## 5. UI inventory
 
@@ -200,7 +199,7 @@ modules) and T-DH-49 (machine path of `dhTransform`).
 
 ### 6.6 Building and deploying this app alone
 
-Owner rule R-A (2026-10-17): this one app can be taken out of the repository and hosted anywhere. One command builds it:
+Rule 7 of docs/DESIGN_PROCESS.md: this one app can be taken out of the repository and hosted anywhere. One command builds it:
 
 ```
 npm run bundle -- dh-parameters
@@ -260,33 +259,30 @@ Verified by e2e "bundle: dh-parameters runs from its own folder" (A-DH-06): the 
 
 ## 8. Proposed changes
 
-No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
-
-| ID | Status | Requested by / date | Change | Reason | Acceptance criteria |
-|----|--------|---------------------|--------|--------|---------------------|
+Proposals for this app are tracked separately.
 
 ## 9. Revision history
 
 | Doc rev. | Code version | Date | Change |
 |----------|--------------|------|--------|
-| 1 | v0.1.16 | 2026-10-18 | first implementation of the design draft approved by the owner (DEC-17; draft of 2026-10-12 with COMMON-DECISIONS §5, §6 and owner rules R-A/R-B/R-C applied), including the DH-family move of robot-singularities' code to `demos/common/` (§6.5, regression test T-DH-48); decided while implementing: D-DH-01 (one zoom fitted to all five snapshots, T-DH-22 retitled), D-DH-07 (typed values snap), D-DH-08 (machine trig of the drawing's rotations), A-DH-07 (context-loss redraw), N-DH-06/N-DH-08 (corner normalisation in the renderer); harness checks are golden tests `harness "H-DH-nn"` that skip until `tests/golden/dh-parameters.harness.json` exists |
+| 1 | v0.1.16 | 2026-10-18 | first implementation of the design draft, including the DH-family move of robot-singularities' code to `demos/common/` (§6.5, regression test T-DH-48); decided while implementing: D-DH-01 (one zoom fitted to all five snapshots, T-DH-22 retitled), D-DH-07 (typed values snap), D-DH-08 (machine trig of the drawing's rotations), A-DH-07 (context-loss redraw), N-DH-06/N-DH-08 (corner normalisation in the renderer); harness checks are golden tests `harness "H-DH-nn"` that skip until `tests/golden/dh-parameters.harness.json` exists |
 | 2 | v0.1.16 | 2026-10-18 | review fixes: K-DH-06 (`-1+d-jr-.01` in COMMON §7 order, `axisBottomZ`), D-DH-09 (3/2 jr one ulp above 3/10, kept for robot-singularities), §6.3 state shape, §6.5 g3d row and SPDX sentence corrected, checklist M-DH-04 Port line (snaps, D-DH-07), e2e θ1 drag aims at the centre of the target position |
-| 3 | v0.1.17 | 2026-10-18 | harness run 2 (Mathematica 15.0.1 records H-DH-01 … H-DH-10): K-DH-06 resolved (prismatic axis bottom in written order), products with a machine factor are Mathematica's fused machine Dot (`mul4Fma`, F-DH-09: T1.T2.T3 bit for bit in H-DH-02, -04, -05), `shared/exact-pi.js` sin(π/8) = 0.3826834323650898 (H-DH-07 machine T3, H-ME-12), D-DH-09 removed (3/2 jr drawn as 0.3), D-DH-10 (exact entries in doubles), K-DH-03 narrowed (the box equals Mathematica's PlotRange); golden tests compare T1, T2, T3, T1.T2.T3 (machine entries bit for bit), the plot range and every recorded primitive |
+| 3 | v0.1.17 | 2026-10-18 | harness run 2 (Mathematica 15.0.1 records H-DH-01 … H-DH-10): K-DH-06 resolved (prismatic axis bottom in written order), products with a machine factor are Mathematica's fused machine Dot (`mul4Fma`, F-DH-09: T1.T2.T3 bit for bit in H-DH-02, -04, -05), `shared/exact-pi.js` sin (π/8) = 0.3826834323650898 (H-DH-07 machine T3, H-ME-12), D-DH-09 removed (3/2 jr drawn as 0.3), D-DH-10 (exact entries in doubles), K-DH-03 narrowed (the box equals Mathematica's PlotRange); golden tests compare T1, T2, T3, T1.T2.T3 (machine entries bit for bit), the plot range and every recorded primitive |
 | 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 5 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
 | 6 | v0.1.20 | 2026-10-21 | version number only (Manipulate layer extended, eleven more apps migrated to it); no change to this app |
-| 7 | v0.1.21 | 2026-10-23 | `main.js` rewritten on the shared Manipulate layer with a 3D picture (`shared/manipulate.js` + `shared/graphics3d-view.js` `View3D`; Graphics3D data model and renderer moved to MIT `shared/graphics3d.js` / `shared/graphics3d-three.js`, owner decision D1); no change to behaviour or picture (all unit, golden and browser tests passing; three.js scene graph, full-page pixels (SwiftShader) and Manipulate state identical to v0.1.20 at sample settings) |
+| 7 | v0.1.21 | 2026-10-23 | `main.js` rewritten on the shared Manipulate layer with a 3D picture (`shared/manipulate.js` + `shared/graphics3d-view.js` `View3D`); no change to behaviour or picture (all unit, golden and browser tests passing; three.js scene graph, full-page pixels (SwiftShader) and Manipulate state identical to v0.1.20 at sample settings) |
 | 8 | v0.1.22 | 2026-10-25 | version number; bundle table (`shared/manipulate.js` now also loads `shared/graphics-extras.js` and `shared/svg-frame.js` for the new Graphics options `Axes`/`Frame`/`PlotLabel`); no change to this app's code, behaviour or picture (pixel parity with v0.1.21) |
 | 9 | v0.1.23 | 2026-10-25 | version number; the shared code gained plot functions, a geometry kit, 3D text and tube primitives and fixes for new apps (v0.1.23); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.22) |
 | 10 | v0.1.24 | 2026-10-26 | version number; the shared code gained a clock for bodies that read the time, Locator variables that change between one point and a list, sector disks and Opacity on points and text (v0.1.24); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.23) |
 | 11 | v0.1.25 | 2026-10-26 | version number; the shared code gained one page clock (`shared/clock.js`: slider animations and app animations read it, tests fix it), tolerant `Equal`/`Unequal` in `shared/wl.js` and exact slider texts from saved states (v0.1.25); the ⊕ animation test now fixes the page clock and checks the exact value; no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.24) |
 | 12 | v0.1.26 | 2026-10-27 | version number; the shared code gained region and density plots (`RegionPlot`, two-parameter `ParametricPlot`, `DensityPlot`), `BSplineCurve`, decorated insets, textures on polygons, `settleInterval` for bodies that pause between evaluations, typeset control headings and fixes found by the seven new ports (v0.1.26); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.25) |
 | 13 | v0.1.27 | 2026-10-28 | version number; the shared code gained spans with a step, a cyclic `Riffle`, `EvenQ`/`OddQ`, `ArcCos`/`ArcSin`, `DeleteCases`, `ToString` and `StringForm` (`shared/wl.js`), legend labels that are pictures and Mathematica's `Placed[…, {pos, align}]` form, `Automatic` in PlotStyle lists, `Fraction` labels, 3D `Line` with several polylines, and View3D's `Epilog` and `SphericalRegion: false` (v0.1.27); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.26) |
-| 14 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default; motion planning, PA2 fix F-02) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.27) |
+| 14 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.27) |
 | 15 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.28) |
 | 16 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
 | 17 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
-| 18 | v0.1.32 | 2026-11-05 | A-DH-08: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
+| 18 | v0.1.32 | 2026-11-05 | A-DH-08: landing-page thumbnail (`tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 | 19 | v0.1.33 | 2026-11-06 | version number (v0.1.33: four new apps; opt-in shared additions S-1 … S-7, unused by this app, and the locators of a Locator list made after the first evaluation); no change to this app's code, behaviour or picture |
 | 20 | v0.1.34 | 2026-11-10 | version number (v0.1.34: the switch "errors of the original: kept \| corrected" for the apps with code-level findings in §11, `shared/errata.js`); no change to this app's code, behaviour or picture |
 | 21 | v0.1.35 | 2026-11-11 | version number (v0.1.35: two new apps, paths-inside-a-polygon and voronoi-diagrams; no shared code changed); no change to this app's code, behaviour or picture |
@@ -307,7 +303,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 
 ## 11. Errors in the original (conceptual and mathematical)
 
-Owner rule R-C (2026-10-17). Checked: `DHTransform[d, r, θ, α]` = Rot<sub>z</sub>(θ)·Trans<sub>z</sub>(d)·Trans<sub>x</sub>(r)·Rot<sub>x</sub>(α)
+Rule 9 of docs/DESIGN_PROCESS.md. Checked: `DHTransform[d, r, θ, α]` = Rot<sub>z</sub>(θ)·Trans<sub>z</sub>(d)·Trans<sub>x</sub>(r)·Rot<sub>x</sub>(α)
 against Spong, Hutchinson and Vidyasagar [1] (correct), its composition T1, T1.T2, T1.T2.T3 for the joints and the
 gripper (correct), the drawing functions, the Details' description of the four elementary transformations and of the
 two frame-assignment rules (correct), the printed matrix A<sub>i</sub> (correct), and each of the five DH tables of the

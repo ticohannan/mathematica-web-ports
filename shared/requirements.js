@@ -2,7 +2,7 @@
    SPDX-License-Identifier: MIT */
 /* shared/requirements.js — CLASSIC script (ES5 on purpose, so that old browsers can run it).
    Shows a clear notice instead of an empty page when the browser cannot run the demonstration
-   (owner decision DEC-22: WebGL apps require WebGL 2, no graceful degradation; every app gets a
+   (WebGL apps require WebGL 2, no graceful degradation; every app gets a
    start-up watchdog). Include in <head> BEFORE the module script:
      <script src="../../shared/requirements.js" data-needs-webgl2></script>   (3D apps)
      <script src="../../shared/requirements.js"></script>                     (2D/SVG apps)

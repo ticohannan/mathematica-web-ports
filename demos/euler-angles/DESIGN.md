@@ -7,7 +7,6 @@
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Euler Angles: Precession, Nutation, and Spin", contributed by Kevin Hernandez, based on a program by Sándor Kabai (CC BY-NC-SA 3.0). Readable source: [`docs/original-source/euler-angles.txt`](../../docs/original-source/euler-angles.txt) |
 | Port files | `model.js` (orientations, bookmarks, geometry constants; pure), `main.js` (the Manipulate on `shared/manipulate.js`: the three sliders, the bookmarks, the gyroscope as a three.js scene that is the picture's renderer; v0.1.21), `index.html` (with the start-up notice, A-EA-08) |
-| Role in the project | practice port (the assignment evaluates only the motion-planning app) |
 
 ## 1. Purpose and background
 
@@ -75,9 +74,9 @@ units, physics (torque, real precession dynamics), saving views.
 | A-EA-04 | "All demos" link back to the landing page | site navigation | v0.1.0 | inventory; M-GEN-01 |
 | A-EA-05 | Credit footer: original title, authors, licence, adaptation notice, links | required by the CC BY-NC-SA 3.0 licence | v0.1.1 | e2e "attribution on" |
 | A-EA-06 | Recovers by itself after the browser restores a lost WebGL context (GPU reset, driver update, sleep): redraws the same view on the white background | without it the scene vanished and came back on black only after the next interaction | v0.1.11 | e2e "redraws by itself after the WebGL context is lost and restored" |
-| A-EA-07 | Standalone bundle: `npm run bundle -- euler-angles` writes this app alone, with exactly the files it loads, a root page, README and licence texts, to `dist/euler-angles/` (§6.1) | owner rule R-A: anyone can take this one app and host it elsewhere | v0.1.15 | e2e "bundle: euler-angles runs from its own folder"; unit "bundle contents listed in DESIGN.md match the collector" |
-| A-EA-08 | Start-up notice (DEC-22): `shared/requirements.js` with `data-needs-webgl2` (watchdog: the page counts as started when `window.__demo.ready` is set) and a `<noscript>` notice in the picture; a clear message when the browser lacks JavaScript modules or WebGL 2 or the page does not start | a clear message instead of an empty or dead page; the last apps without it (owner decision 2026-10-23, DEC-37) | v0.1.21 | e2e "start-up notice when"; e2e "WebGL 2 notice on" |
-| A-EA-09 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | owner request 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
+| A-EA-07 | Standalone bundle: `npm run bundle -- euler-angles` writes this app alone, with exactly the files it loads, a root page, README and licence texts, to `dist/euler-angles/` (§6.1) | rule 7: anyone can take this one app and host it elsewhere | v0.1.15 | e2e "bundle: euler-angles runs from its own folder"; unit "bundle contents listed in DESIGN.md match the collector" |
+| A-EA-08 | Start-up notice (DEC-22): `shared/requirements.js` with `data-needs-webgl2` (watchdog: the page counts as started when `window.__demo.ready` is set) and a `<noscript>` notice in the picture; a clear message when the browser lacks JavaScript modules or WebGL 2 or the page does not start | a clear message instead of an empty or dead page; the last apps without it | v0.1.21 | e2e "start-up notice when"; e2e "WebGL 2 notice on" |
+| A-EA-09 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | requested 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
 
 ## 5. UI inventory
 
@@ -112,16 +111,16 @@ its design document".
   clearing the menu). Not `View3D`: it has no `ViewAngle`, adds a content group and refits the camera, which would
   change the scene (gap reported).
 - Mathematica's view (`ViewPoint`, `ViewAngle`, z vertical) is emulated by `shared/three-helpers.js` `createViewer`;
-  labels are HTML overlays. Lighting (since v0.1.21, owner decision 2026-10-23, DEC-36, D-EA-05): as View3D's
+  labels are HTML overlays. Lighting (since v0.1.21, decision 2026-10-23, DEC-36, D-EA-05): as View3D's
   `Lighting -> Automatic` — Mathematica's documented default lights from `shared/mma-lighting.js`, attached to the
   camera, on the displayed colour values (`outputColorSpace = LinearSRGBColorSpace`), as in dh-parameters (D-DH-02).
-- Start-up notice (since v0.1.21, owner decision 2026-10-23, DEC-37, A-EA-08): `index.html` loads
+- Start-up notice (since v0.1.21, decision 2026-10-23, DEC-37, A-EA-08): `index.html` loads
   `shared/requirements.js` with `data-needs-webgl2` before the module and has the `<noscript>` notice in `#graphic`,
   as the other apps; the layer's hook (`window.__demo.ready`) tells the watchdog that the page started.
 
 ### 6.1 Building and deploying this app alone
 
-Owner rule R-A: this one app can be taken out of the repository and hosted anywhere.
+Rule 7: this one app can be taken out of the repository and hosted anywhere.
 
 - Command, in the repository folder: `npm run bundle -- euler-angles` → `dist/euler-angles/` (with `--zip` also `dist/euler-angles.zip`;
   `npm run bundle -- --all` bundles every app). `tools/bundle-app.mjs` follows every file the page loads (HTML, import
@@ -158,20 +157,15 @@ Owner rule R-A: this one app can be taken out of the repository and hosted anywh
 | D-EA-02 | deviation | Bookmark animation (9 s per cycle) and slider animation (6 s per sweep) speeds are guesses; Mathematica's defaults may differ. |
 | D-EA-03 | deviation | Labels are HTML overlays: always on top, never hidden behind geometry. |
 | D-EA-04 | deviation | The 3D picture is as wide as its column, at most 520 px (original `ImageSize -> 400`). |
-| D-EA-05 | deviation (owner decision 2026-10-23, DEC-36) | Colours and lighting as the other 3D ports (D-DH-02, D-RS-02): the renderer writes the displayed colour values directly (`outputColorSpace = LinearSRGBColorSpace`, no linear→sRGB encoding) and the lights are Mathematica's documented default lights of `shared/mma-lighting.js` (what `shared/graphics3d-view.js` View3D does for `Lighting -> Automatic`), instead of `shared/three-helpers.js`'s older approximation with sRGB output (K-EA-02). An intentional visible change of v0.1.21: the rings, axles and rotor are shaded with the coloured lights (darker, more saturated), and the unlit axis lines show their colour values unencoded (darker); everything else in the scene is unchanged (3D parity tool: the scene graph differs only in the lights under the camera and the output colour space; state identical). |
+| D-EA-05 | deviation | Colours and lighting as the other 3D ports (D-DH-02, D-RS-02): the renderer writes the displayed colour values directly (`outputColorSpace = LinearSRGBColorSpace`, no linear→sRGB encoding) and the lights are Mathematica's documented default lights of `shared/mma-lighting.js` (what `shared/graphics3d-view.js` View3D does for `Lighting -> Automatic`), instead of `shared/three-helpers.js`'s older approximation with sRGB output (K-EA-02). An intentional visible change of v0.1.21: the rings, axles and rotor are shaded with the coloured lights (darker, more saturated), and the unlit axis lines show their colour values unencoded (darker); everything else in the scene is unchanged (3D parity tool: the scene graph differs only in the lights under the camera and the output colour space; state identical). |
 | K-EA-01 | known issue | While "Animate bookmarks" runs, "Initial settings" and slider moves are overwritten by the next animation frame (the animation is not stopped). Found by design review, v0.1.6. What the original does in the same situation (⊕ menu → Initial Settings during the bookmark animation) is to be checked (M-EA-08); the port is to behave like the original. A possible improvement is I-EA-01. |
-| K-EA-02 | known issue (lead) | Lighting lead (found with K-RS-10 of the robot-singularities app, whose `shared/mma-lighting.js` reproduces Mathematica's documented default `Lighting`, confirmed in Mathematica 15.0.1): `shared/three-helpers.js` places the default lights with the colours of directional lights 1 and 3 swapped, the 4th light RGBColor[0, 0.18, 0.5] instead of RGBColor[0, 0, 0.18] and the green light at z = 2 instead of 3. Not changed (it is part of D-EA-01); to be compared with the original's snapshots before any change, which would go through §8. Resolved in v0.1.21: the page now uses `shared/mma-lighting.js` (owner decision 2026-10-23, DEC-36, D-EA-05). |
+| K-EA-02 | known issue (lead) | Lighting lead (found with K-RS-10 of the robot-singularities app, whose `shared/mma-lighting.js` reproduces Mathematica's documented default `Lighting`, confirmed in Mathematica 15.0.1): `shared/three-helpers.js` places the default lights with the colours of directional lights 1 and 3 swapped, the 4th light RGBColor[0, 0.18, 0.5] instead of RGBColor[0, 0, 0.18] and the green light at z = 2 instead of 3. Not changed (it is part of D-EA-01); to be compared with the original's snapshots before any change, which would go through §8. Resolved in v0.1.21: the page now uses `shared/mma-lighting.js` (DEC-36, D-EA-05). |
 | N-EA-01 | note | `s1 = a1/1°` in the extracted source is `(a1/1)°` = a1 degrees in radians (box grouping), not a bug. |
 | N-EA-02 | note | Sliders go 0 … 360; the original has no negative angles. |
 
 ## 8. Proposed changes
 
-No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
-
-| ID | Status | Requested by / date | Change | Reason | Acceptance criteria |
-|----|--------|---------------------|--------|--------|---------------------|
-| P-EA-01 | withdrawn 2026-10-03 (owner: keep the original's behaviour; kept as I-EA-01) | design review / 2026-10-03 | "Initial settings" and any slider input stop a running bookmark animation | fixes K-EA-01: the reset should win | after pressing Initial settings during the animation, all angles stay 0 and the button shows "▶ Animate bookmarks" |
-| P-EA-02 | implemented in v0.1.11 as A-EA-06 (approved by the owner 2026-10-05) | browser-compatibility investigation / 2026-10-05 | after the browser restores a lost WebGL context, redraw the scene with the white background | after a simulated loss and restore, three.js reset the clear colour to black and nothing redrew until the next interaction (scene missing, then on black); reload was the only recovery | after `WEBGL_lose_context` loss + restore, without any interaction the canvas shows the same picture as before (ink within 10 %) on white; existing tests pass |
+Proposals for this app are tracked separately.
 
 ## 9. Revision history
 
@@ -188,24 +182,24 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 4 | v0.1.12 | 2026-10-06 | no behaviour change (seven further apps added to the site; their additions to `shared/style.css` apply only to their own pages); lighting lead K-EA-02 recorded |
 | 4 | v0.1.13 | 2026-10-12 | no change to this app (collision beep with a mute checkbox in prm-seven-link; new `shared/beep.js` used only there) |
 | 4 | v0.1.14 | 2026-10-16 | no change to this app (Mathematica harness tooling; snapshot-state golden tests for the seven newer apps) |
-| 5 | v0.1.15 | 2026-10-17 | §11 Errors in the original added (owner rule R-C); Mathematica checklist items rewritten as operator procedures (R-B); standalone bundle (owner rule R-A): §6.1, A-EA-07, tools/bundle-app.mjs; review fixes |
+| 5 | v0.1.15 | 2026-10-17 | §11 Errors in the original added; Mathematica checklist items rewritten as operator procedures; standalone bundle: §6.1, A-EA-07, tools/bundle-app.mjs; review fixes |
 | 6 | v0.1.16 | 2026-10-18 | version number only (batch B release); no change to this app |
 | 7 | v0.1.17 | 2026-10-18 | version number only (harness run 2 accepted); no change to this app |
 | 8 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 9 | v0.1.19 | 2026-10-21 | version number only (shared Manipulate layer added, four apps migrated to it); no change to this app |
 | 10 | v0.1.20 | 2026-10-21 | version number only (Manipulate layer extended, eleven more apps migrated to it); no change to this app |
-| 11 | v0.1.21 | 2026-10-23 | `main.js` on the shared Manipulate layer; **owner decision 2026-10-23 (DEC-36):** the newer lighting (Mathematica's documented default lights of `shared/mma-lighting.js`, linear output colour space) replaces createViewer's older approximation — a visible, intentional change (D-EA-05; scene graph otherwise identical); **DEC-37:** the DEC-22 start-up notice (`shared/requirements.js` with WebGL 2 check, `<noscript>`) added (A-EA-08) |
+| 11 | v0.1.21 | 2026-10-23 | `main.js` on the shared Manipulate layer; **decision 2026-10-23:** the newer lighting (Mathematica's documented default lights of `shared/mma-lighting.js`, linear output colour space) replaces createViewer's older approximation — a visible, intentional change (D-EA-05; scene graph otherwise identical); **:** the start-up notice (`shared/requirements.js` with WebGL 2 check, `<noscript>`) added (A-EA-08) |
 | 12 | v0.1.22 | 2026-10-25 | version number; bundle table (`shared/manipulate.js` now also loads `shared/graphics-extras.js` and `shared/svg-frame.js` for the new Graphics options `Axes`/`Frame`/`PlotLabel`); no change to this app's code, behaviour or picture (pixel parity with v0.1.21) |
 | 13 | v0.1.23 | 2026-10-25 | version number; the shared code gained plot functions, a geometry kit, 3D text and tube primitives and fixes for new apps (v0.1.23); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.22) |
 | 14 | v0.1.24 | 2026-10-26 | version number; the shared code gained a clock for bodies that read the time, Locator variables that change between one point and a list, sector disks and Opacity on points and text (v0.1.24); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.23) |
 | 15 | v0.1.25 | 2026-10-26 | version number; the shared code gained one page clock (`shared/clock.js`: slider animations and app animations read it, tests fix it), tolerant `Equal`/`Unequal` in `shared/wl.js` and exact slider texts from saved states (v0.1.25); `main.js`: the "Animate bookmarks" tour runs on the page clock (`animate` of `shared/clock.js`) instead of its own animation-frame loop — same timing, now testable with a fixed clock (e2e "with the page clock fixed"); no change to behaviour or picture (pixel and scene parity with v0.1.24) |
 | 16 | v0.1.26 | 2026-10-27 | version number; the shared code gained region and density plots (`RegionPlot`, two-parameter `ParametricPlot`, `DensityPlot`), `BSplineCurve`, decorated insets, textures on polygons, `settleInterval` for bodies that pause between evaluations, typeset control headings and fixes found by the seven new ports (v0.1.26); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.25) |
 | 17 | v0.1.27 | 2026-10-28 | version number; the shared code gained spans with a step, a cyclic `Riffle`, `EvenQ`/`OddQ`, `ArcCos`/`ArcSin`, `DeleteCases`, `ToString` and `StringForm` (`shared/wl.js`), legend labels that are pictures and Mathematica's `Placed[…, {pos, align}]` form, `Automatic` in PlotStyle lists, `Fraction` labels, 3D `Line` with several polylines, and View3D's `Epilog` and `SphericalRegion: false` (v0.1.27); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.26) |
-| 18 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default; motion planning, PA2 fix F-02) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.27) |
+| 18 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.27) |
 | 19 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.28) |
 | 20 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
 | 21 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
-| 22 | v0.1.32 | 2026-11-05 | A-EA-09: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
+| 22 | v0.1.32 | 2026-11-05 | A-EA-09: landing-page thumbnail (`tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 | 23 | v0.1.33 | 2026-11-06 | version number (v0.1.33: four new apps; opt-in shared additions S-1 … S-7, unused by this app, and the locators of a Locator list made after the first evaluation); no change to this app's code, behaviour or picture |
 | 24 | v0.1.34 | 2026-11-10 | version number (v0.1.34: the switch "errors of the original: kept \| corrected" for the apps with code-level findings in §11, `shared/errata.js`); no change to this app's code, behaviour or picture |
 | 25 | v0.1.35 | 2026-11-11 | version number (v0.1.35: two new apps, paths-inside-a-polygon and voronoi-diagrams; no shared code changed); no change to this app's code, behaviour or picture |
@@ -218,7 +212,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 ## 10. Improvements to consider (not implemented)
 
 Ideas for making the app better than the original. **None of them is implemented**: the port
-reproduces the original's behaviour. An idea becomes work only when the owner turns it into a
+reproduces the original's behaviour. An idea becomes work only when Tico turns it into a
 proposal in §8 and approves it.
 
 | ID | Improvement | Benefit | Cost / risk | Related |
@@ -230,7 +224,7 @@ proposal in §8 and approves it.
 
 ## 11. Errors in the original (conceptual and mathematical)
 
-Where the original is probably wrong, as distinct from the notes of §7 that are merely unusual (owner rule R-C,
+Where the original is probably wrong, as distinct from the notes of §7 that are merely unusual (rule 9,
 [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) rule 9). Checked on 2026-10-17 against the readable source
 [`docs/original-source/euler-angles.txt`](../../docs/original-source/euler-angles.txt).
 

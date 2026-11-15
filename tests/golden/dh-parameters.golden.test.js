@@ -8,7 +8,7 @@
 //  * what only the pictures docs/original-snapshots/dh-parameters-1.png … -5.png show: the slider labels and the width
 //    of the ground disc (pixels of the snapshots at 2 px per pt);
 //  * the Mathematica-harness records H-DH-01 … H-DH-10 (tests/golden/dh-parameters.harness.json, read through
-//    tests/support/harness-json.js). These SKIP with the documented reason until the owner's harness run exists.
+//    tests/support/harness-json.js). These SKIP with the documented reason until Tico's harness run exists.
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import { parseLexical } from '../../tools/lib/json-lexical.mjs';

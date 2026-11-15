@@ -1,6 +1,6 @@
 # Checking the originals in Mathematica — operator procedure
 
-This is the general procedure for every manual check that involves an original Wolfram notebook (owner rule R-B,
+This is the general procedure for every manual check that involves an original Wolfram notebook (rule 8,
 [`DESIGN_PROCESS.md`](DESIGN_PROCESS.md) rule 8). The checklist items in
 [`MANUAL_TEST_CHECKLIST.md`](MANUAL_TEST_CHECKLIST.md) and [`checklists/`](checklists/) say WHAT to do, under the fixed
 headings **Open**, **Prepare**, **Do**, **Record**, **Save**, **Port**, **Expected / what it decides**; this page says
@@ -152,7 +152,7 @@ out, a locator cannot be found), write that into the test-run file and go on wit
   (create the folder if it does not exist), file name `<dir>_<item>_<YYYY-MM-DD>.nb`, e.g.
   `car-paths_M-CP-06_2026-10-18.nb`, type "Notebook (*.nb)", click Save; then File > Close. If that name exists
   already, add `_2`, `_3`. Never save into `_internal\originals\` or `_internal\originals\batch-ab\` and never
-  over a downloaded file. If that happened by mistake, write it into the test-run file; the owner downloads the
+  over a downloaded file. If that happened by mistake, write it into the test-run file; Tico downloads the
   original again.
 - **When an item asks you to evaluate something** (rare; the item says so explicitly): first make a working copy
   with File > Save As… as above, so the original stays untouched. In the working copy run Evaluation > Evaluate
@@ -191,8 +191,8 @@ saved notebooks. In a Command Prompt in the repository folder:
 tar -a -c -f "%USERPROFILE%\Desktop\test-runs-<YYYY-MM-DD>.zip" _internal\test-runs _internal\originals\saved
 ```
 
-(Leave out `_internal\originals\saved` if you saved nothing.) Attach the zip file to your message in a new session
-or e-mail. The files stay private: `_internal\` is never published.
+(Leave out `_internal\originals\saved` if you saved nothing.) Send the zip file to Tico
+(e-mail or the collaboration repository). The files stay private: `_internal\` is never published.
 
 ## 12. Where the original notebooks are
 
@@ -235,6 +235,6 @@ The sixteen notebooks of batch A/B (in `_internal\originals\batch-ab\`, names as
 `Demonstration-Chart-for-a-Torus-1-0-0-definition.nb`,
 `Demonstration-Probabilistic-Roadmap-Method-in-3D-1-0-0-definition.nb`.
 
-Saved states (owner states, golden data) go to `_internal\originals\saved\` (§9). An owner state saved before this
+Saved states (saved states, golden data) go to `_internal\originals\saved\` (§9). A saved state saved before this
 procedure existed (e.g. the seven-link game with 132 collisions of 2026-10-06) is used by an item under the name the
 item gives; copy it there under that name first if it is kept elsewhere.

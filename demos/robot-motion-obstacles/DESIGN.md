@@ -7,7 +7,6 @@
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Robot Motion with Obstacles", contributed by Aaron T. Becker and Haoran Zhao, published 2016-04-18 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/RobotMotionWithObstacles/>. Readable source: `docs/original-source/robot-motion-obstacles.txt`; snapshots: `docs/original-snapshots/robot-motion-obstacles-1.png` … `-4.png` (the extraction's pictures 5 and 6 are the Wolfram logo, N-RM-03); stored output cell (Body, Initialization, Specifications and the initial settings): raw definition notebook lines 1074–1340 (Body 1133, Specifications 1281, Initialization 1305); fixture `tests/golden/robot-motion-obstacles.original-states.json` (`states[0]` live state, raw line 1076; `snapshots[1…4]` the snapshot Settings, raw lines 2117, 2946, 3747, 4533; `specs` the initial settings) |
 | Port files | `demos/robot-motion-obstacles/model.js` (constants, one evaluation of the Manipulate body; pure), `main.js` (the Manipulate on `shared/manipulate.js`: Q slider, locators, Graphics data; v0.1.19), `index.html`; shared with "Breadth-First Search Robot Motion Planning" and owned by this app (COMMON-DECISIONS §3): `demos/common/arm-grid.js` (new, pure, CC BY-NC-SA) and `demos/common/arm-view.js` (new, Graphics data since v0.1.19, CC BY-NC-SA); they compose `demos/common/two-link.js` (`armSegments`, `armGeometry`) and `demos/common/arrow-arcs.js` (`arrowArc`) owned by two-link-kinematics, and `LOC_ICON` of `demos/common/prm-core.js` |
-| Role in the project | further demonstration (batch A) |
 
 ## 1. Purpose and background
 
@@ -82,8 +81,8 @@ port's code), more links or obstacles, exact obstacle-region boundaries.
 | A-RM-04 | "All demos" link | site navigation | v0.1.15 | inventory; M-GEN-01 |
 | A-RM-05 | Credit footer: original title, authors, licence, adaptation notice | required by CC BY-NC-SA 3.0 | v0.1.15 | e2e "attribution on" |
 | A-RM-06 | Start-up notice (watchdog, `<noscript>`) when the page cannot start (DEC-22) | a clear message instead of an empty page | v0.1.15 | e2e "start-up notice when" |
-| A-RM-07 | standalone bundle (owner rule R-A): `npm run bundle -- robot-motion-obstacles` builds `dist/robot-motion-obstacles/` with exactly the files the app imports, the licences, a generated README and a root `index.html` (§6, "Building and deploying this app alone") | anyone can host this one app elsewhere without the rest of the site (owner rule R-A, 2026-10-17) | v0.1.15 | e2e "bundle: robot-motion-obstacles runs from its own folder"; unit "bundle contents listed in DESIGN.md match the collector" |
-| A-RM-08 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | owner request 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
+| A-RM-07 | standalone bundle (rule 7): `npm run bundle -- robot-motion-obstacles` builds `dist/robot-motion-obstacles/` with exactly the files the app imports, the licences, a generated README and a root `index.html` (§6, "Building and deploying this app alone") | anyone can host this one app elsewhere without the rest of the site (rule 7, 2026-10-17) | v0.1.15 | e2e "bundle: robot-motion-obstacles runs from its own folder"; unit "bundle contents listed in DESIGN.md match the collector" |
+| A-RM-08 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | requested 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
 
 ## 5. UI inventory
 
@@ -163,7 +162,7 @@ ControlActive, wires "Initial settings" and builds the `window.__demo` hook (A-R
 `tests/golden/robot-motion-obstacles.golden.test.js` (saved states and snapshot pictures; `tests/support/png.js` reads
 the pictures), `tests/golden/robot-motion-obstacles.harness.test.js` (one test `harness "H-RM-nn"` per harness scenario:
 replays `tests/harness/robot-motion-obstacles.scenarios.json` on the model and compares with
-`tests/golden/robot-motion-obstacles.harness.json`; skipped with "no harness data (owner run pending)" until the owner's
+`tests/golden/robot-motion-obstacles.harness.json`; skipped with "no harness data (harness run pending)" until Tico's
 Mathematica run is accepted), `tests/e2e/robot-motion-obstacles.spec.js`.
 
 **Reused (existing).** `shared/manipulate.js` and `shared/graphics.js` (v0.1.19; they build on `shared/svg-plot.js`
@@ -194,7 +193,7 @@ point–segment distances ≈ 10 ms in JS (the original needs seconds, which is 
 
 ### 6.1 Building and deploying this app alone
 
-Owner rule R-A (2026-10-17): this one app can be taken out of the repository and hosted anywhere.
+Rule 7 of docs/DESIGN_PROCESS.md: this one app can be taken out of the repository and hosted anywhere.
 
 - Command, in the repository folder: `npm run bundle -- robot-motion-obstacles` → `dist/robot-motion-obstacles/` (with `--zip` also
   `dist/robot-motion-obstacles.zip`; `npm run bundle -- --all` bundles every app). `tools/bundle-app.mjs` follows every file the page
@@ -258,18 +257,15 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 
 ## 8. Proposed changes
 
-No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
-
-| ID | Status | Requested by / date | Change | Reason | Acceptance criteria |
-|----|--------|---------------------|--------|--------|---------------------|
+Proposals for this app are tracked separately.
 
 ## 9. Revision history
 
 | Doc rev. | Code version | Date | Change |
 |----------|--------------|------|--------|
-| 1 | v0.1.15 | 2026-10-17 | first implementation, from the design draft of 2026-10-12 approved by the owner on 2026-10-17 (DEC-17; draft revised after review r2, COMMON-DECISIONS §3–§6 and owner rules R-A/R-B/R-C). Built as specified; additions while building: the arm-view.js helpers and the measured frame and glyph sizes (§6, D-RM-05), the harness test file (§6 Tests). New shared code: `demos/common/arm-grid.js`, `demos/common/arm-view.js`; review fixes |
+| 1 | v0.1.15 | 2026-10-17 | first implementation, from the design draft of 2026-10-12. Built as specified; additions while building: the arm-view.js helpers and the measured frame and glyph sizes (§6, D-RM-05), the harness test file (§6 Tests). New shared code: `demos/common/arm-grid.js`, `demos/common/arm-view.js`; review fixes |
 | 2 | v0.1.16 | 2026-10-18 | version number only (batch B release); no change to this app |
-| 3 | v0.1.17 | 2026-10-18 | harness run 2 accepted (Mathematica 15.0.1): all 20 records match the port, no app code changed. Golden test adapter: an unassigned local recorded as null (H-RM-20, N-RM-08). K-RM-06 resolved (a·(1/b)); evidence added to K-RM-03 (count) and K-RM-04 (not decided) |
+| 3 | v0.1.17 | 2026-10-18 | harness run 2 accepted (Mathematica 15.0.1): all 20 records match the port, no app code changed. Golden test adapter: an unassigned local recorded as null (H-RM-20, N-RM-08). K-RM-06 resolved (a· (1/b)); evidence added to K-RM-03 (count) and K-RM-04 (not decided) |
 | 4 | v0.1.18 | 2026-10-18 | version number only (harness run 3 accepted for manipulability-ellipsoid); no change to this app |
 | 5 | v0.1.19 | 2026-10-21 | main.js rewritten on the new shared Manipulate layer (`shared/manipulate.js`, `shared/graphics.js`): the controls are written as Manipulate control specs and the picture as Graphics data; no change to behaviour or picture (all unit, golden and browser tests unchanged and passing; screenshots and Manipulate state identical to v0.1.18 at sample settings); `demos/common/arm-view.js` now returns Graphics data (§6) |
 | 6 | v0.1.20 | 2026-10-21 | bundle table only (the Manipulate layer now also loads `shared/ui-extra.js`, `ui-interval.js`, `random.js`); no change to this app |
@@ -280,11 +276,11 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 11 | v0.1.25 | 2026-10-26 | version number; the shared code gained one page clock (`shared/clock.js`: slider animations and app animations read it, tests fix it), tolerant `Equal`/`Unequal` in `shared/wl.js` and exact slider texts from saved states (v0.1.25); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.24) |
 | 12 | v0.1.26 | 2026-10-27 | version number; the shared code gained region and density plots (`RegionPlot`, two-parameter `ParametricPlot`, `DensityPlot`), `BSplineCurve`, decorated insets, textures on polygons, `settleInterval` for bodies that pause between evaluations, typeset control headings and fixes found by the seven new ports (v0.1.26); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.25) |
 | 13 | v0.1.27 | 2026-10-28 | version number; the shared code gained spans with a step, a cyclic `Riffle`, `EvenQ`/`OddQ`, `ArcCos`/`ArcSin`, `DeleteCases`, `ToString` and `StringForm` (`shared/wl.js`), legend labels that are pictures and Mathematica's `Placed[…, {pos, align}]` form, `Automatic` in PlotStyle lists, `Fraction` labels, 3D `Line` with several polylines, and View3D's `Epilog` and `SphericalRegion: false` (v0.1.27); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.26) |
-| 14 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default; motion planning, PA2 fix F-02) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.27) |
+| 14 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.27) |
 | 15 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (pixel and scene parity with v0.1.28) |
 | 16 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
 | 17 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
-| 18 | v0.1.32 | 2026-11-05 | A-RM-08: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
+| 18 | v0.1.32 | 2026-11-05 | A-RM-08: landing-page thumbnail (`tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 | 19 | v0.1.33 | 2026-11-06 | version number (v0.1.33: four new apps; opt-in shared additions S-1 … S-7, unused by this app, and the locators of a Locator list made after the first evaluation); no change to this app's code, behaviour or picture |
 | 20 | v0.1.34 | 2026-11-10 | version number (v0.1.34: the switch "errors of the original: kept \| corrected" for the apps with code-level findings in §11, `shared/errata.js`); no change to this app's code, behaviour or picture |
 | 21 | v0.1.35 | 2026-11-11 | version number (v0.1.35: two new apps, paths-inside-a-polygon and voronoi-diagrams; no shared code changed); no change to this app's code, behaviour or picture |
@@ -306,7 +302,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 
 ## 11. Errors in the original (conceptual and mathematical)
 
-Owner rule R-C (2026-10-17). Checked: `pointsegdis2` against the projection onto a segment (with s = 2(p − mean)·u/u·u,
+Rule 9 of docs/DESIGN_PROCESS.md. Checked: `pointsegdis2` against the projection onto a segment (with s = 2(p − mean)·u/u·u,
 the code's t = −s and closest point mean − u clamp(t)/2 = mean + u clamp(s)/2: correct), the collision radius 2w (bar
 half-width plus disk radius: correct, N-RM-05), the angle mapping and the cell centres (2k − 1)π/res against the inset
 placement (column j and row i land on θ1 = (2j − 1)π/res and θ2 = 2π − (2i − 1)π/res, with link 2 at a1 − a2 ≡ θ1 + θ2:

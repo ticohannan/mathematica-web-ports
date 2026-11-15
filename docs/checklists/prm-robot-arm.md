@@ -1,6 +1,6 @@
 # Manual checks — PRM for robot arm (`demos/prm-robot-arm/`)
 
-Each item compares the original in Mathematica with the port, as an operator procedure (owner rule R-B). The general
+Each item compares the original in Mathematica with the port, as an operator procedure (rule 8). The general
 procedure — starting Mathematica, Enable Dynamics, the ⊕ menu, invisible locators, waiting, recording, saving,
 sending results back — is in [`docs/MATHEMATICA_CHECKS.md`](../MATHEMATICA_CHECKS.md). Record every result in the
 test-run file `_internal\test-runs\<YYYY-MM-DD>_prm-robot-arm.md` (create it with `npm run test-run -- prm-robot-arm`).
@@ -104,14 +104,14 @@ during the drag than after release (yes/no).
 3. If a path exists (green path with magenta connectors), read the label above the phase space; drag **progress**
    from left to right and watch the blue point in the phase space and the robot in the workspace.
 4. Click the + right of the **radius** slider and ▶: which slider is animated? Pause it.
-5. Owner state 1: open `_internal\originals\saved\prm-robot-arm_owner-state-1_2026-10-06.nb` (the working copy saved on
+5. Saved state 1: open `_internal\originals\saved\prm-robot-arm_owner-state-1_2026-10-06.nb` (the working copy saved on
    2026-10-06; copy it there under this name first if it is elsewhere), Enable Dynamics, and read the label.
 **Record** — Do 1: brown roadmap edges drawn (yes/no); Do 3: the label exactly, and whether progress moves the blue
 point and the robot along the path; Do 4: which slider moved; Do 5: the label exactly.
-**Save** — File > Close, Don't Save (also for the owner state).
+**Save** — File > Close, Don't Save (also for the saved state).
 **Port** — Do 1–4 in the port. Expected: brown roadmap; with a path, magenta connectors, green path and "Path length =
 x"; progress moves the blue point and the 3D robot; the ⊕ of radius animates the RADIUS (progress has no animator in
-the original either, O-PA-02). For owner state 1 the port shows "Path length = 3.58".
+the original either, O-PA-02). For saved state 1 the port shows "Path length = 3.58".
 **Expected / what it decides** — Do 1–4 the same in both; Do 5 settles the regression pin of O-PA-03 (expected
 "Path length = 3.58").
 

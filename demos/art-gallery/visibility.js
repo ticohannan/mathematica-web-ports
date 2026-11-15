@@ -11,7 +11,7 @@
 // port of the same authors); Norm = classic BLAS dnrm2 scaling (confirmed by extra-checks.wls on Mathematica 15.0.1:
 // Norm[{1.5, 2.5}] = 2.91547594742265); a/b = a·b⁻¹ as Mathematica evaluates it.
 // Normalize: two models (NORMALIZE_MODELS, DESIGN.md K-AG-03). The default multiplies by the reciprocal of the
-// CORRECTLY ROUNDED length; it reproduces the 2019 snapshots and the owner's Mathematica 15.0.1 state bit for bit.
+// CORRECTLY ROUNDED length; it reproduces the 2019 snapshots and Tico's Mathematica 15.0.1 state bit for bit.
 // 'viaNorm' (v · 1/Norm[v] with the dnrm2 Norm) reproduces the state saved by Mathematica 14.1 bit for bit.
 //
 // Quirks of the ORIGINAL are reproduced and marked "ORIGINAL QUIRK (Q-AG-nn)"; places where the port cannot do what
@@ -42,7 +42,7 @@ const scaleBy = (v, n) => { if (n === 0) return v.slice(); const r = 1 / n; retu
 /**
  * Normalize[v] (zero vector unchanged; Mathematica multiplies by the reciprocal of the length).
  * PORT DEVIATION (D-AG-08): which length Mathematica's Normalize uses is not documented. 'correctlyRounded' (default)
- * matches the 2019 snapshots and the owner's 15.0.1 state; 'viaNorm' (the dnrm2 Norm) matches the 14.1 saved state.
+ * matches the 2019 snapshots and Tico's 15.0.1 state; 'viaNorm' (the dnrm2 Norm) matches the 14.1 saved state.
  */
 export const NORMALIZE_MODELS = Object.freeze({
   correctlyRounded: (v) => scaleBy(v, normCorrectlyRounded(v)),

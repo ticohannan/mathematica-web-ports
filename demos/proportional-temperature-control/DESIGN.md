@@ -7,7 +7,6 @@
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Proportional Temperature Control", contributed by Jeff Bryant and Housam Binous, published 2007-09-28 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ProportionalTemperatureControl/> |
 | Port files | `model.js` (one evaluation of the Manipulate body; pure), `main.js` (the Manipulate on `shared/manipulate.js`), `index.html` |
-| Role in the project | new demonstration (v0.1.37 batch: control theory and signals, DEC-56) |
 
 ## 1. Purpose and background
 
@@ -25,7 +24,7 @@ additions are the A- features.
 ## 3. Users and use cases
 
 - UC-PT-01: a student explores the Demonstration in a browser, without Mathematica.
-- UC-PT-02: the owner compares the port with the original (checklist `docs/checklists/proportional-temperature-control.md`), with the errors of the original kept or corrected.
+- UC-PT-02: Tico compares the port with the original (checklist `docs/checklists/proportional-temperature-control.md`), with the errors of the original kept or corrected.
 
 ## 4. Features
 
@@ -45,9 +44,9 @@ additions are the A- features.
 | A-PT-03 | Start-up notice when the browser cannot run the page (DEC-22) | no empty page | v0.1.37 | e2e "start-up notice when" |
 | A-PT-04 | Breadcrumb link to all demos | navigation | v0.1.37 | inventory |
 | A-PT-05 | Credits footer (authors, title, source, licence, adaptation notice) | required by the licence (CC BY-NC-SA 3.0 §4) | v0.1.37 | e2e "attribution on" |
-| A-PT-06 | This app can be bundled and served alone (§6.1) | owner rule R-A | v0.1.37 | e2e "bundle: proportional-temperature-control runs from its own folder" |
-| A-PT-07 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | owner request 2026-11-05 | v0.1.37 | e2e "every card on the landing page has a thumbnail that loads" |
-| A-PT-08 | Switch "errors of the original: kept \| corrected" beside "Initial settings" (variable `errata`, default kept = the original's behaviour). "corrected" changes only E-PT-01 (§11; `errata-mode.js`); the differences are listed on the page under "Errors of the original: what "corrected" changes" | owner request 2026-11-12: every code-level error of the original can be switched between the original's behaviour and its correction | v0.1.37 | unit "corrected mode (E-PT)"; e2e "errata switch on proportional-temperature-control: kept is the original, corrected changes the listed result" |
+| A-PT-06 | This app can be bundled and served alone (§6.1) | rule 7 | v0.1.37 | e2e "bundle: proportional-temperature-control runs from its own folder" |
+| A-PT-07 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | requested 2026-11-05 | v0.1.37 | e2e "every card on the landing page has a thumbnail that loads" |
+| A-PT-08 | Switch "errors of the original: kept \| corrected" beside "Initial settings" (variable `errata`, default kept = the original's behaviour). "corrected" changes only E-PT-01 (§11; `errata-mode.js`); the differences are listed on the page under "Errors of the original: what "corrected" changes" | requested 2026-11-12: every code-level error of the original can be switched between the original's behaviour and its correction | v0.1.37 | unit "corrected mode (E-PT)"; e2e "errata switch on proportional-temperature-control: kept is the original, corrected changes the listed result" |
 
 ## 5. UI inventory
 
@@ -77,7 +76,7 @@ matches any text. Checked by the browser test "every control on … is specified
 
 ### 6.1 Building and deploying this app alone
 
-Owner rule R-A (2026-10-17): this one app can be taken out of the repository and hosted anywhere.
+Rule 7 of docs/DESIGN_PROCESS.md: this one app can be taken out of the repository and hosted anywhere.
 
 - Command, in the repository folder: `npm run bundle -- proportional-temperature-control` → `dist/proportional-temperature-control/`.
 - Contents (generated with `node tools/bundle-app.mjs proportional-temperature-control --update-docs`):
@@ -101,18 +100,14 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 
 ## 8. Proposed changes
 
-No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
-
-| ID | Status | Requested by / date | Change | Reason | Acceptance criteria |
-|----|--------|---------------------|--------|--------|---------------------|
-| P-PT-01 | approved (owner request 2026-11-12), implemented in v0.1.37 as A-PT-08 | owner / 2026-11-12 | Switch "errors of the original: kept \| corrected": mark the current version, then offer each logical error of the original as a gated correction; the corrected mode changes only the code needed for E-PT-01 | the errors of the original were reproduced bug for bug; the owner wants to compare the original with a corrected version and to be able to go back | the default is the original (golden data, harness replays and parity unchanged); each correction has a unit test with an independently derived expected value and the browser test of the switch; the page documents the differences |
+Proposals for this app are tracked separately.
 
 ## 9. Revision history
 
 | Doc rev. | Code version | Date | Change |
 |----------|--------------|------|--------|
 | 1 | v0.1.37 | 2026-11-12 | generated by `tools/new-app.mjs` (example model and controls) |
-| 2 | v0.1.37 | 2026-11-12 | the port (DEC-56): the three differential equations by NDSolve (shared ode.js), ContinuousAction -> False; switch for E-PT-01 |
+| 2 | v0.1.37 | 2026-11-12 | the port: the three differential equations by NDSolve (shared ode.js), ContinuousAction -> False; switch for E-PT-01 |
 | 3 | v0.1.38 | 2026-11-12 | version number (v0.1.38: one new app, forward-kinematics; shared/traditional-form.js is new, and `Lighting -> "Neutral"` in shared/mma-lighting.js and graphics3d-view.js is opt-in); no change to this app's code, behaviour or picture |
 | 4 | v0.1.39 | 2026-11-12 | version number (v0.1.39: selective testing — tools/affected.mjs and publish:tested run only the browser tests a change can affect; no app code changed); no change to this app's code, behaviour or picture |
 | 5 | v0.1.40 | 2026-11-13 | version number (v0.1.40: three truss ports; shared/truss.js is new; shared/graphics.js gains Mouseover, RotatedText, rounded and line-less Framed, Arrowheads[Large] and heads at given places, Grid alignment at "=", styled scripts and fitPlotRange — the changes to existing drawing are a styled script keeping its style and the baseline after it, and framed or backed labels keeping their outer spaces); no change to this app's code or behaviour |
@@ -123,11 +118,11 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 |----|----|----|----|----|
 | I-PT-01 | Show the heater power Q | explains the oscillation | not in the original | F-PT-02 |
 | I-PT-02 | Let K_p vary | the controller's effect | not in the original | F-PT-02 |
-| I-PT-03 | Mathematica reference values | tests against Mathematica | owner's Mathematica | — |
+| I-PT-03 | Mathematica reference values | tests against Mathematica | Tico's Mathematica | — |
 
 ## 11. Errors in the original (conceptual and mathematical)
 
-Checked when the Demonstration's code was ported (owner rule R-C). Kind: conceptual, mathematical, numerical or
+Checked when the Demonstration's code was ported (rule 9). Kind: conceptual, mathematical, numerical or
 text; Status: open, kept or corrected in vX.Y.Z (the tests check these words). Not by Dr. Becker: findings here are
 listed in the errata list as such and are not raised with him.
 

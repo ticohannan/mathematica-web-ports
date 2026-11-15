@@ -10,7 +10,7 @@
 //   * §9 gets the revision row of the current package.json version (in the switch's own version its text; in a later
 //     version an existing row is kept, a missing one is added as a version-number row), and the header's "Code version";
 //   * with a demos/<dir>/errata-mode.js: the A- feature row of the switch (§4), its two rows in the UI inventory (§5),
-//     the approved P- row (§8) and, for each listed E- finding, Status "switchable since vX.Y.Z" with the sentence
+//     for each listed E- finding, Status "switchable since vX.Y.Z" with the sentence
 //     "Switch: …" at the end of "What the port does" (§11).
 // docs/CORRECTED_MODE.md lists every correction of every app (generated; do not edit by hand).
 // The tool is idempotent: running it twice changes nothing.
@@ -21,7 +21,7 @@ import { APPS } from '../tests/e2e/apps.js';
 
 const SINCE = 'v0.1.34'; // the version that introduced the switch (never changes)
 const DATE = '2026-11-10';
-const REQUEST = 'owner request 2026-11-10';
+const REQUEST = 'requested 2026-11-10';
 const FEATURE_MARK = 'Switch "errors of the original: kept \\| corrected"';
 const VERSION_ONLY = `version number (${SINCE}: the switch "errors of the original: kept \\| corrected" for the apps with code-level findings in §11, \`shared/errata.js\`); no change to this app's code, behaviour or picture`;
 
@@ -53,7 +53,7 @@ export async function loadCorrections(dir) {
   if (mod.SWITCH) return Object.assign([...mod.CORRECTIONS], { switch: mod.SWITCH });
   return mod.CORRECTIONS;
 }
-const switchOf = (corrections) => corrections?.switch ?? { since: SINCE, date: DATE, request: REQUEST, owner: 'owner / 2026-11-10' };
+const switchOf = (corrections) => corrections?.switch ?? { since: SINCE, date: DATE, request: REQUEST };
 
 export function updateDesign(md, { dir, prefix }, corrections, version) {
   const lines = md.split('\n');
@@ -63,7 +63,6 @@ export function updateDesign(md, { dir, prefix }, corrections, version) {
 
   let featureId = null;
   const { since: SW_SINCE, date: SW_DATE, request: SW_REQUEST } = switchOf(corrections);
-  const SW_OWNER = switchOf(corrections).owner ?? `owner / ${SW_DATE}`;
   const own = !!corrections?.switch; // an app ported with its switch: its revision rows are its own
   if (corrections) {
     const ids = corrections.map((c) => c.id);
@@ -91,27 +90,7 @@ export function updateDesign(md, { dir, prefix }, corrections, version) {
     for (let k = j - 1; k >= i; k--) if (/^\| `(setter-errata-\*|errata-details)` \|/.test(lines[k])) lines.splice(k, 1);
     [i, j] = sectionRange(lines, '5. UI inventory');
     lines.splice(lastTableLine(lines, i, j) + 1, 0, ...inv);
-    // §8 proposal row (approved and implemented)
-    [i, j] = sectionRange(lines, '8. Proposed changes');
-    const pExisting = lines.slice(i, j).find((l) => l.startsWith('|') && l.includes(FEATURE_MARK));
-    let pId;
-    if (pExisting) pId = cells(pExisting)[0];
-    else {
-      const nums = [...md.matchAll(new RegExp(`\\bP-${prefix}-(\\d+)\\b`, 'g'))].map((m) => Number(m[1]));
-      pId = `P-${prefix}-${String(Math.max(0, ...nums) + 1).padStart(2, '0')}`;
-    }
-    const pRow = row([pId, `approved (${SW_REQUEST}), implemented in ${SW_SINCE} as ${featureId}`, SW_OWNER,
-      `${FEATURE_MARK}: mark the current version, then offer each logical error of the original as a gated correction; the corrected mode changes only the code needed for ${ids.join(', ')}`,
-      'the errors of the original were reproduced bug for bug; the owner wants to compare the original with a corrected version and to be able to go back',
-      'the default is the original (golden data, harness replays and parity unchanged); each correction has a unit test with an independently derived expected value and the browser test of the switch; the page documents the differences']);
-    if (pExisting) lines[lines.indexOf(pExisting)] = pRow;
-    else {
-      const sep = lines.findIndex((l, k) => k > i && k < j && /^\|[-| ]+\|$/.test(l));
-      if (sep < 0) throw new Error(`${dir}: §8 has no table`);
-      let at = sep;
-      while (at + 1 < j && lines[at + 1].startsWith('|')) at++;
-      lines.splice(at + 1, 0, pRow);
-    }
+    // §8: proposals are tracked outside the public design document (repo policy 2026-11-15)
     // §11 rows
     [i, j] = sectionRange(lines, '11. Errors in the original');
     for (const c of corrections) {
@@ -128,7 +107,7 @@ export function updateDesign(md, { dir, prefix }, corrections, version) {
   const [i, j] = sectionRange(lines, '9. Revision history');
   const have = lines.findIndex((l, k) => k > i && k < j && l.startsWith('|') && cells(l)[1] === `v${version}`);
   const text = corrections
-    ? `${featureId}: the switch "errors of the original: kept \\| corrected" (${SW_REQUEST}); corrected mode for ${corrections.map((c) => c.id).join(', ')}, default kept: the original's behaviour, golden data and pictures unchanged`
+    ? `${featureId}: the switch "errors of the original: kept \\| corrected"; corrected mode for ${corrections.map((c) => c.id).join(', ')}, default kept: the original's behaviour, golden data and pictures unchanged`
     : VERSION_ONLY;
   // v0.1.35: the row text above belongs to the version that brought the switch (SINCE); in a later version an existing
   // row of that version is the release's own and is kept, and a missing one gets a plain version-number row

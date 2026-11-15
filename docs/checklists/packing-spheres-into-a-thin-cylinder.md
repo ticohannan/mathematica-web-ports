@@ -1,6 +1,6 @@
 # Manual checks — Packing Spheres into a Thin Cylinder (`demos/packing-spheres-into-a-thin-cylinder/`)
 
-Each item compares the original in Mathematica with the port, as an operator procedure (owner rule R-B); the general
+Each item compares the original in Mathematica with the port, as an operator procedure (rule 8); the general
 procedure is in [`docs/MATHEMATICA_CHECKS.md`](../MATHEMATICA_CHECKS.md). Record every result in the test-run file
 `_internal\test-runs\<YYYY-MM-DD>_packing-spheres-into-a-thin-cylinder.md` (create it with `npm run test-run -- packing-spheres-into-a-thin-cylinder`). Items M-PS-07 and
 M-PS-08 compare what only a person can judge: the 3D look and the contact network.

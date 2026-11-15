@@ -80,7 +80,7 @@ Denavit-Hartenberg parameters to the PRM in 3D, added in v0.1.16 as "batch B" (s
 from robot singularities to `demos/common/`); and new demonstrations ported on the shared layer with the app
 generator: five from the Graham scan to the swarm in a circle in v0.1.23, the RC cars steered with one joystick
 in v0.1.24, seven from the visibility region to the apparent velocity in a camera's frame in v0.1.26, and spheres packed into a
-thin cylinder in v0.1.27; from a lecture notebook Dr. Becker gave the owner to convert, the normal form of a line in v0.1.31;
+thin cylinder in v0.1.27; from a lecture notebook Dr. Becker gave Tico to convert, the normal form of a line in v0.1.31;
 four signal-processing and optics demonstrations in v0.1.33; and two by other authors in v0.1.35, shortest paths inside a
 polygon (Stan Wagon and Karen Saxe) and Voronoi diagrams (Ed Pegg Jr, Jeff Bryant and Theodore W. Gray); thirteen
 control-theory and signal demonstrations by other authors in v0.1.37, with shared modules for transfer functions, NDSolve and
@@ -125,7 +125,7 @@ Human/manual tests: [docs/MANUAL_TEST_CHECKLIST.md](docs/MANUAL_TEST_CHECKLIST.m
 added since v0.1.12, one file per app in [docs/checklists/](docs/checklists/); checks in Mathematica are step-by-step operator procedures, with the general
 procedure in [docs/MATHEMATICA_CHECKS.md](docs/MATHEMATICA_CHECKS.md) and results in a test-run file per app and day
 (`npm run test-run -- <dir>`). Where an original is probably wrong (conceptually or mathematically), its design
-document lists it in §11 *Errors in the original*; the ports keep the original's behaviour until the owner decides.
+document lists it in §11 *Errors in the original*; the ports keep the original's behaviour until Tico decides.
 Full guide: [docs/TESTING.md](docs/TESTING.md). Feature changes: [docs/DESIGN_PROCESS.md](docs/DESIGN_PROCESS.md).
 
 ### Errors of the originals: kept or corrected
@@ -139,7 +139,7 @@ listed findings. What changes in each app is on its page (under the Details) and
 
 ## Deploying a single app
 
-Every app can be taken out and hosted on its own (owner rule R-A). `npm run bundle -- prm-robot-arm` writes one app
+Every app can be taken out and hosted on its own (rule 7). `npm run bundle -- prm-robot-arm` writes one app
 to `dist\prm-robot-arm\` (add `--zip` for `dist\prm-robot-arm.zip` as well; `--all` instead of a name bundles every app;
 `--out <folder>` writes elsewhere):
 
@@ -214,8 +214,8 @@ Shahrokhi (Dubins car path, Dubins isochrons, four-bar linkage); Aaron T. Becker
 random tree); Shiva Shahrokhi and Aaron T. Becker (camera and lasers) — licensed
 [CC BY-NC-SA 3.0](https://creativecommons.org/licenses/by-nc-sa/3.0/). This repository is released
 under the same licence, for non-commercial use; separable tooling (`tools/`, `shared/`, configuration)
-is MIT-licensed. Author of the adaptation: Tico Hannan (© 2026), who produced it with an AI
-code-generation tool. Not affiliated with or endorsed by the original authors or Wolfram Research.
+is MIT-licensed. Author of the adaptation: Tico Hannan (© 2026).
+Not affiliated with or endorsed by the original authors or Wolfram Research.
 The car-path port carries code converted (by the original's authors) from the MIT-licensed Python library
 *reeds-shepp-curves*; its notice is kept in LICENSE.md.
 Full credits, sources, the per-file licence map and third-party licences: [LICENSE.md](LICENSE.md).

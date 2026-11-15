@@ -9,7 +9,7 @@
 //  * the snapshot pictures where the Settings cannot hold it (docs/original-snapshots/manipulability-ellipsoid-k.png,
 //    2 px per pt): dial size and spacing, the base cylinder's width, the drawn arrows, rings and full blue circles;
 //  * the Mathematica-harness records H-ME-01 … H-ME-16 (tests/golden/manipulability-ellipsoid.harness.json, read through
-//    tests/support/harness-json.js). These SKIP with the documented reason until the owner's harness run exists.
+//    tests/support/harness-json.js). These SKIP with the documented reason until Tico's harness run exists.
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { loadStates, isExact as isExactWl, exactDouble } from '../../tools/lib/wl-json.mjs';

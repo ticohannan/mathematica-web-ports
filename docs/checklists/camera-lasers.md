@@ -1,6 +1,6 @@
 # Manual checks — Camera and lasers (`demos/camera-lasers/`)
 
-Each item compares the original in Mathematica with the port, as an operator procedure (owner rule R-B). The general
+Each item compares the original in Mathematica with the port, as an operator procedure (rule 8). The general
 procedure — starting Mathematica, Enable Dynamics, the ⊕ menu, invisible locators, waiting, recording, saving,
 sending results back — is in [`docs/MATHEMATICA_CHECKS.md`](../MATHEMATICA_CHECKS.md). Record every result in the
 test-run file `_internal\test-runs\<YYYY-MM-DD>_camera-lasers.md` (create it with `npm run test-run -- camera-lasers`).
@@ -65,7 +65,7 @@ cell (no Shift+Enter).
      separate.
 **Record** — in `_internal\test-runs\<YYYY-MM-DD>_camera-lasers.md`, under the heading M-CL-03: step 1: the reading on each side; step 2: the readings at π/8 and π/4; any difference in dot sizes or in
 which faces of the object are drawn.
-**Save** — File > Close, Don't Save (owner states are made in M-CL-09).
+**Save** — File > Close, Don't Save (saved states are made in M-CL-09).
 **Port** — the same on the page (`locator-p`, `locator-p1`).
 **Expected / what it decides** — about 6.4 on both sides in step 1 (F-CL-16, F-CL-17).
 
@@ -116,7 +116,7 @@ cell (no Shift+Enter).
 4. Set **λ** to 1.2, then to 0.24; count the converging ground lines in the camera image each time.
 **Record** — in `_internal\test-runs\<YYYY-MM-DD>_camera-lasers.md`, under the heading M-CL-06: the reticule labels in steps 1–3 (exact texts; stacked fractions yes/no; minus signs); step 4: the two
 line counts.
-**Save** — File > Close, Don't Save (owner states are made in M-CL-09).
+**Save** — File > Close, Don't Save (saved states are made in M-CL-09).
 **Port** — the same on the page (`vslider-s`, `value-s`, `slider-lambda`, `value-lambda`).
 **Expected / what it decides** — s 0.65: 1/2, 0.6, 0.75, 1, 3/2, 5/2, 5 (stacked); s 0.2: tenths (1/10, 0.12, …);
 λ 0.1, s 0.1: fiftieths (1/50, 1/25, …); 5 and 25 lines (F-CL-04, F-CL-05, F-CL-18, K-CL-04).

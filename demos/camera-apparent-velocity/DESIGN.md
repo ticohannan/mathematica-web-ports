@@ -7,7 +7,6 @@
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Maximizing Apparent Velocity in a Camera's Frame", contributed by Mohammad Sultan and Aaron T. Becker, published 2018-11-07 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/MaximizingApparentVelocityInACamerasFrame/> Source as text: [`docs/original-source/camera-apparent-velocity.txt`](../../docs/original-source/camera-apparent-velocity.txt); snapshots `docs/original-snapshots/camera-apparent-velocity-1…8.png`; saved states `tests/golden/camera-apparent-velocity.original-states.json` (`states[0]` the live state, equal to `specs`, the Manipulate's initial values; `snapshots` the eight snapshots' settings) |
 | Port files | `model.js` (the Initialization definitions of the computation and of the 3D picture, the coordinate grids and one evaluation of the Manipulate body; pure), `picture2d.js` (the 2D definitions, the rasterized label and the body's 2D Graphics; pure), `main.js` (the Manipulate on `shared/manipulate.js` with the 3D picture by `View3D` and the 2D picture as SVG), `index.html` |
-| Role in the project | new demonstration, ported in simple mode (v0.1.26): generator, `shared/wl.js`, plain arithmetic; the first port with a Texture (`Texture`, `Rasterize`, `ImageReflect` and textured polygons added to the shared 2D and 3D graphics for it) |
 
 ## 1. Purpose and background
 
@@ -64,9 +63,9 @@ the opening state. Out of scope: anything the original does not do; port additio
 | A-CV-03 | Start-up notice when the browser cannot run the page (DEC-22, WebGL 2 required) | no empty page | v0.1.26 | e2e "start-up notice when" |
 | A-CV-04 | Breadcrumb link to all demos | navigation | v0.1.26 | inventory |
 | A-CV-05 | Credits footer (authors, title, source, licence, adaptation notice) | required by the licence (CC BY-NC-SA 3.0 §4) | v0.1.26 | e2e "attribution on" |
-| A-CV-06 | This app can be bundled and served alone (§6.1) | owner rule R-A | v0.1.26 | e2e "bundle: camera-apparent-velocity runs from its own folder" |
-| A-CV-07 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | owner request 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
-| A-CV-08 | Switch "errors of the original: kept \| corrected" beside "Initial settings" (variable `errata`, default kept = the original's behaviour). "corrected" changes only E-CV-01 (§11; `errata-mode.js`); the differences are listed on the page under "Errors of the original: what "corrected" changes" | owner request 2026-11-10: every code-level error of the original can be switched between the original's behaviour and its correction | v0.1.34 | unit "corrected mode (E-CV)"; e2e "errata switch on camera-apparent-velocity: kept is the original, corrected changes the listed result" |
+| A-CV-06 | This app can be bundled and served alone (§6.1) | rule 7 | v0.1.26 | e2e "bundle: camera-apparent-velocity runs from its own folder" |
+| A-CV-07 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | requested 2026-11-05 | v0.1.32 | e2e "every card on the landing page has a thumbnail that loads" |
+| A-CV-08 | Switch "errors of the original: kept \| corrected" beside "Initial settings" (variable `errata`, default kept = the original's behaviour). "corrected" changes only E-CV-01 (§11; `errata-mode.js`); the differences are listed on the page under "Errors of the original: what "corrected" changes" | requested 2026-11-10: every code-level error of the original can be switched between the original's behaviour and its correction | v0.1.34 | unit "corrected mode (E-CV)"; e2e "errata switch on camera-apparent-velocity: kept is the original, corrected changes the listed result" |
 
 ## 5. UI inventory
 
@@ -132,7 +131,7 @@ matches any text. Checked by the browser test "every control on … is specified
   the two Grids into their displays (`Control` factories without input) and renders the 3D label layer (K-CV-02).
 - `index.html`: the ControlPlacement -> Left column (plain headings, checkbox after its label, the Grids as right/left
   aligned tables) and the two picture containers in one place.
-- Shared code added for this port (v0.1.26, MIT, owner exception for the lead's integration): in `shared/graphics.js`
+- Shared code added for this port (v0.1.26, MIT, an exception for the lead's integration): in `shared/graphics.js`
   `Texture(image)`, `Polygon(pts, { VertexTextureCoordinates })`, `Rasterize(expr, { RasterSize, ImageSize,
   Background })`, `ImageReflect(image)`, `textureMatrix(pts, vtc)` (pure) and `imageCanvas(image)` (browser), a
   textured polygon drawn as an SVG `<image>` placed by the affine map and clipped to the polygon; in
@@ -143,7 +142,7 @@ matches any text. Checked by the browser test "every control on … is specified
 
 ### 6.1 Building and deploying this app alone
 
-Owner rule R-A (2026-10-17): this one app can be taken out of the repository and hosted anywhere.
+Rule 7 of docs/DESIGN_PROCESS.md: this one app can be taken out of the repository and hosted anywhere.
 
 - Command, in the repository folder: `npm run bundle -- camera-apparent-velocity` → `dist/camera-apparent-velocity/`.
 - Contents (generated with `node tools/bundle-app.mjs camera-apparent-velocity --update-docs`):
@@ -219,11 +218,7 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 
 ## 8. Proposed changes
 
-No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
-
-| ID | Status | Requested by / date | Change | Reason | Acceptance criteria |
-|----|--------|---------------------|--------|--------|---------------------|
-| P-CV-01 | approved (owner request 2026-11-10), implemented in v0.1.34 as A-CV-08 | owner / 2026-11-10 | Switch "errors of the original: kept \| corrected": mark the current version, then offer each logical error of the original as a gated correction; the corrected mode changes only the code needed for E-CV-01 | the errors of the original were reproduced bug for bug; the owner wants to compare the original with a corrected version and to be able to go back | the default is the original (golden data, harness replays and parity unchanged); each correction has a unit test with an independently derived expected value and the browser test of the switch; the page documents the differences |
+Proposals for this app are tracked separately.
 
 ## 9. Revision history
 
@@ -232,13 +227,13 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 | 1 | v0.1.25 | 2026-10-26 | generated by `tools/new-app.mjs` (example model and controls) |
 | 2 | v0.1.26 | 2026-10-27 | the port: the original's (saved) definitions, controls, 3D and 2D pictures, coordinate displays and animation in simple mode; opening state from the notebook; Texture, Rasterize and ImageReflect added to the shared graphics |
 | 3 | v0.1.27 | 2026-10-28 | version number; the shared code gained spans with a step, a cyclic `Riffle`, `EvenQ`/`OddQ`, `ArcCos`/`ArcSin`, `DeleteCases`, `ToString` and `StringForm` (`shared/wl.js`), legend labels that are pictures and Mathematica's `Placed[…, {pos, align}]` form, `Automatic` in PlotStyle lists, `Fraction` labels, 3D `Line` with several polylines, and View3D's `Epilog` and `SphericalRegion: false` (v0.1.27); no change to this app's code, behaviour or picture (DOM parity with v0.1.26) |
-| 4 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default; motion planning, PA2 fix F-02) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (DOM parity with v0.1.27) |
+| 4 | v0.1.28 | 2026-10-29 | version number; the shared slider gained the option `pauseWhenHidden` (off by default) plays and steps a stored value outside its range from the position shown, and stops a playing animation when the slider is disabled (it went on) (v0.1.28); no change to this app's code, behaviour or picture (DOM parity with v0.1.27) |
 | 5 | v0.1.29 | 2026-11-01 | version number (v0.1.29: motion-planning fixes F-12 and F-08 only, no shared code changed); no change to this app's code, behaviour or picture (DOM parity with v0.1.28) |
 | 6 | v0.1.30 | 2026-11-01 | version number (v0.1.30: the shared slider gained the opt-in option `fullPanel`, used by motion planning only); no change to this app's code, behaviour or picture |
 | 7 | v0.1.31 | 2026-11-02 | version number (v0.1.31: a new app, line-parameterization from a lecture notebook; the shared `Rotate` turns a centred Text about its position, `tools/new-app.mjs` gained `--source`); no change to this app's code, behaviour or picture |
-| 8 | v0.1.32 | 2026-11-05 | A-CV-07: landing-page thumbnail (owner request 2026-11-05; `tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
+| 8 | v0.1.32 | 2026-11-05 | A-CV-07: landing-page thumbnail (`tools/make-thumbnails.mjs`); no change to this app's code, behaviour or picture |
 | 9 | v0.1.33 | 2026-11-06 | version number (v0.1.33: four new apps; opt-in shared additions S-1 … S-7, unused by this app, and the locators of a Locator list made after the first evaluation); no change to this app's code, behaviour or picture |
-| 10 | v0.1.34 | 2026-11-10 | A-CV-08: the switch "errors of the original: kept \| corrected" (owner request 2026-11-10); corrected mode for E-CV-01, default kept: the original's behaviour, golden data and pictures unchanged |
+| 10 | v0.1.34 | 2026-11-10 | A-CV-08: the switch "errors of the original: kept \| corrected"; corrected mode for E-CV-01, default kept: the original's behaviour, golden data and pictures unchanged |
 | 11 | v0.1.35 | 2026-11-11 | version number (v0.1.35: two new apps, paths-inside-a-polygon and voronoi-diagrams; no shared code changed); no change to this app's code, behaviour or picture |
 | 12 | v0.1.36 | 2026-11-11 | version number (v0.1.36: the full colour menu of voronoi-diagrams); no change to this app's code, behaviour or picture |
 | 13 | v0.1.37 | 2026-11-12 | version number (v0.1.37: thirteen control and signal ports and the shared modules they use; the additions to shared/plot.js, graphics.js and manipulate.js are opt-in); no change to this app's code, behaviour or picture |
@@ -258,7 +253,7 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 
 ## 11. Errors in the original (conceptual and mathematical)
 
-Checked when porting (owner rule R-C): the optimal goal and the silhouette formulas are right (N-CV-03). The errors
+Checked when porting (rule 9): the optimal goal and the silhouette formulas are right (N-CV-03). The errors
 found are in the displayed distance and in the Details text.
 
 | ID | Kind | Where in the original | What is (probably) wrong | What the port does | Effect of correcting it | Status |

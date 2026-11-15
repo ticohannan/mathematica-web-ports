@@ -131,7 +131,7 @@ describe('art-gallery geometry helpers', () => {
     expect(NORMALIZE_MODELS.viaNorm([1.5, 2.5])).toEqual([1.5 * rd, 2.5 * rd]);
   });
   it('sameQ accepts reals differing in the last binary digit, as SameQ, MatchQ and Position do', () => {
-    // a 1-ulp difference is SameQ in Mathematica 15.0.1 (extra-checks.wls, owner run 2026-10-06, K-AG-08)
+    // a 1-ulp difference is SameQ in Mathematica 15.0.1 (extra-checks.wls, Tico's run 2026-10-06, K-AG-08)
     expect(sameQ([1.5, -2], [1.5 + 2 ** -52, -2])).toBe(true);
     expect(sameQ([0.1 + 0.2, 1], [0.3, 1])).toBe(true); // the case checked in Mathematica
     expect(sameQ([0, 3], [0, 3])).toBe(true);

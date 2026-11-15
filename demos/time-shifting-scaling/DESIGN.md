@@ -3,11 +3,10 @@
 | | |
 |---|---|
 | Code version: | 0.1.40 |
-| Document revision | 2 (2026-11-06) — implemented after the owner's "go" (Q-1: the lower plot of even-odd-synthesis at 500 px); compared with the four snapshots |
+| Document revision | 2 (2026-11-06) — implemented after Tico's "go" (Q-1: the lower plot of even-odd-synthesis at 500 px); compared with the four snapshots |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Time Shifting and Time Scaling in Signal Processing", contributed by Aaron T. Becker and Mable Wan, published 2016-06-21 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/TimeShiftingAndTimeScalingInSignalProcessing/> |
 | Port files | `model.js` (the five signals as break-point lists, the coupling of a, b and T, the two plots; pure), `main.js` (the Manipulate on `shared/manipulate.js`), `index.html` |
-| Role in the project | new demonstration, simple mode (v0.1.33): generator, `shared/wl.js`, `shared/plot.js`, plain arithmetic |
 
 ## 1. Purpose and background
 
@@ -54,9 +53,9 @@ joined (`InterpolationOrder -> 1`), TopHat, StairStep and UH as steps (`Interpol
 | A-TS-03 | Start-up notice when the browser cannot run the page (DEC-22) | no empty page | v0.1.33 | e2e "start-up notice when" |
 | A-TS-04 | Breadcrumb link to all demos | navigation | v0.1.33 | inventory |
 | A-TS-05 | Credits footer (authors, title, source, licence, adaptation notice) | required by the licence (CC BY-NC-SA 3.0 §4) | v0.1.33 | e2e "attribution on" |
-| A-TS-06 | This app can be bundled and served alone (§6.1) | owner rule R-A | v0.1.33 | e2e "bundle: time-shifting-scaling runs from its own folder" |
-| A-TS-07 | Landing-page thumbnail `thumbnail.webp` | owner request 2026-11-05 | v0.1.33 | e2e "every card on the landing page has a thumbnail that loads" |
-| A-TS-08 | Switch "errors of the original: kept \| corrected" beside "Initial settings" (variable `errata`, default kept = the original's behaviour). "corrected" changes only E-TS-01 (§11; `errata-mode.js`); the differences are listed on the page under "Errors of the original: what "corrected" changes" | owner request 2026-11-10: every code-level error of the original can be switched between the original's behaviour and its correction | v0.1.34 | unit "corrected mode (E-TS)"; e2e "errata switch on time-shifting-scaling: kept is the original, corrected changes the listed result" |
+| A-TS-06 | This app can be bundled and served alone (§6.1) | rule 7 | v0.1.33 | e2e "bundle: time-shifting-scaling runs from its own folder" |
+| A-TS-07 | Landing-page thumbnail `thumbnail.webp` | requested 2026-11-05 | v0.1.33 | e2e "every card on the landing page has a thumbnail that loads" |
+| A-TS-08 | Switch "errors of the original: kept \| corrected" beside "Initial settings" (variable `errata`, default kept = the original's behaviour). "corrected" changes only E-TS-01 (§11; `errata-mode.js`); the differences are listed on the page under "Errors of the original: what "corrected" changes" | requested 2026-11-10: every code-level error of the original can be switched between the original's behaviour and its correction | v0.1.34 | unit "corrected mode (E-TS)"; e2e "errata switch on time-shifting-scaling: kept is the original, corrected changes the listed result" |
 
 ## 5. UI inventory
 
@@ -92,7 +91,7 @@ matches any text. Checked by the browser test "every control on … is specified
 
 ### 6.1 Building and deploying this app alone
 
-Owner rule R-A (2026-10-17): this one app can be taken out of the repository and hosted anywhere.
+Rule 7 of docs/DESIGN_PROCESS.md: this one app can be taken out of the repository and hosted anywhere.
 
 - Command, in the repository folder: `npm run bundle -- time-shifting-scaling` → `dist/time-shifting-scaling/`.
 - Contents (generated with `node tools/bundle-app.mjs time-shifting-scaling --update-docs`):
@@ -124,19 +123,15 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 
 ## 8. Proposed changes
 
-No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
-
-| ID | Status | Requested by / date | Change | Reason | Acceptance criteria |
-|----|--------|---------------------|--------|--------|---------------------|
-| P-TS-01 | approved (owner request 2026-11-10), implemented in v0.1.34 as A-TS-08 | owner / 2026-11-10 | Switch "errors of the original: kept \| corrected": mark the current version, then offer each logical error of the original as a gated correction; the corrected mode changes only the code needed for E-TS-01 | the errors of the original were reproduced bug for bug; the owner wants to compare the original with a corrected version and to be able to go back | the default is the original (golden data, harness replays and parity unchanged); each correction has a unit test with an independently derived expected value and the browser test of the switch; the page documents the differences |
+Proposals for this app are tracked separately.
 
 ## 9. Revision history
 
 | Doc rev. | Code version | Date | Change |
 |----------|--------------|------|--------|
-| 1 | v0.1.33 | 2026-11-06 | generated by `tools/new-app.mjs`, then the design written from the notebook (owner request 2026-11-06) |
-| 2 | v0.1.33 | 2026-11-06 | implemented after the owner's "go" (2026-11-06); shared additions S-1 … S-7: `shared/plot.js` Exclusions/ExclusionsStyle, PlotMarkers, InterpolationOrder 0; `shared/ui-extra.js` + `shared/manipulate.js` CheckboxBar; `shared/svg-plot.js` + `shared/manipulate.js` LocatorAutoCreate; `shared/wl.js` HeavisidePi; `shared/graphics.js` JoinForm; compared with the four snapshots |
-| 3 | v0.1.34 | 2026-11-10 | A-TS-08: the switch "errors of the original: kept \| corrected" (owner request 2026-11-10); corrected mode for E-TS-01, default kept: the original's behaviour, golden data and pictures unchanged |
+| 1 | v0.1.33 | 2026-11-06 | generated by `tools/new-app.mjs`, then the design written from the notebook |
+| 2 | v0.1.33 | 2026-11-06 | implemented; shared additions S-1 … S-7: `shared/plot.js` Exclusions/ExclusionsStyle, PlotMarkers, InterpolationOrder 0; `shared/ui-extra.js` + `shared/manipulate.js` CheckboxBar; `shared/svg-plot.js` + `shared/manipulate.js` LocatorAutoCreate; `shared/wl.js` HeavisidePi; `shared/graphics.js` JoinForm; compared with the four snapshots |
+| 3 | v0.1.34 | 2026-11-10 | A-TS-08: the switch "errors of the original: kept \| corrected"; corrected mode for E-TS-01, default kept: the original's behaviour, golden data and pictures unchanged |
 | 4 | v0.1.35 | 2026-11-11 | version number (v0.1.35: two new apps, paths-inside-a-polygon and voronoi-diagrams; no shared code changed); no change to this app's code, behaviour or picture |
 | 5 | v0.1.36 | 2026-11-11 | version number (v0.1.36: the full colour menu of voronoi-diagrams); no change to this app's code, behaviour or picture |
 | 6 | v0.1.37 | 2026-11-12 | version number (v0.1.37: thirteen control and signal ports and the shared modules they use; the additions to shared/plot.js, graphics.js and manipulate.js are opt-in); no change to this app's code, behaviour or picture |

@@ -47,7 +47,7 @@ describe('voronoi-diagrams model', () => {
   });
 
   it('the gradient data', () => {
-    // Mathematica's ColorData["Gradients"], exported by the owner (v0.1.36), in its order; gradients.js is generated from it
+    // Mathematica's ColorData["Gradients"], exported by Tico (v0.1.36), in its order; gradients.js is generated from it
     const exp = JSON.parse(fs.readFileSync('tests/golden/voronoi-diagrams.gradients.json', 'utf8'));
     expect(exp.count).toBe(51);
     expect(GRADIENT_NAMES).toEqual(exp.gradients.map((g) => g.name));

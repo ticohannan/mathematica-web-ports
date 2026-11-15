@@ -7,7 +7,6 @@
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "First-Order Transfer Functions in Process Control", contributed by Simon M. Lane, published 2014-05-06 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/FirstOrderTransferFunctionsInProcessControl/> |
 | Port files | `model.js` (one evaluation of the Manipulate body; pure), `main.js` (the Manipulate on `shared/manipulate.js`), `index.html` |
-| Role in the project | new demonstration (v0.1.37 batch: control theory and signals, DEC-56) |
 
 ## 1. Purpose and background
 
@@ -25,7 +24,7 @@ additions are the A- features.
 ## 3. Users and use cases
 
 - UC-FO-01: a student explores the Demonstration in a browser, without Mathematica.
-- UC-FO-02: the owner compares the port with the original (checklist `docs/checklists/first-order-process-control.md`), with the errors of the original kept or corrected.
+- UC-FO-02: Tico compares the port with the original (checklist `docs/checklists/first-order-process-control.md`), with the errors of the original kept or corrected.
 
 ## 4. Features
 
@@ -45,9 +44,9 @@ additions are the A- features.
 | A-FO-03 | Start-up notice when the browser cannot run the page (DEC-22) | no empty page | v0.1.37 | e2e "start-up notice when" |
 | A-FO-04 | Breadcrumb link to all demos | navigation | v0.1.37 | inventory |
 | A-FO-05 | Credits footer (authors, title, source, licence, adaptation notice) | required by the licence (CC BY-NC-SA 3.0 §4) | v0.1.37 | e2e "attribution on" |
-| A-FO-06 | This app can be bundled and served alone (§6.1) | owner rule R-A | v0.1.37 | e2e "bundle: first-order-process-control runs from its own folder" |
-| A-FO-07 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | owner request 2026-11-05 | v0.1.37 | e2e "every card on the landing page has a thumbnail that loads" |
-| A-FO-08 | Switch "errors of the original: kept \| corrected" beside "Initial settings" (variable `errata`, default kept = the original's behaviour). "corrected" changes only E-FO-01, E-FO-02, E-FO-03 (§11; `errata-mode.js`); the differences are listed on the page under "Errors of the original: what "corrected" changes" | owner request 2026-11-12: every code-level error of the original can be switched between the original's behaviour and its correction | v0.1.37 | unit "corrected mode (E-FO)"; e2e "errata switch on first-order-process-control: kept is the original, corrected changes the listed result" |
+| A-FO-06 | This app can be bundled and served alone (§6.1) | rule 7 | v0.1.37 | e2e "bundle: first-order-process-control runs from its own folder" |
+| A-FO-07 | Landing-page thumbnail `thumbnail.webp`: the picture at the initial settings, made by `tools/make-thumbnails.mjs`; the card's picture links to this app | requested 2026-11-05 | v0.1.37 | e2e "every card on the landing page has a thumbnail that loads" |
+| A-FO-08 | Switch "errors of the original: kept \| corrected" beside "Initial settings" (variable `errata`, default kept = the original's behaviour). "corrected" changes only E-FO-01, E-FO-02, E-FO-03 (§11; `errata-mode.js`); the differences are listed on the page under "Errors of the original: what "corrected" changes" | requested 2026-11-12: every code-level error of the original can be switched between the original's behaviour and its correction | v0.1.37 | unit "corrected mode (E-FO)"; e2e "errata switch on first-order-process-control: kept is the original, corrected changes the listed result" |
 
 ## 5. UI inventory
 
@@ -77,7 +76,7 @@ matches any text. Checked by the browser test "every control on … is specified
 
 ### 6.1 Building and deploying this app alone
 
-Owner rule R-A (2026-10-17): this one app can be taken out of the repository and hosted anywhere.
+Rule 7 of docs/DESIGN_PROCESS.md: this one app can be taken out of the repository and hosted anywhere.
 
 - Command, in the repository folder: `npm run bundle -- first-order-process-control` → `dist/first-order-process-control/`.
 - Contents (generated with `node tools/bundle-app.mjs first-order-process-control --update-docs`):
@@ -96,25 +95,21 @@ Owner rule R-A (2026-10-17): this one app can be taken out of the repository and
 
 | ID | Kind | Description |
 |----|----|----|
-| D-FO-01 | deviation | Formula labels: three of the four snapshots show them with context marks ("K Global`a", "Global`e^…"), snapshot 1 without; the port draws them clean (owner's default, Q-3 of the plan). The sinusoidal one is written on one line instead of with built-up fractions. |
+| D-FO-01 | deviation | Formula labels: three of the four snapshots show them with context marks ("K Global`a", "Global`e^…"), snapshot 1 without; the port draws them clean (Tico's default, Q-3 of the plan). The sinusoidal one is written on one line instead of with built-up fractions. |
 | D-FO-02 | deviation | The tables are drawn by the port's Grid; the column alignment on "=" and "." is approximated by right alignment. |
 | D-FO-03 | deviation | FindMaximum[{…, 0.05 <= t <= 10}, {t, 0.05}]: Mathematica's constrained search reached the SECOND maximum in snapshot 4 (ω = 3.5: B = 0.27 at t = 2.67); the port climbs to the first (0.31 at t = 0.87). At the opening settings both give the first (0.91). Which maximum Mathematica finds for other settings is to be checked (M-FO-06). |
 | Q-FO-01 | quirk kept | The input's peak marker A is drawn at t = 1.5/ω, not at the true peak π/(2ω) (1.571/ω). |
 
 ## 8. Proposed changes
 
-No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md)):
-
-| ID | Status | Requested by / date | Change | Reason | Acceptance criteria |
-|----|--------|---------------------|--------|--------|---------------------|
-| P-FO-01 | approved (owner request 2026-11-12), implemented in v0.1.37 as A-FO-08 | owner / 2026-11-12 | Switch "errors of the original: kept \| corrected": mark the current version, then offer each logical error of the original as a gated correction; the corrected mode changes only the code needed for E-FO-01, E-FO-02, E-FO-03 | the errors of the original were reproduced bug for bug; the owner wants to compare the original with a corrected version and to be able to go back | the default is the original (golden data, harness replays and parity unchanged); each correction has a unit test with an independently derived expected value and the browser test of the switch; the page documents the differences |
+Proposals for this app are tracked separately.
 
 ## 9. Revision history
 
 | Doc rev. | Code version | Date | Change |
 |----------|--------------|------|--------|
 | 1 | v0.1.37 | 2026-11-12 | generated by `tools/new-app.mjs` (example model and controls) |
-| 2 | v0.1.37 | 2026-11-12 | the port (DEC-56): the three responses in closed form with their markers and Grid tables; switch for E-FO-01 … E-FO-03 |
+| 2 | v0.1.37 | 2026-11-12 | the port: the three responses in closed form with their markers and Grid tables; switch for E-FO-01 … E-FO-03 |
 | 3 | v0.1.38 | 2026-11-12 | version number (v0.1.38: one new app, forward-kinematics; shared/traditional-form.js is new, and `Lighting -> "Neutral"` in shared/mma-lighting.js and graphics3d-view.js is opt-in); no change to this app's code, behaviour or picture |
 | 4 | v0.1.39 | 2026-11-12 | version number (v0.1.39: selective testing — tools/affected.mjs and publish:tested run only the browser tests a change can affect; no app code changed); no change to this app's code, behaviour or picture |
 | 5 | v0.1.40 | 2026-11-13 | version number (v0.1.40: three truss ports; shared/truss.js is new; shared/graphics.js gains Mouseover, RotatedText, rounded and line-less Framed, Arrowheads[Large] and heads at given places, Grid alignment at "=", styled scripts and fitPlotRange — the changes to existing drawing are a styled script keeping its style and the baseline after it, and framed or backed labels keeping their outer spaces); no change to this app's code or behaviour |
@@ -125,11 +120,11 @@ No open proposal. Template (see [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PRO
 |----|----|----|----|----|
 | I-FO-01 | Mark the steady amplitude and lag in the sinusoidal plot | shows what the table should give | not in the original | E-FO-03 |
 | I-FO-02 | A choice of gain K | the caption's K | not in the original | F-FO-03 |
-| I-FO-03 | Mathematica reference values for FindMaximum (`tools/wolfram/export-control-reference.wls`) | resolves D-FO-03 | owner's Mathematica | D-FO-03 |
+| I-FO-03 | Mathematica reference values for FindMaximum (`tools/wolfram/export-control-reference.wls`) | resolves D-FO-03 | Tico's Mathematica | D-FO-03 |
 
 ## 11. Errors in the original (conceptual and mathematical)
 
-Checked when the Demonstration's code was ported (owner rule R-C). Kind: conceptual, mathematical, numerical or
+Checked when the Demonstration's code was ported (rule 9). Kind: conceptual, mathematical, numerical or
 text; Status: open, kept or corrected in vX.Y.Z (the tests check these words). Not by Dr. Becker: findings here are
 listed in the errata list as such and are not raised with him.
 

@@ -4,7 +4,7 @@
 // demos/three-parametrizations/main.js — the Manipulate: progress (top), method, the Euler ZYZ, axis/angle and
 // roll-pitch-yaw controls (left) and the teapots with their frames (a three.js scene, the picture's renderer), on
 // shared/manipulate.js (browser only).
-// On the shared Manipulate layer since v0.1.21; lighting as the other 3D ports since then (owner decision 2026-10-23,
+// On the shared Manipulate layer since v0.1.21; lighting as the other 3D ports since then (
 // DEC-36, D-TP-06).
 import { Manipulate, Delimiter, Rule, Control } from '../../shared/manipulate.js';
 import { THREE, createViewer, surface, fatLine, label, inkFraction } from '../../shared/three-helpers.js';
@@ -30,7 +30,7 @@ function Teapots(element) {
     viewPoint: [1.3, -2.4, 2.0], // Mathematica's default ViewPoint
     size: 375, maxSize: 520,
   });
-  // Lighting -> Automatic as View3D draws it (D-TP-06, owner decision 2026-10-23, DEC-36): Mathematica's documented
+  // Lighting -> Automatic as View3D draws it (D-TP-06, decision 2026-10-23, DEC-36): Mathematica's documented
   // default lights (shared/mma-lighting.js) on the displayed colour values (linear output, no sRGB encoding)
   viewer.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
   addMathematicaLighting(viewer.camera);

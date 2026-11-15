@@ -10,7 +10,7 @@
 //    178 … 190), as the port stores them;
 //  * what only the picture docs/original-snapshots/prm-3d-1.png shows: the label "path length = 8.09";
 //  * the Mathematica-harness records H-P3-01 … H-P3-22 (tests/golden/prm-3d.harness.json, read through
-//    tests/support/harness-json.js). These SKIP with the documented reason until the owner's harness run exists.
+//    tests/support/harness-json.js). These SKIP with the documented reason until Tico's harness run exists.
 import { describe, it, expect } from 'vitest';
 import { loadStates, plain } from '../../tools/lib/wl-json.mjs';
 import { harnessCase, captureOf, randomDraws, toJS } from '../support/harness-json.js';

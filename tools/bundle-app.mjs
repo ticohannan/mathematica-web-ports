@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // SPDX-FileCopyrightText: 2026 Tico Hannan
 // SPDX-License-Identifier: MIT
-// tools/bundle-app.mjs — copy ONE app with exactly the files it loads into its own folder (owner rule R-A),
+// tools/bundle-app.mjs — copy ONE app with exactly the files it loads into its own folder (rule 7),
 // so that it can be hosted on its own by any static web server.
 //
 //   npm run bundle -- <dir> [<dir> …]     e.g. npm run bundle -- prm-robot-arm   → dist/prm-robot-arm/

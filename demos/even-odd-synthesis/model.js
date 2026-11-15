@@ -55,7 +55,7 @@ export function evaluate({ signal, τ }) {
     Epilog: [PointSize('Large'), Annotation(Point([τ, 0]), 'shift-point'), Text('T', [τ, 0.1])],
     label: 'The input signal x(t − T)',
   });
-  // the bottom plot at the top plot's width (D-EO-01, owner decision Q-1); X[−t] jumps at the mirrored points
+  // the bottom plot at the top plot's width (D-EO-01, decision Q-1); X[−t] jumps at the mirrored points
   const bottom = Plot((t) => [x(t), (x(t) + x(-t)) / 2, (x(t) - x(-t)) / 2], [-10, 10], {
     ImageSize: 500, AspectRatio: 1 / 3, PlotRange: RANGE, ImagePadding: PADDING, Exclusions: [...jumps, ...jumps.map((v) => -v)],
     Filling: { 1: [1], 2: 'Axis', 3: 'Axis' }, PlotStyle: [Thin, 'Automatic', 'Automatic'],

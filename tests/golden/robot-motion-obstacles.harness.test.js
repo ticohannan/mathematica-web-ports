@@ -5,7 +5,7 @@
 // (tests/harness/robot-motion-obstacles.scenarios.json) and is compared with what Mathematica 15.0.1 recorded
 // (tests/golden/robot-motion-obstacles.harness.json, written by `npm run harness -- robot-motion-obstacles --accept`).
 // One test per H- id titled `harness "H-RM-nn"` (HW-65); without harness data every test is skipped with the reason
-// "no harness data (owner run pending)" (HW-67). Start state: the initial settings (`specs` of the fixture = the live
+// "no harness data (harness run pending)" (HW-67). Start state: the initial settings (`specs` of the fixture = the live
 // state); `set` assigns the variables and evaluates the body once; `setFrom` loads snapshot k's Settings and
 // evaluates once; `controlActive` per step. Captures are compared bit for bit by value; Mathematica-only captures
 // (%text) are not compared here.
@@ -77,11 +77,11 @@ describe('robot-motion harness (Mathematica 15.0.1 records)', () => {
   it('harness "H-RM-20"', (ctx) => check(ctx, 'H-RM-20'));
   it('every scenario of the scenario file has a test above; the replay runs without Mathematica data', () => {
     expect(scenarios.map((s) => s.id)).toEqual(Array.from({ length: 20 }, (_, i) => `H-RM-${String(i + 1).padStart(2, '0')}`));
-    // the replay itself works now (its results are compared once the owner's harness run is accepted)
+    // the replay itself works now (its results are compared once Tico's harness run is accepted)
     const r01 = replay(scenarios[0]);
     expect(r01.state.freeConfigSpace).toEqual(plain(fx.live).freeConfigSpace);
     expect(replay(scenarios.find((s) => s.id === 'H-RM-20')).view.resolution).toBeUndefined();
     expect(replay(scenarios.find((s) => s.id === 'H-RM-13')).state.freeConfigSpace).toBe(7);
-    expect(NO_DATA).toBe('no harness data (owner run pending)');
+    expect(NO_DATA).toBe('no harness data (harness run pending)');
   });
 });

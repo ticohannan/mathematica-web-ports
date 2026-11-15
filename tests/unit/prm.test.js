@@ -164,7 +164,7 @@ describe('prm: query, label and progress', () => {
   });
 });
 
-// ---- v0.1.21 (owner decision D2): model.js returns the picture as shared/graphics.js data (picture). The drawing output
+// ---- v0.1.21: model.js returns the picture as shared/graphics.js data (picture). The drawing output
 // of the page before that change is frozen in tests/unit/fixtures/prm-drawing.pre-graphics.json (f04c973; ?seed=1).
 describe('prm: Graphics data = the drawing before v0.1.21', () => {
   const fx = preGraphics('prm');
