@@ -1,0 +1,169 @@
+
+### [Title]
+The Vibrating String
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+The solutions of the wave equation Subscript[\[PartialD], t,t]u=c^2Subscript[\[PartialD], x,x]u represent the motion of an idealized string where u=u(x,t) represents the deflection of a string along the axis x at a time t . Here, such solutions are represented.
+
+### [Text]
+Using the locators, you can construct approximations to a polynomial of arbitrary degree or a piecewise continuous function on the interval 0 to π. The trigger starts the solution with no initial velocity and shows the evolution of the string as a function of time. This solution is built through the so-called d'Alembert solutions, which are a superposition of left and right traveling waves. The construction of these solutions can be explicitly demonstrated by only plotting right or left traveling waves (better seen on a larger x interval). The evolving string is the superposition of both waves. The time evolutions of the first three Fourier modes of the solutions are shown on the left of the plot.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [CodeText]
+If you provide initialization code, include a SaveDefinitions->True option in the Manipulate.
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+points=points//.{left___,{x1_,y1_},middle___,{x1_,y2_},right___}:>{left,middle,{x1,y2},right};
+points=points//.{left___,{0.001,y1_},right___}:>{left,right};
+points=points//.{left___,{1-0.001,y1_},right___}:>{left,right};
+ptsrt=Union[{{10^(-8),0}},points,{{1,0}}];
+ptsrt2={{{0},0,ptsrt[[2,2]]/ptsrt[[2,1]]}}~Join~Table[{{ptsrt[[i+1,1]]},ptsrt[[i+1,2]],(ptsrt[[i+2,2]]-ptsrt[[i,2]])/(ptsrt[[i+2,1]]-ptsrt[[i,1]])},{i,Length[ptsrt]-2}]~Join~{{{1},0,-ptsrt[[Length[ptsrt]-1,2]]/(1-ptsrt[[Length[ptsrt]-1,1]])}};Bn=Table[NIntegrate[2 FB[ptsrt,ptsrt2,x,idpolynom]*Sin[m Pi x],{x,0,1}, AccuracyGoal->6],{m,3}];
+
+Plot[{If[id,F[ptsrt,ptsrt2,x,idpolynom]],If[string,F[ptsrt,ptsrt2,x-c*t,idpolynom]/2+F[ptsrt,ptsrt2,x+c*t,idpolynom]/2],If[ltw,F[ptsrt,ptsrt2,x+c*t,idpolynom]/2],If[rtw,F[ptsrt,ptsrt2,x-c*t,idpolynom]/2]},{x,-a,1+a},PlotRange->{{-a,1+a},{-2,2}},ImageSize->{400,300}],
+{{idpolynom,1,"\<initial data\>"},{1->"\<piecewise polynomial\>",2->"\<piecewise linear\>"}},
+{{c,0.5,"\<velocity\>"},0,3,Appearance->"\<Labeled\>"},
+{{a,0,"\<x interval\>"},0,2,1,Appearance->"\<Labeled\>"},
+{{points,{{1/2,1}}},{0.001,-2},{1-.001,2},Locator,LocatorAutoCreate->{All,{1,10}}},
+{{id,True,"\<initial string\>"},{False,True}},
+{{string,True,"\<evolving string\>"},{False,True}},
+{{ltw,False,"\<left wave\>"},{False,True}},
+{{rtw,False,"\<right wave\>"},{False,True}},
+{{t,0,"\<run\>"},0,Infinity,ControlType->Trigger}, 
+{{modedisp,False,"\<display modes\>"},{False,True}},
+
+Dynamic[If[modedisp,GraphicsGrid[{{Plot[Bn[[1]] Sin[Pi x] Cos[t Pi c],{x,0,1},Frame->True,Axes->False,ImageSize->{160},PlotRange->{{0,1},{-2,2}},PlotLabel->"\<First mode\>"]},
+{Plot[Bn[[2]] Sin[2 Pi x] Cos[t c Pi 2],{x,0,1},Frame->True,Axes->False,PlotRange->{{0,1},{-2,2}},PlotLabel->"\<Second mode\>"]},
+{Plot[Bn[[3]] Sin[3Pi  x] Cos[t c Pi 3],{x,0,1},Frame->True,Axes->False,PlotRange->{{0,1},{-2,2}},PlotLabel->"\<Third mode\>"]
+}}],"\< \>"]],
+
+ControlPlacement->{Top,Top,Top,Left,Left,Left,Left,Left,Left,Left,Left},
+
+Initialization:>{MyPiecewise[P_,x_]:=Module[{i},Piecewise[Table[{(P[[i+1,2]]-P[[i,2]])/(P[[i+1,1]]-P[[i,1]]) (x-P[[i,1]])+P[[i,2]],P[[i,1]]<x<P[[i+1,1]]},
+{i,1,Length[P]-1}]]],
+PeriodicExtension[g_,x_]:=If[Abs[x]<1,g[x],PeriodicExtension[g,x-2Sign[x]]],
+OddExtension[g_,x_]:=If[x>=0,g[x],-g[-x]],
+F[pts_,pts2_,x_,idpolynom_]:=PeriodicExtension[Function[ss,OddExtension[Function[s,
+If[idpolynom==2,MyPiecewise[pts,s],Interpolation[pts2][s]]
+],ss]],x],
+FB[pts_,pts2_,x_,idpolynom_]:=
+If[idpolynom==2,MyPiecewise[pts,x],Interpolation[pts2][x]]
+},TrackedSymbols:>Manipulate,AutorunSequencing->{1,3,4,7,9},ControllerLinking->False
+]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Alain Goriely
+
+### [Text]
+Mark Robertson-Tessi
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+Details, references or citation information
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+partial differential equations
+
+### [Item]
+wave equation
+
+### [Item]
+DAlembert solutions
+
+### [Item]
+linear superposition
+
+### [Item]
+string
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+d'Alembert's Solution
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2007-11-27
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

@@ -1,0 +1,69 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstration by Gerard Balmens
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rotating a Hypercube in 4D</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <script type="importmap">{ "imports": { "three": "../../vendor/three/three.module.js", "three/addons/": "../../vendor/three/addons/" } }</script>
+  <script src="../../shared/requirements.js" data-needs-webgl2></script>
+  <style>
+    /* the picture's frame as wide as the image (ImageSize -> {350, 350}) */
+    #graphic { flex: 0 1 352px; max-width: 352px; }
+    /* the Grid of the rotation controls: plane, Animator, angle on one line */
+    .rot-row { flex-wrap: nowrap !important; align-items: center !important; }
+    .rot-row .ctl-animator { display: flex; align-items: center; gap: 4px; }
+    .rot-row .ctl-animator .ctl-label { width: 2.6em; }
+    .rot-row .ctl-animator-slider { width: 80px; }
+    .rot-row .rot-angle { display: inline-block; min-width: 3.2em; text-align: right; font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Rotating a Hypercube in 4D</div>
+    <h1 class="demo-title">Rotating a Hypercube in 4D</h1>
+
+    <section class="manipulate" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="graphic" id="graphic" data-testid="graphic">
+        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser with WebGL 2.</div></noscript>
+      </div>
+    </section>
+
+    <p class="caption">This Demonstration gives a variety of animated rotations of a hypercube in 4D projected to 3D. The
+      axis (set of fixed points) in a 4D rotation is a plane. As a simple example, stop the animation and set all the
+      angles to zero. Drag the first slider; this rotates the hypercube without distortion about the W-X plane, which
+      we see in 3D as a rotation about the X axis.</p>
+
+    <details class="details" data-testid="details">
+      <summary>Details</summary>
+      <p>The original has no details section. Its related links: "Projections of the Four-Cube", "Rotating a
+        Hypercube" and "Rotating Squares, Cubes, and Higher-Dimensional Hypercubes" (Wolfram Demonstrations Project).</p>
+      <p>How the picture is made: the 16 vertices (±1, ±1, ±1, ±1) are turned by the six plane rotations, moved by 2
+        along w and divided by 1 + pw (w + 2). The control labelled "stereographic projection" therefore sets a central
+        (perspective) projection from the point w = −2 − 1/pw onto the hyperplane w = −2; as pw goes to 0 it becomes a
+        parallel projection.</p>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. All computation runs in your browser. Differences
+      from the original: the translucent faces are blended in an order computed for the opening view (Mathematica sorts
+      them for every view); the duration value is shown in an editable field; the rotation controls are laid out as
+      rows instead of a grid.</p>
+    <div class="credits" data-testid="credits">
+      Adapted from <a href="https://demonstrations.wolfram.com/RotatingAHypercubeIn4D/">"Rotating a Hypercube in 4D"</a>
+      by Gerard Balmens, Wolfram Demonstrations Project (published 2012-11-27), licensed
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+      This JavaScript translation by Tico Hannan (© 2026) is released under the
+      same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

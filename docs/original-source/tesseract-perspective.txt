@@ -1,0 +1,179 @@
+
+### [Title]
+Rotating a Tesseract in Perspective
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+\<A tesseract (or hypercube) is the 4D analog of the cube in 3D. It is constructed by translating a unit cube one unit perpendicular to the 3-space of the cube. The resulting 4D object is rotated in 4D and projected to 3-space in perspective.\>
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+IncDim[sg_,d_]:=Map[Append[#,d]&,sg,{2}]
+
+### [Input] (init)
+DblSegments[l_]:=Join[IncDim[l,-1],IncDim[l,1]]
+
+### [Input] (init)
+ConnectPoints[l1_,l2_]:=Table[{Flatten[l1,1][[i]],Flatten[l2,1][[i]]},{i,Length[Flatten[l1,1]]}]
+
+### [Input] (init)
+DblConnSegments[l_]:=Union[ConnectPoints[IncDim[l,-1],IncDim[l,1]]]
+
+### [Input] (init)
+UpDimShape[l_]:=Join[DblSegments[l],DblConnSegments[l]]
+
+### [Input] (init)
+Sqr=UpDimShape[{{{-1},{1}}}];
+
+### [Input] (init)
+myCube=UpDimShape[Sqr];
+
+### [Input] (init)
+Homogen[l_]:=Map[Append[#,1]&,l,{2}]
+
+### [Input] (init)
+Tes=UpDimShape[myCube];
+
+### [Input] (init)
+R4x[Theta_]:={{1,0,0,0,0},{0,Cos[Theta],-Sin[Theta],0,0},{0,Sin[Theta],Cos[Theta],0,0},{0,0,0,1,0},{0,0,0,0,1}}
+R4y[Theta_]:={{Cos[Theta],0,Sin[Theta],0,0},{0,1,0,0,0},{-Sin[Theta],0,Cos[Theta],0,0},{0,0,0,1,0},{0,0,0,0,1}}
+R4z[Theta_]:={{Cos[Theta],-Sin[Theta],0,0,0},{Sin[Theta],Cos[Theta],0,0,0},{0,0,1,0,0},{0,0,0,1,0},{0,0,0,0,1}}
+R4k[Theta_]:={{1,0,0,0,0},{0,1,0,0,0},{0,0,Cos[Theta],-Sin[Theta],0},{0,0,Sin[Theta],Cos[Theta],0},{0,0,0,0,1}}
+
+### [Input] (init)
+Rotate4X[l_,Theta_]:=Map[R4x[Theta].#&,l,{2}]
+Rotate4Y[l_,Theta_]:=Map[R4y[Theta].#&,l,{2}]
+Rotate4Z[l_,Theta_]:=Map[R4z[Theta].#&,l,{2}]
+Rotate4K[l_,Theta_]:=Map[R4k[Theta].#&,l,{2}]
+
+### [Input] (init)
+DropUnit[l_]:=Map[Drop[#,-1]&,l,{2}]
+
+### [Input] (init)
+RotFigure4[l_,Thetax_,Thetay_,Thetaz_,Thetak_]:=DropUnit[Rotate4K[Rotate4Z[Rotate4Y[Rotate4X[Homogen[l],Thetax],Thetay],Thetaz],Thetak]]
+
+### [Input] (init)
+Ortho[l_]:=Map[Drop[#,-1]&,l,{2}]
+
+### [Input] (init)
+PersPoint[pt_,d_]:=Map[#/(Last[pt]/d)&,pt]
+
+### [Input] (init)
+Perspective[l_,d_]:=Ortho[Map[PersPoint[#,d]&,l,{2}]]
+
+### [Input] (init)
+Mtr4[x_,y_,z_,k_]:={{1,0,0,0,x},{0,1,0,0,y},{0,0,1,0,z},{0,0,0,1,k},{0,0,0,0,1}}
+
+### [Input] (init)
+Trans5vec[l_,x_,y_,z_,k_]:=Map[Mtr4[x,y,z,k].#&,l,{2}]
+
+### [Input] (init)
+Trans5[l_,x_,y_,z_,k_]:=DropUnit[Trans5vec[Homogen[l],x,y,z,k]]
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[Graphics3D[{Lighter@Blue,CapForm["\<Round\>"],Specularity[White,20],Tube[Perspective[Trans5[RotFigure4[Tes,0,0,0,a],0,0,0,-3],-1],0.04]},PlotRange->{{-.7,.7},{-.7,.7},{-.7,.7}},Boxed->False,Lighting->"\<Neutral\>", ImageSize->1.1{400,400}, SphericalRegion-> True],
+{{a,0,"\<rotate\>"},0,2*3.1416,.0001,Appearance->"\<Labeled\>"},SaveDefinitions->True]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Alexander Perepelitsa
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+Details, references or citation information
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+keyword 1
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Cube
+
+### [Text]
+Tesseract
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2014-06-30
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

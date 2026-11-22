@@ -1,0 +1,58 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstration by Alain Goriely
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vibrations of a Rectangular Membrane</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <script type="importmap">{ "imports": { "three": "../../vendor/three/three.module.js", "three/addons/": "../../vendor/three/addons/" } }</script>
+  <script src="../../shared/requirements.js" data-needs-webgl2></script>
+  <style>
+    /* ImageSize -> {390, 350}: the picture's area as wide as the image (and its 1 px border) */
+    #graphic { flex: 0 1 392px; max-width: 392px; }
+    /* the box's tick labels as Mathematica draws them: upright sans-serif */
+    .lbl.ra-tick { font: 11px system-ui, "Segoe UI", Helvetica, Arial, sans-serif; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Vibrations of a Rectangular Membrane</div>
+    <h1 class="demo-title">Vibrations of a Rectangular Membrane</h1>
+
+    <section class="manipulate" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="graphic" id="graphic" data-testid="graphic">
+        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser with WebGL 2.</div></noscript>
+      </div>
+    </section>
+
+    <p class="caption">The two-dimensional wave equation <span style="white-space:nowrap">∂<sub><i>t</i>,<i>t</i></sub><i>u</i> = <i>c</i><sup>2</sup>(∂<sub><i>x</i>,<i>x</i></sub><i>u</i> + ∂<sub><i>y</i>,<i>y</i></sub><i>u</i>)</span> provides a simple model of a vibrating rectangular membrane. You can see the evolution of an initial profile with no initial velocity for a rectangular membrane with no deflection at the boundaries. You can set the superposition of the first four Fourier modes as initial data and you can observe the membrane as time evolves.</p>
+
+    <details class="details" data-testid="details">
+      <summary>Details</summary>
+      <p>The original Demonstration has no Details text. External link: <a href="https://mathworld.wolfram.com/WaveEquationRectangle.html">Wave Equation—Rectangle</a> (Wolfram MathWorld).</p>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. All computation runs in your browser. The surface is
+      sampled on a fixed grid of 65 × 65 points (the original refines its grid adaptively), and the box's tick marks
+      and the view are drawn as close to the original as the port can; drag the picture to rotate it. Where the
+      original's formulas give no picture (all four amplitudes 0, or a box height reduced to zero or below) the port
+      draws a white surface or a flat box; the details are in DESIGN.md.</p>
+    <div class="credits" data-testid="credits">
+      Adapted from <a href="https://demonstrations.wolfram.com/VibrationsOfARectangularMembrane/">"Vibrations of a Rectangular Membrane"</a>
+      by Alain Goriely, Wolfram Demonstrations Project (published 2007-12-13), licensed
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+      This JavaScript translation by Tico Hannan (© 2026) is released under the
+      same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

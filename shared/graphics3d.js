@@ -25,6 +25,40 @@
 // Added in v0.1.26 (additive; existing outputs unchanged): Texture[image] and Polygon[pts, VertexTextureCoordinates ->
 //   {{s, t}, …}] — a flattened polygon carries `texture` and `textureCoordinates` only when it has both (images: RGBA data
 //   or shared/graphics.js Rasterize; drawn by shared/graphics3d-three.js).
+// Added in v0.1.41 (opt-in, additive; existing outputs unchanged; first used by rectangular-membrane):
+//   - Hue(h, s, b): an RGB colour directive; Hue is periodic in h with period 1 (Hue[0], Hue[1] and Hue[-1] are red,
+//     Hue[-0.25] = Hue[0.75], magenta-blue); an h that is not a finite number (Mathematica's Hue[Indeterminate] or
+//     Hue[ComplexInfinity] stays unevaluated, not a colour) gives null. hueRGB(h, s, b) is the same as an RGB list.
+//   - Plot3D(f, [x0, x1], [y0, y1], options): Plot3D[f[x, y], {x, x0, x1}, {y, y0, y1}, options], sampled when called
+//     and returned as a Graphics3D with ONE primitive 'plotSurface' (pure data: points, normals, vertex colours,
+//     triangles, mesh lines). Options (Mathematica's names):
+//       PlotPoints: n or [nx, ny] (default 65 each way: a FIXED grid; Mathematica starts from 15 and refines adaptively,
+//         MaxRecursion is not modelled). The cells are split along the diagonal from (i, j + 1) to (i + 1, j).
+//       PlotRange: 'Automatic' / 'All' (the z range of the samples; a constant f gets {z - 1, z + 1}), [z0, z1], or
+//         [[x0, x1], [y0, y1], [z0, z1]] (a pair may be 'Automatic' / 'All'); a pair given high-first is used sorted.
+//         The result's PlotRange option is always the explicit box, so View3D clips and frames it.
+//       ClippingStyle: 'None' (the only one implemented, and the default here; Mathematica's default Automatic, which
+//         caps the cut parts, throws): the surface is cut EXACTLY where it leaves the box (polygons clipped in the data,
+//         new vertices on the box faces, colours evaluated there); nothing is drawn outside.
+//       ColorFunction: (x, y, z) => colour (an RGB list, a colour directive of this file, or a shared/graphics.js colour
+//         such as its Hue), evaluated at every vertex (the colours are interpolated across each triangle, as
+//         VertexColors are); ColorFunctionScaling: true (default: x, y, z scaled to 0…1 over the plot range) or false
+//         (the coordinates themselves). A result that is not a colour (null, NaN) leaves the vertex in the PlotStyle
+//         colour (default white). With a ColorFunction and no Lighting option, Lighting is 'Neutral' (the Lighting
+//         reference page: "If a color function is given to a plot, then neutral lighting is used automatically").
+//       Mesh: 'Automatic' (15 lines each way, at x0 + k (x1 - x0)/16, k = 1…15), n, [nx, ny], [[x values], [y values]],
+//         or 'None' / 0: mesh lines are curves on the surface (f evaluated along them at the other direction's
+//         PlotPoints), cut at the box like the surface; with the default 65 points they lie on grid lines.
+//         MeshStyle: a colour / Opacity / Directive (default black at opacity 0.5, 1 px).
+//       PlotStyle: the surface colour (a colour directive or Directive; default white).
+//       BoxRatios: omitted = Mathematica's Plot3D default {1, 1, 0.4}; 'Automatic' = the box's own proportions (the
+//         option is left out of the result, View3D then draws data coordinates); a list as given.
+//       Axes, Boxed: default true (Plot3D's defaults); any other option (ImageSize, ViewPoint, Ticks, AxesEdge, …) is
+//         passed to the Graphics3D unchanged.
+//     A sample that is not a finite number leaves a hole (the triangles touching it are dropped, mesh lines broken).
+//     Normals: from the samples (central differences, one-sided at the edges), interpolated on cut edges; in data
+//     coordinates (a BoxRatios scaling is applied by the renderer's normal matrix).
+//   - niceTicks of a range of zero width returns its one value (it looped before; ranges of positive width unchanged).
 import { NAMED, darker } from './mma-colors.js';
 import { fma } from './mma-exact.js';
 
@@ -170,6 +204,182 @@ export function ParametricPlot3D(fs, uRange, vRange = null, { PlotStyle = null, 
   return { head: 'Graphics3D', content, options: {} };
 }
 
+// ---- Hue and Plot3D (v0.1.41, see the file header) ----------------------------------------------------------------
+/** Hue[h, s, b] as an RGB list (h periodic with period 1), or null when h, s or b is not a finite number. */
+export function hueRGB(h, sat = 1, bri = 1) {
+  if (!Number.isFinite(h) || !Number.isFinite(sat) || !Number.isFinite(bri)) return null;
+  const t = (((h % 1) + 1) % 1) * 6, i = Math.floor(t) % 6, f = t - Math.floor(t);
+  const p = bri * (1 - sat), q = bri * (1 - sat * f), u = bri * (1 - sat * (1 - f));
+  return [[bri, u, p], [q, bri, p], [p, bri, u], [p, q, bri], [u, p, bri], [bri, p, q]][i];
+}
+/** Hue[h, s, b]: a colour directive (see hueRGB); null for an h that is not a number (not a colour). */
+export const Hue = (h, sat = 1, bri = 1) => { const c = hueRGB(h, sat, bri); return c ? color(c) : null; };
+
+/** The RGB list of a colour (an RGB list, a colour directive here, a shared/graphics.js colour), or null if it is none. */
+export function colorRGB(c) {
+  const v = Array.isArray(c) ? c : c && c.directive === 'color' ? c.value : c && c.dir === 'color' ? c.rgb : null;
+  return Array.isArray(v) && v.length >= 3 && v.slice(0, 3).every(Number.isFinite) ? [v[0], v[1], v[2]] : null;
+}
+
+export const PLOT3D_POINTS = 65;
+const PLOT3D_MESH_STYLE = { color: [0, 0, 0], opacity: 0.5 };
+const isAuto = (r) => r == null || r === 'Automatic' || r === 'All';
+const sorted = ([a, b]) => (a <= b ? [a, b] : [b, a]);
+
+/** Mesh option → [[x values], [y values]] for the box's x and y ranges. */
+function meshValues(Mesh, [[x0, x1], [y0, y1]]) {
+  if (Mesh == null || Mesh === 'None' || Mesh === false || Mesh === 0) return [[], []];
+  const even = (n, a, b) => Array.from({ length: Math.max(0, Math.round(n)) }, (_, k) => a + ((b - a) * (k + 1)) / (n + 1));
+  if (Mesh === 'Automatic' || Mesh === true) return [even(15, x0, x1), even(15, y0, y1)];
+  if (typeof Mesh === 'number') return [even(Mesh, x0, x1), even(Mesh, y0, y1)];
+  return Mesh.map((m, k) => (Array.isArray(m) ? m.slice() : even(m, ...(k === 0 ? [x0, x1] : [y0, y1]))));
+}
+
+/** The style of MeshStyle / PlotStyle directives as { color, opacity } (unset fields from `base`). */
+function styleOf(d, base) {
+  if (d == null) return { ...base };
+  const st = applyDirective({ color: base.color, opacity: base.opacity }, Array.isArray(d) ? { directive: 'list', value: d } : d);
+  return { color: st.color, opacity: st.opacity };
+}
+
+/** Clip a convex polygon of vertices {p, n} to lo <= p[k] <= hi (Sutherland–Hodgman; cut points lie exactly on the face). */
+function clipPolygon(poly, k, lo, hi) {
+  let out = poly;
+  for (const [bound, inside] of [[lo, (v) => v.p[k] >= lo], [hi, (v) => v.p[k] <= hi]]) {
+    const src = out;
+    out = [];
+    for (let i = 0; i < src.length; i++) {
+      const a = src[i], b = src[(i + 1) % src.length], ia = inside(a), ib = inside(b);
+      if (ia) out.push(a);
+      if (ia !== ib) {
+        const t = (bound - a.p[k]) / (b.p[k] - a.p[k]);
+        const p = a.p.map((x, j) => x + t * (b.p[j] - x));
+        p[k] = bound;
+        out.push({ p, n: a.n.map((x, j) => x + t * (b.n[j] - x)) });
+      }
+    }
+    if (out.length < 3) return [];
+  }
+  return out;
+}
+
+/** The part of segment a–b inside the box as [t0, t1] (0 <= t0 <= t1 <= 1), or null (Liang–Barsky). */
+function segmentInBox(a, b, box) {
+  let t0 = 0, t1 = 1;
+  for (let k = 0; k < 3; k++) {
+    const d = b[k] - a[k], [lo, hi] = box[k];
+    if (d === 0) { if (a[k] < lo || a[k] > hi) return null; continue; }
+    let u = (lo - a[k]) / d, v = (hi - a[k]) / d;
+    if (u > v) [u, v] = [v, u];
+    t0 = Math.max(t0, u); t1 = Math.min(t1, v);
+    if (t0 > t1) return null;
+  }
+  return [t0, t1];
+}
+
+/** A polyline (null entries break it) cut to the box: a list of polylines of at least two distinct points. */
+function clipPolyline(points, box) {
+  const lines = [];
+  let cur = null;
+  const at = (a, b, t) => { const p = a.map((x, j) => x + t * (b[j] - x)); for (let j = 0; j < 3; j++) p[j] = Math.min(box[j][1], Math.max(box[j][0], p[j])); return p; };
+  const flush = () => { if (cur && cur.length >= 2) lines.push(cur); cur = null; };
+  for (let i = 0; i + 1 < points.length; i++) {
+    const a = points[i], b = points[i + 1];
+    if (!a || !b) { flush(); continue; }
+    const s = segmentInBox(a, b, box);
+    if (!s || s[1] - s[0] <= 0) { flush(); continue; }
+    const p = s[0] === 0 ? a.slice() : at(a, b, s[0]), q = s[1] === 1 ? b.slice() : at(a, b, s[1]);
+    if (!cur) cur = [p];
+    cur.push(q);
+    if (s[1] < 1) flush();
+  }
+  flush();
+  return lines;
+}
+
+/** Plot3D[f, {x, x0, x1}, {y, y0, y1}, options] (see the file header). */
+export function Plot3D(f, xRange, yRange, {
+  PlotPoints = PLOT3D_POINTS, PlotRange = 'Automatic', ClippingStyle = 'None', ColorFunction = null,
+  ColorFunctionScaling = true, Mesh = 'Automatic', MeshStyle = null, PlotStyle = null, BoxRatios, Lighting,
+  Axes = true, Boxed = true, ...rest
+} = {}) {
+  if (ClippingStyle !== 'None' && ClippingStyle !== null) throw new Error(`Plot3D: ClippingStyle ${String(ClippingStyle)} is not implemented (only None)`);
+  const [nx, ny] = Array.isArray(PlotPoints) ? PlotPoints : [PlotPoints, PlotPoints];
+  const [x0, x1] = xRange, [y0, y1] = yRange;
+  const xs = Array.from({ length: nx }, (_, i) => x0 + ((x1 - x0) * i) / (nx - 1));
+  const ys = Array.from({ length: ny }, (_, j) => y0 + ((y1 - y0) * j) / (ny - 1));
+  const val = (x, y) => { const z = f(x, y); return typeof z === 'number' && Number.isFinite(z) ? z : NaN; };
+  const Z = xs.map((x) => ys.map((y) => val(x, y)));
+
+  // the plot range box
+  let zlo = Infinity, zhi = -Infinity;
+  for (const row of Z) for (const z of row) if (Number.isFinite(z)) { zlo = Math.min(zlo, z); zhi = Math.max(zhi, z); }
+  if (zlo === Infinity) { zlo = -1; zhi = 1; } else if (zlo === zhi) { zlo -= 1; zhi += 1; }
+  const full = Array.isArray(PlotRange) && Array.isArray(PlotRange[0]);
+  const given = full ? PlotRange : [null, null, isAuto(PlotRange) ? null : PlotRange];
+  const box = [[x0, x1], [y0, y1], [zlo, zhi]].map((d, k) => (isAuto(given[k]) ? sorted(d) : sorted(given[k])));
+
+  // normals from the samples
+  const d = (i, j, di, dj) => {
+    const z = (a, b) => (a >= 0 && a < nx && b >= 0 && b < ny ? Z[a][b] : NaN);
+    const ok = (v) => Number.isFinite(v);
+    const fwd = z(i + di, j + dj), bwd = z(i - di, j - dj), here = Z[i][j];
+    const h = di ? (x1 - x0) / (nx - 1) : (y1 - y0) / (ny - 1);
+    if (ok(fwd) && ok(bwd)) return (fwd - bwd) / (2 * h);
+    if (ok(fwd)) return (fwd - here) / h;
+    if (ok(bwd)) return (here - bwd) / h;
+    return 0;
+  };
+  const normal = (i, j) => { const fx = d(i, j, 1, 0), fy = d(i, j, 0, 1), r = Math.hypot(fx, fy, 1); return [-fx / r, -fy / r, 1 / r]; };
+  const V = xs.map((x, i) => ys.map((y, j) => (Number.isFinite(Z[i][j]) ? { p: [x, y, Z[i][j]], n: normal(i, j) } : null)));
+
+  // triangles cut at the box
+  const points = [], normals = [], triangles = [];
+  const index = new Map();
+  const add = (v) => {
+    let k = index.get(v);
+    if (k === undefined) { k = points.length; points.push(v.p); const r = Math.hypot(...v.n) || 1; normals.push(v.n.map((c) => c / r)); index.set(v, k); }
+    return k;
+  };
+  const inBox = (v) => v.p.every((c, k) => c >= box[k][0] && c <= box[k][1]);
+  const area2 = (a, b, c) => { const u = sub3(b.p, a.p), w = sub3(c.p, a.p); return Math.hypot(...cross3(u, w)); };
+  for (let i = 0; i + 1 < nx; i++) for (let j = 0; j + 1 < ny; j++) {
+    const a = V[i][j], b = V[i][j + 1], c = V[i + 1][j], e = V[i + 1][j + 1];
+    for (const tri of [[a, c, b], [b, c, e]]) {
+      if (tri.some((v) => !v)) continue;
+      let poly = tri;
+      if (!tri.every(inBox)) for (let k = 0; k < 3 && poly.length; k++) poly = clipPolygon(poly, k, box[k][0], box[k][1]);
+      for (let m = 1; m + 1 < poly.length; m++) {
+        if (area2(poly[0], poly[m], poly[m + 1]) === 0) continue;
+        triangles.push([add(poly[0]), add(poly[m]), add(poly[m + 1])]);
+      }
+    }
+  }
+
+  // vertex colours
+  let colors = null;
+  if (ColorFunction) {
+    const scale = (v, k) => (ColorFunctionScaling === false ? v : (v - box[k][0]) / (box[k][1] - box[k][0]));
+    colors = points.map((p) => colorRGB(ColorFunction(scale(p[0], 0), scale(p[1], 1), scale(p[2], 2))));
+  }
+
+  // mesh lines: f along x = const and y = const, cut at the box
+  const [mx, my] = meshValues(Mesh, box);
+  const meshLines = [
+    ...mx.flatMap((x) => clipPolyline(ys.map((y) => { const z = val(x, y); return Number.isFinite(z) ? [x, y, z] : null; }), box)),
+    ...my.flatMap((y) => clipPolyline(xs.map((x) => { const z = val(x, y); return Number.isFinite(z) ? [x, y, z] : null; }), box)),
+  ];
+
+  const base = styleOf(PlotStyle, { color: null, opacity: 1 });
+  const prim = { prim: 'plotSurface', points, normals, colors, triangles, meshLines, meshStyle: styleOf(MeshStyle, PLOT3D_MESH_STYLE), baseColor: base.color, baseOpacity: base.opacity };
+  const options = { PlotRange: box, Axes, Boxed, ...rest };
+  if (BoxRatios === undefined) options.BoxRatios = [1, 1, 0.4];
+  else if (BoxRatios !== 'Automatic') options.BoxRatios = BoxRatios;
+  if (Lighting !== undefined) options.Lighting = Lighting;
+  else if (ColorFunction) options.Lighting = 'Neutral';
+  return Graphics3D([prim], options);
+}
+
 const DEFAULT_STYLE = { color: null, opacity: 1, thickness: 'Normal', pointSize: null, arrowheads: null };
 
 function applyDirective(st, d) {
@@ -229,6 +439,16 @@ export function flatten(g, style = DEFAULT_STYLE, M = I4, out = []) {
     case 'cone': out.push({ type: 'cone', p1: P(g.p1), p2: P(g.p2), radius: g.radius, ...s }); break;
     case 'infiniteLine': out.push({ type: 'infiniteLine', points: g.points.map(P), ...s }); break;
     case 'text': out.push({ type: 'text', expr: g.expr, pos: P(g.pos), ...s, fontSize: style.fontSize ?? 12 }); break;
+    case 'plotSurface': { // v0.1.41 (Plot3D): normals turned by the linear part of the transform (rotations, uniform scales)
+      const L = ident ? null : linPart(M);
+      const N = (n) => { if (!L) return n.slice(); const m = L.map((r) => r[0] * n[0] + r[1] * n[1] + r[2] * n[2]); const h = Math.hypot(...m) || 1; return m.map((c) => c / h); };
+      out.push({
+        type: 'plotSurface', points: g.points.map(P), normals: g.normals.map(N), colors: g.colors, triangles: g.triangles,
+        meshLines: g.meshLines.map((l) => l.map(P)), meshStyle: g.meshStyle, ...s,
+        color: g.baseColor ?? s.color, opacity: g.baseOpacity !== 1 ? g.baseOpacity : s.opacity,
+      });
+      break;
+    }
     default: throw new Error(`unknown primitive ${g.prim}`);
   }
   return out;
@@ -301,6 +521,7 @@ export function boxRatioTransform(box, ratios) {
  * decimals as the major step) with length 0.035, minors unlabelled with 0.018 (fractions of the box side).
  */
 export function niceTicks([a, b], { major: majorLen = 0.035, minor: minorLen = 0.018 } = {}) {
+  if (!(b - a > 0)) return a === b && Number.isFinite(a) ? [[a, String(a + 0), majorLen]] : []; // v0.1.41: no endless loop
   const half = (b - a) / 2;
   let e = Math.floor(Math.log10(half)), step = null, mant = 1;
   for (let k = 0; k < 3 && step === null; k++, e--) {
@@ -472,7 +693,7 @@ export function primitiveBounds(prims) {
         const r = a.map((x) => p.radius * Math.sqrt(Math.max(0, 1 - (x / n) ** 2)));
         add(p.p1, r); add(p.p2, r); break;
       }
-      case 'line': case 'polygon': case 'point': case 'arrow': case 'infinitePlane': case 'mesh': for (const q of p.points) add(q); break;
+      case 'line': case 'polygon': case 'point': case 'arrow': case 'infinitePlane': case 'mesh': case 'plotSurface': for (const q of p.points) add(q); break;
       case 'tube': for (const q of p.points) add(q, [p.radius, p.radius, p.radius]); break;
       case 'cone': add(p.p1, [p.radius, p.radius, p.radius]); add(p.p2); break;
       case 'text': add(p.pos); break;

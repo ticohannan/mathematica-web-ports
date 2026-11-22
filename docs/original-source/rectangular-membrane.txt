@@ -1,0 +1,137 @@
+
+### [Title]
+Vibrations of a Rectangular Membrane
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+The two-dimensional wave equation Subscript[\[PartialD], t,t]u=c^2(Subscript[\[PartialD], x,x]u+Subscript[\[PartialD], y,y]u) provides a simple model of a vibrating rectangular membrane. You can see the evolution of an initial profile with no initial velocity for a rectangular membrane with no deflection at the boundaries. You can set the superposition of the first four Fourier modes as initial data and you can observe the membrane as time evolves.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [CodeText]
+If you provide initialization code, include a SaveDefinitions->True option in the Manipulate.
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[Plot3D[B[1,1] Cos[Sqrt[(1)/(a^2)+(1)/(b^2)] c π t] Sin[(π x)/(a)] Sin[(π y)/(b)]+B[2,1] Cos[Sqrt[(4)/(a^2)+(1)/(b^2)] c π t] Sin[(2 π x)/(a)] Sin[(π y)/(b)]+B[1,2] Cos[Sqrt[(1)/(a^2)+(4)/(b^2)] c π t] Sin[(π x)/(a)] Sin[(2 π y)/(b)]+B[2,2] Cos[Sqrt[(4)/(a^2)+(4)/(b^2)] c π t] Sin[(2 π x)/(a)] Sin[(2 π y)/(b)],{x,0,a},{y,0,b},ColorFunction->Function[{x,y,z},Hue[z/(Abs[B[1,1]]+Abs[B[2,1]]+Abs[B[1,2]]+Abs[B[2,2]])]],ColorFunctionScaling->False,PlotRange->{{0,a},{0,b},{-(Abs[B[1,1]]+Abs[B[2,1]]+Abs[B[1,2]]+Abs[B[2,2]])+zrange,Abs[B[1,1]]+Abs[B[2,1]]+Abs[B[1,2]]+Abs[B[2,2]]-zrange}},ClippingStyle->None,ImageSize->{390,350},BoxRatios->Automatic],
+{{a,4,"\<length\>"},1,10,.01,Appearance->"\<Labeled\>",ImageSize->Tiny},
+{{b,4,"\<width\>"},1,10,.01,Appearance->"\<Labeled\>",ImageSize->Tiny},
+Delimiter,
+"\<   mode\>",
+{{B[1,1],0.5,"\<m=1, n=1\>"},-2,2,.01,Appearance->"\<Labeled\>",ImageSize->Tiny},
+{{B[2,1],0,"\<m=2, n=1\>"},-2,2,.01,Appearance->"\<Labeled\>",ImageSize->Tiny},
+{{B[1,2],0,"\<m=1, n=2\>"},-2,2,.01,Appearance->"\<Labeled\>",ImageSize->Tiny},
+{{B[2,2],0,"\<m=2, n=2\>"},-2,2,.01,Appearance->"\<Labeled\>",ImageSize->Tiny},
+Delimiter,
+{{t,0,"\<time\>"},0,10,.01,Appearance->"\<Labeled\>",ImageSize->Tiny},{{c,1,"\<wave speed\>"},0,2,.01,Appearance->"\<Labeled\>",ImageSize->Tiny},
+Delimiter,
+{{zrange,0,"\<reduce box height\>"},0,2,0.1,Appearance->"\<Labeled\>",ImageSize->Tiny},
+ControlPlacement->Left,AutorunSequencing->{1,2,3,5,7}]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Alain Goriely
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+Details, references or citation information
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+rectangular membrane
+
+### [Item]
+wave equation
+
+### [Item]
+Laplacian
+
+### [Item]
+vibrating string
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Wave Equation\[LongDash]Rectangle
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2007-12-13
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

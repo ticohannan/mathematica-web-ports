@@ -1,0 +1,191 @@
+
+### [Title]
+AC Induction Motor Rotor Design
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+\<You can adjust the three principal parameters related to induction motor rotor design. Approximate values for three specific NEMA designs are provided by means of buttons.\>
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [CodeText]
+If you provide initialization code, include a SaveDefinitions->True option in the Manipulate.
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[Plot[(-(21.12` e^2 r (-1800.`+s))/(3.24`*^6 r^2+1.` (-1800.`+s)^2 x^2)),
+{s,0,1820},
+AxesLabel->{"\<speed
+RPM\>","\<torque
+% full load\>"},
+PlotRange->{0,700},PlotStyle->{{ColorData["\<HTML\>","\<SlateBlue\>"],Thickness[0.01]}},
+Ticks->{{0,200,400,600,800,1000,1200,1400,1600,1800},{0,50,100,150,200,250,300,350,400,450,500,550,600,650,700}},
+ImageSize->{500,300},
+
+Epilog->{
+(* Locked Rotor Display *)
+Inset[Style["\<\[LowerLeftArrow]\>",20,RGBColor[0.5,0.2,0.5],Bold],{50,(-(21.12` e^2 r (-1800.`))/(3.24`*^6 r^2+1.` (-1800.`)^2 x^2))+30}],
+Inset[
+Column[{
+Style["\<locked rotor\>",12, RGBColor[0.5,0.2,0.5]],
+Style["\<torque\>",12, RGBColor[0.5,0.2,0.5]],
+Style[Round[(-(21.12` e^2 r (-1800.`))/(3.24`*^6 r^2+1.` (-1800.`)^2 x^2)),1]"\<% full load\>",12,RGBColor[0.5,0.2,0.5]]
+},Center],
+{300,610}],
+
+(* Maximum torque Display *)
+Inset[Style["\<\[DownArrow]\>",20,Black,Bold],{If[Round[(1800-(1800 *r)/(x)),1]<0,0,Round[(1800-(1800 *r)/(x)),1]],
+If[Round[(1800-(1800 *r)/(x)),1]<0,(-(21.12` e^2 r (-1800.`))/(3.24`*^6 r^2+1.` (-1800.`)^2 x^2))+25,((0.005866666666666667` e^2)/(x))+25,1]}],
+Inset[
+Column[{
+Style["\<max torque\>",12, Black],
+
+Style[Round[((0.005866666666666667` e^2)/(x)),1]"\<% full load\>",12,Black],
+
+Row[{Style[
+If[Round[(1800-(1800 *r)/(x)),1]<0,0,Round[(1800-(1800 *r)/(x)),1]],12,Black]
+,Style["\< rpm\>",12,Black]}]
+},Center],
+{1005,610}],
+
+(* Full Load Torque Display *)
+Inset[Style["\<\[LeftArrow]\>",20,RGBColor[0.9,0.1,0.1],Bold],{((1)/(x^2)(-0.1056` e^2 r+1800.` x^2+0.1056` Sqrt[r^2 (1.` e^4-2.90547520661157`*^8 x^2)]))+60,100}],
+Inset[
+Column[{
+Style["\<full load\>",12, RGBColor[0.9,0.1,0.1]],
+Style["\<torque\>",12, RGBColor[0.9,0.1,0.1]],
+Style[Round[((1)/(x^2)(-0.1056` e^2 r+1800.` x^2+0.1056` Sqrt[r^2 (1.` e^4-2.90547520661157`*^8 x^2)])),1]"\< rpm\>",12,RGBColor[0.9,0.1,0.1]]
+},Center],
+{1710,610}]
+}
+(* end of epilog *)
+],
+(* end of plot *)
+
+(* add sliders *)
+{{e,150,"\<blocked rotor voltage (\!\(\*SubscriptBox[\(E\), \(BR\)]\))\>"},
+130,240,Appearance->"\<Labeled\>"},
+
+{{r,0.107,"\<rotor resistance (\!\(\*SubscriptBox[\(R\), \(R\)]\))\>"},
+0.01,1.0,Appearance->"\<Labeled\>"},
+
+{{x,0.422,"\<rotor reactance (\!\(\*SubscriptBox[\(X\), \(R\)]\))\>"},
+0.2,0.85,Appearance->"\<Labeled\>"},
+
+Row[{"\<         NEMA design \>",
+Button["\< A \>",r=0.065;x=0.3263;e=150],
+Button["\< B \>",r=0.0792;x=0.405;e=158],
+Button["\< D \>",r=0.384;x=0.384;e=150]}]
+]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Harley H. Hartman
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+By adjusting the rotor resistance (Subscript[R, R]), the rotor reactance (Subscript[X, R]), and the blocked rotor voltage (Subscript[E, BR]), you can observe the interactive effects of the parameters. The buttons provide a quick means of setting the parameters to the approximate NEMA design types of A, B, and D. 
+
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+electrical
+
+### [Item]
+electrical power
+
+### [Item]
+AC power systems
+
+### [Item]
+AC electrical machines
+
+### [Item]
+induction motor
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Item]
+Link to external information
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2007-11-08
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

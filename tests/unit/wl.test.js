@@ -34,6 +34,8 @@ describe('shared/wl.js — construction and parts', () => {
     expect(W.Take(l, [2, 3])).toEqual([20, 30]);
     expect(W.Drop(l, 1)).toEqual([20, 30, 40]);
     expect(W.Drop(l, [2, 3])).toEqual([10, 40]);
+    expect(W.Drop(l, [2])).toEqual([10, 30, 40]); // Drop[list, {n}]
+    expect(W.Drop(l, [-1])).toEqual([10, 20, 30]);
     expect([W.First(l), W.Last(l), W.Most(l), W.Rest(l)]).toEqual([10, 40, [10, 20, 30], [20, 30, 40]]);
     expect(W.RotateLeft(l)).toEqual([20, 30, 40, 10]);
     expect(W.RotateRight(l, 2)).toEqual([30, 40, 10, 20]);

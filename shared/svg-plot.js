@@ -183,7 +183,11 @@ export const darkLocatorGlyph = (plot) => locatorGlyph(plot, { color: [0, 0, 0],
  *   testid(name) (default `locator-${name}`): the data-testid of each locator
  *   autoCreate (v0.1.33, Mathematica's LocatorAutoCreate -> True): { add([x, y]), remove(name) } — an Alt-click (⌘-click on
  *     a Mac) within hitPx of a locator calls remove(name), elsewhere add(point); the caller changes its list of points
- *     (and setNames follows). Without it Alt/⌘-clicks are ordinary presses.
+ *     (and setNames follows). Without it Alt/⌘-clicks are ordinary presses. v0.1.41 (opt-in, LocatorAutoCreate -> All
+ *     and count limits): { all: true } — a plain press away from every locator also calls add(point) instead of making
+ *     the nearest locator jump, and when add returns the name of the new locator that locator is dragged at once;
+ *     allows(kind, name) (kind 'add' or 'remove'; default always true) — false makes that click do nothing
+ *     (Mathematica's {min, max}: "no effect"). Without these two keys the behaviour is that of v0.1.33.
  * Returns { redraw(), nodes, dragging() }.
  */
 export function addLocators(plot, { names, get, onMove, onStart, onEnd, appearance, hitPx = 12, keyStep = 0.05, throttle = 'raf', pickAnywhere = false, describe = (n) => `${n} locator; arrow keys move it`, layerName = 'locators', pointer = true, testid = (n) => `locator-${n}`, autoCreate = null }) {
@@ -226,14 +230,26 @@ export function addLocators(plot, { names, get, onMove, onStart, onEnd, appearan
     if (e.button !== 0) return;
     const p = plot.clientToWorld(e.clientX, e.clientY);
     const [n, d] = nearestTo(p);
-    if (autoCreate && (e.altKey || e.metaKey)) { // LocatorAutoCreate: Alt/⌘-click deletes the locator under it, else adds one
+    const hit = !!n && d <= hitPx * plot.displayScale();
+    const modifier = e.altKey || e.metaKey;
+    // LocatorAutoCreate: Alt/⌘-click deletes the locator under it, else adds one; with All (v0.1.41) a plain press away
+    // from the locators adds one too and drags it
+    if (autoCreate && (modifier || (autoCreate.all && !hit))) {
       e.preventDefault();
-      if (n && d <= hitPx * plot.displayScale()) autoCreate.remove(n); else autoCreate.add(p);
+      const ok = (kind, name) => (autoCreate.allows ? autoCreate.allows(kind, name) : true);
+      if (hit) { if (ok('remove', n)) autoCreate.remove(n); return; }
+      if (!ok('add')) return;
+      const made = autoCreate.add(p);
+      if (!modifier && autoCreate.all && made && nodes[made]) grab(made, p, false, e);
       return;
     }
     if (!n) return;
-    const grabbed = d <= hitPx * plot.displayScale();
-    if (!grabbed && !pickAnywhere) return;
+    if (!hit && !pickAnywhere) return;
+    grab(n, p, hit, e);
+    if (!hit) onMove(n, p, { source: 'pointer' }); // LocatorPane: the nearest locator jumps to the click
+  };
+  /** start dragging locator n from press point p (grabbed: keep the offset between pointer and locator) */
+  const grab = (n, p, grabbed, e) => {
     active = n;
     const [x, y] = get(n);
     offset = grabbed ? [x - p[0], y - p[1]] : [0, 0];
@@ -242,7 +258,6 @@ export function addLocators(plot, { names, get, onMove, onStart, onEnd, appearan
     try { plot.svg.setPointerCapture(e.pointerId); } catch { /* not supported everywhere; window listeners below cover it */ }
     e.preventDefault();
     onStart?.(n);
-    if (!grabbed) onMove(n, p, { source: 'pointer' }); // LocatorPane: the nearest locator jumps to the click
   };
   if (pointer) plot.svg.addEventListener('pointerdown', down);
   const move = (e) => {

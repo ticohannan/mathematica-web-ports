@@ -1,0 +1,153 @@
+
+### [Title]
+Path of Light through an Acoustic Wave
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+\<Consider a light wave traveling through a sound wave. Since a sound wave is a fluctuation in air pressure, there is also a fluctuation in the refractive index of the air. This fluctuation in refractive index bends the path of light as it travels through the air.\>
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [CodeText]
+If you provide initialization code, include a SaveDefinitions->True option in the Manipulate.
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+If[m>n-.1,m=n-.1];Plot[{(2 (ArcTan[(m+n Tan[(w*x)/(2)])/(Sqrt[-m^2+n^2])]+Pi*Ceiling[w*x/(2*Pi)-.5])*n*Tan[Theta])/(Sqrt[-m^2+n^2] w)-(2 n ArcTan[(m)/(Sqrt[-m^2+n^2])] Tan[Theta])/(Sqrt[-m^2+n^2] w),m*Sin[w*x]},{x,0,50},PlotStyle->{Thick,Dashed},ImageSize->{500,300},ImagePadding->{{25,25},{10,10}}],
+{{n,1,"\<index of refraction of air \!\(\*SubscriptBox[\(n\), \(air\)]\)\>"},.8,5,Appearance->"\<Labeled\>"},
+{{m,.7,"\<sound volume m\>"},0,n-.1,Appearance->"\<Labeled\>"},
+{{w,.5,"\<frequency of sound w\>"},.3,2,Appearance->"\<Labeled\>"},
+{{Theta,.01,"\<initial angle of light Theta\>"},-.02,.02,Appearance->"\<Labeled\>"}]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Brendon O'Leary
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+\<The path of light was calculated by the principle of least time. The time that it takes for light to travel a certain distance can be calculated by the integral\>
+
+### [Text]
+t=Subscript[\[Integral],0]^s((Subscript[n, air]+m*sin(w x))/(c))ds=Subscript[\[Integral],0]^x((Subscript[n, air]+m*sin(w x))/(c))Sqrt[1+(y'(x))^2]dx,
+
+### [Text]
+such that s is the coordinate along the path of the light.
+
+### [Text]
+The path y(x) that corresponds to a minimum value of t was found by solving the Euler\[Dash]Lagrange equations, which produced this differential equation:
+
+### [Text]
+-(m w cos(w x) y^\[Prime](x)+m w cos(w x) (y^\[Prime](x))^3+(Subscript[n, air]+m sin(w x)) y^\[Prime]\[Prime](x))/((1+(y^\[Prime](x))^2)^(3/2))=0.
+
+### [Text]
+\<The third-order term was omitted to make the solution to this differential equation more tractable.\>
+
+### [Text]
+This Demonstration shows the path of light (in bold) overlaid with the acoustic wave. The y axis represents distance (in arbitrary units) for the light path and pressure (or index of refraction) of the air, both in arbitrary units. The x axis is distance for both curves.
+
+### [Text]
+\<When the index of refraction of the air increases, the light bends toward the normal of the acoustic wavefront, and when the index of refraction of the air decreases, the light bends away from the normal of the wavefront.\>
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+Calculus of Variations
+
+### [Item]
+Principle of Least Time
+
+### [Item]
+Light
+
+### [Item]
+Acoustics
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Fermat's Principle
+
+### [Text]
+Lagrange's Equations
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2010-07-15
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

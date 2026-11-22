@@ -47,7 +47,10 @@
 //   [[name, init], xmin, xmax, None] or { ControlType: None }   also hidden; [[p, p0], Locator] a locator with no range
 // opts (Mathematica's option names): Appearance: 'Labeled' shows the value field (default: none, as in Mathematica);
 // Appearance: None on a locator draws no glyph (still draggable); LocatorAutoCreate: true on a Locator list (v0.1.33):
-// Alt/⌘-click on the picture adds a point, on a locator deletes it; a locator's Appearance may also be Graphics primitives
+// Alt/⌘-click on the picture adds a point, on a locator deletes it; v0.1.41 (opt-in): LocatorAutoCreate: All (a plain
+// click away from the locators adds a point and drags it; Alt/⌘-click on a locator deletes it), [All, [min, max]],
+// [true, [min, max]] and [min, max] (count limits: a click that would leave them has no effect; locatorAutoCreate);
+// a locator's Appearance may also be Graphics primitives
 // drawn around the point (coordinates relative to it, in picture units), or a function (state, name) → primitives that
 // is evaluated again after every evaluation (a state-dependent locator picture); ControlType: Slider (a plain slider, no ⊕ panel),
 // VerticalSlider, PopupMenu, SetterBar, Checkbox, IntervalSlider, CheckboxBar (v0.1.33; values as for SetterBar, Rule
@@ -77,7 +80,7 @@
 // (shared/ui.js `steps: 'mma'`).
 
 import { Controls } from './ui.js';
-import { addButton, addCheckbox, addCheckboxBar, addPopup, addVerticalSlider, addRow, addRadioButtons, addTrigger } from './ui-extra.js';
+import { addButton, addCheckbox, addCheckboxBar, addPopup, addVerticalSlider, addRow, addRadioButtons, addTrigger, addAnimator } from './ui-extra.js';
 import { addIntervalSlider } from './ui-interval.js';
 import { createPlot, addLocators, darkLocatorGlyph, locatorGlyph, svgNode } from './svg-plot.js';
 import { createRng, replayRng } from './random.js';
@@ -101,14 +104,41 @@ export const Checkbox = Object.freeze({ controlType: 'Checkbox' });
 export const IntervalSlider = Object.freeze({ controlType: 'IntervalSlider' });
 /** ControlType -> CheckboxBar (v0.1.33): the value is the list of the checked values (in the order they were checked). */
 export const CheckboxBar = Object.freeze({ controlType: 'CheckboxBar' });
+/** ControlType -> TogglerBar (v0.1.41): as CheckboxBar (the value is the list of the values toggled on, in the order
+ *  they were toggled on), drawn as a row of toggle buttons; a value label may be a Tooltip[label, tip]. */
+export const TogglerBar = Object.freeze({ controlType: 'TogglerBar' });
 /** ControlType -> RadioButton (v0.1.37): radio buttons; Appearance -> 'Vertical' stacks them. */
 export const RadioButton = Object.freeze({ controlType: 'RadioButton' });
 /** ControlType -> Trigger (v0.1.37): play/pause and reset buttons that run the value from min to max (AnimationRate). */
 export const Trigger = Object.freeze({ controlType: 'Trigger' });
+/** ControlType -> Animator (v0.1.41): the value runs over [min, max] by itself (AnimationRunning, DefaultDuration as a
+ *  number or a function of the state, AnimationRate, AnimationDirection, AppearanceElements; addAnimator in ui-extra.js). */
+export const Animator = Object.freeze({ controlType: 'Animator' });
 /** Control(factory, options): a control built by a factory (Mathematica's Control[{x, …}] with a custom appearance). */
 export const Control = (factory, options = {}) => Object.freeze({ marker: 'Control', factory, options });
 /** Button[label, action] (in the control list): action(state, ctx) changes the state; options { name }. */
 export const Button = (label, action, options = {}) => Object.freeze({ marker: 'Button', label, action, options });
+
+/** All (v0.1.41), for LocatorAutoCreate -> All (the same string the plot options use for PlotRange -> All). */
+export const All = 'All';
+/**
+ * LocatorAutoCreate (pure; v0.1.41): the option's value → { all, min, max } or null (no auto-creation). Mathematica's
+ * settings (reference page of LocatorAutoCreate): True — Alt/⌘-click (Mathematica: the platform's modifier + click) away
+ * from the locators creates one, on a locator deletes it; All — any click away from the locators creates one (Alt/⌘-click
+ * on a locator deletes it); {min, max} — as True, with at least min and at most max locators; {All, {min, max}},
+ * {True, {min, max}} — the count limits of All or True. A click that would leave the count outside the limits has no
+ * effect. False, None and anything else: null.
+ */
+export function locatorAutoCreate(v) {
+  if (v === true || v === 'True') return { all: false, min: 0, max: Infinity };
+  if (v === All) return { all: true, min: 0, max: Infinity };
+  if (Array.isArray(v) && v.length === 2 && v.every((x) => typeof x === 'number')) return { all: false, min: v[0], max: v[1] };
+  if (Array.isArray(v) && v.length === 2 && Array.isArray(v[1]) && v[1].length === 2) {
+    const base = locatorAutoCreate(v[0]);
+    return base && { ...base, min: v[1][0], max: v[1][1] };
+  }
+  return null;
+}
 
 const isPoint = (x) => Array.isArray(x) && x.length === 2 && x.every((v) => typeof v === 'number');
 /** A text expression (Style, Subscript, Superscript, or a Row of strings and text expressions) — not a control spec. */
@@ -163,12 +193,14 @@ export function parseControl(spec) {
     const values = rest[0].map((v) => (v && v.rule ? { value: v.value, label: v.label } : { value: v, label: String(v) }));
     const boolean = values.length === 2 && ((values[0].value === false && values[1].value === true) || (values[0].value === true && values[1].value === false)); // {False, True} or {True, False}
     if (type === 'CheckboxBar') return { ...base, kind: 'checkboxbar', values };
+    if (type === 'TogglerBar') return { ...base, kind: 'checkboxbar', values, toggler: true };
     if (type === 'RadioButton') return { ...base, kind: 'radio', values };
     const kind = type === 'PopupMenu' ? 'popup' : type === 'Checkbox' || (boolean && type !== 'SetterBar') ? 'checkbox' : 'setter';
     return { ...base, kind, values };
   }
   if (isBound(rest[0]) && isBound(rest[1])) {
     if (type === 'Trigger') return { ...base, kind: 'trigger', min: rest[0], max: rest[1], step: rest[2] ?? 0 };
+    if (type === 'Animator') return { ...base, kind: 'animator', min: rest[0], max: rest[1], step: rest[2] ?? 0 };
     const kind = type === 'IntervalSlider' ? 'interval' : type === 'VerticalSlider' ? 'vslider' : 'slider';
     return { ...base, kind, min: rest[0], max: rest[1], step: rest[2] ?? 0, plain: type === 'Slider' };
   }
@@ -522,8 +554,21 @@ export function Manipulate(spec) {
         holdUntilRelease(api.row);
         break;
       case 'trigger':
-        api = addTrigger(controls, { name: c.name, label, min: bound(c.min, state), max: bound(c.max, state), step: c.step, value: val(c.name), onInput, parent, rate: c.opts.AnimationRate, animate, ...extra });
+        api = addTrigger(controls, {
+          name: c.name, label, min: bound(c.min, state), max: bound(c.max, state), step: c.step, value: val(c.name), onInput, parent,
+          rate: c.opts.AnimationRate, animate, elements: c.opts.AppearanceElements, repetitions: c.opts.AnimationRepetitions, ...extra,
+        });
         break;
+      case 'animator': {
+        const o = c.opts;
+        api = addAnimator(controls, {
+          name: c.name, label, min: bound(c.min, state), max: bound(c.max, state), step: c.step, value: val(c.name), onInput, parent, animate,
+          elements: o.AppearanceElements, running: o.AnimationRunning !== false, rate: o.AnimationRate, direction: o.AnimationDirection,
+          duration: typeof o.DefaultDuration === 'function' ? () => o.DefaultDuration(state) : (o.DefaultDuration ?? 5), ...extra,
+        });
+        if (!enabled) api.setEnabled(false);
+        break;
+      }
       case 'radio':
         api = addRadioButtons(controls, { name: c.name, label, options: c.values.map((o) => ({ value: o.value, label: textOf(o.label), html: htmlOf(o.label) })), value: val(c.name), onChange: onInput, parent, vertical: c.opts.Appearance === 'Vertical', ...extra });
         if (!enabled) api.setEnabled(false);
@@ -559,7 +604,10 @@ export function Manipulate(spec) {
         if (!enabled) api.setEnabled(false);
         break;
       case 'checkboxbar':
-        api = addCheckboxBar(controls, { name: c.name, label, options: c.values.map((o) => ({ value: o.value, label: textOf(o.label), html: htmlOf(o.label) })), value: val(c.name), onChange: onInput, parent, ...extra });
+        api = addCheckboxBar(controls, {
+          name: c.name, label, toggler: !!c.toggler, value: val(c.name), onChange: onInput, parent, ...extra,
+          options: c.values.map((o) => { const tip = o.label && o.label.head === 'Tooltip' ? o.label : null; const l = tip ? tip.g : o.label; return { value: o.value, label: textOf(l), html: htmlOf(l), tooltip: tip ? textOf(tip.label) : undefined }; }),
+        });
         if (!enabled) api.setEnabled(false);
         break;
       case 'slider2D':
@@ -703,21 +751,37 @@ export function Manipulate(spec) {
   }
   // LocatorAutoCreate -> True (v0.1.33) on a Locator list of picture k: Alt/⌘-click adds a point at the end of the list
   // (Mathematica appends) or deletes the one clicked; the body is evaluated again (and syncLocators adds or removes
-  // the locators). A locator at the clicked point keyboard-focusable as the others.
-  const autoCreateOn = (k) => all.find((c) => c.kind === 'locator' && c.opts.LocatorAutoCreate === true && (c.opts.picture ?? 0) === k);
-  const autoCreator = (k) => ({
-    add: (p) => {
-      const c = autoCreateOn(k);
-      setVar(state, c.name, [...(val(c.name) ?? []), clampTo(scales[k] ? fromWorld(k, p) : p, c.min, c.max)]);
-      requestRun();
-    },
-    remove: (n) => {
-      const l = locOf(n);
-      if (!l || l.index === null || !l.opts.LocatorAutoCreate) return;
-      setVar(state, l.variable, val(l.variable).filter((_, i) => i !== l.index));
-      requestRun();
-    },
-  });
+  // the locators). A locator at the clicked point keyboard-focusable as the others. v0.1.41: All (a plain click away
+  // from the locators adds a point, which is dragged at once) and the count limits {spec, {min, max}}
+  // (locatorAutoCreate below); LocatorAutoCreate -> True without limits behaves exactly as before.
+  const autoCreateOn = (k) => all.find((c) => c.kind === 'locator' && locatorAutoCreate(c.opts.LocatorAutoCreate) && (c.opts.picture ?? 0) === k);
+  const autoCreator = (k) => {
+    const ac = locatorAutoCreate(autoCreateOn(k).opts.LocatorAutoCreate);
+    return {
+      ...(ac.all ? { all: true } : {}),
+      ...(ac.min > 0 || ac.max < Infinity ? {
+        allows: (kind, n) => {
+          if (kind === 'add') return (val(autoCreateOn(k).name) ?? []).length + 1 <= ac.max;
+          const l = locOf(n), lac = l && locatorAutoCreate(l.opts.LocatorAutoCreate);
+          return !!lac && l.index !== null && val(l.variable).length - 1 >= lac.min;
+        },
+      } : {}),
+      add: (p) => {
+        const c = autoCreateOn(k);
+        const before = (val(c.name) ?? []).length;
+        setVar(state, c.name, [...(val(c.name) ?? []), clampTo(scales[k] ? fromWorld(k, p) : p, c.min, c.max)]);
+        requestRun();
+        // the new locator's name, when the evaluation kept the new point at the end of the list (a body may remove it)
+        return (val(c.name) ?? []).length === before + 1 ? `${c.name}-${before + 1}` : undefined;
+      },
+      remove: (n) => {
+        const l = locOf(n);
+        if (!l || l.index === null || !locatorAutoCreate(l.opts.LocatorAutoCreate)) return;
+        setVar(state, l.variable, val(l.variable).filter((_, i) => i !== l.index));
+        requestRun();
+      },
+    };
+  };
   function makePane(k, names) {
     const L = spec.locators ?? {};
     {

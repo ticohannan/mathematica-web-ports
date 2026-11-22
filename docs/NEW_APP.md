@@ -62,6 +62,8 @@ Manipulate({
 | `{{p, {0, 0}}, Locator}`, `Appearance -> None` | `[['p', [0, 0]], [xmin, ymin], [xmax, ymax], Locator, { Appearance: None }]` |
 | locator `Appearance -> Graphics[…]` (also depending on other variables) | `{ Appearance: [Blue, Disk([0, 0], 0.1)] }` or `{ Appearance: (s) => [s.on ? Red : Blue, Disk([0, 0], 0.1)] }` — coordinates relative to the point |
 | `Button["Reset", …]`, `Row[{…}]`, `Delimiter`, `"heading"` | `Button('Reset', (s) => { … })`, `Row([…])`, `Delimiter`, `'heading'` |
+| `LocatorAutoCreate -> {All, {1, 10}}` on a Locator list (a click adds a point, at most 10, at least 1) | `{ LocatorAutoCreate: [All, [1, 10]] }` with `All` from `shared/manipulate.js` |
+| `ControlType -> TogglerBar` (values `1 -> Tooltip["+", "sum"]`, …), `ControlType -> Trigger` with `AppearanceElements -> {"PlayPauseButton", "FasterSlowerButtons"}`, `AnimationRepetitions -> Infinity` | `{ ControlType: TogglerBar }` with `Rule(1, Tooltip(' + ', 'sum'))`; `{ ControlType: Trigger, AppearanceElements: ['PlayPauseButton', 'FasterSlowerButtons'], AnimationRepetitions: Infinity }` |
 | `ControlPlacement -> Top` (Mathematica's default) | `ControlPlacement: 'Top'` in the spec (the pages' default is beside) |
 | `Initialization :> (…)` | ordinary code at the top of `model.js` |
 | `x` changed inside the body | return `{ state: { …s, x: newX }, graphics: […] }` |
@@ -160,6 +162,8 @@ const c = Times(1 / pts.length, Total(pts));                          // Total[p
 | `Pi`, `E`, `Degree`, `Sin`, `Cos`, `Sqrt`, `Exp`, `Log[b, x]` | same names | |
 | `RandomReal[{0, 1}, n]`, `RandomInteger`, `RandomChoice`, `RandomSample` | same names | `SeedRandom[n]`: pass a seeded source as the last argument — the Manipulate's `rng` (with `random: true` in the spec; `body: (s, { rng }) => RandomReal([0, 1], 3, rng)`, `?seed=N` in the page URL) or `createRng({ seed: n })` of `shared/random.js` |
 | a value computed only when its inputs change (`If[a =!= aOld, …]`) | `const cached = cacheLast(); … cached([a, b], () => compute(a, b))` | |
+| `StreamPlot[{u, v}, {x, …}, {y, …}]`, `ContourPlot[f == 0, {x, …}, {y, …}]` | `StreamPlot(…)`, `ContourPlot(Equation(f, 0), …)` of `shared/plot.js` | v0.1.41; options as far as a port has needed them (see the file header) |
+| `Interpolation[{{x1, y1}, …}]`, `Interpolation[{{{x1}, y1, dy1}, …}]` (with derivatives) | `Interpolation(data)` of `shared/numeric.js` → a function | order 3: local cubic through 4 points; with derivatives: piecewise cubic Hermite |
 | `x == y`, `x != y`, `x < y` on computed reals | `Equal(x, y)`, `Unequal(x, y)` (numbers or lists), `Less(x, y)` (numbers) | Mathematica ignores the last seven bits: `0.1 + 0.2 == 0.3` is True; use `===` for integers, strings and copied values |
 
 Results agree with Mathematica up to rounding, not bit for bit. That is enough for a new app; do not mix `shared/wl.js`

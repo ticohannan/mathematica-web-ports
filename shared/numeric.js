@@ -19,6 +19,11 @@
 //   Fourier(list, {FourierParameters: [a, b]})   Mathematica's discrete Fourier transform
 //                                v_s = n^((a−1)/2) Σ_r u_r e^(2π i b (r−1)(s−1)/n), default {0, 1}; radix-2 FFT for a
 //                                power-of-two length, the direct sum otherwise. Real or complex input; complex output.
+//   Interpolation(data)          (v0.1.41) Interpolation[data] of one variable, InterpolationOrder 3: data {{x, y}, …}
+//                                gives a piecewise cubic through the 4 data points around each interval (Mathematica's
+//                                default, local Lagrange); data {{{x}, y, dy}, …} (values and derivatives) gives the
+//                                piecewise cubic Hermite interpolant. Returns f(x); outside the data the end pieces are
+//                                extended (Mathematica extrapolates with a warning). Order 1: piecewise linear.
 //   TriangleWave(x), SquareWave(x), SawtoothWave(x)   period 1, as Mathematica's (TriangleWave[0] = 0, rising to 1 at
 //                                1/4; SquareWave 1 on [0, 1/2), −1 on [1/2, 1); SawtoothWave x − Floor[x]).
 
@@ -180,3 +185,42 @@ export function TriangleWave(x) {
 }
 export const SquareWave = (x) => (x - Math.floor(x) < 0.5 ? 1 : -1);
 export const SawtoothWave = (x) => x - Math.floor(x);
+
+/** Interpolation[data] (v0.1.41): see the header. data {{x, y}…} or {{{x}, y, dy}…}; opts.InterpolationOrder 1 or 3. */
+export function Interpolation(data, { InterpolationOrder = 3 } = {}) {
+  const hermite = data.length > 0 && Array.isArray(data[0][0]);
+  const pts = data.map((d) => (hermite ? [d[0][0], d[1], d[2]] : [d[0], d[1]])).sort((p, q) => p[0] - q[0]);
+  const n = pts.length;
+  if (n === 0) throw new Error('Interpolation: no data');
+  if (n === 1) return () => pts[0][1];
+  const xs = pts.map((p) => p[0]);
+  const seg = (x) => { // the interval [x_i, x_{i+1}] holding x (end intervals extended)
+    let lo = 0, hi = n - 1;
+    if (x <= xs[0]) return 0;
+    if (x >= xs[n - 1]) return n - 2;
+    while (hi - lo > 1) { const m = (lo + hi) >> 1; if (xs[m] <= x) lo = m; else hi = m; }
+    return lo;
+  };
+  if (hermite) {
+    return (x) => {
+      const i = seg(x), [x0, y0, d0] = pts[i], [x1, y1, d1] = pts[i + 1];
+      const h = x1 - x0, t = (x - x0) / h, t2 = t * t, t3 = t2 * t;
+      return (2 * t3 - 3 * t2 + 1) * y0 + (t3 - 2 * t2 + t) * h * d0 + (-2 * t3 + 3 * t2) * y1 + (t3 - t2) * h * d1;
+    };
+  }
+  if (InterpolationOrder === 1 || n === 2) {
+    return (x) => { const i = seg(x), [x0, y0] = pts[i], [x1, y1] = pts[i + 1]; return y0 + (y1 - y0) * (x - x0) / (x1 - x0); };
+  }
+  const order = Math.min(InterpolationOrder, n - 1);
+  return (x) => {
+    const i = seg(x);
+    let a = Math.max(0, Math.min(n - 1 - order, i - Math.floor((order - 1) / 2))); // the order+1 points around the interval
+    let v = 0;
+    for (let j = a; j <= a + order; j++) {
+      let w = pts[j][1];
+      for (let k = a; k <= a + order; k++) if (k !== j) w *= (x - xs[k]) / (xs[j] - xs[k]);
+      v += w;
+    }
+    return v;
+  };
+}

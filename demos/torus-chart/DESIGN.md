@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.40 |
+| Code version: | 0.1.41 |
 | Document revision | 1 (2026-10-18) — first implementation |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Chart for a Torus", contributed by Aaron T. Becker and Haoran Zhao, published 2016-05-02 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ChartForATorus/>. Readable source: [`docs/original-source/torus-chart.txt`](../../docs/original-source/torus-chart.txt); snapshots: `docs/original-snapshots/torus-chart-1.png` … `-4.png` (files 5 and 6 of the extraction are 96 × 100 placeholder icons); golden data: `tests/golden/torus-chart.original-states.json` (COMMON-DECISIONS §1: `states[0]` = the live state, `snapshots[1…4]` = the snapshot cells' Settings, raw notebook lines 2311, 6086, 9212, 12067, `specs` = the initial settings; λ read from the raw notebook by `tools/extract_state.py --snapshots`, N-TC-01) |
@@ -257,6 +257,7 @@ Proposals for this app are tracked separately.
 | 24 | v0.1.38 | 2026-11-12 | version number (v0.1.38: one new app, forward-kinematics; shared/traditional-form.js is new, and `Lighting -> "Neutral"` in shared/mma-lighting.js and graphics3d-view.js is opt-in); no change to this app's code, behaviour or picture |
 | 25 | v0.1.39 | 2026-11-12 | version number (v0.1.39: selective testing — tools/affected.mjs and publish:tested run only the browser tests a change can affect; no app code changed); no change to this app's code, behaviour or picture |
 | 26 | v0.1.40 | 2026-11-13 | version number (v0.1.40: three truss ports; shared/truss.js is new; shared/graphics.js gains Mouseover, RotatedText, rounded and line-less Framed, Arrowheads[Large] and heads at given places, Grid alignment at "=", styled scripts and fitPlotRange — the changes to existing drawing are a styled script keeping its style and the baseline after it, and framed or backed labels keeping their outer spaces); no change to this app's code or behaviour |
+| 27 | v0.1.41 | 2026-11-17 | version number (v0.1.41: fourteen ports, five on waves, five on fields and machines and four on geometry and ecology; shared additions, all opt-in: the TogglerBar and Animator controls, the Trigger options AppearanceElements and AnimationRepetitions, LocatorAutoCreate with All and count limits, Interpolation, Plot3D with Hue colours, StreamPlot and ContourPlot of an equation, Drop[list, {n}]; a Trigger over an infinite range runs at 1 unit per second, and automatic 3D ticks of a zero-width range give one tick); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

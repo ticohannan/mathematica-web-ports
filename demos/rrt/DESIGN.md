@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.40 |
+| Code version: | 0.1.41 |
 | Document revision | 3 (2026-10-18) — harness run 2 evaluated (15.0.1 numerics model, K-RT-02/06 resolved, P-RT-01 proposed) |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Rapidly Exploring Random Tree (RRT) and RRT*", contributed by Aaron T. Becker and Li Huang, published 2018-01-16 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/RapidlyExploringRandomTreeRRTAndRRT/>. Readable source: [`docs/original-source/rrt.txt`](../../docs/original-source/rrt.txt); snapshots: `docs/original-snapshots/rrt-1.png` … `rrt-6.png` (pictures 7 and 8 of the extraction are the Wolfram logo placeholder, not snapshots); saved states (COMMON-DECISIONS §1): [`tests/golden/rrt.original-states.json`](../../tests/golden/rrt.original-states.json), written by `python3 tools/extract_state.py --snapshots`, with `states[0]` = the live output-cell state, `snapshots[1…6]` = the six snapshot cells' `"Settings"` (raw notebook lines 3360, 4786, 9538, 16507, 21317, 24564) and `specs` = the initial settings (see §6, *Golden data*) |
@@ -291,6 +291,7 @@ Proposals for this app are tracked separately.
 | 24 | v0.1.38 | 2026-11-12 | version number (v0.1.38: one new app, forward-kinematics; shared/traditional-form.js is new, and `Lighting -> "Neutral"` in shared/mma-lighting.js and graphics3d-view.js is opt-in); no change to this app's code, behaviour or picture |
 | 25 | v0.1.39 | 2026-11-12 | version number (v0.1.39: selective testing — tools/affected.mjs and publish:tested run only the browser tests a change can affect; no app code changed); no change to this app's code, behaviour or picture |
 | 26 | v0.1.40 | 2026-11-13 | version number (v0.1.40: three truss ports; shared/truss.js is new; shared/graphics.js gains Mouseover, RotatedText, rounded and line-less Framed, Arrowheads[Large] and heads at given places, Grid alignment at "=", styled scripts and fitPlotRange — the changes to existing drawing are a styled script keeping its style and the baseline after it, and framed or backed labels keeping their outer spaces); no change to this app's code or behaviour |
+| 27 | v0.1.41 | 2026-11-17 | version number (v0.1.41: fourteen ports, five on waves, five on fields and machines and four on geometry and ecology; shared additions, all opt-in: the TogglerBar and Animator controls, the Trigger options AppearanceElements and AnimationRepetitions, LocatorAutoCreate with All and count limits, Interpolation, Plot3D with Hue colours, StreamPlot and ContourPlot of an equation, Drop[list, {n}]; a Trigger over an infinite range runs at 1 unit per second, and automatic 3D ticks of a zero-width range give one tick); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

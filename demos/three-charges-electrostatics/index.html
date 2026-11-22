@@ -1,0 +1,69 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstration by Whasington Silvestre
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Electrostatics of a Linear System of Three Charged Particles</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <script src="../../shared/requirements.js"></script>
+  <style>
+    /* the four checkboxes in one row, each label before its box (the original's Row of Controls) */
+    .ta-checks { align-items: center !important; }
+    .ta-checks .ctl-check { flex-direction: row-reverse; gap: 4px; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Electrostatics of a Linear System of Three Charged Particles</div>
+    <h1 class="demo-title">Electrostatics of a Linear System of Three Charged Particles</h1>
+
+    <section class="manipulate" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="graphic" id="graphic" data-testid="graphic">
+        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser.</div></noscript>
+      </div>
+    </section>
+
+    <p class="caption">This Demonstration explores the electrostatics of a one-dimensional system of three charged
+      particles, labeled <i>q</i><sub><i>t</i></sub>, <i>q</i><sub>1</sub> and <i>q</i><sub>2</sub>.</p>
+    <p class="caption">Use the sliders to vary the charges (in microcoulombs, μC) and positions (in meters, m) of the
+      particles. Check "plot net force" to graph the net electric force (in newtons, N) on the the "target particle"
+      <i>q</i><sub><i>t</i></sub> due to the charges <i>q</i><sub>1</sub> and <i>q</i><sub>2</sub>. Check "plot net
+      field" to graph the net electric field (in meganewtons per coulomb, MN/C) created by <i>q</i><sub>1</sub> and
+      <i>q</i><sub>2</sub> at the location <i>x</i><sub><i>t</i></sub> of particle <i>q</i><sub><i>t</i></sub>. Check
+      the "show data at <i>x</i><sub><i>t</i></sub>" box to display a table of the values of
+      <i>F</i><sub>1<i>t</i></sub> (force on <i>q</i><sub><i>t</i></sub> due to <i>q</i><sub>1</sub>),
+      <i>F</i><sub>2<i>t</i></sub> (force on <i>q</i><sub><i>t</i></sub> due to <i>q</i><sub>2</sub>),
+      <i>F</i><sub>net</sub> (net force on <i>q</i><sub><i>t</i></sub>), <i>E</i><sub>1</sub> (field that
+      <i>q</i><sub>1</sub> produces at <i>x</i><sub><i>t</i></sub>), <i>E</i><sub>2</sub> (field that
+      <i>q</i><sub>2</sub> produces at <i>x</i><sub><i>t</i></sub>) and <i>E</i><sub>net</sub> (the net electric field
+      at <i>x</i><sub><i>t</i></sub>). Check "show equilibrium data" to show the equilibrium position
+      <i>x</i><sub><i>e</i></sub> of the target particle.</p>
+    <p class="caption">When only one finite equilibrium position is found, forces and fields are also reported in the
+      equilibrium table. Use the upper-left figure to monitor the magnitude/direction of the individual forces on
+      <i>q</i><sub><i>t</i></sub> and the upper-right figure to monitor the magnitude/direction of the individual fields
+      at <i>x</i><sub><i>t</i></sub> (in both figures, the longest arrow corresponds to the force/field with the largest
+      intensity, but the arrows are not to scale).</p>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. All computation runs in your browser. The charge
+      sliders run over the values −20 … 20 without 0, as the original's. Placing <i>x</i><sub><i>t</i></sub> exactly on
+      <i>x</i><sub>1</sub> or <i>x</i><sub>2</sub> (by typing the value) shows "Indeterminate" in the table and leaves out
+      the arrows of the two small figures.</p>
+    <div class="credits" data-testid="credits">
+      Adapted from <a href="https://demonstrations.wolfram.com/ElectrostaticsOfALinearSystemOfThreeChargedParticles/">"Electrostatics of a Linear System of Three Charged Particles"</a>
+      by Whasington Silvestre, Wolfram Demonstrations Project (published 2022-12-01), licensed
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+      This JavaScript translation by Tico Hannan (© 2026) is released under the
+      same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

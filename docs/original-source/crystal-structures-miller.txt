@@ -1,0 +1,175 @@
+
+### [Title]
+Simple Crystal Structures and Miller Indices
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+Objective
+
+### [Text]
+\<This Demonstration interactively illustrates several crystal structures, showing unit cells and Miller indices.\>
+
+### [Text]
+Goals/Tasks
+
+### [Text]
+1. Repetition of unit cell to make crystals
+
+### [Text]
+\<2. Differences in SC, BCC, FCC, HCP and various simple ceramics structures\>
+
+### [Text]
+3. Conventional unit cell (use shift in three directions)
+
+### [Text]
+4. Contact condition for atoms (by changing atomic radius)
+
+### [Text]
+5. Close-packed directions and close-packed planes
+
+### [Text]
+6. Draw planes for Miller indices
+
+### [Text]
+7. Explore crystals by rotation and zoom
+
+### [Text]
+\<The last may run slowly, so be patient when there are many 3D spheres and planes to draw!\>
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [CodeText]
+If you provide initialization code, include a SaveDefinitions->True option in the Manipulate.
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[Show[Graphics3D[
+Join[
+If[CrystalType=="\<SC\>",Table[{Sphere[{x,y,z},radius]},{x,0,rp},{y,0,rp},{z,0,rp}],
+If[CrystalType=="\<BCC\>",Join[Table[{Sphere[{x,y,z},radius]},{x,0,rp},{y,0,rp},{z,0,rp}],Table[{Sphere[{x+0.5,y+0.5,z+0.5},radius]},{x,0,rp},{y,0,rp},{z,0,rp}]],
+If[CrystalType=="\<ZnS\>",Join[Table[{Red,Sphere[{x,y,z},radius]},{x,0,rp},{y,0,rp},{z,0,rp}],Table[{Red,Sphere[{x+0.,y+0.5,z+0.5},radius]},{x,0,rp},{y,0,rp},{z,0,rp}],Table[{Red,Sphere[{x+0.5,y+0.,z+0.5},radius]},{x,0,rp},{y,0,rp},{z,0,rp}],Table[{Red,Sphere[{x+0.5,y+0.5,z+0.},radius]},{x,0,rp},{y,0,rp},{z,0,rp}],Table[{Blue,Sphere[{x+0.25,y+0.25,z+0.25},radius]},{x,0,rp},{y,0,rp},{z,0,rp}],Table[{Blue,Sphere[{x+0.25,y+0.75,z+0.75},radius]},{x,0,rp},{y,0,rp},{z,0,rp}],Table[{Blue,Sphere[{x+0.75,y+0.25,z+0.75},radius]},{x,0,rp},{y,0,rp},{z,0,rp}],Table[{Blue,Sphere[{x+0.75,y+0.75,z+0.25},radius]},{x,0,rp},{y,0,rp},{z,0,rp}]],
+If[CrystalType=="\<NaCl\>",Join[Table[{Red,Sphere[{x,y,z},radius]},{x,0,rp},{y,0,rp},{z,0,rp}],Table[{Red,Sphere[{x+0.,y+0.5,z+0.5},radius]},{x,0,rp},{y,0,rp},{z,0,rp}],Table[{Red,Sphere[{x+0.5,y+0.,z+0.5},radius]},{x,0,rp},{y,0,rp},{z,0,rp}],Table[{Red,Sphere[{x+0.5,y+0.5,z+0.},radius]},{x,0,rp},{y,0,rp},{z,0,rp}],Table[{Blue,Sphere[{x+0.5,y+0.,z+0.},radius2]},{x,0,rp},{y,0,rp},{z,0,rp}],Table[{Blue,Sphere[{x+0.5,y+0.5,z+0.5},radius2]},{x,0,rp},{y,0,rp},{z,0,rp}],Table[{Blue,Sphere[{x+0.,y+0.,z+0.5},radius2]},{x,0,rp},{y,0,rp},{z,0,rp}],Table[{Blue,Sphere[{x+0.,y+0.5,z+0.},radius2]},{x,0,rp},{y,0,rp},{z,0,rp}]],
+If[CrystalType=="\<Diamond\>",Join[Table[{Sphere[{x,y,z},radius]},{x,0,rp},{y,0,rp},{z,0,rp}],Table[{Sphere[{x+0.,y+0.5,z+0.5},radius]},{x,0,rp},{y,0,rp},{z,0,rp}],Table[{Sphere[{x+0.5,y+0.,z+0.5},radius]},{x,0,rp},{y,0,rp},{z,0,rp}],Table[{Sphere[{x+0.5,y+0.5,z+0.},radius]},{x,0,rp},{y,0,rp},{z,0,rp}],Table[{Sphere[{x+0.25,y+0.25,z+0.25},radius]},{x,0,rp},{y,0,rp},{z,0,rp}],Table[{Sphere[{x+0.25,y+0.75,z+0.75},radius]},{x,0,rp},{y,0,rp},{z,0,rp}],Table[{Sphere[{x+0.75,y+0.25,z+0.75},radius]},{x,0,rp},{y,0,rp},{z,0,rp}],Table[{Sphere[{x+0.75,y+0.75,z+0.25},radius]},{x,0,rp},{y,0,rp},{z,0,rp}]],
+If[CrystalType=="\<CsCl\>", Join[Table[{Red,Sphere[{x,y,z},radius]},{x,0,rp},{y,0,rp},{z,0,rp}],Table[{Blue,Sphere[{x+0.5,y+0.5,z+0.5},radius2]},{x,0,rp},{y,0,rp},{z,0,rp}]],
+If[CrystalType=="\<HCP\>",Join[Table[{Sphere[{x*1.0,y*Sqrt[3.],z*Sqrt[8/3.]},radius]},{x,0,rp},{y,0,rp},{z,0,rp}],Table[{Sphere[{(x+0.5)*1.0,(y+0.5)*Sqrt[3.],z*Sqrt[8/3.]},radius]},{x,0,rp},{y,0,rp},{z,0,rp}],Table[{Sphere[{x*1.0,(y+1/3.)*Sqrt[3.],(z+0.5)*Sqrt[8/3.]},radius]},{x,0,rp},{y,0,rp},{z,0,rp}], Table[{Sphere[{(x+0.5)*1.0 ,(y+5./6)*Sqrt[3.],(z+0.5)*Sqrt[8/3.]},radius]},{x,0,rp},{y,0,rp},{z,0,rp}]],
+Join[Table[{Sphere[{x,y,z},radius]},{x,0,rp},{y,0,rp},{z,0,rp}],
+Table[{Sphere[{x+0.,y+0.5,z+0.5},radius]},{x,0,rp},{y,0,rp},{z,0,rp}],
+Table[{Sphere[{x+0.5,y+0.,z+0.5},radius]},{x,0,rp},{y,0,rp},{z,0,rp}],Table[{Sphere[{x+0.5,y+0.5,z+0.},radius]},{x,0,rp},{y,0,rp},{z,0,rp}]]]]]]]]],{EdgeForm[{Thick,Black}],If[DrawCubeFace,FaceForm[Lighter[Blue]],FaceForm[]],If[DrawCell,Cuboid[{sx,sy,sz},{sx+1,sy+If[CrystalType=="\<HCP\>",Sqrt[3.],1],sz+If[CrystalType=="\<HCP\>",Sqrt[8/3.],1]}],Point[{0,0,0}]]}],Axes->True,AxesLabel->{x,y,z}],If[DrawPlanes,If[r!=0,Plot3D[Table[(d*If[CrystalType=="\<HCP\>",Sqrt[8/3.],1]-m x-n y If[CrystalType=="\<HCP\>",Sqrt[3.],1])/r,{d,-3rp,3rp}],{x,0,rp+1},{y,0,rp+1},Mesh->None],If[n!=0,ParametricPlot3D[Table[{x,(d If[CrystalType=="\<HCP\>",Sqrt[3.],1]-m x)/n,z},{d,-3rp,3rp}],{x,0,rp+1},{z,0,rp+1},Mesh->None],If[m!=0,ParametricPlot3D[Table[{d /m,y,z},{d,-3 rp,3 rp}],{y,0,rp+1},{z,0,rp+1},Mesh->None],ParametricPlot3D[Table[{d,y,z},{d,-3 rp,3 rp}],{y,0,rp+1},{z,0,rp+1},Mesh->None]]]],Graphics3D[Point[{0,0,0}]]],PlotRange->{{-1,rp+1},{-1,rp+1},{-1,rp+1}}, SphericalRegion-> True, ImageSize-> {400,400}],
+{{CrystalType,"\<SC\>", "\<crystal structure\>"},{"\<SC\>","\<BCC\>","\<FCC\>","\<HCP\>","\<CsCl\>","\<Diamond\>","\<NaCl\>", "\<ZnS\>"},ControlType->PopupMenu},
+{{rp,1,"\<repeats\>"},0,5,1, ImageSize-> Tiny,Appearance->"\<Labeled\>"},
+{{radius,0.1,"\<radius (red)\>"},0.1,1,ImageSize-> Tiny,Appearance->"\<Labeled\>"},
+{{radius2,0.1,"\<radius (blue)\>"},0.1,1,ImageSize-> Tiny,Appearance->"\<Labeled\>"},"\<\>",
+"\<cell shifts\>",
+{{sx,0,Style["\<x\>",Italic]},0,rp-1,1,ImageSize-> Tiny,Appearance->"\<Labeled\>"},
+{{sy,0,Style["\<y\>",Italic]},0,rp-1,1,ImageSize-> Tiny,Appearance->"\<Labeled\>"},
+{{sz,0,Style["\<z\>",Italic]},0,rp-1,1,ImageSize-> Tiny,Appearance->"\<Labeled\>"},
+"\<\>",
+Control[{{DrawCell,False,"\<unit cell\>"},{True,False}}],
+Control[{{DrawCubeFace,False,"\<unit cell face\>"},{True,False},Enabled->DrawCell}],
+"\<\>",
+Control[{{DrawPlanes,False,"\<Miller planes\>"},{True,False}}],
+{{m,1,Row[{"\<Miller \>",Style["\<h\>",Italic]}]},{-4,-3,-2,-1,0,1,2,3,4},Enabled->DrawPlanes},
+{{n,1,Row[{"\<Miller \>",Style["\<k\>",Italic]}]},{-4,-3,-2,-1,0,1,2,3,4},Enabled->DrawPlanes},
+{{r,1,Row[{"\<Miller \>",Style["\<l\>",Italic]}]},{-4,-3,-2,-1,0,1,2,3,4},Enabled->DrawPlanes}]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Yunfeng Shi
+
+### [Text]
+Adam Bross
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+Details, references or citation information
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+keyword 1
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Item]
+Link to external information
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2018-04-02
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

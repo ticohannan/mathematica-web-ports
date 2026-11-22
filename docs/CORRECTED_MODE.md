@@ -15,7 +15,7 @@ Since v0.1.34 the apps listed here have a switch beside "Initial settings": **er
 
 To go back to the last version without the switch: tag `pre-fixed-mode-v0.1.33` (= v0.1.33, commit `b4569b0`).
 
-Apps with the switch: 26; corrections: 47. Code version 0.1.40.
+Apps with the switch: 32; corrections: 61. Code version 0.1.41.
 
 ## Motion Planning for Robot Path around Obstacles (`demos/motion-planning/`)
 
@@ -193,3 +193,47 @@ Apps with the switch: 26; corrections: 47. Code version 0.1.40.
 | Finding | The original (kept) | Corrected |
 |---|---|---|
 | E-TJ-01 | joint C in focus: the two balances read "∑ Fy = −FC + FBC sin θ + FCD sin θ" and "∑ Fx = −FAC − …" — they lack the "= 0" that the balances of the other joints have, so they do not say what is set to zero. | they read "∑ Fy = 0 = −FC + …" and "∑ Fx = 0 = −FAC − …", as at the other joints. |
+
+## The Vibrating String (`demos/vibrating-string/`, since v0.1.41)
+
+| Finding | The original (kept) | Corrected |
+|---|---|---|
+| E-VS-03 | the piecewise-linear initial data (MyPiecewise) uses open intervals, so at every data point (each locator) its value is 0 instead of the locator's height; the curves drop to 0 wherever the plot samples a data point exactly. | the intervals are closed, so the piecewise-linear string passes through every locator. The Fourier coefficients do not change (single points do not change an integral). |
+| E-VS-04 | the periodic extension (PeriodicExtension) takes 2 off x until x lies strictly between −1 and 1; at x = ±1 (every odd integer) it jumps between 1 and −1 for ever, so the string has no value there (a gap of one sample, for example at the right end x = 1 at t = 0). | the extension also stops at x = ±1 itself, so the string is 0 at x = ±1 (its fixed ends) as everywhere else on its period. |
+
+## Longitudinal Standing Waves (`demos/longitudinal-standing-waves/`, since v0.1.41)
+
+| Finding | The original (kept) | Corrected |
+|---|---|---|
+| E-LS-01 | the waves fRight and fLeft use the wavelength 28/9 = 3.11 for every harmonic and pipe end (a value of λ saved with the Demonstration), while the envelopes, the arrows, the node labels and the size of the displacements use the selected wavelength 4L/(2n − 1) (closed) or 2L/n. The transverse standing wave then does not fit its envelope or the pipe ends, and the contour lines fold over into thick black bands (at the opening settings and in most snapshots). | fRight and fLeft use the selected wavelength λ = 4L/(2n − Boole[end == "closed"]): the standing wave has its antinodes at the open ends and a node at a closed end, fits its envelope, and the contour lines and density points bunch at the pressure antinodes without folding over. |
+
+## AC Induction Motor Rotor Design (`demos/induction-motor-rotor-design/`, since v0.1.41)
+
+| Finding | The original (kept) | Corrected |
+|---|---|---|
+| E-IM-02 | when the rotor resistance exceeds the rotor reactance (r > x) the curve's maximum lies at a negative speed, outside the plot: the "max torque" label then shows "0 rpm" together with the unconstrained maximum 0.005867 e²/x, a torque the motor does not reach at 0 rpm (e = 150, r = 1, x = 0.422: "313 % full load" at "0 rpm", while the curve starts at 224 % there and falls). | in that case the "max torque" label shows the largest torque on the plotted speeds, the locked-rotor torque at 0 rpm (the value the arrow points at); for r ≤ x nothing changes. |
+
+## Solar Energy Incident on Earth's Surface (`demos/solar-energy-earth-surface/`, since v0.1.41)
+
+| Finding | The original (kept) | Corrected |
+|---|---|---|
+| E-SE-01 | the red point, the black normal and the start of the red Sun arrow are drawn with rotateEarth[h, sea + .5], half a turn (12 hours) away from the point whose energy is plotted: at noon (time of day 12) the point is drawn on the night side. | the point and both arrows are drawn with rotateEarth[h, sea], where the energy is computed: at noon the point faces the Sun. |
+| E-SE-02 | the dark night half of the globe always covers the side x ≤ 0, whatever the season, although the Sun's direction turns with the season (at season 0.5 the night half covers the sunlit side). | the night half is turned about the z axis by 2π·season, so that it always covers the side turned away from the Sun. |
+| E-SE-03 | the accumulated-energy plot draws the chosen latitude in red and the equator in black (ListLinePlot[{aeng, aeng1, aeng2}] with the styles {Red, Black, Blue}), the opposite of the energy plot and its legend. | the equator is red and the latitude black in both plots, as the legend says. |
+| E-SE-04 | the day's energy is summed over 25 hourly values, t = 0, 1, …, 24, so midnight is counted twice: wherever the Sun is up at midnight (the north pole in summer) the day's total is one hour too large (13,566 instead of 13,023 at the pole at season 0). | the sum runs over the 24 hours t = 0, 1, …, 23. |
+
+## Simple Crystal Structures and Miller Indices (`demos/crystal-structures-miller/`, since v0.1.41)
+
+| Finding | The original (kept) | Corrected |
+|---|---|---|
+| E-CM-01 | ZnS draws its blue spheres (the tetrahedral sites) with the red radius: the slider "radius (blue)" changes nothing for ZnS. | the blue ZnS spheres use "radius (blue)", as for NaCl and CsCl. |
+| E-CM-02 | HCP Miller planes with two or three nonzero indices use h x + √3 k y + l z = √(8/3) d (l ≠ 0) or h x + k y = √3 d (l = 0): these are not lattice planes of the 1 × √3 × √(8/3) cell (the (110) planes miss the atoms at (1/2, √3/2, 0)). | the planes h x/a + k y/b + l z/c = d of the cell a = 1, b = √3, c = √(8/3): the (h k l) planes cut the cell edges at a/h, b/k, c/l and pass through lattice points. |
+| E-CM-03 | the HCP unit cell is shifted by whole units (sx, sy, sz) although its sides are 1, √3 and √(8/3): a shifted HCP cell does not sit on lattice points. | the HCP cell is shifted by whole cells: its corner is (sx, √3 sy, √(8/3) sz). |
+| E-CM-04 | each Miller plane family has the planes d = −3 rp … 3 rp only: when the positive (or the negative) indices add up to more than 3 the family stops inside the crystal (e.g. (4 0 0) with one repeat misses the plane x = 1), and with no repeats only the plane through the origin is drawn. | d runs over −D … D with D = max(3 rp, (rp + 1) × the sum of the absolute values of h, k, l), so the planes fill the whole plot range box. |
+| E-CM-05 | Miller indices (0 0 0) fall through to the last branch of the plane code, which draws the planes x = d (the (1 0 0) family) for indices that describe no plane. | (0 0 0) draws no planes. |
+
+## Lotka-Volterra Competition Model (`demos/lotka-volterra-competition/`, since v0.1.41)
+
+| Finding | The original (kept) | Corrected |
+|---|---|---|
+| E-LV-01 | the separatrices of the saddle are integrated over the fixed time span −1000 … 1000 from points 10<sup>−7</sup> of the saddle's distance from the origin away from it. Their speed is proportional to the growth rates: below about r1 = r2 = 0.1 (with α = 1.45, β = 1.4) the curves to (0, 1) and (1, 0) stop short of these points (at r1 = r2 = 0.05 they hardly leave the saddle), the basin polygons built from them are wrong, and the colours no longer show the basins of attraction. | each separatrix is integrated until it leaves the square, comes back to the saddle or reaches another equilibrium (no fixed time span), so the curves end at (0, 0), (0, 1) and (1, 0) and the basins are coloured correctly for every growth rate. With the opening settings the picture is the same as the original's. |

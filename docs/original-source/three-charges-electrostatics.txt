@@ -1,0 +1,241 @@
+
+### [Title]
+Electrostatics of a Linear System of Three Charged Particles
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+This Demonstration explores the electrostatics of a one-dimensional system of three charged particles, labeled Subscript[q, t], Subscript[q, 1] and Subscript[q, 2].
+
+### [Text]
+Use the sliders to vary the charges (in microcoulombs, μC) and positions (in meters, m) of the particles. Check "plot net force" to graph the net electric force (in newtons, N) on the the "target particle" Subscript[q, t] due to the charges Subscript[q, 1] and Subscript[q, 2]. Check "plot net field" to graph the net electric field (in meganewtons per coulomb, MN/C) created by Subscript[q, 1] and Subscript[q, 2] at the location Subscript[x, t] of particle Subscript[q, t]. Check the "show data at Subscript[x, t]" box to display a table of the values of Subscript[F, 1t] (force on Subscript[q, t] due to Subscript[q, 1]), Subscript[F, 2t] (force on Subscript[q, t] due to Subscript[q, 2]), Subscript[F, net] (net force on Subscript[q, t]), Subscript[E, 1] (field that Subscript[q, 1] produces at Subscript[x, t]), Subscript[E, 2] (field that Subscript[q, 2] produces at Subscript[x, t]) and Subscript[E, net] (the net electric field at Subscript[x, t]). Check "show equilibrium data" to show the equilibrium position Subscript[x, e] of the target particle.
+
+### [Text]
+When only one finite equilibrium position is found, forces and fields are also reported in the equilibrium table. Use the upper-left figure to monitor the magnitude/direction of the individual forces on Subscript[q, t] and the upper-right figure to monitor the magnitude/direction of the individual fields at Subscript[x, t] (in both figures, the longest arrow corresponds to the force/field with the largest intensity, but the arrows are not to scale).
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [CodeText]
+If you provide initialization code, include a SaveDefinitions->True option in the Manipulate.
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[Module[{k=8.99*10^9,a=10^-6,f1t,f2t,fnet,nf,root,af1t,af2t,f1ts,f2ts,e1s,e2s,ae1,ae2},
+(*Force that 1(2) exerts on the target particle qt *)
+f1t[x1_,xt_,q1_,qt_]:=((k*qt*q1*a*a)/(Abs[xt-x1])^3)*(xt-x1);
+f2t[x2_,xt_,q2_,qt_]:=((k*qt*q2*a*a)/(Abs[xt-x2])^3)*(xt-x2);
+(*Net force on the target particle qt *)
+fnet[x1_,x2_,xt_,q1_,q2_,qt_]:=f1t[x1,xt,q1,qt]+f2t[x2,xt,q2,qt];
+(*Equilibrium position of the target particle qt *)
+root=Quiet[NSolve[(q1/(Abs[x-x1])^3)*(x-x1)+((q2)/(Abs[x-x2])^3)*(x-x2)==0,x,Real]];
+(*Arrows associated with the individual forces on qt. f=force, s=size, a=arrow*)
+f1ts=If[Abs[f1t[x1,xt,q1,qt]]>Abs[f2t[x2,xt,q2,qt]],2,1];
+f2ts=If[Abs[f2t[x2,xt,q2,qt]]>Abs[f1t[x1,xt,q1,qt]],2,1];
+af1t=If[f1t[x1,xt,q1,qt]>0,{{-(5.25+f1ts),4.5},{-5.25,4.5}},{{-5.25,4.5},{-(5.25+f1ts),4.5}}];
+af2t=If[f2t[x2,xt,q2,qt]>0,{{-4.75,4.5},{-(4.75-f2ts),4.5}},{{-(4.75-f2ts),4.5},{-4.75,4.5}}];
+(*Arrows associated with the individual fields at xt. e=electric field, s=size, a=arrow*)
+e1s=If[Abs[f1t[x1,xt,q1,qt]/(qt*a)]>Abs[f2t[x2,xt,q2,qt]/(qt*a)],2,1];
+e2s=If[Abs[f2t[x2,xt,q2,qt]/(qt*a)]>Abs[f1t[x1,xt,q1,qt]/(qt*a)],2,1];
+ae1=If[f1t[x1,xt,q1,qt]/(qt*a)>0,{{(5-e1s),4.5},{5,4.5}},{{5,4.5},{(5-e1s),4.5}}];
+ae2=If[f2t[x2,xt,q2,qt]/(qt*a)>0,{{5,4.5},{(5+e2s),4.5}},{{(5+e2s),4.5},{5,4.5}}];
+(*To output a number with 8 digits with 4 of them being decimals*)
+nf[q_]:=NumberForm[q*1.,{8,4},ExponentFunction->(Null&)];
+(*THE MAIN PLOT*)
+Plot[{fnet[x1,x2,x,q1,q2,qt],fnet[x1,x2,x,q1,q2,qt]/qt},{x,-10,xt},
+Exclusions->{x1,x2} ,
+AspectRatio->1,AxesStyle->Arrowheads[{-0.03,0.03}],
+PlotStyle->{If[force,Blue,Transparent],If[field,Green,Transparent]},
+PlotRange->{{-10,10},{-5,5}},PerformanceGoal->"\<Quality\>",ImageSize->{425,425},Ticks->{{-8,-6,-4,-2,2,4,6,8}},
+Epilog->{PointSize[0.03],FontSize->16,
+Style[Point[{x1,0}],If[q1<0,Black,Red]],
+Style[Point[{x2,0}],If[q2<0,Black,Red]],
+Style[Point[{xt,0}],If[qt<0,Black,Red]],
+Inset[Style[Subscript[Style["\<q\>",Italic], "\<1\>"],Black],{x1,-0.60}],
+Inset[Style[Subscript[Style["\<q\>",Italic], "\<2\>"],Black],{x2,-0.60}],
+Inset[Style[Subscript[Style["\<q\>",Italic], Style["\<t\>",Italic]],Black],{xt,-0.60}],
+Inset[If[q1>0,Style["\<+\>",White],Style["\<-\>",White]],{x1,0}],
+Inset[If[q2>0,Style["\<+\>",White],Style["\<-\>",White]],{x2,0}],
+Inset[If[qt>0,Style["\<+\>",White],Style["\<-\>",White]],{xt,0}],
+(*This Inset displays data associated with the positon xt of the target particle qt*)
+Inset[
+If[status,Grid[{
+{"\<\!\(\*SubscriptBox[\(x\), \(t\)]\)\>",nf[xt],"\<m\>"},
+{"\<\!\(\*SubscriptBox[\(F\), \(1  t\)]\)\>",nf[f1t[x1,xt,q1,qt]],"\<N\>"},
+{"\<\!\(\*SubscriptBox[\(F\), \(2  t\)]\)\>",nf[f2t[x2,xt,q2,qt]],"\<N\>"},
+{"\<\!\(\*SubscriptBox[\(F\), \(net\)]\)\>",nf[fnet[x1,x2,xt,q1,q2,qt]],"\<N\>"},
+{"\<\!\(\*SubscriptBox[\(E\), \(1\)]\)\>",nf[f1t[x1,xt,q1,qt]/qt],"\<MN/C\>"}, (*here we are dividing by qt instead of qt*a to scale the field*)
+{"\<\!\(\*SubscriptBox[\(E\), \(2\)]\)\>",nf[f2t[x2,xt,q2,qt]/qt],"\<MN/C\>"},(*here we are dividing by qt instead of qt*a to scale the field*)
+{"\<\!\(\*SubscriptBox[\(E\), \(net\)]\)\>",nf[fnet[x1,x2,xt,q1,q2,qt]/qt],"\<MN/C\>"}},(*here we are dividing by qt instead of qt*a to scale the field*)
+Frame->All,ItemSize->{{3,9,4}},Background->LightBlue,Alignment->Center,BaseStyle->12],Style["\<w\>",Transparent,12]],{-5,2.5}],
+(*This Inset displays data associated with the equilibrium position xe of the target particle qt*)
+Inset[
+If[edata&&root!={}&&root!={{}},
+Grid[{
+{"\<\!\(\*SubscriptBox[\(x\), \(e\)]\)\>",nf[root[[1,1,2]]],"\<m\>"},
+{"\<\!\(\*SubscriptBox[\(F\), \(1  t\)]\)\>",nf[f1t[x1,root[[1,1,2]],q1,qt]],"\<N\>"},
+{"\<\!\(\*SubscriptBox[\(F\), \(2  t\)]\)\>",nf[f2t[x2,root[[1,1,2]],q2,qt]],"\<N\>"},
+{"\<\!\(\*SubscriptBox[\(F\), \(net\)]\)\>",nf[fnet[x1,x2,root[[1,1,2]],q1,q2,qt]],"\<N\>"},
+{"\<\!\(\*SubscriptBox[\(E\), \(1\)]\)\>",nf[f1t[x1,root[[1,1,2]],q1,qt]/qt],"\<MN/C\>"},(*here we are dividing by qt instead of qt*a to scale the field*)
+{"\<\!\(\*SubscriptBox[\(E\), \(2\)]\)\>",nf[f2t[x2,root[[1,1,2]],q2,qt]/qt],"\<MN/C\>"},(*here we are dividing by qt instead of qt*a to scale the field*)
+{"\<\!\(\*SubscriptBox[\(E\), \(net\)]\)\>",nf[fnet[x1,x2,root[[1,1,2]],q1,q2,qt]/qt],"\<MN/C\>"}},(*here we are dividing by qt instead of qt*a to scale the field*)
+Frame->All,ItemSize->{{3,9,4}},Background->LightOrange,Alignment->Center,BaseStyle->12],
+If[edata,
+Grid[{{"\<\!\(\*SubscriptBox[\(x\), \(e\)]\)\>",If[root=={},"\<\[PlusMinus]∞\>","\<everywhere\>"],"\<m\>"}},
+Frame->All,ItemSize->{{3,9,4}},Background->LightOrange,Alignment->Center,BaseStyle->12],Style["\<w\>",Transparent,12]]],{5,2.5}],
+(*If root has a single real value in the interval -10 to +10, this line will make it visible*)
+{Orange,PointSize[0.03],Point[{If[edata&&root!={}&&root!={{}},root[[1,1,2]],20],0}]},
+(*Small figure at the upper left*)
+{Arrowheads[Small],Arrow[af1t],Arrow[af2t]},
+Inset[Style[Subscript[Style["\<F\>",Italic], Row[{"\<1 \>",Style["\<t\>",Italic]}]],Black],{-6.25,4.75}],
+Inset[Style[Subscript[Style["\<F\>",Italic], Row[{"\<2 \>",Style["\<t\>",Italic]}]],Black],{-3.75,4.75}],
+Style[Point[{-5,4.5}],If[qt<0,Black,Red],PointSize[0.02]],
+Inset[Style[Subscript[Style["\<q\>",Italic], Style["\<t\>",Italic]],Black],{-5,4.85}],
+Inset[If[qt>0,Style["\<+\>",White],Style["\<-\>",White]],{-5,4.5}],
+(*Small figure at the upper right*)
+{Arrowheads[Small],Arrow[ae1],Arrow[ae2]},
+Inset[Style[Subscript[Style["\<E\>",Italic], "\<1\>"],Black],{4,4.75}],
+Inset[Style[Subscript[Style["\<E\>",Italic], "\<2\>"],Black],{6,4.75}],
+Inset[Style[Subscript[Style["\<x\>",Italic], Style["\<t\>",Italic]],Black],{5,4.85}],
+{Black,PointSize[0.02],Point[{5,4.5}]}}](*module*)],
+(*MANIPULATE CONTROLS*)
+Grid[{
+{Control@{{q1,5,Row[{Subscript[Style["\<q\>",Italic], "\<1\>"],"\< (μC)\>"}]},Drop[Range[-20,20,1],{21}],ControlType->Manipulator,Appearance->"\<Labeled\>",ImageSize->Small},
+Control@{{q2,5,Row[{Subscript[Style["\<q\>",Italic], "\<2\>"],"\< (μC)\>"}]},Drop[Range[-20,20,1],{21}],ControlType->Manipulator,Appearance->"\<Labeled\>",ImageSize->Small},
+Control@{{qt,-5,Row[{Subscript[Style["\<q\>",Italic], Style["\<t\>",Italic]],"\< (μC)\>"}]},Drop[Range[-20,20,1],{21}],ControlType->Manipulator,Appearance->"\<Labeled\>",ImageSize->Small}},
+{Control@{{x1,0,Row[{Subscript[Style["\<x\>",Italic], "\<1\>"],"\< (m)\>"}]},-10,10,1,Appearance->"\<Labeled\>",ImageSize->Small},
+Control@{{x2,5,Row[{Subscript[Style["\<x\>",Italic], "\<2\>"],"\< (m)\>"}]},-10,10,1,Appearance->"\<Labeled\>",ImageSize->Small},
+Control@{{xt,-8.,Row[{Subscript[Style["\<x\>",Italic], Style["\<t\>",Italic]],"\< (m)\>"}]},-10+0.5,10-0.5,Appearance->"\<Labeled\>",ImageSize->Small}
+}
+},BaseStyle->12],
+Row[{
+Control@{{force,False,"\<plot net force (N)\>"},{True,False}},Spacer[5],
+Control@{{field,False,"\<plot net field (MN/C)\>"},{True,False}},Spacer[15],
+Control@{{status,False,Row[{"\<show data at \>",Subscript[Style["\<x\>",Italic], Style["\<t\>",Italic]]}]},{True,False}},Spacer[5],
+Control@{{edata,False,"\<show equilibrium data\>"},{True,False}}},BaseStyle->12],
+ControlPlacement->Top,Alignment->Center]
+
+### [Output] (skipped cached output)
+
+### [Input]
+
+
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Whasington Silvestre
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+Details, references or citation information
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+Coulombs law
+
+### [Item]
+Electric force
+
+### [Item]
+Electric field
+
+### [Item]
+Electrostatics
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Electrostatic Force between Charged Conducting Spheres
+
+### [Text]
+Dielectric Sphere in a Uniform Electric Field
+
+### [Text]
+Electric Fields for Pairs of Cylinders or Spheres
+
+### [Text]
+Initial Force on a Mobile Charge in Field of Fixed-Point Charges
+
+### [Text]
+Coulomb's Law for Three Aligned Charges
+
+### [Text]
+Electric Field of a Line of Charge
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2022-12-01
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

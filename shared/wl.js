@@ -153,8 +153,8 @@ export function span(list, m = 1, n = -1, s = 1) {
   else for (let k = a; k >= b; k += s) out.push(list[k]);
   return out;
 }
-/** Drop[list, n], Drop[list, -n], Drop[list, {m, n}] */
-export const Drop = (list, n) => (isArr(n) ? [...list.slice(0, idx(list, n[0])), ...list.slice(idx(list, n[1]) + 1)]
+/** Drop[list, n], Drop[list, -n], Drop[list, {m, n}], Drop[list, {n}] (v0.1.41: the element n alone) */
+export const Drop = (list, n) => (isArr(n) ? [...list.slice(0, idx(list, n[0])), ...list.slice(idx(list, n.length === 1 ? n[0] : n[1]) + 1)]
   : n >= 0 ? list.slice(n) : list.slice(0, n));
 export const Join = (...lists) => [].concat(...lists);
 export const Append = (list, x) => [...list, x];

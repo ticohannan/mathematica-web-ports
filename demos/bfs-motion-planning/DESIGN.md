@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.40 |
+| Code version: | 0.1.41 |
 | Document revision | 1 (2026-10-17) — first implementation |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Breadth-First Search Robot Motion Planning", contributed by Aaron T. Becker, Benedict Isichei and Praveen Reddy Padala, published 2017-12-12 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/BreadthFirstSearchRobotMotionPlanning/>. Readable source: `docs/original-source/bfs-motion-planning.txt`; snapshots: `docs/original-snapshots/bfs-motion-planning-1.png` … `-4.png` (the extraction's pictures 5 and 6 are the Wolfram logo); stored output cell (initial settings = stored `"Variables"`, Body, Specifications, Initialization): raw definition notebook lines 2373, 2749, 2949, 3336; fixture `tests/golden/bfs-motion-planning.original-states.json` (`states[0]` live state; `snapshots[1…4]` the snapshot Settings, raw lines 4456, 5720, 7383, 13618; `specs` the initial settings) |
@@ -275,6 +275,7 @@ Proposals for this app are tracked separately.
 | 24 | v0.1.38 | 2026-11-12 | version number (v0.1.38: one new app, forward-kinematics; shared/traditional-form.js is new, and `Lighting -> "Neutral"` in shared/mma-lighting.js and graphics3d-view.js is opt-in); no change to this app's code, behaviour or picture |
 | 25 | v0.1.39 | 2026-11-12 | version number (v0.1.39: selective testing — tools/affected.mjs and publish:tested run only the browser tests a change can affect; no app code changed); no change to this app's code, behaviour or picture |
 | 26 | v0.1.40 | 2026-11-13 | version number (v0.1.40: three truss ports; shared/truss.js is new; shared/graphics.js gains Mouseover, RotatedText, rounded and line-less Framed, Arrowheads[Large] and heads at given places, Grid alignment at "=", styled scripts and fitPlotRange — the changes to existing drawing are a styled script keeping its style and the baseline after it, and framed or backed labels keeping their outer spaces); no change to this app's code or behaviour |
+| 27 | v0.1.41 | 2026-11-17 | version number (v0.1.41: fourteen ports, five on waves, five on fields and machines and four on geometry and ecology; shared additions, all opt-in: the TogglerBar and Animator controls, the Trigger options AppearanceElements and AnimationRepetitions, LocatorAutoCreate with All and count limits, Interpolation, Plot3D with Hue colours, StreamPlot and ContourPlot of an equation, Drop[list, {n}]; a Trigger over an infinite range runs at 1 unit per second, and automatic 3D ticks of a zero-width range give one tick); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

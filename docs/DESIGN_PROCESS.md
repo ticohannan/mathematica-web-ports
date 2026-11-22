@@ -70,6 +70,20 @@ it is verified:
 | Determine If a Truss Can Be Solved | [`demos/truss-solvability/DESIGN.md`](../demos/truss-solvability/DESIGN.md) | `demos/truss-solvability/` |
 | Method of Sections to Solve a Truss | [`demos/truss-method-of-sections/DESIGN.md`](../demos/truss-method-of-sections/DESIGN.md) | `demos/truss-method-of-sections/` |
 | Method of Joints to Solve a Truss Problem | [`demos/truss-method-of-joints/DESIGN.md`](../demos/truss-method-of-joints/DESIGN.md) | `demos/truss-method-of-joints/` |
+| The Vibrating String | [`demos/vibrating-string/DESIGN.md`](../demos/vibrating-string/DESIGN.md) | `demos/vibrating-string/` |
+| Guitar String Harmonics: Standing Waves | [`demos/guitar-string-harmonics/DESIGN.md`](../demos/guitar-string-harmonics/DESIGN.md) | `demos/guitar-string-harmonics/` |
+| Longitudinal Standing Waves | [`demos/longitudinal-standing-waves/DESIGN.md`](../demos/longitudinal-standing-waves/DESIGN.md) | `demos/longitudinal-standing-waves/` |
+| How to Catch a Standing Wave | [`demos/catch-a-standing-wave/DESIGN.md`](../demos/catch-a-standing-wave/DESIGN.md) | `demos/catch-a-standing-wave/` |
+| Vibrations of a Rectangular Membrane | [`demos/rectangular-membrane/DESIGN.md`](../demos/rectangular-membrane/DESIGN.md) | `demos/rectangular-membrane/` |
+| Electrostatics of a Linear System of Three Charged Particles | [`demos/three-charges-electrostatics/DESIGN.md`](../demos/three-charges-electrostatics/DESIGN.md) | `demos/three-charges-electrostatics/` |
+| AC Induction Motor Rotor Design | [`demos/induction-motor-rotor-design/DESIGN.md`](../demos/induction-motor-rotor-design/DESIGN.md) | `demos/induction-motor-rotor-design/` |
+| Operating an AC Three-Phase Induction Motor | [`demos/three-phase-induction-motor/DESIGN.md`](../demos/three-phase-induction-motor/DESIGN.md) | `demos/three-phase-induction-motor/` |
+| Path of Light through an Acoustic Wave | [`demos/light-through-acoustic-wave/DESIGN.md`](../demos/light-through-acoustic-wave/DESIGN.md) | `demos/light-through-acoustic-wave/` |
+| Solar Energy Incident on Earth's Surface | [`demos/solar-energy-earth-surface/DESIGN.md`](../demos/solar-energy-earth-surface/DESIGN.md) | `demos/solar-energy-earth-surface/` |
+| Rotating a Hypercube in 4D | [`demos/hypercube-4d-rotation/DESIGN.md`](../demos/hypercube-4d-rotation/DESIGN.md) | `demos/hypercube-4d-rotation/` |
+| Rotating a Tesseract in Perspective | [`demos/tesseract-perspective/DESIGN.md`](../demos/tesseract-perspective/DESIGN.md) | `demos/tesseract-perspective/` |
+| Simple Crystal Structures and Miller Indices | [`demos/crystal-structures-miller/DESIGN.md`](../demos/crystal-structures-miller/DESIGN.md) | `demos/crystal-structures-miller/` |
+| Lotka-Volterra Competition Model | [`demos/lotka-volterra-competition/DESIGN.md`](../demos/lotka-volterra-competition/DESIGN.md) | `demos/lotka-volterra-competition/` |
 
 The originals came without design documents. Version 0.1.6 added best-effort design documents
 reconstructed from the original notebooks (their code, captions and details text) and from the

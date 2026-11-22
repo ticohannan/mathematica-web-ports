@@ -1,0 +1,186 @@
+
+### [Title]
+Guitar String Harmonics: Standing Waves
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+\<The vibration of a guitar string provides a good example of standing waves. Holding down the string at a fret forces a node in the vibrating string and produces a standing wave with the appropriate wavelength.\>
+
+### [Text]
+\<This Demonstration lets you explore and visualize the different harmonics that can be produced on a guitar by forcing a node at various fret positions.\>
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+L=25.5;
+
+### [Input] (init)
+λ=2 L;
+
+### [Input] (init)
+f[n_]:=(n/2 L )*Sqrt[41.77]
+
+### [Input] (init)
+Omega =2π f;
+
+### [Input] (init)
+A = 0.25;
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Row[{Dynamic[Graphics[{RGBColor[0.85, 0.85, 0], Rectangle[{5.5, 0.05}, {-0.5, 25.55}], 
+      {RGBColor[1, 0.5, 0], Thickness[0.05], {Line[{{5.5, 0}, {-0.5, 0}}],Line[{{5.5, 25.5}, {-0.5, 25.5}}]}, 
+      {RGBColor[0.6, 0.4, 0.2], Thickness[0.02], {Line[{{5.5, 24.069}, {-0.5, 24.069}}], Line[{{5.5, 22.718}, {-0.5, 22.718}}], Line[{{5.5, 21.443}, {-0.5, 21.443}}], 
+        Line[{{5.5, 20.239}, {-0.5, 20.239}}], Line[{{5.5, 19.103}, {-0.5, 19.103}}],  Line[{{5.5, 18.031}, {-0.5, 18.031}}],  Line[{{5.5, 17.019}, {-0.5, 17.019}}], Line[{{5.5, 16.064}, {-0.5, 16.064}}], Line[{{5.5, 15.162}, {-0.5, 15.162}}], Line[{{5.5, 14.311}, {-0.5, 14.311}}], Line[{{5.5, 13.508}, {-0.5, 13.508}}], Line[{{5.5, 12.75}, {-0.5, 12.75}}]}}, {Black,Disk[{2.5,7},3]}, {Black,Disk[{0,0},0.25]}, {Black,Disk[{1,0},0.25]}, {Black,Disk[{2,0},0.25]}, {Black,Disk[{3,0},0.25]}, {Black,Disk[{4,0},0.25]}, {Black,Disk[{5,0},0.25]},
+      Thickness[0.013], GrayLevel[0.5], {Line[{{3, 0}, {3, 25.5}}], Line[{{4, 0}, {4, 25.5}}], Line[{{5, 0}, {5, 25.5}}]}, 
+Thickness[0.018], {Line[{{1, 0}, {1, 25.5}}], Line[{{2, 0}, {2, 25.5}}],
+Line[Table[{2 A Sin[2π x/(2 L/n )/.n-> 1] Cos[2π t(n/2 L )*Sqrt[41.77] /.n-> 1],x},{x,0,n λ}]]},{Black,Disk[{0,L-L/n },0.25]}}},
+PlotRange->{{-1.5,6.5},{0,L}},ImageSize-> {263,500}]], 
+Text@Grid[{
+{"\<standing wave equation\>"},
+{Row[{Style["\<y\>",Italic],"\< = 2 \>",Style["\<A\>",Italic],"\< sin(\>",Divide[Row[{"\<2 π \>",Style["\<x\>",Italic]}],"\< λ\>"],"\<) cos(Omega \>",Style["\<t\>",Italic],"\<)\>"}]},
+{"\<
+wavelength equation\>"},
+{Row[{"\<λ = \>",Divide[Row[{"\<2 \>",Style["\<L\>",Italic]}],Style["\<n\>",Italic]]}]},
+{"\<
+frequency equation\>"},
+{Row[{"\<Omega = \>",Divide[Row[{Style["\<n\>",Italic],"\< π\>"}],Style["\<L\>",Italic]],Sqrt[Style["\<T\>",Italic]/ρ]}]},
+{"\<
+forced nodes\>"},
+{Grid[{
+{"\<2nd harmonic\>","\<12th fret\>"},
+{"\<3rd harmonic\>","\<7th fret\>"},
+{"\<4th harmonic\>","\<5th fret\>"},
+{"\<5th harmonic\>","\<just before 4th fret\>"}},Frame-> All]},
+{"\<
+harmonic frequencies\>"},
+{Grid[{
+{"\<1st harmonic\>",NumberForm[f[1],{4,1}],"\<Hz\>"},
+{"\<2nd harmonic\>",NumberForm[f[2],{4,1}],"\<Hz\>"},
+{"\<3rd harmonic\>",NumberForm[f[3],{4,1}],"\<Hz\>"},
+{"\<4th harmonic\>",NumberForm[f[4],{4,1}],"\<Hz\>"},
+{"\<5th harmonic\>",NumberForm[f[5],{4,1}],"\<Hz\>"}},Frame-> All]}},Alignment-> Center]}],
+{{n,1, "\<harmonic\>"}, {1->"\<1st\>", 2->"\<2nd\>",3->"\<3rd\>", 4->"\<4th\>", 5->"\<5th\>"}, ControlType -> PopupMenu, Appearance-> Large},
+{{t,0,"\<time\>"},0,1,.01,ControlType->Trigger,AnimationRate->.05},TrackedSymbols:>{n},
+SaveDefinitions->True, SynchronousUpdating->True, ControlPlacement-> Left]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Contributed by: Connor Davenport
+
+### [Text]
+Suggested by: Edmon Perkins
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+Snapshot 1: 3rd harmonic
+
+### [Text]
+Snapshot 2: 4th harmonic
+
+### [Text]
+Snapshot 3: 5th harmonic
+
+### [Text]
+Variables: A: amplitude, λ: wavelength, Omega: angular frequency, L: string length, n: harmonic number, T: string tension, ρ: string density
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+guitar string
+
+### [Item]
+vibration
+
+### [Item]
+standing wave
+
+### [Item]
+harmonic
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Item]
+Link to external information
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2019-04-19
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

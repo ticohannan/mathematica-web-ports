@@ -64,4 +64,20 @@ export const SCENARIOS = {
   'truss-method-of-sections': { state: { steps: 2, cuts: 4, zoom: true }, probe: '(v) => v.printedF13', original: 10.606602, corrected: 20, digits: 4 },
   // E-TJ-01: joint C's balances get the "= 0" of the other joints' balances
   'truss-method-of-joints': { state: { steps: 2, joints: 3, focus: true }, probe: '(v) => v.jointCBalanceHasZero', original: false, corrected: true },
+  // v0.1.41 ports
+  // E-LS-01: the opening settings: the standing wave at the open end x = L is 0.6 cos(4.5π) = 0 with the saved λ = 28/9, and 0.6 cos(3π) = −0.6 (an antinode) with λ = 14/3 (by hand)
+  'longitudinal-standing-waves': { probe: '(v) => v.sumAtEnd', original: 0, corrected: -0.6, digits: 6 },
+  // E-VS-03: piecewise linear, the point (1/2, 1): the string at the point is 0 in the original, its height 1 (by hand)
+  'vibrating-string': { state: { idpolynom: 2 }, probe: '(v) => v.atData[0]', original: 0, corrected: 1 },
+  // E-IM-02: r = 1 > x = 0.422, the maximum is off the plot; T(0) = 21.12 · 150² · 1/(1800 (1 + 0.422²)) = 224.09 (by hand)
+  'induction-motor-rotor-design': { state: { e: 150, r: 1, x: 0.422 }, probe: '(v) => v.labels.max', original: '313 % full load', corrected: '224 % full load' },
+  // E-SE-04: the opening settings; at the solstice the pole has 1367.6 sin 0.408 = 542.63 every hour: 25 × that = 13 565.7
+  // (midnight counted twice), 24 × that = 13 023.1
+  'solar-energy-earth-surface': { probe: '(v) => v.totals.northPole', original: 13565.71, corrected: 13023.08, digits: 1 },
+  // E-CM-01: ZnS with radius 0.3 (red) and 0.2 (blue): the blue spheres (fifth Table) have radius 0.3 in the original,
+  // radius (blue) = 0.2 when corrected (by hand: the label says so)
+  'crystal-structures-miller': { state: { CrystalType: 'ZnS', radius: 0.3, radius2: 0.2 }, probe: '(v) => v.groups[4].radius', original: 0.3, corrected: 0.2 },
+  // E-LV-01: α = 1.45, β = 1.4, r1 = r2 = 0.05 (the saddle at (0.437, 0.388)): the unstable separatrix towards (0, 1) ends near the saddle
+  // after t = 1000 in the original; it tends to the stable node (0, 1) (phase-plane theory; unit test: an independent RK4 to t = 10⁴)
+  'lotka-volterra-competition': { state: { α: 1.45, β: 1.4, r1: 0.05, r2: 0.05 }, probe: '(v) => v.sepEnds[1][1]', original: 0.39, corrected: 1, digits: 2 },
 };

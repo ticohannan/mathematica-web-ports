@@ -1,0 +1,52 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstration by Alexander Perepelitsa
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rotating a Tesseract in Perspective</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <script type="importmap">{ "imports": { "three": "../../vendor/three/three.module.js", "three/addons/": "../../vendor/three/addons/" } }</script>
+  <script src="../../shared/requirements.js" data-needs-webgl2></script>
+  <style>
+    /* ImageSize -> 1.1 {400, 400}: the white picture box as wide as the 440 px image (not the pages' 560 px) */
+    .manipulate.placement-top #graphic { flex: 0 1 442px; width: 100%; max-width: 442px; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Rotating a Tesseract in Perspective</div>
+    <h1 class="demo-title">Rotating a Tesseract in Perspective</h1>
+
+    <section class="manipulate" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="graphic" id="graphic" data-testid="graphic">
+        <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser with WebGL 2.</div></noscript>
+      </div>
+    </section>
+
+    <p class="caption">A tesseract (or hypercube) is the 4D analog of the cube in 3D. It is constructed by translating a unit cube one unit perpendicular to the 3-space of the cube. The resulting 4D object is rotated in 4D and projected to 3-space in perspective.</p>
+
+    <details class="details" data-testid="details">
+      <summary>Details</summary>
+      <p>The original Demonstration has no details text. The tesseract is built from its 32 edges: a segment is doubled into a square, the square into a cube and the cube into a tesseract, each time by copying the shape at −1 and +1 in a new coordinate and joining the copies. The slider "rotate" turns the tesseract by an angle <i>a</i> in the plane of its third and fourth coordinates; the tesseract is then moved to <i>w</i> = −3 and projected from the origin of 4-space onto the 3-space <i>w</i> = −1. Drag the picture to turn the 3D view.</p>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. All computation runs in your browser. The shading of the tubes (white highlights, neutral lighting) is computed by this page and differs slightly from the original's pictures. The cube in the original's construction has edge 2, not 1 (the caption is kept as written; see DESIGN.md §11).</p>
+    <div class="credits" data-testid="credits">
+      Adapted from <a href="https://demonstrations.wolfram.com/RotatingATesseractInPerspective/">"Rotating a Tesseract in Perspective"</a>
+      by Alexander Perepelitsa, Wolfram Demonstrations Project (published 2014-06-30), licensed
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+      This JavaScript translation by Tico Hannan (© 2026) is released under the
+      same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

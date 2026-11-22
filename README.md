@@ -71,6 +71,20 @@ plain HTML + JavaScript (ES modules, no build step), SVG for 2D, three.js/WebGL 
 | Determine If a Truss Can Be Solved | `demos/truss-solvability/` | SVG | support at B, joint labels, roller or pin at each support; counts and verdict; errors switch |
 | Method of Sections to Solve a Truss | `demos/truss-method-of-sections/` | SVG | reactions (moment with Mouseover, force balance), six cuts with balances, solved truss; member width and height; errors switch |
 | Method of Joints to Solve a Truss Problem | `demos/truss-method-of-joints/` | SVG | reaction views (popup, Mouseover), balances at joints A … D in focus, solved truss; errors switch |
+| The Vibrating String | `demos/vibrating-string/` | SVG | initial-data setter, locators (click adds, Alt-click deletes), velocity, x interval, time trigger; d'Alembert's solution and the first three modes; errors switch |
+| Guitar String Harmonics: Standing Waves | `demos/guitar-string-harmonics/` | SVG | harmonic popup (1st … 5th), time trigger; fretboard with the forced node; equations and frequency table |
+| Longitudinal Standing Waves | `demos/longitudinal-standing-waves/` | SVG | harmonic setter, pipe-end and display togglers, time trigger; displacement, pressure, density and transverse picture; errors switch |
+| How to Catch a Standing Wave | `demos/catch-a-standing-wave/` | SVG | frequency slider (high to low), time trigger, first-harmonic setter; the cavity end is a locator; the nodes as points |
+| Vibrations of a Rectangular Membrane | `demos/rectangular-membrane/` | WebGL 2 | length, width, four mode amplitudes, time, speed and box height; Plot3D coloured by height |
+| Electrostatics of a Linear System of Three Charged Particles | `demos/three-charges-electrostatics/` | SVG | charges q1, q2, qt (sliders over −20 … 20 without 0), positions x1, x2, xt, four checkboxes; net force and field plots, data tables, equilibrium point |
+| AC Induction Motor Rotor Design | `demos/induction-motor-rotor-design/` | SVG | blocked rotor voltage, rotor resistance and reactance sliders, NEMA A / B / D buttons; torque–speed curve with three labelled points; errors switch |
+| Operating an AC Three-Phase Induction Motor | `demos/three-phase-induction-motor/` | WebGL 2 | animator and phase slider, magnitude, phase shift and bar skew; 3D motor with phase bands and skewed bars; three-phase plot |
+| Path of Light through an Acoustic Wave | `demos/light-through-acoustic-wave/` | SVG | index of air, sound volume (its maximum follows the index), frequency and angle; the light path over the wave |
+| Solar Energy Incident on Earth's Surface | `demos/solar-energy-earth-surface/` | WebGL 2 | season, latitude and time of day; globe with the night half, tropics and the Sun and normal arrows; power and daily totals; errors switch |
+| Rotating a Hypercube in 4D | `demos/hypercube-4d-rotation/` | WebGL 2 | six animators (one per plane of 4D), full hypercube or one or three holes, coloured, blue or no faces, opacity, axes, projection and duration; the hypercube in 3D with its angles |
+| Rotating a Tesseract in Perspective | `demos/tesseract-perspective/` | WebGL 2 | rotate slider; the tesseract as tubes in perspective |
+| Simple Crystal Structures and Miller Indices | `demos/crystal-structures-miller/` | WebGL 2 | crystal structure, repeats and shifts, radii, cell face, Miller indices; spheres, unit cell and plane families; errors switch |
+| Lotka-Volterra Competition Model | `demos/lotka-volterra-competition/` | SVG | competition coefficients, growth rates and carrying capacities, reset; StreamPlot phase portrait with nullclines or separatrices and basins; time plot; errors switch |
 
 The apps came in groups: the first three (motion planning, rotations, Euler angles); seven more from the
 seven-link PRM to robot singularities, added in v0.1.12 as further proofs of concept (developed first in a separate,
@@ -84,7 +98,10 @@ thin cylinder in v0.1.27; from a lecture notebook Dr. Becker gave Tico to conver
 four signal-processing and optics demonstrations in v0.1.33; and two by other authors in v0.1.35, shortest paths inside a
 polygon (Stan Wagon and Karen Saxe) and Voronoi diagrams (Ed Pegg Jr, Jeff Bryant and Theodore W. Gray); thirteen
 control-theory and signal demonstrations by other authors in v0.1.37, with shared modules for transfer functions, NDSolve and
-the control plots; and forward kinematics of a three-link arm (Rob Lockhart) in v0.1.38.
+the control plots; forward kinematics of a three-link arm (Rob Lockhart) in v0.1.38; three truss demonstrations in
+v0.1.40; and fourteen in v0.1.41: five on waves, from the vibrating string to the vibrations of a rectangular
+membrane, five on fields and machines, from three charges on a line to solar energy on the Earth's surface, and four on
+geometry and ecology, from a hypercube rotating in 4D to the Lotka-Volterra competition model.
 
 ## Where the code runs
 

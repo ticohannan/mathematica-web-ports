@@ -62,6 +62,30 @@
 // 0…1); PlotRange {{x0, x1}, {y0, y1}} (default the given ranges), a third entry {z0, z1} or All, or {z0, z1} alone, sets
 // the z range (automatic: min…max of the samples); non-numbers are transparent; MaxRecursion, PerformanceGoal ignored.
 // Test id density-raster.
+//
+// v0.1.41 — vector fields and implicit curves (opt-in; nothing above changed):
+//   StreamPlot((x, y) => [vx, vy], [x0, x1], [y0, y1], { StreamPoints: 25 })    StreamPlot[{vx, vy}, {x, x0, x1}, {y, y0, y1},
+//                                                                  StreamPoints -> 25]
+//   ContourPlot(Equation((x, y) => [f1, f2], 0), [x0, x1], [y0, y1], { ContourStyle: [Thickness(0.006), Brown] })
+//                                                                  ContourPlot[{f1, f2} == 0, {x, …}, {y, …}, ContourStyle -> …]
+// StreamPlot: Frame, no Axes, AspectRatio 1, PlotRange = the given ranges padded Scaled[0.055] (as the snapshots of the
+// Lotka-Volterra Competition Model measure it). Streamlines are evenly spaced (after B. Jobard and W. Lefer, "Creating
+// evenly-spaced streamlines of arbitrary density", Visualization in Scientific Computing '97, Springer 1997, 43-55; not
+// Mathematica's seeding): seeds on a grid in the scaled square, coarse grid first; each line is traced both ways along
+// the unit direction field (RK4, step dsep/6) until it leaves the domain, the field vanishes, or it comes within dsep/2
+// of another line (or of itself); lines shorter than dsep are dropped. StreamPoints -> n sets dsep = 0.3/√n of the
+// scaled square and lets lines run their whole length; Automatic (the default) uses dsep = 0.042 and cuts lines at a
+// length of 0.22, the short dense lines of Mathematica's default. StreamColorFunction: default the speed |v| scaled to
+// 0…1 over the domain through STREAM_GRADIENT (Mathematica 12's default stream colours, fitted to snapshot pictures),
+// None for one colour (black or the StreamStyle colour). StreamStyle: directives after the defaults (AbsoluteThickness
+// 1.1). Arrowheads: filled triangles 0.024 of the width long, one at the middle of a line and one more per 0.3 of
+// length, pointing along the field. Test ids stream-lines, stream-arrows.
+// ContourPlot of an equation: the curves lhs(x, y) == rhs (lhs may return a list: one curve set per entry, as
+// Mathematica's ContourPlot[{f1, f2} == 0]) by marching squares on a PlotPoints × PlotPoints grid (default 100) with each
+// crossing refined by 12 bisections; a value ≥ rhs counts as above (a zero on the domain's edge draws no line along it);
+// segments joined into polylines; ContourStyle one style for all curves or a list (default ColorData[97, i], 1 px);
+// Frame, no Axes, AspectRatio 1, PlotRange = the given ranges padded Scaled[0.02]. Only the equation form is supported
+// (no contour levels, no shading). Test id contour-i.
 
 import {
   Graphics, RGBColor, Black, Opacity, AbsoluteThickness, AbsolutePointSize, PointSize, Line, Polygon, Point, applyDirective, DEFAULT_STYLE,
@@ -725,4 +749,229 @@ export function LogLogPlot(f, [a, b], opts = {}) {
   const ys = sample(g, [Math.log(a), Math.log(b)], opts).ys.flat().filter(finite);
   const yr = opts.yRange ?? [Math.exp(Math.min(...ys)), Math.exp(Math.max(...ys))];
   return Plot(g, [Math.log(a), Math.log(b)], logOpts(opts, true, true, [a, b], yr));
+}
+
+// ---- vector fields and implicit curves (v0.1.41) -------------------------------------------------------------------
+/** STREAM_GRADIENT: [value, [r, g, b]] — the default StreamPlot colours of Mathematica 12+ (by speed), fitted to snapshots. */
+export const STREAM_GRADIENT = Object.freeze([
+  [0, [0.094, 0.004, 0.698]], [0.25, [0.392, 0.09, 0.655]], [0.45, [0.588, 0.204, 0.608]], [0.6, [0.706, 0.243, 0.478]],
+  [0.7, [0.824, 0.314, 0.353]], [0.8, [0.933, 0.384, 0.208]], [0.9, [1, 0.494, 0.039]], [1, [1, 0.671, 0]],
+].map(([t, c]) => Object.freeze([t, Object.freeze(c)])));
+/** StreamGradient(v): the colour of STREAM_GRADIENT at v (clipped to 0…1), linear between the stops. */
+export const StreamGradient = (v) => {
+  const S = STREAM_GRADIENT, t = v >= 0 ? (v <= 1 ? v : 1) : 0;
+  let k = 1;
+  while (k < S.length - 1 && S[k][0] < t) k++;
+  const [ta, a] = S[k - 1], [tb, b] = S[k], s = (t - ta) / (tb - ta);
+  return RGBColor(a[0] + (b[0] - a[0]) * s, a[1] + (b[1] - a[1]) * s, a[2] + (b[2] - a[2]) * s);
+};
+
+/**
+ * The streamlines of a field in the unit square (pure): f(u, v) → [du, dv] in scaled coordinates. Returns lines as lists
+ * of [u, v] points in the direction of the field. dsep: separation; maxLen: longest line (Infinity: no limit).
+ */
+export function streamlines(f, { dsep, maxLen = Infinity }) {
+  const h = dsep / 6, dtest = dsep / 2, G = Math.ceil(1 / dtest);
+  const grid = new Map(); // occupancy: cell → points of accepted lines
+  const key = (u, v) => Math.min(G - 1, Math.max(0, Math.floor(u * G))) * G + Math.min(G - 1, Math.max(0, Math.floor(v * G)));
+  const near = (u, v, d, extra) => {
+    const ci = Math.floor(u * G), cj = Math.floor(v * G);
+    for (let i = ci - 1; i <= ci + 1; i++) for (let j = cj - 1; j <= cj + 1; j++) {
+      if (i < 0 || j < 0 || i >= G || j >= G) continue;
+      for (const [pu, pv] of grid.get(i * G + j) ?? []) if ((pu - u) ** 2 + (pv - v) ** 2 < d * d) return true;
+    }
+    if (extra) for (const [pu, pv] of extra) if ((pu - u) ** 2 + (pv - v) ** 2 < d * d) return true;
+    return false;
+  };
+  const dir = (u, v, sgn) => {
+    const w = f(u, v);
+    const n = Math.hypot(w[0], w[1]);
+    return finite(n) && n > 1e-12 ? [(sgn * w[0]) / n, (sgn * w[1]) / n] : null;
+  };
+  const trace = (u0, v0, sgn, budget) => {
+    const pts = [];
+    let u = u0, v = v0, len = 0;
+    while (len < budget) {
+      const k1 = dir(u, v, sgn); if (!k1) break;
+      const k2 = dir(u + (h / 2) * k1[0], v + (h / 2) * k1[1], sgn); if (!k2) break;
+      const k3 = dir(u + (h / 2) * k2[0], v + (h / 2) * k2[1], sgn); if (!k3) break;
+      const k4 = dir(u + h * k3[0], v + h * k3[1], sgn); if (!k4) break;
+      const nu = u + (h / 6) * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]), nv = v + (h / 6) * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]);
+      if (!(nu >= 0 && nu <= 1 && nv >= 0 && nv <= 1)) break;
+      if (Math.hypot(nu - u, nv - v) < h * 0.2) break; // stalled (a sink)
+      // too close to another line, or to this line's own earlier points (not the last few)
+      const own = pts.length > 12 ? pts.slice(0, pts.length - 12) : null;
+      if (near(nu, nv, dtest, own)) break;
+      u = nu; v = nv; len += h; pts.push([u, v]);
+    }
+    return { pts, len };
+  };
+  const lines = [];
+  // seeds: grids of spacing dsep·2^k, coarse first (each seed once)
+  const seen = new Set();
+  const N = Math.max(1, Math.round(1 / dsep));
+  for (let step = 2 ** Math.floor(Math.log2(N)); step >= 1; step /= 2) {
+    for (let i = 0; i < N; i += step) for (let j = 0; j < N; j += step) {
+      const id = i * N + j;
+      if (seen.has(id)) continue;
+      seen.add(id);
+      const u0 = (i + 0.5) / N, v0 = (j + 0.5) / N;
+      if (near(u0, v0, dsep)) continue;
+      const fw = trace(u0, v0, 1, maxLen / 2);
+      const bw = trace(u0, v0, -1, maxLen - fw.len / 1 > maxLen / 2 ? maxLen - fw.len : maxLen / 2);
+      const line = [...bw.pts.reverse(), [u0, v0], ...fw.pts];
+      if (fw.len + bw.len < dsep) continue;
+      lines.push(line);
+      for (const p of line) { const k = key(p[0], p[1]); if (!grid.has(k)) grid.set(k, []); grid.get(k).push(p); }
+    }
+  }
+  return lines;
+}
+
+/** StreamPlot[{vx, vy}, {x, x0, x1}, {y, y0, y1}, opts] — see the header. */
+export function StreamPlot(f, [x0, x1], [y0, y1], opts = {}) {
+  const W = x1 - x0, H = y1 - y0;
+  const sp = opts.StreamPoints;
+  const n = finite(sp) ? sp : null;
+  const dsep = n ? 0.3 / Math.sqrt(n) : 0.042, maxLen = n ? Infinity : 0.22;
+  const g = (u, v) => { const w = f(x0 + u * W, y0 + v * H); return [w[0] / W, w[1] / H]; };
+  const lines = streamlines(g, { dsep, maxLen });
+  // speeds for the colours: scaled over a grid of the domain (as Mathematica scales the colour function)
+  const speed = (x, y) => { const w = f(x, y); return Math.hypot(w[0], w[1]); };
+  let lo = Infinity, hi = -Infinity;
+  for (let i = 0; i <= 40; i++) for (let j = 0; j <= 40; j++) {
+    const s = speed(x0 + (W * i) / 40, y0 + (H * j) / 40);
+    if (finite(s)) { lo = Math.min(lo, s); hi = Math.max(hi, s); }
+  }
+  const noColour = isNone(opts.StreamColorFunction);
+  const cf = typeof opts.StreamColorFunction === 'function' ? opts.StreamColorFunction : StreamGradient;
+  const BINS = 24;
+  const binOf = (x, y) => {
+    if (noColour) return 0;
+    const s = speed(x, y), t = hi > lo ? (s - lo) / (hi - lo) : 0;
+    return Math.min(BINS - 1, Math.max(0, Math.floor(t * BINS)));
+  };
+  const colourOf = (b) => (noColour ? Black : cf((b + 0.5) / BINS));
+  const segs = Array.from({ length: BINS }, () => []), heads = Array.from({ length: BINS }, () => []);
+  const toXY = ([u, v]) => [x0 + u * W, y0 + v * H];
+  const AL = 0.024, AW = 0.0085; // arrowhead length and half-width (fractions of the scaled square)
+  for (const line of lines) {
+    // colour runs: consecutive points in the same bin, sharing their end points
+    let run = [toXY(line[0])], b = binOf(...run[0]);
+    for (let i = 1; i < line.length; i++) {
+      const p = toXY(line[i]), pb = binOf(...p);
+      run.push(p);
+      if (pb !== b) { if (run.length > 1) segs[b].push(run); run = [p]; b = pb; }
+    }
+    if (run.length > 1) segs[b].push(run);
+    // arrowheads: at the middle and one more per 0.3 of length
+    const cum = [0];
+    for (let i = 1; i < line.length; i++) cum.push(cum[i - 1] + Math.hypot(line[i][0] - line[i - 1][0], line[i][1] - line[i - 1][1]));
+    const L = cum[cum.length - 1], k = Math.max(1, Math.round(L / 0.3));
+    for (let a = 0; a < k; a++) {
+      const target = ((a + 0.5) * L) / k;
+      let i = 1;
+      while (i < cum.length - 1 && cum[i] < target) i++;
+      const [pu, pv] = line[i - 1], [qu, qv] = line[i];
+      const d = Math.hypot(qu - pu, qv - pv) || 1, du = (qu - pu) / d, dv = (qv - pv) / d;
+      const s = (target - cum[i - 1]) / ((cum[i] - cum[i - 1]) || 1), tu = pu + (qu - pu) * s, tv = pv + (qv - pv) * s;
+      const tip = [tu + (AL / 2) * du, tv + (AL / 2) * dv], back = [tu - (AL / 2) * du, tv - (AL / 2) * dv];
+      const tri = [tip, [back[0] - AW * dv, back[1] + AW * du], [back[0] + AW * dv, back[1] - AW * du]].map(toXY);
+      heads[binOf(...toXY([tu, tv]))].push(tri);
+    }
+  }
+  const user = asList(opts.StreamStyle);
+  const lineParts = [], headParts = [];
+  for (let b = 0; b < BINS; b++) {
+    if (segs[b].length) lineParts.push([colourOf(b), AbsoluteThickness(1.1), ...user, Line(segs[b])]);
+    if (heads[b].length) headParts.push([colourOf(b), EdgeForm(), ...user.filter((d) => d.dir !== 'thickness'), Polygon(heads[b])]);
+  }
+  const o = plotOptions({ Frame: true, Axes: false, ...opts }, domainRange(opts.PlotRange, [x0, x1], [y0, y1], opts, 0.055), [], 1);
+  return Graphics([asList(opts.Prolog), Annotation(lineParts, 'stream-lines'), Annotation(headParts, 'stream-arrows'), asList(opts.Epilog)], o);
+}
+
+/** Equation(lhs, rhs): Mathematica's lhs == rhs for ContourPlot; lhs(x, y) → a number or a list of numbers. */
+export const Equation = (lhs, rhs = 0) => Object.freeze({ head: 'Equal', lhs, rhs });
+
+/**
+ * The curves g(x, y) = 0 on a grid (pure): marching squares, crossings refined by bisection, segments joined into
+ * polylines. Returns [[x, y], …] lists.
+ */
+export function implicitCurves(g, [x0, x1], [y0, y1], { PlotPoints = 100 } = {}) {
+  const N = Math.max(2, Math.round(PlotPoints)), M = N + 1;
+  const X = (i) => (i === N ? x1 : x0 + ((x1 - x0) * i) / N), Y = (j) => (j === N ? y1 : y0 + ((y1 - y0) * j) / N);
+  const val = new Float64Array(M * M);
+  for (let j = 0; j <= N; j++) for (let i = 0; i <= N; i++) val[j * M + i] = g(X(i), Y(j));
+  const pos = (v) => !(v < 0); // ≥ 0 (and non-numbers) above
+  const cross = (ax, ay, bx, by, va) => { // between a and b (opposite sides), 12 bisections
+    const sa = pos(va);
+    for (let s = 0; s < 12; s++) {
+      const mx = (ax + bx) / 2, my = (ay + by) / 2;
+      if (pos(g(mx, my)) === sa) { ax = mx; ay = my; } else { bx = mx; by = my; }
+    }
+    return [(ax + bx) / 2, (ay + by) / 2];
+  };
+  const cache = new Map();
+  // edge ids: horizontal (i, j)→(i+1, j): 2·(j·M + i); vertical (i, j)→(i, j+1): 2·(j·M + i) + 1
+  const pointOn = (id) => {
+    let p = cache.get(id);
+    if (!p) {
+      const c = id >> 1, i = c % M, j = (c - i) / M;
+      p = id & 1 ? cross(X(i), Y(j), X(i), Y(j + 1), val[c]) : cross(X(i), Y(j), X(i + 1), Y(j), val[c]);
+      cache.set(id, p);
+    }
+    return p;
+  };
+  const segs = [];
+  for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+    const c = [j * M + i, j * M + i + 1, (j + 1) * M + i + 1, (j + 1) * M + i];
+    const s = c.map((k) => pos(val[k]));
+    const e = [2 * (j * M + i), 2 * (j * M + i + 1) + 1, 2 * ((j + 1) * M + i), 2 * (j * M + i) + 1]; // bottom, right, top, left
+    const cut = [0, 1, 2, 3].filter((k) => s[k] !== s[(k + 1) % 4]).map((k) => e[k]);
+    if (cut.length === 2) segs.push([cut[0], cut[1]]);
+    else if (cut.length === 4) { // a saddle cell: decide by the centre
+      const centre = pos(g((X(i) + X(i + 1)) / 2, (Y(j) + Y(j + 1)) / 2));
+      if (centre === s[0]) segs.push([e[0], e[1]], [e[2], e[3]]); else segs.push([e[3], e[0]], [e[1], e[2]]);
+    }
+  }
+  // join segments sharing edge ids into polylines
+  const adj = new Map();
+  segs.forEach(([a, b], k) => { for (const x of [a, b]) { if (!adj.has(x)) adj.set(x, []); adj.get(x).push(k); } });
+  const used = new Uint8Array(segs.length), out = [];
+  const walk = (start, k0) => {
+    const ids = [start];
+    let cur = start, k = k0;
+    while (k != null && !used[k]) {
+      used[k] = 1;
+      const [a, b] = segs[k], nxt = a === cur ? b : a;
+      ids.push(nxt); cur = nxt;
+      k = (adj.get(cur) ?? []).find((q) => !used[q]);
+    }
+    return ids;
+  };
+  for (let k = 0; k < segs.length; k++) {
+    if (used[k]) continue;
+    const [a, b] = segs[k];
+    const fwd = walk(a, k), back = walk(a, (adj.get(a) ?? []).find((q) => !used[q]));
+    const ids = [...back.reverse().slice(0, -1), ...fwd];
+    void b;
+    out.push(ids.map(pointOn));
+  }
+  return out;
+}
+
+/** ContourPlot[lhs == rhs, {x, x0, x1}, {y, y0, y1}, opts] — the equation form only; see the header. */
+export function ContourPlot(eq, [x0, x1], [y0, y1], opts = {}) {
+  if (!eq || eq.head !== 'Equal') throw new Error('plot: ContourPlot supports only an equation, ContourPlot(Equation(f, c), …)');
+  const probe = eq.lhs((x0 + x1) / 2, (y0 + y1) / 2);
+  const m = Array.isArray(probe) ? probe.length : 1;
+  const styles = styleList(opts.ContourStyle, m);
+  const parts = [];
+  for (let r = 0; r < m; r++) {
+    const g = (x, y) => { const v = eq.lhs(x, y); return (m > 1 || Array.isArray(v) ? v[r] : v) - eq.rhs; };
+    const curves = implicitCurves(g, [x0, x1], [y0, y1], opts).filter((c) => c.length > 1);
+    if (curves.length) parts.push(Annotation([RGBColor(...COLOR_DATA_97[r % 10]), AbsoluteThickness(1), ...asList(styles[r]), Line(curves.length === 1 ? curves[0] : curves)], `contour-${r + 1}`));
+  }
+  const o = plotOptions({ Frame: true, Axes: false, ...opts }, domainRange(opts.PlotRange, [x0, x1], [y0, y1], opts, 0.02), [], 1);
+  return Graphics([asList(opts.Prolog), ...parts, asList(opts.Epilog)], o);
 }

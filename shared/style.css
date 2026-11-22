@@ -92,6 +92,10 @@ svg.svg-plot .locator:focus-visible .locator-glyph circle, svg.svg-plot .locator
 .ctl-check { display: flex; align-items: center; gap: 6px; }
 .ctl-checkbar { display: flex; flex-direction: row; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 4px 14px; }
 .ctl-checkbar-item { display: inline-flex; align-items: center; gap: 4px; }
+.ctl-togglerbar { gap: 0; }
+.ctl-toggler { font: inherit; font-size: 0.85rem; border: 1px solid var(--line); background: var(--btn); padding: 2px 8px; cursor: pointer; margin-right: -1px; }
+.ctl-toggler.on, .ctl-toggler[aria-pressed="true"] { background: var(--btn-on); }
+.ctl-toggler:disabled { cursor: default; opacity: 0.6; }
 /* a port-addition checkbox beside "Initial settings" (prm-seven-link's "mute beep") */
 .panel-tools .ctl-check { flex-direction: row; gap: 4px; align-self: center; }
 /* the switch "errors of the original: kept | corrected" (shared/errata.js, a port addition) beside "Initial settings" */
@@ -103,6 +107,10 @@ details.errata-note li { margin: 4px 0; }
 .graphic.wide { max-width: 760px; flex-basis: 600px; }
 .vslider { writing-mode: vertical-lr; direction: rtl; height: 80px; width: 22px; }
 /* v0.1.37: Trigger (play/pause, reset) and radio buttons (shared/ui-extra.js) */
+.ctl.ctl-animator { flex-direction: row; align-items: center; gap: 4px; flex-wrap: wrap; }
+.ctl-animator button { font: inherit; font-size: 0.8rem; min-width: 26px; border: 1px solid var(--line); background: var(--btn); border-radius: 4px; padding: 2px 6px; cursor: pointer; }
+.ctl-animator button[aria-pressed="true"] { background: var(--btn-on); }
+.ctl-animator-slider { flex: 1 1 80px; min-width: 60px; }
 .ctl.ctl-trigger { flex-direction: row; align-items: center; gap: 4px; flex-wrap: wrap; }
 .ctl-trigger button { font: inherit; font-size: 0.8rem; min-width: 30px; border: 1px solid var(--line); background: var(--btn); border-radius: 4px; padding: 2px 8px; cursor: pointer; }
 .ctl-trigger button:active, .ctl-trigger button[aria-pressed="true"] { background: var(--btn-on); }

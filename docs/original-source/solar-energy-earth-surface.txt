@@ -1,0 +1,161 @@
+
+### [Title]
+Solar Energy Incident on Earth's Surface
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+\<This Demonstration compares the maximum incident solar energy per square meter at a given latitudes, in particular, the equator and the North Pole. The model does not consider solar attenuation, weather, shade, altitude, incident angle, or air density. You can select the latitude, hour of the day, and season of the year. The season ranges from 0 to 1 (0 is the summer solstice), latitude ranges from 0 to 90 degrees in the northern hemisphere, and the time of day is on a 24-hour cycle where the point of reference is Greenwich, England on the day of the summer solstice. The vectors normal to the surface and pointing toward the Sun are shown for reference.\>
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [CodeText]
+If you provide initialization code, include a SaveDefinitions->True option in the Manipulate.
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{tiltEarth,rotateEarth,cancer,capricorn,northpole,southpole,artic,antartic,sun,point,normal,energy,rotvec1,eng,eng1,eng2,aeng,aeng1,aeng2,engtot,plt,earth,night,pt,norm1,sunnorm1},
+tiltEarth = (<<Grid:Cos[0.408]0Sin[0.408] | 010 | -Sin[0.408]0Cos[0.408]>>);
+rotateEarth[hour_, season_] = (<<Grid:Cos[(2 * π * (hour - 12 + season * 24))/(24)]-Sin[(2 * π * (hour - 12 + season * 24))/(24)]0 | Sin[(2 * π * (hour - 12 + season * 24))/(24)]Cos[(2 * π * (hour - 12 + season * 24))/(24)]0 | 001>>);
+sun[season_] = {Cos[2 * π * season], Sin[2  * π * season], 0};
+point [latitude_] = (<<Grid:Cos[(latitude * 2 * π)/(360)] | 0 | Sin[(latitude * 2 * π)/(360)]>>);
+normal[latitude_, hour_, season_] = tiltEarth . rotateEarth[hour, season] . point[latitude];
+energy[latitude_, hour_, season_] = 1367.6  * Max[0, (sun[season] . normal[latitude, hour,season])[[1]]];
+rotvec1=tiltEarth . rotateEarth[h,sea];
+eng=Table[energy[lat,t,sea],{t,0,24,1}];
+eng1=Table[energy[0,t,sea],{t,0,24,1}];
+eng2=Table[energy[90,t,sea],{t,0,24,1}];
+aeng=Accumulate[eng];
+aeng1=Accumulate[eng1];
+aeng2=Accumulate[eng2];
+engtot=ListLinePlot[{aeng,aeng1,aeng2},ImageSize->{175,175},PlotStyle->{{Red}, {Black}, {Blue}},PlotLabel->"\<energy\>",AxesLabel->{"\<time (hr)\>","\<watts/m\>"^2},Ticks->{{0,4,8,12,16,20,24},Automatic}];
+plt=Show[Plot[{energy[0, h, sea],energy[lat, h, sea],energy[90, h, sea]}, {h, 0,24}, PlotRange->{0, 1400},Ticks->{{0,4,8,12,16,20,24},Automatic}, PlotStyle->{{Red}, {Black}, {Blue}},ImageSize->{175,175},PlotLegends->{equator,latitude,north pole},PlotLabel->"\<energy\>",AxesLabel->{"\<time (hr)\>","\<watts/m\>"^2}],
+Graphics[{PointSize[Large],Point[{h,energy[lat,h,sea]}]}]];
+northpole=Graphics3D[{Blue,Tube[{rotvec1.{ 0,0,1},1.2*(rotvec1.{ 0,0,1})},.02]}];
+southpole=Graphics3D[{Green, Tube[{rotvec1.{ 0,0,-1},1.2*(rotvec1.{ 0,0,-1})},.02]}];
+cancer=ParametricPlot3D[rotvec1.{Cos[s]Sin[(66.5*π)/(180)],Sin[s]Sin[(66.5*π)/(180)],Cos[(66.5*π)/(180)]},{s,0, 2Pi},PlotStyle->{Thick,Blue,Dashed}];
+capricorn=ParametricPlot3D[rotvec1.{Cos[s]Sin[(113.5*π)/(180)],Sin[s]Sin[(113.5*π)/(180)],Cos[(113.5*π)/(180)]},{s,0, 2Pi},PlotStyle->{Thick,Green,Dashed}];
+artic=ParametricPlot3D[rotvec1.{Cos[s]Sin[(23.5*π)/(180)],Sin[s]Sin[(23.5*π)/(180)],Cos[(23.5*π)/(180)]},{s,0, 2Pi},PlotStyle->{Thick,Blue}];
+antartic=ParametricPlot3D[rotvec1.{Cos[s]Sin[(156.5*π)/(180)],Sin[s]Sin[(156.5*π)/(180)],Cos[(156.5*π)/(180)]},{s,0, 2Pi},PlotStyle->{Thick,Green}];
+norm1=Graphics3D[{Black,Arrowheads[Medium],Arrow[{Flatten[tiltEarth . rotateEarth[h,sea+.5].point[lat]],1.3*Flatten[tiltEarth . rotateEarth[h,sea+.5].point[lat]]}]}];
+sunnorm1=Graphics3D[{Red,Arrowheads[Medium],Arrow[{Flatten[tiltEarth . rotateEarth[h,sea+.5].point[lat]],Flatten[tiltEarth . rotateEarth[h,sea+.5].point[lat]]+.5*Flatten[ sun[sea]]}]}];
+earth=ParametricPlot3D[rotvec1.{Cos[s]Sin[t],Sin[s]Sin[t],Cos[t]},{s,0, 2Pi},{t,0,Pi},Mesh->{24,9},ViewAngle->20Degree,PlotStyle->{Texture[<<GraphicsBox>>]},PlotRange->{{-1.5,1.5},{-1.5,1.5},{-1.5,1.5}},Boxed->False,Axes->False,ImageSize->.95{350,350}];
+night=ParametricPlot3D[1.01* {-Cos[u]Sin[v],Sin[u]Sin[v],Cos[v]},{v,0,π},{u,-π/2,π/2},PlotPoints->20,Mesh->None,PlotStyle->{Opacity[0.7],FaceForm[GrayLevel[.3]]}];
+pt=Graphics3D[{Red,Sphere[{Flatten[tiltEarth . rotateEarth[h,sea+.5].point[lat]]},.02]}];
+Grid[{{Show[earth,night,cancer,capricorn,northpole,southpole,artic,antartic,pt,norm1,sunnorm1],Column[{plt,engtot}]}}]],
+{{sea,0,"\<season\>"},0,1,Appearance->"\<Labeled\>"},
+{{lat,51.47885,"\<latitude\>"},0,90,Appearance->"\<Labeled\>"},
+{{h,12,"\<time of day\>"},0,24,Appearance->"\<Labeled\>"},
+TrackedSymbols:> {sea,lat,h},
+AutorunSequencing->{1}]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Stephen Wilkerson
+
+### [Text]
+Frank A. Wattenberg
+
+### [Text]
+Russell Park
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+Details, references or citation information
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+solar energy
+
+### [Item]
+earth tilt
+
+### [Item]
+seasons
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Daylight Calculator
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2013-08-09
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

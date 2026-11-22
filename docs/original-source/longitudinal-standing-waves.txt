@@ -1,0 +1,346 @@
+
+### [Title]
+Longitudinal Standing Waves
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+\<A sound wave in an organ pipe can be understood as the superposition of waves reflecting back and forth between the two ends, with destructive interference at nodes and constructive interference at antinodes.\>
+
+### [Text]
+\<Click to select the harmonic and to switch between "open" and "closed" pipes; use the "time" play/pause button to start/stop the animation; select the options to display: standing wave, wave moving to the right, wave reflected back to the left, longitudinal wave pressure contour lines, longitudinal wave densities, corresponding transverse wave, longitudinal wave "envelope" (maximum displacements of the air molecules at various positions), corresponding transverse wave envelope, and labels for displacement and/or pressure nodes and antinodes.\>
+
+### [Text]
+\<Since sound waves are longitudinal waves, the average motion of the air molecules is back and forth parallel to the direction the wave travels (the transverse visualizations are only included for comparison.)\>
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+T=1;L=7;ε=.01;H=.6;
+plotstyle={
+(* 1: sum *) Directive[Dashing[{}],Thick,Black],
+(* 2: right *) Directive[Dashing[{}],Thick,Blue],
+(* 3: left *) Directive[Dashing[{}],Thick,Red],
+(* envelope, option 8, plotstyle[[4]] *) Directive[Dotted,Gray], 
+(* envelope, option 8, plotstyle[[5]] *) Directive[Dotted,Gray], 
+(* pipe border, no option, plotstyle[[6]] *) Black,
+(* pipe border, no option, plotstyle[[7]] *) Black
+};
+(* create a bunch of spread out points, deleting near duplicates: *)
+pts=Union[Transpose@{RandomReal[{-0.8(2L),L+0.8(2L)},#],RandomReal[{-H,H},#]}&@5000,SameTest->(EuclideanDistance[#1,#2]<.1&)];
+(* x-coordinates for a bunch of spaced out vertical lines: *)
+lineData=Range[-0.8(2L),L+0.8(2L),.01L];
+lop[l_List] := Select[l,0<=#<=L&]
+(* function to throw away out of range x-coordinates *)
+lopPoints[l_List] := Select[l,0<=#[[1,1]]<=L&] ;(* function to throw away Points with out of range x-coordinates *)
+(* functions to graph: waves moving right|left *)
+fRight[x_,t_]:=Cos[2π(x/λ-t/T)];
+fLeft[x_,t_]:= Cos[2π(x/λ+t/T)];
+(* function to draw an arrow unless x-coords are too close, then a point: *)
+myArrow[{x1_,x2_},y_]:=
+Switch[Norm[x2-x1],
+_?(#<.1&),Point[{(x1+x2)/2,y}],
+_,Arrow[{{x1,y},{x2,y}},ε]];
+(* build "\<longitudinal envelope\>", a list of arrows (or points) showing relative sizes of displacements: *)
+Clear[hArrows];
+hArrows[n_,L_,λ_,end_] := hArrows[n,L,λ,end] =If[end=="\<none\>",{},{Gray,Arrowheads[{-ε,ε}],
+Outer[myArrow[#2,#1]&,
+H Range[-.8,.8,.4] (* y-coordinates *), 
+Partition[
+(* massaged x-coordinates between which to draw the arrows: *)
+Join[#-0.075λ Cos[(4π #)/(λ)+(π)/(2)]&/@Range[0.0,L+ε λ,λ/If[end=="\<closed\>"&&n==1,26,If[n<=2,14,If[n<=5,10,6]]]],If[end=="\<closed\>" (* add one extra end coordinate *),{L},{}]],
+2,1],
+1]}];
+dlabels[n_,L_,λ_,end_] := dlabels[n,L,λ,end]={{Text[Subscript["\<N\>","\<d\>"],#]& /@ Table[{x,.8},{x,λ/4,L,λ/2}]},
+{Text[Subscript["\<A\>","\<d\>"],#]& /@ Table[{x,.8},{x,0,L,λ/2}]}};
+plabels[n_,L_,λ_,end_]:= plabels[n,L,λ,end]={{Text[Subscript["\<A\>","\<p\>"],#]& /@ Table[{x,-.85},{x,λ/4,L,λ/2}]},
+{Text[Subscript["\<N\>","\<p\>"],#]& /@ Table[{x,-.85},{x,0,L,λ/2}]}};
+transverseIcon=Plot[Cos[t],{t,0,3π},PlotRange->All,ImageSize->19,Axes->False];
+pipecaps={{},Line[{{L+ε,-H-ε},{L+ε,H+ε}}],
+Line[Partition[Table[{L+0.04(1-(-1)^i),(-1+(2/12)i)(H+2ε)},{i,0,12}],2,1]]};
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{longitudinalShown,densityShown,transverseShown,λ},
+(* if option button 4, buttons 1|2|3 mean show both|left|right longitudinal waves (lines): *)
+longitudinalShown=options \[Intersection] If[MemberQ[options,4],If[end!="\<none\>",{1,2,3},{1,2}],{}];
+(* if option button 5, buttons 1|2|3 mean show both|left|right longitudinal waves (points): *)
+densityShown=options \[Intersection] If[MemberQ[options,5],If[end!="\<none\>",{1,2,3},{1,2}],{}];
+(* if option button 6, buttons 1|2|3 show both|left|right transverse waves, *)
+(* option button 8 means transverse envelope, functions 4&5 *)
+(* always show pipe border: functions 6&7 *)
+transverseShown=Flatten[{
+(options \[Intersection] If[MemberQ[options,6],{1,2,3,8},{8}]\[Intersection] If[end!="\<none\>",{1,2,3,8},{1,2}]) /. 8->{4,5},6,7}];
+λ=4L/(2n-Boole[end=="\<closed\>"]); (* "\<closed\>": 4L/(2n-1), else: 2L/n *)
+Pane[
+Plot[Evaluate@({
+(* 1: sum *) 0.5 H (fRight[x,t]+Boole[end!="\<none\>"] fLeft[x,t]),
+(* 2: right *) 0.5 H fRight[x,t]+ε,
+(* 3: left *) 0.5 H fLeft[x,t] -ε,
+(* 4,5: envelope, option 8 *) H Cos[2π(x/λ)], - H Cos[2π(x/λ)],
+(* 6,7: pipe, no option *) -(H+2ε), (H+2ε)
+}[[transverseShown]]),{x,0,L},ImageSize->{550,150},
+Filling->
+If[MemberQ[transverseShown,4 (* envelope = 4&5 *)], #->{#+1}& @ First@First@Position[transverseShown,4],None],
+PlotStyle->Evaluate[plotstyle[[transverseShown]]],Axes->None,AspectRatio->Automatic,PlotRange->1,
+Epilog->{
+(* end: nothing | single line | zigzag *)
+pipecaps[[Switch[end,"\<open\>" ,1,"\<closed\>",2,"\<none\>",3]]],
+(* longitudinal wave representation, vertical lines: *)
+{MapThread[List,{
+{Black,Blue,Red}[[longitudinalShown]], 
+Map[Line[{{#,-H},{#,H}}]& ,
+ lop/@ Transpose[
+({#+0.07λ(fRight[#,t]+Boole[end!="\<none\>"] fLeft[#,t]),
+#+0.07λ fRight[#,t],
+#+0.07λ fLeft[#,t]}[[longitudinalShown]])& /@ lineData],{2}]
+}]},
+(* longitudinal wave representation, points: *)
+{MapThread[List,{
+{Black,Blue,Red}[[densityShown]], (* dots *)
+ lopPoints/@ Transpose[({
+Point[{#[[1]]+0.07λ(fRight[#[[1]],t]+Boole[end!="\<none\>"] fLeft[#[[1]],t]),#[[2]]}],
+Point[{#[[1]]+0.07λ fRight[#[[1]],t],#[[2]]}],
+Point[{#[[1]]+0.07λ fLeft[#[[1]],t],#[[2]]}]
+}[[densityShown]])& /@ pts]
+}]},
+(* longitudinal envelope display: *)
+If[end==="\<none\>",{},{
+If[MemberQ[options,7],hArrows[n,L,λ,end],{}],
+(* node & antinode labels: *)
+If[MemberQ[options,9],dlabels[n,L,λ,end],{}],
+If[MemberQ[options,10],plabels[n,L,λ,end],{}]
+}]
+}],{550,150}]],
+{{n,3,Row[{"\<harmonic \>",Style["\<n\>",Italic]}]
+},Range[7],ControlType->Setter},
+{{end,"\<open\>","\<pipe end\>"},{"\<open\>","\<closed\>","\<none\>"}},
+{{options,{1,4,7,8}},{
+1->Tooltip["\<  +  \>","\<standing wave: sum of left and right waves\>"],
+2->Tooltip["\<  ->  \>","\<wave moving right\>"],
+3->Tooltip["\<  \[LeftArrow]  \>","\<wave reflected back left\>"],
+4->Tooltip["\<  |||||  \>","\<longitudinal contours\>"],(*7*)
+5->Tooltip["\<  \[VerticalEllipsis]\[VerticalEllipsis]\[VerticalEllipsis]\[VerticalEllipsis]\[VerticalEllipsis]  \>","\<longitudinal density\>"],(*8*)
+6->Tooltip[transverseIcon,"\<transverse wave\>"],(*5*)
+7->Tooltip["\< \[Congruent]\[Congruent] \>","\<longitudinal envelope\>"],(*6*)
+8->Tooltip["\< \[AscendingEllipsis]\[DescendingEllipsis] \>","\<transverse envelope\>"], (*4*)
+9->Tooltip["\<displacement nodes\>","\<show displacement nodes and antinodes\>"],
+10->Tooltip["\<pressure nodes\>","\<show pressure nodes and antinodes\>"]
+},ControlType->TogglerBar},
+(* {{t,0,"\<time t\>"},0,1}, *)
+{{t,0,Row[{"\<time \>", Style["\<t\>",Italic]}]},0,1,ControlType->Trigger,AnimationRepetitions->∞,AppearanceElements->{"\<PlayPauseButton\>","\<FasterSlowerButtons\>"}},
+TrackedSymbols:>{t,n,options,end},SaveDefinitions->True,
+AutorunSequencing->{1,2,4},ControlPlacement->Top]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Kenneth E. Caviness
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+\<This Demonstration allows experimentation with standing waves in open and closed pipes, a commonly observed type of longitudinal wave motion[1]. Longitudinal waves (including sound waves, compression/expansion waves in a Slinky, and primary earthquake P waves) propagate through a solid, liquid or gas with a speed dependent on the density of the medium.\>
+
+### [Text]
+\<Wave reflection occurs at both closed and open pipe ends, with maximum displacement (motion) possible at an open end and minimum displacement possible at a closed end. Thus there is a displacement node at any closed end and an antinode at any open end.\>
+
+### [Text]
+\<This treatment makes a number of simplifications and ignores edge effects, assuming that there is a pressure node (and displacement antinode) at a pipe's open end and a pressure antinode (and displacement node) at a closed end. In a physical pipe, the position of the pressure node at the open end varies slightly, depending on the tube diameter. The left/right displacements and the arrows showing maximum displacements are also exaggerated for easier viewing and are not intended to show the actual motion of the air, only giving an idea of relative magnitudes of the drift velocities of the molecules at different positions in the pipe.\>
+
+### [Text]
+In an open pipe of length L, the only possible wavelengths forming standing waves are those such that L is an integer multiple of the half-wavelength, while in a closed pipe, L must be an odd integer multiple of the quarter-wavelength.
+
+### [Text]
+\<The main controls are the "harmonic n" buttons to select one of the allowed wavelengths to display, the "pipe end" buttons to specify that the right end of the pipe be "open" or "closed" ("none" means the pipe goes on forever and no reflected wave, no interference, no standing wave will occur) and the "time" controls to start/stop, speed up or slow down the animation.\>
+
+### [Text]
+\<The first three option buttons toggle the display of three waves: the standing wave itself and its rightward-moving and leftward-moving components. The next three buttons specify the visual representation: pressure contour lines (vertical lines whose spacings indicate differing pressures), density (scattered points that move in response to the wave motion and so give an indication of molecular displacements and air density) and transverse (included for comparison and easy identification of wave features). The next two buttons display wave envelopes and the last two add node/antinode labels.\>
+
+### [Text]
+\<A nice introductory exploration is to display an animated rightward-moving wave in various representations, add the leftward-moving reflection and then the standing wave, seeing how they interrelate. Add an "envelope"\[LongDash]showing the maximum displacement (left/right for longitudinal, up/down for the transverse visualization) and see how the air molecules alternately move left and right, clumping at displacement node positions (pressure antinode positions) whose labels can be toggled on/off.\>
+
+### [Text]
+\<Adjust the time controls to slow down the animation enough so it evolves smoothly, not jumping. The best speed will vary depending on the number of options simultaneously shown.\>
+
+### [Text]
+\<Snapshot 1: the rightward-moving component wave of the seventh harmonic in a closed pipe, shown as a sequence of pressure contour lines with the corresponding transverse wave; tight or wide spacing of the contour lines indicates high or low pressure regions, respectively\>
+
+### [Text]
+\<Snapshot 2: the same situation showing the composite standing wave and the transverse wave envelope as background: note the time-varying piling up of pressure contour lines at alternate displacement nodes, an indication that these are the antinodes of the pressure wave\>
+
+### [Text]
+\<Snapshot 3: the same situation with air pressure and density visualized by a point distribution\>
+
+### [Text]
+Snapshot 4: the fundamental wavelength (n=1) for an open pipe, shown with high air pressure and density at the central pressure antinode (displacement node) and with the transverse wave envelope for comparison
+
+### [Text]
+Snapshot 5: comparison of the longitudinal and transverse envelopes for the fundamental mode (n=1) of an open pipe; note that the length of the pipe is filled with one-half wavelength
+
+### [Text]
+Snapshot 6: the fundamental wavelength (n=1) for a closed pipe, shown with high air pressure (closely spaced pressure contours) at the closed end (a displacement node) and with the transverse wave envelope for comparison; note that the length of the pipe is filled with one-quarter wavelength
+
+### [Text]
+The pipe length and wavelength relationships:
+
+### [Text]
+Open pipe:	L=n((λ)/(2)) \[LeftRightArrow] λ=(2L)/(n), n=1,2,3,\[Ellipsis]
+
+### [Text]
+Closed pipe:	L=n((λ)/(2))+(λ)/(4)=((2n+1)λ)/(4) \[LeftRightArrow] λ=(4L)/(2n+1), n=0,1,2,\[Ellipsis] \[LeftRightArrow] λ=(4L)/(1), (4L)/(3), (4L)/(5),\[Ellipsis]
+
+### [Text]
+For more information, see any college physics textbook, or see "Standing Wave" on Wikipedia.
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+standing wave
+
+### [Item]
+longitudinal wave
+
+### [Item]
+transverse wave
+
+### [Item]
+resonance
+
+### [Item]
+organ pipe
+
+### [Item]
+node
+
+### [Item]
+anti node
+
+### [Item]
+harmonic
+
+### [Item]
+superposition
+
+### [Item]
+interference
+
+### [Item]
+wavelength
+
+### [Item]
+frequency
+
+### [Item]
+period
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Transverse Standing Waves
+
+### [Text]
+Drawbar/Harmonic Waveform Viewer
+
+### [Text]
+Tuning Fork
+
+### [Text]
+Standing Waves and Chords
+
+### [Text]
+Elementary Propagation of a Wave
+
+### [Text]
+Standing Wave
+
+### [Text]
+Harmonic
+
+### [Text]
+Oscillation
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2020-11-25
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

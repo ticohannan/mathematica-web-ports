@@ -1,0 +1,206 @@
+
+### [Title]
+Lotka-Volterra Competition Model
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+\<The classic Lotka\[Dash]Volterra (LV) equations represent a simple model of two species competing for the same resources over ecological time. (Not to be confused with the LV predator-prey model.) It is assumed that each species grows logistically in the absence of the other species. Factors such as predation and seasonal effects are not incorporated into the model. The classic LV equations have been rescaled for this Demonstration by the carrying capacity of each population. You can vary the competition coefficients, intrinsic growth rates and the carrying capacities of each species to observe the effect on the phase plane.\>
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [CodeText]
+If you provide initialization code, include a SaveDefinitions->True option in the Manipulate.
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+tMax=120;
+sys={r1 x (1-x-Alpha k2/k1 y),r2 y (1-y-Beta k1/k2 x)};
+vars={x,y};
+ticks={#,ToString[PercentForm[#]]}&/@Range[0,1,.25]; (* Format frame ticks to percents *)
+equilibria=Solve[sys=={0,0},vars,Reals]//Quiet; (* Find the fixed points *)
+saddles=Pick[equilibria,Sign@Det@D[sys,{vars}]/.equilibria,-1]; (* Find the saddle points *)
+sol=NDSolve[{u'[t]== r1 u[t] (1-u[t]-Alpha k2/k1 v[t]),v'[t]== r2 v[t] (1-v[t]-Beta k1/k2 u[t]),u[0]== 0.35,v[0]== 0.35},{u[t],v[t]},{t,0,tMax}];
+
+(* Define community equilibrium point *)
+{xEq,yEq}={(k1-k2 Alpha)/(k1 (1-Alpha Beta)), (k2-k1 Beta)/(k2 (1-Alpha Beta))};
+(* Determine if the community equilibrium is a saddle point *)
+stable=If[Det[D[sys,{vars}]/.{x-> xEq,y-> yEq}]>0,True,False];
+
+(* Determine which phase portrait to display - stable or unstable community equilibrium *)
+If[stable||xEq<0||xEq>1||yEq<0||yEq>1,
+If[xEq<0||xEq>1||yEq<0||yEq>1,
+label=Column[{"\<two\[Hyphen]species competition outcomes\>","\<One species always outcompetes the other\>","\<regardless of initial population densities.\>"}],
+label=Column[{"\<stable coexistence of competing species\>","\<\[Bullet] green - species 1 isoclines\>","\<\[Bullet] brown - species 2 isoclines\>"}]]; (* End IF *)
+stream=StreamPlot[{r1 x (1-x-Alpha k2/k1 y),r2 y (1-y-Beta k1/k2 x) },{x,0,1},{y,0,1},
+PlotLabel->label,
+FrameLabel-> {"\<species 1 
+population densities as a percent of carrying capacity\>", "\<species 2\>"},
+FrameTicks->{{ticks,None},{ticks,None}},
+StreamPoints->25,
+ImageSize->{370,400}
+];
+uNullcline=ContourPlot[sys==0,{x,0,1},{y,0,1},ContourStyle->{Thickness[0.006],RGBColor[.63,.24,.18] (* redish brown *)}];
+vNullcline=ParametricPlot[{t,-yEq/(1-xEq)(t-1)},{t,0,Sqrt[2]},RegionFunction-> Function[{t,y},0<y<1],PlotRange->{{0,1},{0,1}},PlotStyle->{Thick,Darker[Green]}];
+(* Plot of phase portrait without nullclines *)
+If[xEq<0||xEq>1||yEq<0||yEq>1,
+Framed[Show[{stream},
+Epilog->{
+{Black,PointSize[0.02],Point[vars]/.equilibria},
+{Black,Arrowheads[0.02],Arrow[{{0,0.01},{0,.995}}],Arrow[{{0.01,0},{.995,0}}]}
+}]],
+(* Plot of phase portrait with nullclines *)
+Framed[Show[{stream,uNullcline,vNullcline},
+Epilog->{
+{Thick,Darker[Green],Line[{{0,0.015},{0,.985}}]},{Thickness[0.006],RGBColor[.63,.24,.18],Line[{{0.015,0},{.985,0}}]},
+{Black,PointSize[0.02],Point[vars]/.equilibria}
+}]]
+],
+label=Column[{"\<two\[Hyphen]species competition outcomes\>","\< \[Bullet] light gray - basin of attraction for species 1\>","\< \[Bullet] pale blue - basin of attraction for species 2\>"}];
+sepICS[p0_,eps_]:=With[{p1=p0+eps*Norm[p0] {Cos[t],Sin[t]}},p1/.NSolve[Det[{p1-p0,sys/.Thread[vars->p1]}]==0&&0<t< 2 Pi]];
+separatrices=Flatten[Module[{eps=10^-7,(* tunable distance from equilibrium *)X0,dX},With[{Xa=0,Xb=1,Yc=0,Yd=1,(* plot domain boundaries *)p0=vars/.#,(* equilibrium *)X=Through[vars[t]]},(* variables at t *)X0=X/.t->0;(* initial values *)dX=D[X,t];(* derivatives *)With[{X1=X[[1]],X2=X[[2]]},First@NDSolve[{dX==(sys/.v:Alternatives@@vars:>v[t]),X0==#,(* stop when close to saddle *)WhenEvent[Norm[X-p0]<0.5 eps*Norm[p0],"\<StopIntegration\>"],(* stop when solution leaves plot domain *)WhenEvent[Abs[X1-(Xa+Xb)/2]>(Xb-Xa)/2,"\<StopIntegration\>"],WhenEvent[Abs[X2-(Yc+Yd)/2]>(Yd-Yc)/2,"\<StopIntegration\>"]},vars,{t,-1000,1000}]&/@sepICS[p0,eps]]]&/@saddles],1];sepPlots=ParametricPlot@@@({{x[t],y[t]},Hold[Flatten][{t,x["\<Domain\>"]}],PlotStyle->Black,PlotRange->{{0,1},{0,1}}}/.separatrices//ReleaseHold);sepLines=First@Cases[#,_Line,Infinity]&/@sepPlots;background=Graphics[Riffle[Lighter[#,0.6]&/@{Lighter[RGBColor[.05,.7,.73]],Lighter[RGBColor[.05,.7,.73]],Lighter[Gray],Lighter[Gray]},MapAt[Reverse,Partition[sepLines,2,1,1],{{2},{4}}]/.{Line[p1_],Line[p2_]}:>Polygon[Join[p1,p2,Nearest[Tuples[{{0,1},{0,1}}],{p2[[-1,1]],p1[[1,2]]},{1,0.01}],Nearest[Tuples[{{0,1},{0,1}}],{p1[[1,1]],p2[[-1,2]]},{1,0.01}]]]],PlotRange->All,Frame->True,Axes->False,AspectRatio->1];
+streamLines=StreamPlot[sys,{x,0,1},{y,0,1}];
+Framed[Show[{background,streamLines,sepPlots},
+PlotLabel->label,
+FrameLabel-> {"\<species 1 
+population densities as a percent of carrying capacity\>", "\<species 2\>"},
+FrameTicks->{{ticks,None},{ticks,None}},
+StreamPoints->20,
+Axes->True,
+ImageSize->{370,400},
+Epilog->{
+{Black,PointSize[0.02],Point[vars]/.equilibria}
+}]]
+],
+
+(* Define parameters and create sliders *)
+"\<Lotka\[Dash]Volterra competition model\>",
+Delimiter,"\<competition coefficients\>",
+{{Alpha,0.63,"\<species 1\>"},0.01,2,0.01,Appearance->"\<Labeled\>",ImageSize->70},{{Beta,0.53,"\<species 2\>"},0.01,2,0.01,Appearance->"\<Labeled\>",ImageSize->70},
+Delimiter,"\<intrinsic growth rates\>",
+{{r1,0.55,"\<species 1\>"},0,2.,0.01,Appearance->"\<Labeled\>",ImageSize->70},{{r2,0.55,"\<species 2\>"},0,2.,0.01,Appearance->"\<Labeled\>",ImageSize->70},
+Delimiter,"\<carrying capacities\>",
+{{k1,100,"\<species 1\>"},10,300,1,Appearance->"\<Labeled\>",ImageSize->70},
+{{k2,100,"\<species 2\>"},10,300,1,Appearance->"\<Labeled\>",ImageSize->70},
+Delimiter,Button[Style["\<reset\>"],Alpha=.63;Beta=.53;k1=120;k2=120;r1=0.15;r2=0.15],
+(* Plot the solution to the LV system in left panel *)
+Dynamic[ticks2={#,ToString[PercentForm[#]]}&/@Range[0,1,.5]; (* Format frame ticks to percents *)Framed[Plot[{u[t]/.sol,v[t]/.sol},{t,0,tMax},Frame-> True,FrameLabel-> {{None,None},{"\<time\>","\<population densities as a 
+percent of carrying capacity\>"}},PlotStyle-> {Darker[Green],RGBColor[.63,.24,.18]},PlotRange-> {{0,tMax},{0,1}},FrameTicks-> {{ticks2,None},{Automatic,None}}, PlotLegends->Placed[ {"\<species 1\>","\<species 2\>"},Below],AspectRatio->.45,ImageSize-> {200,120}]]],
+TrackedSymbols:>{Alpha,Beta,k1,k2,r1,r2},SynchronousUpdating->False,ControlType->Slider,ControlPlacement-> Left]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Richard Cangelosi
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+\<Snapshot 1: The case of stable coexistence. Isoclines are superimposed on the phase portrait.\>
+
+### [Text]
+\<Snapshot 2: The phase portrait where coexistence is impossible, one species survives and one goes extinct regardless of initial population densities.\>
+
+### [Text]
+\<Snapshot 3: The principle of competitive exclusion. The phase portrait includes color-coded basins of attractions.\>
+
+### [Text]
+\<This Demonstration simulates the interaction between two competing species based on the classic LV equations. The snapshots illustrate three qualitative changes to the phase portrait that occur as parameters are varied.\>
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+Lotka\[Dash]Volterra competition model
+
+### [Item]
+dynamical system
+
+### [Item]
+nonlinear differential equations
+
+### [Item]
+phase portraits
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Lotka-Volterra Discrete Difference Equations
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2021-06-04
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

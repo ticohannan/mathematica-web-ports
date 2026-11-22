@@ -25,6 +25,12 @@
 //                                 imageCanvas; colour values used as they are; anisotropic filtering up to 8), always
 //                                 blended (the image's alpha × Opacity), both faces, no depth writes; edges as for any
 //                                 polygon.
+//   'plotSurface' (v0.1.41, shared/graphics3d.js Plot3D): one indexed BufferGeometry with the given normals and, when
+//                                 the plot has a ColorFunction, vertex colours (a vertex without a colour in the
+//                                 PlotStyle colour, default white) on a two-sided Lambert material (lit by the
+//                                 picture's lights; polygon offset, so the mesh lines on it stay visible); the mesh
+//                                 lines as thin screen-space lines in the MeshStyle colour and opacity. Already cut at
+//                                 the plot range in the data: no clipping planes (a zero-height box would hide it).
 import { THREE, surface, cylinderBetween, fatLine, label } from './three-helpers.js';
 import { sampleCurve, sampleSurface, sampleCircle, infinitePlanePolygon, apply4, cuboidCorners, infiniteLineSegment } from './graphics3d.js';
 import { imageCanvas } from './graphics.js';
@@ -228,6 +234,27 @@ export function addPrims(group, prims, ctx) {
       case 'mesh': {
         group.add(indexedMesh(p.points, p.polygons, mat(p, THREE.DoubleSide)));
         if (p.edgeForm !== 'None') edges(p.polygons.flatMap((f) => loop(f.map((i) => p.points[i]))), p);
+        break;
+      }
+      case 'plotSurface': { // v0.1.41
+        const base = p.color ?? DEFAULT_SURFACE;
+        const n = p.points.length, pos = new Float32Array(3 * n), nor = new Float32Array(3 * n);
+        p.points.forEach((q, k) => pos.set(q, 3 * k));
+        p.normals.forEach((q, k) => nor.set(q, 3 * k));
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        geo.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+        if (p.colors) {
+          const col = new Float32Array(3 * n);
+          p.colors.forEach((c, k) => col.set(c ?? base, 3 * k));
+          geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+        }
+        geo.setIndex(p.triangles.flat());
+        const m = new THREE.MeshLambertMaterial({ color: p.colors ? new THREE.Color(1, 1, 1) : new THREE.Color(...base), vertexColors: !!p.colors, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 });
+        if (p.opacity < 1) { m.transparent = true; m.opacity = p.opacity; m.depthWrite = false; }
+        group.add(new THREE.Mesh(geo, m));
+        const ms = p.meshStyle ?? { color: [0, 0, 0], opacity: 0.5 };
+        for (const l of p.meshLines) group.add(fatLine(ctx.viewer, l, ms.color ?? DEFAULT_LINE, thinPx, ms.opacity ?? 1));
         break;
       }
       case 'arrow': {

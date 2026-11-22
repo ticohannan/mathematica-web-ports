@@ -1,0 +1,229 @@
+
+### [Title]
+Rotating a Hypercube in 4D
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+This Demonstration gives a variety of animated rotations of a hypercube in 4D projected to 3D. The axis (set of fixed points) in a 4D rotation is a plane. As a simple example, stop the animation and set all the angles to zero. Drag the first slider; this rotates the hypercube without distortion about the W-X plane, which we see in 3D as a rotation about the X axis.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+Rxw[a_]=(\[NoBreak]<<Grid:10000 | 0Cos[a]-Sin[a]00 | 0Sin[a]Cos[a]00 | 00010 | 00001>>\[NoBreak]);Ryw[b_]=(\[NoBreak]<<Grid:Cos[b]0-Sin[b]00 | 01000 | Sin[b]0Cos[b]00 | 00010 | 00001>>\[NoBreak]);
+Rzw[c_]=(\[NoBreak]<<Grid:Cos[c]-Sin[c]000 | Sin[c]Cos[c]000 | 00100 | 00010 | 00001>>\[NoBreak]);Rxy[d_]=(\[NoBreak]<<Grid:10000 | 01000 | 00Cos[d]-Sin[d]0 | 00Sin[d]Cos[d]0 | 00001>>\[NoBreak]);
+Rxz[e_]=(\[NoBreak]<<Grid:10000 | 0Cos[e]0-Sin[e]0 | 00100 | 0Sin[e]0Cos[e]0 | 00001>>\[NoBreak]);Ryz[f_]=(\[NoBreak]<<Grid:Cos[f]00-Sin[f]0 | 01000 | 00100 | Sin[f]00Cos[f]0 | 00001>>\[NoBreak]);
+Transw[w_]=(<<Grid:10000 | 01000 | 00100 | 00010 | 000w1>>) ; Proj[pw_]=(<<Grid:10000 | 01000 | 00100 | 0001pw | 00001>>) ;
+ProjRot[a_,b_,c_,d_,e_,f_,dw_,pw_]=Chop[N[Rxw[a]. Ryw[b].Rzw[c]. Rxy[d]. Rxz[e].Ryz[f].Transw[dw].Proj[pw]]];
+
+
+### [Input] (init)
+c1=RGBColor[1,0,0];c2=RGBColor[0,1,0];c3=RGBColor[0,0,1];c4=RGBColor[1,1,0];
+
+### [Input] (init)
+V={{-1,-1,-1,-1,1},{1,-1,-1,-1,1},{1,1,-1,-1,1},{-1,1,-1,-1,1},
+{-1,-1,1,-1,1},{1,-1,1,-1,1},{1,1,1,-1,1},{-1,1,1,-1,1},
+{-1,-1,-1,1,1},{1,-1,-1,1,1},{1,1,-1,1,1},{-1,1,-1,1,1},
+{-1,-1,1,1,1},{1,-1,1,1,1},{1,1,1,1,1},{-1,1,1,1,1}};
+edge={{1,2},{2,3},{3,4},{4,1},{1,5},{2,6},{3,7},
+{4,8},{5,6},{6,7},{7,8},{8,5},{9,10},{10,11},{11,12},
+{12,9},{9,13},{10,14},{11,15},{12,16},{13,14},{14,15},
+{15,16},{16,13},{1,9},{2,10},{3,11},{4,12},{5,13},
+{6,14},{7,15},{8,16}};
+cf={c3,c3,c3,c3,c1,c1,c1,c1,c2,c2,c2,c2,c4,c4,c4,c4};
+
+### [Input] (init)
+allface={{1,2,3,4},{1,2,6,5},{2,3,7,6},{3,4,8,7},
+{4,1,5,8},{5,6,7,8},{9,10,11,12},{9,10,14,13},
+{10,11,15,14},{11,12,16,15},{12,9,13,16},{13,14,15,16},
+{1,2,10,9},{2,3,11,10},{3,4,12,11},{4,1,9,12},
+{5,6,14,13},{6,7,15,14},{7,8,16,15},{8,5,13,16},
+{1,9,13,5},{2,10,14,6},{3,11,15,7},{4,12,16,8}};
+
+### [Input] (init)
+deleteface={{},
+{{2},{4},{8},{10}},
+{{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12}}};
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{coord,dfig,dw,face,lines,lum,opt1,ptr1,ptr2,pts,size,thick,vertices,viewp,VP},
+(* Init*)
+dw=2;
+lum={{"\<Ambient\>",White}};
+thick=3;
+viewp={1.1,-2.4,1.4};
+ptr1=2-pw;ptr2=1.05ptr1;
+(* Choice*)
+face:=Delete[allface,deleteface[[hyp]]];
+(* Calculs *)
+VP=Chop[N[V.ProjRot[a,b,c,d,e,f,dw,pw]]];
+vertices=Chop[Table[Subscript[VP, [[i,k]]]/Subscript[VP, [[i,5]]],{i,1,16},{k,1,3}]];
+(* Graphics *)
+If[axe==1,opt1=1,opt1=0];
+coord = Graphics3D[{AbsoluteThickness[3],Opacity[opt1],
+{Darker[Red],Line[{{-ptr1,0,0}, {ptr1,0,0}}],Text[Style["\<X\>",14,Italic], {ptr2,0,0}]},
+ {Darker[Green],Line[{{0, -ptr1,0}, {0,ptr1,0}}],Text[Style["\<Y\>",14,Italic], {0,ptr2,0}]},
+{Darker[Blue],Line[{{0,0,-ptr1}, {0,0,ptr1}}],Text[Style["\<Z\>",14,Italic], {0,0,ptr2}]}},
+Boxed->False,ViewPoint->viewp,SphericalRegion->True,ViewAngle->18.5 Degree,Lighting->lum];
+pts={Red,Sphere[vertices,0.03]};
+lines:=GraphicsComplex[vertices,Line[edge]];
+Which[
+graph==1,dfig=Graphics3D[{Opacity[op],EdgeForm[{Black,AbsoluteThickness[thick]}],
+GraphicsComplex[vertices,Polygon[face],VertexColors->cf]},Lighting->lum],
+graph==2,dfig=Graphics3D[{Opacity[op],RGBColor[.2,.6,.9],EdgeForm[{Black,AbsoluteThickness[thick]}],
+GraphicsComplex[vertices,Polygon[face]]},Lighting->lum],
+graph==3,dfig=Graphics3D[{AbsoluteThickness[thick],lines,pts}]
+	];
+(* Display *)
+Show[coord ,dfig,AspectRatio->Automatic,ImageSize->{350,350}]
+
+],
+(* Controls *)
+{{hyp,1 ,"\<hypercube\>"},{1->"\<full\>",2->"\<1 hole\>",3->"\<3 holes\>"},ControlType->RadioButtonBar},
+{{graph,1 ,"\<faces\>" },{1->"\<color\>",2->"\<blue\>",3->"\<edges only\>"},ControlType->RadioButtonBar},
+{{op,.4,"\<opacity\>"},0,1,ControlType->Slider,ImageSize->Small,Appearance->"\<Labeled\>"},
+{{axe,0,"\<axes\>"},{0,1},ControlType->Checkbox},
+"\<stereographic projection\>",
+{{pw,1,"\<\>"},0.001,1,ControlType->Slider,ImageSize->Small,Appearance->"\<Labeled\>"},
+Delimiter,
+Style["\<rotations 4D\>",Bold,10,TextAlignment->Right],
+Grid[{
+{"\<duration\>", Control[{{dur,20,"\<\>"},5,40,5,ControlType->Slider,ImageSize->Small}], Dynamic[dur]},
+{"\<\>","\<\>","\<\>"},
+{"\<fixed
+plane
+\>","\<control\>","\<angle of
+rotation
+\>"},
+{"\<W\[Hyphen]X\>", Control[{{a,0,"\<\>"},0.,2.π,ImageSize->Tiny,Animator,AppearanceElements->{"\<ProgressSlider\>","\<PlayPauseButton\>","\<DirectionButton\>","\<ResetButton\>"},
+AnimationRunning->False,DefaultDuration->dur}], Dynamic[NumberForm[Chop[a/N[Degree]],{4,0}]]},
+{"\<W\[Hyphen]Y\>", Control[{{b,0,"\<\>"},0.,2.π,ImageSize->Tiny,Animator,AppearanceElements->{"\<ProgressSlider\>","\<PlayPauseButton\>","\<DirectionButton\>","\<ResetButton\>"},
+AnimationRunning->False,DefaultDuration->dur}], Dynamic[NumberForm[Chop[b/N[Degree]],{4,0}]]},
+{"\<W\[Hyphen]Z\>", Control[{{c,0,"\<\>"},0.,2.π,ImageSize->Tiny,Animator,AppearanceElements->{"\<ProgressSlider\>","\<PlayPauseButton\>","\<DirectionButton\>","\<ResetButton\>"},
+AnimationRunning->True,DefaultDuration->dur}], Dynamic[NumberForm[Chop[c/N[Degree]],{4,0}]]},
+{"\<X\[Hyphen]Y\>", Control[{{d,0,"\<\>"},0.,2.π,ImageSize->Tiny,Animator,AppearanceElements->{"\<ProgressSlider\>","\<PlayPauseButton\>","\<DirectionButton\>","\<ResetButton\>"},
+AnimationRunning->True,DefaultDuration->dur}], Dynamic[NumberForm[Chop[d/N[Degree]],{4,0}]]},{"\<X\[Hyphen]Z\>", Control[{{e,0,"\<\>"},0.,2.π,ImageSize->Tiny,Animator,AppearanceElements->{"\<ProgressSlider\>","\<PlayPauseButton\>","\<DirectionButton\>","\<ResetButton\>"},
+AnimationRunning->False,DefaultDuration->dur}], Dynamic[NumberForm[Chop[e/N[Degree]],{4,0}]]},{"\<Y\[Hyphen]Z\>", Control[{{f,0,"\<\>"},0.,2.π,ImageSize->Tiny,Animator,AppearanceElements->{"\<ProgressSlider\>","\<PlayPauseButton\>","\<DirectionButton\>","\<ResetButton\>"},
+AnimationRunning->False,DefaultDuration->dur}], Dynamic[NumberForm[Chop[f/N[Degree]],{4,0}]]}}],
+Style["\<\>",10,Bold],Delimiter,
+Button["\<        reset rotations
+(with animations stopped)\>",Dynamic[(a=0;b=0;c=0;d=0;e=0;f=0)],
+ImageSize->200,Background->LightYellow],
+ControlPlacement->Left,
+SynchronousUpdating->True,
+TrackedSymbols->{a,b,c,d,e,f,hyp,axe,graph,op,pw,dur},
+SaveDefinitions->True]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Gerard Balmens
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+Details, references or citation information
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+Hypercube
+
+### [Item]
+Rotation
+
+### [Item]
+4D
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Projections of the Four-Cube
+
+### [Text]
+Rotating a Hypercube
+
+### [Text]
+Rotating Squares, Cubes, and Higher-Dimensional Hypercubes
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2012-11-27
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

@@ -1,0 +1,26 @@
+{
+ "source": "OperatingAnACThreePhaseInductionMotor.nb",
+ "note": "Manipulate states saved in the ORIGINAL notebook, computed by the original Mathematica code: states[0] = the live state of the output cell, specs = the initial settings (the Manipulate's stored \"Variables\"), snapshots = the Settings stored with each snapshot cell. Extracted with tools/extract_state.py --snapshots. Golden parity fixture (CC BY-NC-SA 3.0, as the original).",
+ "format": "Numbers: a JSON integer is an exact Wolfram integer (|x| <= 2^53 - 1; larger ones are {\"wl\": digits}); a JSON number written with a decimal point or an exponent is a machine real (the shortest text that reads back as the identical double); any other exact number (Rational, rational multiple of Pi, arbitrary-precision real, an unevaluated Sin[...], Infinity) is {\"wl\": a Wolfram-readable form (not necessarily InputForm: compare exact values by value), \"n\": its double} - \"n\" is the correctly rounded double for a Rational or rational multiple of Pi, Python's double evaluation otherwise, and absent for Infinity. Symbols are {\"sym\": name}, other expressions {\"head\": name, \"args\": [...]}; variable names without context and $$, Greek letters as Unicode. packedTypes maps the JSON pointer of a decoded packed array that was stored with a narrower element type (CompressedData tag b) to that type. snapshots[\"k\"] belongs to the picture docs/original-snapshots/<dir>-k.png (cells in file order).",
+ "specs": {
+  "a": 5.63,
+  "f": 50,
+  "m": 1,
+  "p": 0
+ },
+ "states": [
+  {"a":5.63,"f":50,"m":1,"p":0}
+ ],
+ "snapshots": {
+  "1": {"a":5.63,"m":1,"p":0,"f":50},
+  "2": {"a":0.74,"m":1.342,"p":0,"f":50},
+  "3": {"a":1.54,"m":1,"p":80.0,"f":0.0},
+  "4": {"a":2.3000000000000003,"m":1,"p":0.0,"f":100.0}
+ },
+ "snapshotCellIds": {
+  "1": 256892528,
+  "2": 734345549,
+  "3": 557122734,
+  "4": 533089418
+ }
+}

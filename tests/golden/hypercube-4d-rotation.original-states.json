@@ -1,0 +1,36 @@
+{
+ "source": "RotatingAHypercubeIn4D.nb",
+ "note": "Manipulate states saved in the ORIGINAL notebook, computed by the original Mathematica code: states[0] = the live state of the output cell, specs = the initial settings (the Manipulate's stored \"Variables\"), snapshots = the Settings stored with each snapshot cell. Extracted with tools/extract_state.py --snapshots. Golden parity fixture (CC BY-NC-SA 3.0, as the original).",
+ "format": "Numbers: a JSON integer is an exact Wolfram integer (|x| <= 2^53 - 1; larger ones are {\"wl\": digits}); a JSON number written with a decimal point or an exponent is a machine real (the shortest text that reads back as the identical double); any other exact number (Rational, rational multiple of Pi, arbitrary-precision real, an unevaluated Sin[...], Infinity) is {\"wl\": a Wolfram-readable form (not necessarily InputForm: compare exact values by value), \"n\": its double} - \"n\" is the correctly rounded double for a Rational or rational multiple of Pi, Python's double evaluation otherwise, and absent for Infinity. Symbols are {\"sym\": name}, other expressions {\"head\": name, \"args\": [...]}; variable names without context and $$, Greek letters as Unicode. packedTypes maps the JSON pointer of a decoded packed array that was stored with a narrower element type (CompressedData tag b) to that type. snapshots[\"k\"] belongs to the picture docs/original-snapshots/<dir>-k.png (cells in file order).",
+ "specs": {
+  "a": 0,
+  "axe": 0,
+  "b": 0,
+  "c": 1.045464832012365,
+  "d": 1.045402963451291,
+  "dur": 20,
+  "e": 0,
+  "f": 0,
+  "graph": 1,
+  "hyp": 1,
+  "op": 0.4,
+  "pw": 1
+ },
+ "states": [
+  {"a":0,"axe":0,"b":0,"c":0.054660199596142635,"d":0.05453616286837221,"dur":20,"e":0,"f":0,"graph":1,"hyp":1,"op":0.4,"pw":1}
+ ],
+ "snapshots": {
+  "1": {"hyp":1,"graph":1,"op":0.4,"axe":0,"pw":1,"dur":20,"a":0,"b":0,"c":0.054660199596142635,"d":0.05453616286837221,"e":0,"f":0},
+  "2": {"hyp":1,"graph":1,"op":0.4,"axe":0,"pw":1,"dur":20,"a":0,"b":0,"c":3.933738385017391,"d":0.28073329571092476,"e":0,"f":0},
+  "3": {"hyp":2,"graph":2,"op":0.4,"axe":0,"pw":1,"dur":20,"a":0,"b":0,"c":1.7035812391406249,"d":2.6735525138703764,"e":0,"f":0},
+  "4": {"hyp":2,"graph":3,"op":0.4,"axe":0,"pw":0.001,"dur":20,"a":0,"b":0,"c":5.681798176077379,"d":0.7718697521830515,"e":0.718,"f":0.538},
+  "5": {"hyp":3,"graph":1,"op":0.85,"axe":0,"pw":1.0,"dur":20,"a":0,"b":0,"c":0.5689687541135386,"d":0.8929019038968928,"e":0,"f":0}
+ },
+ "snapshotCellIds": {
+  "1": 278753804,
+  "2": 1854436935,
+  "3": 1091397634,
+  "4": 1462205611,
+  "5": 1634331456
+ }
+}

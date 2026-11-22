@@ -1,0 +1,59 @@
+<!doctype html>
+<!-- SPDX-FileCopyrightText: 2026 Tico Hannan
+     SPDX-FileCopyrightText: Original Wolfram Demonstration by Harley H. Hartman
+     SPDX-License-Identifier: CC-BY-NC-SA-3.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Operating an AC Three-Phase Induction Motor</title>
+  <link rel="stylesheet" href="../../shared/style.css">
+  <script type="importmap">{ "imports": { "three": "../../vendor/three/three.module.js", "three/addons/": "../../vendor/three/addons/" } }</script>
+  <script src="../../shared/requirements.js" data-needs-webgl2></script>
+  <style>
+    /* Grid[{{Graphics3D[…, ImageSize -> {275, 275}], Plot[…, ImageSize -> {300, 300}]}}]: the two pictures side by side */
+    .tb-pictures { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; width: 100%; }
+    .tb-pictures #graphic { flex: 0 1 275px; max-width: 275px; min-width: 0; }
+    .tb-pictures #graphic2 { flex: 0 1 300px; max-width: 300px; min-width: 0; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Operating an AC Three-Phase Induction Motor</div>
+    <h1 class="demo-title">Operating an AC Three-Phase Induction Motor</h1>
+
+    <section class="manipulate" aria-label="Interactive demonstration">
+      <div class="panel-tools">
+        <button type="button" class="ctl-btn" id="reset" data-testid="reset">Initial settings</button>
+      </div>
+      <div class="controls" id="controls"></div>
+      <div class="tb-pictures">
+        <div class="graphic" id="graphic" data-testid="graphic">
+          <noscript><div class="requirements-notice" data-testid="requirements-notice"><strong>This demonstration needs JavaScript.</strong> Please enable JavaScript or use a current browser with WebGL 2.</div></noscript>
+        </div>
+        <div class="graphic" id="graphic2" data-testid="graphic2"></div>
+      </div>
+    </section>
+
+    <p class="caption">This Demonstration illustrates the operation of an induction motor. You can create a voltage imbalance or a phase shift in the three-phase source. This will result in a change in speed of the rotor that represents a change in developed torque. You can also adjust the skew of the rotor bars.</p>
+
+    <details class="details" data-testid="details">
+      <summary>Details</summary>
+      <p>The 3D graphic display represents a rotor and a stator of an induction motor. Also shown is a plot of the three‐phase supply. The rotor illustrates the rotor bars and other major parts of a typical induction motor rotor. The stator shows six phase bands representing each of the winding sides of a typical two-pole machine. The phase bands illuminate when the phase polarity is positive. This provides a visualization of the rotating nature of the created magnetic field. The rotor speed is controlled by the magnitude of the magnetic field. If you adjust the controls such that the magnetic field magnitude is not consistent, the rotor will slow down and speed up in relation to the field. This illustrates the change in torque that results in an induction motor under similar circumstances. This effect is exaggerated to allow this phenomenon to be observed.</p>
+    </details>
+
+    <p class="port-note">Browser port of a Wolfram Demonstration. All computation runs in your browser. The page opens at the
+      state saved with the original (phase position 5.63); "Initial settings" goes to the Manipulate's initial values
+      (phase position 0). Drag the motor to turn the view. The outline of the orange position indicator is drawn thin.</p>
+    <div class="credits" data-testid="credits">
+      Adapted from <a href="https://demonstrations.wolfram.com/OperatingAnACThreePhaseInductionMotor/">"Operating an AC Three-Phase Induction Motor"</a>
+      by Harley H. Hartman, Wolfram Demonstrations Project (published 2008-06-18), licensed
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>.
+      This JavaScript translation by Tico Hannan (© 2026) is released under the
+      same licence. Changes from the original are listed in DESIGN.md; full credits in LICENSE.md.
+      Not affiliated with or endorsed by the original authors or Wolfram Research.
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
