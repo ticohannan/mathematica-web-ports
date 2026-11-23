@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.41 |
+| Code version: | 0.1.42 |
 | Document revision | 2 (2026-10-25) |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Distribution of a Swarm of Robots in a Circular Workplace under Gravity", contributed by Haoran Zhao and Aaron T. Becker, published 2016-02-15 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/DistributionOfASwarmOfRobotsInACircularWorkplaceUnderGravity/> Source as text: [`docs/original-source/swarm-circle.txt`](../../docs/original-source/swarm-circle.txt); snapshots `docs/original-snapshots/swarm-circle-1…2.png`; saved states `tests/golden/swarm-circle.original-states.json` (four snapshot settings) |
@@ -167,6 +167,7 @@ Proposals for this app are tracked separately.
 | 18 | v0.1.39 | 2026-11-12 | version number (v0.1.39: selective testing — tools/affected.mjs and publish:tested run only the browser tests a change can affect; no app code changed); no change to this app's code, behaviour or picture |
 | 19 | v0.1.40 | 2026-11-13 | version number (v0.1.40: three truss ports; shared/truss.js is new; shared/graphics.js gains Mouseover, RotatedText, rounded and line-less Framed, Arrowheads[Large] and heads at given places, Grid alignment at "=", styled scripts and fitPlotRange — the changes to existing drawing are a styled script keeping its style and the baseline after it, and framed or backed labels keeping their outer spaces); no change to this app's code or behaviour |
 | 20 | v0.1.41 | 2026-11-17 | version number (v0.1.41: fourteen ports, five on waves, five on fields and machines and four on geometry and ecology; shared additions, all opt-in: the TogglerBar and Animator controls, the Trigger options AppearanceElements and AnimationRepetitions, LocatorAutoCreate with All and count limits, Interpolation, Plot3D with Hue colours, StreamPlot and ContourPlot of an equation, Drop[list, {n}]; a Trigger over an infinite range runs at 1 unit per second, and automatic 3D ticks of a zero-width range give one tick); no change to this app's code, behaviour or picture |
+| 21 | v0.1.42 | 2026-11-23 | version number (v0.1.42: one new app, Potential Fields, from Dr. Becker's Lecture 22 notebook; no shared code changed); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

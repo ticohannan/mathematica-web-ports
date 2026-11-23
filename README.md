@@ -2,7 +2,7 @@
 
 **Live site:** <https://ticohannan.github.io/mathematica-web-ports/> · **Source:** <https://github.com/ticohannan/mathematica-web-ports>
 
-Sixty Mathematica `Manipulate` demonstrations (and one lecture notebook) re-implemented as a **static website**:
+Seventy-seven Mathematica `Manipulate` demonstrations (and two lecture notebooks) re-implemented as a **static website**:
 plain HTML + JavaScript (ES modules, no build step), SVG for 2D, three.js/WebGL for 3D.
 
 | Demo | Folder | Rendering | Interaction |
@@ -85,6 +85,7 @@ plain HTML + JavaScript (ES modules, no build step), SVG for 2D, three.js/WebGL 
 | Rotating a Tesseract in Perspective | `demos/tesseract-perspective/` | WebGL 2 | rotate slider; the tesseract as tubes in perspective |
 | Simple Crystal Structures and Miller Indices | `demos/crystal-structures-miller/` | WebGL 2 | crystal structure, repeats and shifts, radii, cell face, Miller indices; spheres, unit cell and plane families; errors switch |
 | Lotka-Volterra Competition Model | `demos/lotka-volterra-competition/` | SVG | competition coefficients, growth rates and carrying capacities, reset; StreamPlot phase portrait with nullclines or separatrices and basins; time plot; errors switch |
+| Potential Fields | `demos/potential-fields/` | WebGL 2 + SVG | four tabs: attractive, repulsive, attractive + repulsive (surfaces with d, ζ, η, ρ0 sliders and 2D obstacle pads) and its contour plot (a lecture notebook, not a Demonstration) |
 
 The apps came in groups: the first three (motion planning, rotations, Euler angles); seven more from the
 seven-link PRM to robot singularities, added in v0.1.12 as further proofs of concept (developed first in a separate,
@@ -99,9 +100,10 @@ four signal-processing and optics demonstrations in v0.1.33; and two by other au
 polygon (Stan Wagon and Karen Saxe) and Voronoi diagrams (Ed Pegg Jr, Jeff Bryant and Theodore W. Gray); thirteen
 control-theory and signal demonstrations by other authors in v0.1.37, with shared modules for transfer functions, NDSolve and
 the control plots; forward kinematics of a three-link arm (Rob Lockhart) in v0.1.38; three truss demonstrations in
-v0.1.40; and fourteen in v0.1.41: five on waves, from the vibrating string to the vibrations of a rectangular
-membrane, five on fields and machines, from three charges on a line to solar energy on the Earth's surface, and four on
-geometry and ecology, from a hypercube rotating in 4D to the Lotka-Volterra competition model.
+v0.1.40; fourteen in v0.1.41: five on waves, from the vibrating string to the vibrations of a rectangular membrane,
+five on fields and machines, from three charges on a line to solar energy on the Earth's surface, and four on geometry
+and ecology, from a hypercube rotating in 4D to the Lotka-Volterra competition model; and, from Dr. Becker's Lecture 22
+notebook, attractive and repulsive potential fields in four tabs in v0.1.42.
 
 ## Where the code runs
 

@@ -2,8 +2,8 @@
 
 ## Summary
 
-The sixty-one web applications in `demos/` are **adaptations** (JavaScript / SVG / WebGL translations)
-of Wolfram Demonstrations Project content (one, line-parameterization, of a lecture notebook by a Demonstrations author, licensed alike), which is licensed under the
+The seventy-nine web applications in `demos/` are **adaptations** (JavaScript / SVG / WebGL translations)
+of Wolfram Demonstrations Project content (two, line-parameterization and potential-fields, of lecture notebooks by a Demonstrations author, licensed alike), which is licensed under the
 **Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported licence (CC BY-NC-SA 3.0)**,
 <https://creativecommons.org/licenses/by-nc-sa/3.0/>
 (Wolfram's terms: <https://wolfram.com/legal/terms/wolfram-demonstrations-project.html>).
@@ -107,6 +107,7 @@ Licence texts: [`LICENSES/CC-BY-NC-SA-3.0.txt`](LICENSES/CC-BY-NC-SA-3.0.txt) an
 | `demos/tesseract-perspective/**`, `tests/unit/tesseract-perspective.test.js`, `tests/e2e/tesseract-perspective.spec.js`, `docs/checklists/tesseract-perspective.md` | CC BY-NC-SA 3.0 | the port of "Rotating a Tesseract in Perspective" (Alexander Perepelitsa), its tests and its manual checklist |
 | `demos/crystal-structures-miller/**`, `tests/unit/crystal-structures-miller.test.js`, `tests/e2e/crystal-structures-miller.spec.js`, `docs/checklists/crystal-structures-miller.md` | CC BY-NC-SA 3.0 | the port of "Simple Crystal Structures and Miller Indices" (Yunfeng Shi and Adam Bross), its tests and its manual checklist |
 | `demos/lotka-volterra-competition/**`, `tests/unit/lotka-volterra-competition.test.js`, `tests/e2e/lotka-volterra-competition.spec.js`, `docs/checklists/lotka-volterra-competition.md` | CC BY-NC-SA 3.0 | the port of "Lotka-Volterra Competition Model" (Richard Cangelosi), its tests and its manual checklist |
+| `demos/potential-fields/**`, `tests/unit/potential-fields.test.js`, `tests/e2e/potential-fields.spec.js`, `docs/checklists/potential-fields.md` | CC BY-NC-SA 3.0 | the port of "Potential Fields" (Aaron T. Becker), its tests and its manual checklist |
 | `index.html`, `README.md`, `LICENSE.md` | CC BY-NC-SA 3.0 | describe and present the adaptations |
 | `docs/original-source/**`, `docs/original-snapshots/**`, `docs/MANUAL_TEST_CHECKLIST.md`, `docs/checklists/**` | CC BY-NC-SA 3.0 | readable copies of / pictures from / derived from the originals |
 | `demos/distance-norms/**`, `tests/unit/distance-norms.test.js`, `tests/golden/distance-norms.golden.test.js`, `tests/golden/distance-norms.original-states.json`, `tests/e2e/distance-norms.spec.js`, `docs/original-source/distance-norms.txt`, `docs/original-snapshots/distance-norms-*.png`, `docs/checklists/distance-norms.md` (batch A) | CC BY-NC-SA 3.0 | the "Distance Norms in Robot Workspace and Phase Space" port, its tests and the data and pictures taken from its original |
@@ -204,9 +205,11 @@ Licence texts: [`LICENSES/CC-BY-NC-SA-3.0.txt`](LICENSES/CC-BY-NC-SA-3.0.txt) an
 | `demos/tesseract-perspective/` | "Rotating a Tesseract in Perspective" — <https://demonstrations.wolfram.com/RotatingATesseractInPerspective/> (published 2014-06-30) | Alexander Perepelitsa |
 | `demos/crystal-structures-miller/` | "Simple Crystal Structures and Miller Indices" — <https://demonstrations.wolfram.com/SimpleCrystalStructuresAndMillerIndices/> (published 2018-04-02) | Yunfeng Shi and Adam Bross |
 | `demos/lotka-volterra-competition/` | "Lotka-Volterra Competition Model" — <https://demonstrations.wolfram.com/LotkaVolterraCompetitionModel/> (published 2021-06-04) | Richard Cangelosi |
+| `demos/potential-fields/` | "Demonstration of Attractive, Repulsive, and Combination Potential Fields" — ECE 6311 Lecture 22 notebook | Aaron T. Becker |
 
-Sixty were published by the Wolfram Demonstrations Project under CC BY-NC-SA 3.0. One (line-parameterization) is
-adapted from a lecture notebook Aaron T. Becker gave Tico to convert; it is licensed as his Demonstrations, CC BY-NC-SA 3.0.
+Seventy-seven were published by the Wolfram Demonstrations Project under CC BY-NC-SA 3.0. Two (line-parameterization,
+potential-fields) are adapted from lecture notebooks Aaron T. Becker gave Tico to convert; they are licensed as his
+Demonstrations, CC BY-NC-SA 3.0.
 
 ### What was changed (adaptation notice)
 

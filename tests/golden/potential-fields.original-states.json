@@ -1,0 +1,20 @@
+{
+ "source": "Lecture-22-PotentialFields.nb",
+ "note": "Manipulate states saved in the ORIGINAL notebook, computed by the original Mathematica code: states[0] = the live state of the output cell, specs = the initial settings (the Manipulate's stored \"Variables\"), snapshots = the Settings stored with each snapshot cell. Extracted with tools/extract_state.py --snapshots. Golden parity fixture (CC BY-NC-SA 3.0, as the original).",
+ "format": "Numbers: a JSON integer is an exact Wolfram integer (|x| <= 2^53 - 1; larger ones are {\"wl\": digits}); a JSON number written with a decimal point or an exponent is a machine real (the shortest text that reads back as the identical double); any other exact number (Rational, rational multiple of Pi, arbitrary-precision real, an unevaluated Sin[...], Infinity) is {\"wl\": a Wolfram-readable form (not necessarily InputForm: compare exact values by value), \"n\": its double} - \"n\" is the correctly rounded double for a Rational or rational multiple of Pi, Python's double evaluation otherwise, and absent for Infinity. Symbols are {\"sym\": name}, other expressions {\"head\": name, \"args\": [...]}; variable names without context and $$, Greek letters as Unicode. packedTypes maps the JSON pointer of a decoded packed array that was stored with a narrower element type (CompressedData tag b) to that type. snapshots[\"k\"] belongs to the picture docs/original-snapshots/<dir>-k.png (cells in file order).",
+ "specs": {
+  "di": 1,
+  "ζi": 1
+ },
+ "states": [
+  {"di":1,"ζi":1},
+  {"di":2.04,"ζi":2.6550000000000002},
+  {"di":0.01,"ζi":2.11},
+  {"di":3.085,"ζi":2.195},
+  {"obs":[-1,1],"ηi":10,"ρ0":2},
+  {"di":1,"obs":[-1.7999999999999998,0.5],"obs2":[-1,1],"ζi":1},
+  {"di":1.5,"obs":[0.6200000000000001,1.3500000000000005],"obs2":[-2.12,1.0200000000000005],"ζi":3.115}
+ ],
+ "snapshots": {},
+ "snapshotCellIds": {}
+}

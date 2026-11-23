@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.41 |
+| Code version: | 0.1.42 |
 | Document revision | 6 (2026-10-18) — DH-family move: the generic code lives in `demos/common/` (re-export shims here); no feature change |
 | Status | describes the app as implemented; changes go through *Proposed changes* (§8) and [`docs/DESIGN_PROCESS.md`](../../docs/DESIGN_PROCESS.md) |
 | Original | Wolfram Demonstrations Project, "Robot Singularities in Three-Link Manipulators", contributed by Aaron T. Becker and Yitong Lu, published January 11, 2021 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/RobotSingularitiesInThreeLinkManipulators/>. Readable source: [`docs/original-source/robot-singularities.txt`](../../docs/original-source/robot-singularities.txt); snapshots: `docs/original-snapshots/robot-singularities-*.png`; saved state: `tests/golden/robot-singularities.original-state.json` |
@@ -255,6 +255,7 @@ Proposals for this app are tracked separately.
 | 29 | v0.1.39 | 2026-11-12 | version number (v0.1.39: selective testing — tools/affected.mjs and publish:tested run only the browser tests a change can affect; no app code changed); no change to this app's code, behaviour or picture |
 | 30 | v0.1.40 | 2026-11-13 | version number (v0.1.40: three truss ports; shared/truss.js is new; shared/graphics.js gains Mouseover, RotatedText, rounded and line-less Framed, Arrowheads[Large] and heads at given places, Grid alignment at "=", styled scripts and fitPlotRange — the changes to existing drawing are a styled script keeping its style and the baseline after it, and framed or backed labels keeping their outer spaces); no change to this app's code or behaviour |
 | 31 | v0.1.41 | 2026-11-17 | version number (v0.1.41: fourteen ports, five on waves, five on fields and machines and four on geometry and ecology; shared additions, all opt-in: the TogglerBar and Animator controls, the Trigger options AppearanceElements and AnimationRepetitions, LocatorAutoCreate with All and count limits, Interpolation, Plot3D with Hue colours, StreamPlot and ContourPlot of an equation, Drop[list, {n}]; a Trigger over an infinite range runs at 1 unit per second, and automatic 3D ticks of a zero-width range give one tick); no change to this app's code, behaviour or picture |
+| 32 | v0.1.42 | 2026-11-23 | version number (v0.1.42: one new app, Potential Fields, from Dr. Becker's Lecture 22 notebook; no shared code changed); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

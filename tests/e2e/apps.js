@@ -84,4 +84,5 @@ export const APPS = [
   { dir: 'tesseract-perspective', prefix: 'TT', spec: 'tesseract-perspective.spec.js', url: '/demos/tesseract-perspective/', slug: 'RotatingATesseractInPerspective', title: "Rotating a Tesseract in Perspective", authors: ["Alexander Perepelitsa"], webgl: true, notice: true },
   { dir: 'crystal-structures-miller', prefix: 'CM', spec: 'crystal-structures-miller.spec.js', url: '/demos/crystal-structures-miller/', slug: 'SimpleCrystalStructuresAndMillerIndices', title: "Simple Crystal Structures and Miller Indices", authors: ["Yunfeng Shi","Adam Bross"], webgl: true, notice: true },
   { dir: 'lotka-volterra-competition', prefix: 'LV', spec: 'lotka-volterra-competition.spec.js', url: '/demos/lotka-volterra-competition/', slug: 'LotkaVolterraCompetitionModel', title: "Lotka-Volterra Competition Model", authors: ["Richard Cangelosi"], webgl: false, notice: true },
+  { dir: 'potential-fields', prefix: 'PF', spec: 'potential-fields.spec.js', url: '/demos/potential-fields/', source: "ECE 6311 Lecture 22 notebook", title: "Potential Fields", authors: ["Aaron T. Becker"], webgl: true, notice: true },
 ];

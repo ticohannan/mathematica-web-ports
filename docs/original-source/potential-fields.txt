@@ -1,0 +1,61 @@
+
+### [Subchapter]
+\<Demonstration of Attractive, Repulsive, and Combination Potential Fields\>
+
+### [Input] (init)
+Uatt[x_,y_,ζ_,d_] :=Module[{dist = Sqrt[x^2+y^2] },If[dist<= d, (1)/(2)ζ (x^2+y^2) , d ζ (dist-(1)/(2) d)]];
+Urep[x_,y_,xo_,yo_,η_,ρ0_] :=Module[{dist =Sqrt[(x-xo)^2+(y-yo)^2] },If[dist<= ρ0, (1)/(2)η((1)/(dist)-(1)/(ρ0))^2 ,0]];
+
+### [Input]
+di = 1;
+ζi = 1;
+Manipulate[Module[{switchLine,Energy},
+Energy = Plot3D[  Uatt[x,y,ζi,di],{x,-4,4},{y,-4,4},PlotLabel->"\<Attractive Potential\>"];
+switchLine =Graphics3D[{Red, Thick,Line[Table[{di Cos[Theta],di Sin[Theta],1/2ζi di^2},{Theta,0,2π,π/32}]]}];
+Show[{Energy,switchLine}]],
+{{di , 1,"\<\!\(\*SubscriptBox[\(d\), \(i\)]\)\>"},0.01,4},
+{{ζi, 1,"\<\!\(\*SubscriptBox[\(ζ\), \(i\)]\)\>"},0,4}]
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Input]
+
+Manipulate[Module[{},Plot3D[  Urep[x,y,obs[[1]],obs[[2]],ηi,ρ0],{x,-4,4},{y,-4,4},PlotLabel->"\<Repulsive Potential\>",PlotRange->{Automatic,Automatic,{-0.1,10}}]],{{obs, {-1,1}},{-4,-4},{4,4}},{{ρ0,2},0,5},{{ηi ,10},0,200}]
+
+### [Output] (skipped cached output)
+
+### [Input]
+
+Manipulate[Module[{ηi = 1,ρ0 = 2,switchLine,Energy},
+Energy = Plot3D[ Uatt[x,y,ζi,di]+  Urep[x,y,obs[[1]],obs[[2]],ηi,ρ0]+  Urep[x,y,obs2[[1]],obs2[[2]],ηi,ρ0],{x,-4,4},{y,-4,4},ExclusionsStyle->Red,
+PlotLabel->"\<Attractive+Repulsive Potential\>"];
+switchLine =Graphics3D[{Red, Thick,Line[Table[{di Cos[Theta],di Sin[Theta],1/2ζi di^2},{Theta,0,2π,π/32}]]}];
+Show[{Energy,switchLine}]],
+{{di , 1,"\<\!\(\*SubscriptBox[\(d\), \(i\)]\)\>"},0.01,4},
+{{ζi, 1,"\<\!\(\*SubscriptBox[\(ζ\), \(i\)]\)\>"},0,4},Row[{Control[{{obs, {-1,1}},{-4,-4},{4,4},ControlType->Slider2D}],
+Control[{{obs2, {-1,1}},{-4,-4},{4,4},ControlType->Slider2D}]}]]
+
+### [Output] (skipped cached output)
+
+### [Input]
+
+Manipulate[Module[{ηi = 1,ρ0 = 2,switchLine,Energy},
+Energy =ContourPlot[ Uatt[x,y,ζi,di]+  Urep[x,y,obs[[1]],obs[[2]],ηi,ρ0]+  Urep[x,y,obs2[[1]],obs2[[2]],ηi,ρ0],{x,-4,4},{y,-4,4},ExclusionsStyle->Red,
+PlotLabel->"\<Attractive+Repulsive Potential\>"];
+switchLine =Graphics3D[{Red, Thick,Line[Table[{di Cos[Theta],di Sin[Theta],1/2ζi di^2},{Theta,0,2π,π/32}]]}];
+Show[{Energy(*,switchLine*)}]],
+{{di , 1,"\<\!\(\*SubscriptBox[\(d\), \(i\)]\)\>"},0.01,4},
+{{ζi, 1,"\<\!\(\*SubscriptBox[\(ζ\), \(i\)]\)\>"},0,4},Row[{Control[{{obs, {-1,1}},{-4,-4},{4,4},ControlType->Slider2D}],
+Control[{{obs2, {-1,1}},{-4,-4},{4,4},ControlType->Slider2D}]}]]
+
+### [Input]
+<<DynamicModuleBox>>
+
+### [Input]
+<<GraphicsBox>>
