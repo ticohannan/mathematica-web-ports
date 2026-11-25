@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Tico Hannan
 // SPDX-FileCopyrightText: Original (ECE 6311 Lecture 22 notebook) by Aaron T. Becker
 // SPDX-License-Identifier: CC-BY-NC-SA-3.0
-// tests/e2e/potential-fields.spec.js — browser tests of the "Potential Fields" page: the four tabs (mouse and keys),
+// tests/e2e/potential-fields.spec.js — browser tests of the "Artificial Potential Fields" page: the four tabs (mouse and keys),
 // each tab's controls and picture, Initial settings per tab, and the contour tab at the notebook's second saved
 // state against Tico's screenshot (attribution, start-up notice, UI inventory and bundle are in site.spec.js and bundle.spec.js)
 import { test, expect } from '@playwright/test';
@@ -11,6 +11,8 @@ import { openDemo } from './helpers.js';
 
 const URL = '/demos/potential-fields/';
 const saved = JSON.parse(fs.readFileSync('tests/golden/potential-fields.screenshot-contours.json', 'utf8')).pictures[1];
+// the notebook's state (obs, obs2; ρ0 = 2 fixed) as the port's (a list of obstacles and ρ_0)
+const savedState = (({ obs2, ...rest }) => ({ ...rest, obs: [saved.state.obs, obs2], 'ρ0': 2 }))(saved.state);
 const demo = (page, k, fn, arg) => page.evaluate(([k, fn, arg]) => window.__demos[k][fn](arg), [k, fn, arg]);
 const state = (page, k) => demo(page, k, 'getState');
 const view = (page, k) => demo(page, k, 'view');
@@ -82,40 +84,69 @@ test.describe('potential-fields', () => {
     expect((await view(page, 'att')).switchHeight).toBe(0);
   });
 
-  test('repulsive: dragging in the pad moves the obstacle; the surface stays within −0.1 … 10', async ({ page }) => {
+  test('repulsive: dragging a locator moves its obstacle; the surface stays within −0.1 … 10', async ({ page }) => {
     await openDemo(page, `${URL}#rep`);
+    await expect(page.locator('[data-testid^="locator-rep-obs-"]')).toHaveCount(1);
+    await expect(page.getByTestId('remove-rep-obs')).toBeDisabled(); // at least one obstacle
+    const dot = await page.getByTestId('locator-rep-obs-1').boundingBox();
     const box = await page.getByTestId('pad-rep-obs').boundingBox();
-    await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.5);
+    await page.mouse.move(dot.x + dot.width / 2, dot.y + dot.height / 2);
     await page.mouse.down();
     await page.mouse.move(box.x + box.width * 0.75, box.y + box.height * 0.25, { steps: 4 });
     await page.mouse.up();
-    const obs = (await state(page, 'rep')).obs;
+    const [obs] = (await state(page, 'rep')).obs;
     expect(obs[0]).toBeCloseTo(2, 0);
     expect(obs[1]).toBeCloseTo(2, 0);
+    await expect(page.getByTestId('value-rep-obs-x')).toHaveValue(String(obs[0]));
     expect((await view(page, 'rep')).box[2]).toEqual([-0.1, 10]);
     expect(await demo(page, 'rep', 'inkFraction')).toBeGreaterThan(0.05);
   });
 
-  test('attractive + repulsive: the two pads move the two obstacles; the z range cuts off the poles', async ({ page }) => {
+  test('attractive + repulsive: one pad for all the obstacles, Add and Remove, and the rho_0 slider', async ({ page }) => {
     await openDemo(page, `${URL}#comb`);
-    for (const [name, fx] of [['obs', 0.25], ['obs2', 0.75]]) {
-      const box = await page.getByTestId(`pad-comb-${name}`).boundingBox();
-      await page.mouse.click(box.x + box.width * fx, box.y + box.height * 0.5);
-    }
-    const s = await state(page, 'comb');
-    expect(s.obs[0]).toBeCloseTo(-2, 0);
-    expect(s.obs2[0]).toBeCloseTo(2, 0);
+    await expect(page.locator('[data-testid^="locator-comb-obs-"]')).toHaveCount(2);
+    const box = await page.getByTestId('pad-comb-obs').boundingBox();
+    await page.mouse.click(box.x + box.width * 0.25, box.y + box.height * 0.5); // the nearest locator jumps there
+    expect((await state(page, 'comb')).obs[0][0]).toBeCloseTo(-2, 0);
+    await page.getByTestId('add-comb-obs').click();
+    await expect(page.locator('[data-testid^="locator-comb-obs-"]')).toHaveCount(3);
+    expect((await state(page, 'comb')).obs).toHaveLength(3);
+    expect((await state(page, 'comb')).obs[2]).toEqual([2, -2]); // a free spot
+    const colours = await page.locator('[data-testid^="locator-comb-obs-"]').evaluateAll((els) => els.map((e) => e.getAttribute('fill')));
+    expect(new Set(colours).size).toBe(3); // a colour each
+    await page.getByTestId('remove-comb-obs').click(); // the selected one: the one just added
+    expect((await state(page, 'comb')).obs).toHaveLength(2);
+    await expect(page.getByTestId('count-comb-obs')).toHaveText('2 obstacles');
+    await page.getByTestId('slider-comb-rho0').focus();
+    await page.keyboard.press('End');
+    await expect.poll(async () => (await state(page, 'comb'))['ρ0']).toBe(5);
     const v = await view(page, 'comb');
-    expect(v.zRange[1]).toBeLessThan(10);
     expect(v.zRange[1]).toBeGreaterThan(4); // at least the corners (d ζ (4√2 − d/2) = 5.16)
   });
 
-  test('contour: at saved state 2, the levels of the Mathematica screenshot and the red exclusions', async ({ page }, testInfo) => {
+  test('contour: a focused locator moves with the arrow keys and Delete removes it', async ({ page }) => {
     await openDemo(page, `${URL}#cont`);
-    await demo(page, 'cont', 'setState', saved.state);
+    await page.getByTestId('locator-cont-obs-1').focus();
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('Shift+ArrowUp');
+    expect((await state(page, 'cont')).obs[0]).toEqual([-0.8, 1.5]);
+    await page.keyboard.press('Delete');
+    expect((await state(page, 'cont')).obs).toEqual([[-1, 1]]);
+    await expect(page.getByTestId('remove-cont-obs')).toBeDisabled();
+    for (let k = 0; k < 7; k++) await page.getByTestId('add-cont-obs').click();
+    expect((await state(page, 'cont')).obs).toHaveLength(8);
+    await expect(page.getByTestId('add-cont-obs')).toBeDisabled(); // at most eight
+  });
+
+  test('contour: at saved state 2, the levels of the Mathematica screenshot and the exclusion circles', async ({ page }, testInfo) => {
+    await openDemo(page, `${URL}#cont`);
+    await demo(page, 'cont', 'setState', savedState);
     expect((await view(page, 'cont')).levels).toEqual(saved.levels);
     const g = await page.evaluate(() => window.__demos.cont.graphics());
-    expect(JSON.stringify(g)).toContain('exclusions');
+    expect(JSON.stringify(g)).toContain('exclusions-rho');
+    expect(JSON.stringify(g)).toContain('exclusions-d');
+    await expect(page.locator('[data-testid^="locator-cont-obs-"]')).toHaveCount(2);
     await shot(page, testInfo, 'cont', 'contour-saved-state');
   });
 
@@ -125,8 +156,10 @@ test.describe('potential-fields', () => {
       await page.getByTestId(`tab-${k}`).click();
       const opening = await state(page, k);
       await demo(page, k, 'setState', k === 'rep' ? { 'ρ0': 4, 'ηi': 100 } : { di: 3 });
+      if (k !== 'att') await page.getByTestId(`add-${k}-obs`).click();
       await page.getByTestId(`reset-${k}`).click();
       expect(await state(page, k)).toEqual(opening);
+      if (k !== 'att') await expect(page.locator(`[data-testid^="locator-${k}-obs-"]`)).toHaveCount(opening.obs.length);
     }
   });
 

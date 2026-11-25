@@ -4,30 +4,28 @@
 // demos/potential-fields/main.js — the page: the notebook's four Manipulates (shared/manipulate.js), one per tab.
 // Three draw a 3D picture (shared/graphics3d-view.js), the fourth an SVG contour plot. Each tab has its own controls,
 // picture and "Initial settings" button; window.__demo is the hook of the tab on show (window.__demos has all four).
-import { Manipulate, Row } from '../../shared/manipulate.js';
+import { Manipulate, Control } from '../../shared/manipulate.js';
 import { View3D } from '../../shared/graphics3d-view.js';
 import { Subscript, Style, Italic } from '../../shared/graphics.js';
 import { TABS, initialStates, evaluators } from './model.js';
+import { obstaclePad } from './obstacle-pad.js';
 
 const sub = (base, i) => Subscript(Style(base, Italic), Style(i, Italic));
 const DI = (tab) => [['di', 1, sub('d', 'i')], 0.01, 4, { name: `${tab}-di` }]; // {{di, 1, "d_i"}, 0.01, 4}
 const ZI = (tab) => [['ζi', 1, sub('ζ', 'i')], 0, 4, { name: `${tab}-zi` }]; // {{ζi, 1, "ζ_i"}, 0, 4}
-// Row[{Control[{{obs, {-1, 1}}, {-4, -4}, {4, 4}, ControlType -> Slider2D}], Control[{{obs2, …}}]}]: no labels
-const OBS2 = (tab) => Row([
-  [['obs', [-1, 1], ''], [-4, -4], [4, 4], { name: `${tab}-obs` }],
-  [['obs2', [-1, 1], ''], [-4, -4], [4, 4], { name: `${tab}-obs2` }],
-]);
+// The obstacles: one pad with a locator per obstacle and buttons to add and remove them (Dr. Becker, 2026-11-24; the
+// notebook: {{obs, {-1, 1}}, {-4, -4}, {4, 4}} in the second Manipulate, a Row of two unlabelled 2D sliders obs and
+// obs2 in the last two, A-PF-11). Labels with subscripts: ρ_0, η_i (the notebook: the variable names ρ0, ηi; A-PF-13).
+const OBS = (tab, init) => [['obs', init, 'obstacles'], Control(obstaclePad, { name: `${tab}-obs`, min: [-4, -4], max: [4, 4], minCount: 1 })];
+const RHO0 = (tab) => [['ρ0', 2, Subscript(Style('ρ', Italic), '0')], 0, 5, { name: `${tab}-rho0` }]; // {{ρ0, 2}, 0, 5}
 
 const CONTROLS = {
   att: [DI('att'), ZI('att')],
   // {{obs, {-1, 1}}, {-4, -4}, {4, 4}}, {{ρ0, 2}, 0, 5}, {{ηi, 10}, 0, 200}
-  rep: [
-    [['obs', [-1, 1], 'obs'], [-4, -4], [4, 4], { name: 'rep-obs' }],
-    [['ρ0', 2, 'ρ0'], 0, 5, { name: 'rep-rho0' }],
-    [['ηi', 10, 'ηi'], 0, 200, { name: 'rep-eta' }],
-  ],
-  comb: [DI('comb'), ZI('comb'), OBS2('comb')],
-  cont: [DI('cont'), ZI('cont'), OBS2('cont')],
+  rep: [OBS('rep', [[-1, 1]]), RHO0('rep'), [['ηi', 10, sub('η', 'i')], 0, 200, { name: 'rep-eta' }]],
+  // the notebook: di, ζi and the Row of obs and obs2 (ρ0 = 2 fixed); ρ_0 added (A-PF-10)
+  comb: [DI('comb'), ZI('comb'), RHO0('comb'), OBS('comb', [[-1, 1], [-1, 1]])],
+  cont: [DI('cont'), ZI('cont'), RHO0('cont'), OBS('cont', [[-1, 1], [-1, 1]])],
 };
 
 const hooks = {};

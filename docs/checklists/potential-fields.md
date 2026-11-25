@@ -1,4 +1,4 @@
-# Manual checks — Potential Fields (`demos/potential-fields/`)
+# Manual checks — Artificial Potential Fields (`demos/potential-fields/`)
 
 Each item compares the original in Mathematica with the port, as an operator procedure (rule 8); the general
 procedure is in [`docs/MATHEMATICA_CHECKS.md`](../MATHEMATICA_CHECKS.md). Record every result in the test-run file
@@ -41,8 +41,9 @@ Evaluation > Evaluate Notebook (the potentials are defined in its first cell; th
 initial values). Open the port's page next to it.
 **Prepare** — nothing.
 **Do** —
-1. In each tab, move each control from one end of its range to the other, slowly; drag the 2D pads to each corner;
-   note how the picture changes.
+1. In each tab, move each control from one end of its range to the other, slowly; drag the 2D pads (the port: the
+   locators of the obstacle pad) to each corner; note how the picture changes. The port's ρ<sub>0</sub> slider of
+   the last two tabs and Add and Remove have no counterpart in the notebook (A-PF-10, A-PF-11).
 **Record** — in `_internal\test-runs\<YYYY-MM-DD>_potential-fields.md`, under the heading M-PF-03: per control: "same" or the difference.
 **Save** — File > Close, Don't Save.
 **Port** — the same steps on the port's page.
@@ -109,3 +110,21 @@ Evaluation > Evaluate Notebook. Open the port's page next to it.
 **Port** — the same states.
 **Expected / what it decides** — D-PF-03 (the cap: light grey in the screenshots of 2026-11-23) and D-PF-05 (where
 and how thick the red exclusion curves and the white gap of the repulsive tab are).
+
+### M-PF-10 The obstacle pad and the circle colours (A-PF-10 … A-PF-13)
+**Open** — `_internal\originals\lectures\Lecture-22-PotentialFields.nb` with Mathematica via File > Open…; then
+Evaluation > Evaluate Notebook (for the starting pictures only: the changes are Dr. Becker's requests of 2026-11-24 and
+have no counterpart in the notebook). Open the port's page next to it.
+**Prepare** — the port's contour tab at its initial values.
+**Do** —
+1. Press Add three times, drag each new locator to a different quarter of the pad, then select one and press Remove.
+2. Move the ρ<sub>0</sub> slider from 0 to 5.
+3. Tab to a locator and use the arrow keys and Delete.
+4. Repeat on the 3D tab "Attractive + repulsive".
+**Record** — under the heading M-PF-10: whether each locator keeps its colour, whether the white circles follow the
+obstacles and ρ<sub>0</sub>, whether the red circle follows d<sub>i</sub>, and anything that is hard to use.
+**Save** — File > Close, Don't Save.
+**Port** — the steps above are on the port.
+**Expected / what it decides** — A-PF-10 … A-PF-13 as Dr. Becker asked: one pad with a locator per obstacle in its own
+colour, Add and Remove, a ρ<sub>0</sub> slider for the sum, white ρ<sub>0</sub> circles, a red d<sub>i</sub> circle,
+labels with subscripts.

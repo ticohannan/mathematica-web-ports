@@ -2,19 +2,22 @@
 // SPDX-FileCopyrightText: Original (ECE 6311 Lecture 22 notebook) by Aaron T. Becker
 // SPDX-License-Identifier: CC-BY-NC-SA-3.0
 // demos/potential-fields/model.js — the notebook's two potentials and one evaluation of each of its four Manipulates
-// (the page's four tabs): the state in, { view, graphics } out (pure, no DOM).
+// (the page's four tabs): the state in, { view, graphics } out (pure, no DOM). Changed at Dr. Becker's request
+// (2026-11-24): each tab with obstacles has a list of them (one locator each, obstacle-pad.js), the sum has a ρ_0
+// slider, the ρ_0 circles are white and the d_i circle red.
 //
 //   Uatt[x_, y_, ζ_, d_] := Module[{dist = Sqrt[x^2 + y^2]}, If[dist <= d, 1/2 ζ (x^2 + y^2), d ζ (dist - 1/2 d)]]
 //   Urep[x_, y_, xo_, yo_, η_, ρ0_] := Module[{dist = Sqrt[(x - xo)^2 + (y - yo)^2]},
 //     If[dist <= ρ0, 1/2 η (1/dist - 1/ρ0)^2, 0]]
 //
 // Tabs (in the notebook's order): attractive (Plot3D of Uatt with the red "switch line", the circle dist = d at the
-// height ζ d²/2), repulsive (Plot3D of Urep around one obstacle, z from −0.1 to 10), attractive + repulsive (Plot3D of
-// Uatt plus Urep of two obstacles, η = 1 and ρ0 = 2, ExclusionsStyle -> Red, with the switch line) and the same sum as
-// a ContourPlot (the switch line is computed but left out of Show, as in the notebook).
+// height ζ d²/2), repulsive (Plot3D of Urep around the obstacles, z from −0.1 to 10), attractive + repulsive (Plot3D of
+// Uatt plus Urep of the obstacles, η = 1 and ρ_0 from its slider (the notebook: two obstacles and ρ0 = 2 fixed),
+// ExclusionsStyle -> Red, with the switch line) and the same sum as a ContourPlot (the switch line is computed but
+// left out of Show, as in the notebook).
 import { Graphics3D, Show, Plot3D, Line as Line3D, Red as Red3D, Thick as Thick3D, White as White3D, RGBColor as RGB3D } from '../../shared/graphics3d.js';
 import { DensityPlot, implicitCurves } from '../../shared/plot.js';
-import { Line, Red, GrayLevel, Opacity, AbsoluteThickness, Annotation } from '../../shared/graphics.js';
+import { Line, Red, White, GrayLevel, Opacity, AbsoluteThickness, Annotation } from '../../shared/graphics.js';
 
 export const RANGE = [-4, 4];
 
@@ -31,12 +34,16 @@ export function Urep(x, y, xo, yo, eta, rho0) {
   return 0;
 }
 
-/** The notebook's fixed values in the third and fourth Manipulate: Module[{ηi = 1, ρ0 = 2, …}, …] */
+/** The notebook's fixed values in the third and fourth Manipulate: Module[{ηi = 1, ρ0 = 2, …}, …]; ρ0 = 2 is now the
+ *  initial value of the ρ_0 slider of those tabs (A-PF-10). */
 export const ETA_FIXED = 1, RHO0_FIXED = 2;
 
-/** U of the third and fourth Manipulate: Uatt + Urep(obs) + Urep(obs2). */
-export const Ucombined = (s) => (x, y) => Uatt(x, y, s['ζi'], s.di)
-  + Urep(x, y, s.obs[0], s.obs[1], ETA_FIXED, RHO0_FIXED) + Urep(x, y, s.obs2[0], s.obs2[1], ETA_FIXED, RHO0_FIXED);
+/** The repulsive potential of all the obstacles: Σ Urep (the notebook: one obstacle in the second Manipulate, obs and
+ *  obs2 in the third and fourth; A-PF-11). */
+export const UrepAll = (x, y, obs, eta, rho0) => obs.reduce((u, [xo, yo]) => u + Urep(x, y, xo, yo, eta, rho0), 0);
+
+/** U of the third and fourth Manipulate: Uatt + Σ Urep(obstacle), η = 1. */
+export const Ucombined = (s) => (x, y) => Uatt(x, y, s['ζi'], s.di) + UrepAll(x, y, s.obs, ETA_FIXED, s['ρ0'] ?? RHO0_FIXED);
 
 // ---- states ----------------------------------------------------------------------------------------------------------
 
@@ -51,9 +58,10 @@ export const initialStates = Object.freeze({
   // di = 1; ζi = 1; Manipulate[…, {{di, 1, "d_i"}, 0.01, 4}, {{ζi, 1, "ζ_i"}, 0, 4}]
   att: () => ({ di: 1, 'ζi': 1 }),
   // {{obs, {-1, 1}}, {-4, -4}, {4, 4}}, {{ρ0, 2}, 0, 5}, {{ηi, 10}, 0, 200}
-  rep: () => ({ obs: [-1, 1], 'ρ0': 2, 'ηi': 10 }),
-  comb: () => ({ di: 1, 'ζi': 1, obs: [-1, 1], obs2: [-1, 1] }),
-  cont: () => ({ di: 1, 'ζi': 1, obs: [-1, 1], obs2: [-1, 1] }),
+  // (obs is the list of the obstacles: the notebook's obs, and obs and obs2 in the last two)
+  rep: () => ({ obs: [[-1, 1]], 'ρ0': 2, 'ηi': 10 }),
+  comb: () => ({ di: 1, 'ζi': 1, obs: [[-1, 1], [-1, 1]], 'ρ0': RHO0_FIXED }),
+  cont: () => ({ di: 1, 'ζi': 1, obs: [[-1, 1], [-1, 1]], 'ρ0': RHO0_FIXED }),
 });
 
 // ---- automatic z range (D-PF-04) ----------------------------------------------------------------------------------------
@@ -105,7 +113,7 @@ export const switchLine = (d, zeta) => Array.from({ length: 65 }, (_, k) => {
   return [d * Math.cos(th), d * Math.sin(th), 0.5 * zeta * d * d];
 });
 
-/** A circle in the plane (the condition of an If: dist == r) lifted onto the surface, for ExclusionsStyle -> Red. */
+/** A circle in the plane (the condition of an If: dist == r) lifted onto the surface, for the exclusion curves. */
 const onSurface = (f, [cx, cy], r, n = 129) => Array.from({ length: n }, (_, k) => {
   const th = (2 * Math.PI * k) / (n - 1), x = cx + r * Math.cos(th), y = cy + r * Math.sin(th);
   return [x, y, f(x, y)];
@@ -125,14 +133,14 @@ export function evaluateAttractive(s) {
 }
 
 export function evaluateRepulsive(s) {
-  const f = (x, y) => Urep(x, y, s.obs[0], s.obs[1], s['ηi'], s['ρ0']);
+  const f = (x, y) => UrepAll(x, y, s.obs, s['ηi'], s['ρ0']);
   // Plot3D[Urep[x, y, obs[[1]], obs[[2]], ηi, ρ0], {x, -4, 4}, {y, -4, 4}, PlotLabel -> "Repulsive Potential",
   //   PlotRange -> {Automatic, Automatic, {-0.1, 10}}]
   const zr = [-0.1, 10];
   const energy = Plot3D(capped(f), RANGE, RANGE, { ...PLOT3D_OPTIONS, PlotLabel: 'Repulsive Potential', PlotRange: [RANGE, RANGE, zr] });
   // Exclusions -> Automatic: the condition of the If (dist = ρ0) is left out of the surface with ExclusionsStyle -> None,
   // a gap that shows the white background (Tico's screenshots); the port draws it as a white curve (D-PF-05)
-  const gap = s['ρ0'] > 0 ? [White3D, Thick3D, Line3D(onSurface(f, s.obs, s['ρ0']))] : [];
+  const gap = s['ρ0'] > 0 ? [White3D, Thick3D, ...s.obs.map((c) => Line3D(onSurface(f, c, s['ρ0'])))] : [];
   const graphics = Graphics3D([...energy.content, ...topCap(f, zr[1]), ...gap], energy.options);
   return { view: summary(energy, { zRange: zr }), graphics };
 }
@@ -141,11 +149,11 @@ export function evaluateCombined(s) {
   const f = Ucombined(s);
   const zr = automaticZRange(f);
   const energy = Plot3D(capped(f), RANGE, RANGE, { ...PLOT3D_OPTIONS, PlotLabel: 'Attractive+Repulsive Potential', PlotRange: [RANGE, RANGE, zr] });
-  // ExclusionsStyle -> Red: the conditions of the Ifs (dist = d about the origin, dist = ρ0 about each obstacle) drawn
-  // in red on the surface (D-PF-05)
-  const excl = exclusionCircles(s).map(({ c, r }) => Line3D(onSurface(f, c, r)));
+  // the conditions of the Ifs on the surface (D-PF-05): dist = d about the origin in red, dist = ρ_0 about each
+  // obstacle in white (A-PF-12; the notebook's ExclusionsStyle -> Red drew both red)
+  const curves = (kind) => exclusionCircles(s).filter((e) => e.kind === kind && e.r > 0).map(({ c, r }) => Line3D(onSurface(f, c, r)));
   const line = [Red3D, Thick3D, Line3D(switchLine(s.di, s['ζi']))];
-  const graphics = Graphics3D([...energy.content, ...topCap(f, zr[1]), Red3D, Thick3D, ...excl, ...line], energy.options);
+  const graphics = Graphics3D([...energy.content, ...topCap(f, zr[1]), White3D, Thick3D, ...curves('rho'), Red3D, Thick3D, ...curves('d'), ...line], energy.options);
   return { view: summary(energy, { zRange: zr, switchHeight: 0.5 * s['ζi'] * s.di ** 2 }), graphics };
 }
 
@@ -154,9 +162,9 @@ const summary = (g, extra) => {
   return { triangles: surf.triangles.length, box: g.options.PlotRange, meshLines: surf.meshLines.length, ...extra };
 };
 
-/** The If conditions of the sum: dist = d about the origin and dist = ρ0 (= 2) about each obstacle. */
+/** The If conditions of the sum: dist = d about the origin (kind 'd') and dist = ρ_0 about each obstacle ('rho'). */
 export const exclusionCircles = (s) => [
-  { c: [0, 0], r: s.di }, { c: s.obs, r: RHO0_FIXED }, { c: s.obs2, r: RHO0_FIXED },
+  { c: [0, 0], r: s.di, kind: 'd' }, ...s.obs.map((c) => ({ c, r: s['ρ0'] ?? RHO0_FIXED, kind: 'rho' })),
 ];
 
 // ---- the contour tab --------------------------------------------------------------------------------------------------
@@ -219,15 +227,19 @@ export function evaluateContour(s) {
   const levels = automaticContours(zr);
   const lines = levels.map((c) => Annotation([GrayLevel(0), Opacity(0.5), AbsoluteThickness(1),
     ...implicitCurves((x, y) => f(x, y) - c, RANGE, RANGE, { PlotPoints: 160 }).map((pts) => Line(pts))], `contour-${c}`));
-  const excl = exclusionCircles(s).map(({ c, r }) => Line(Array.from({ length: 129 }, (_, k) => {
+  const circle = ({ c, r }) => Line(Array.from({ length: 129 }, (_, k) => {
     const th = (2 * Math.PI * k) / 128; return [c[0] + r * Math.cos(th), c[1] + r * Math.sin(th)];
-  })));
-  // ContourPlot[…, {x, -4, 4}, {y, -4, 4}, ExclusionsStyle -> Red, PlotLabel -> "Attractive+Repulsive Potential"]
+  }));
+  const ex = exclusionCircles(s).filter((e) => e.r > 0);
+  // ContourPlot[…, {x, -4, 4}, {y, -4, 4}, ExclusionsStyle -> Red, PlotLabel -> "Attractive+Repulsive Potential"];
+  // the ρ_0 circles white, the d_i circle red (A-PF-12)
   const graphics = DensityPlot(f, RANGE, RANGE, {
     PlotPoints: 240, PlotRange: zr, ColorFunctionScaling: false,
     ColorFunction: (v) => bandColor(v, levels, zr) ?? [1, 1, 1],
     PlotLabel: 'Attractive+Repulsive Potential', ImageSize: 360, AspectRatio: 1,
-    Epilog: [...lines, Annotation([Red, AbsoluteThickness(EXCLUSION_PX), ...excl], 'exclusions')],
+    Epilog: [...lines,
+      Annotation([White, AbsoluteThickness(EXCLUSION_PX), ...ex.filter((e) => e.kind === 'rho').map(circle)], 'exclusions-rho'),
+      Annotation([Red, AbsoluteThickness(EXCLUSION_PX), ...ex.filter((e) => e.kind === 'd').map(circle)], 'exclusions-d')],
   });
   return { view: { zRange: zr, levels }, graphics };
 }

@@ -7,7 +7,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Potential Fields</title>
+  <title>Artificial Potential Fields</title>
   <link rel="stylesheet" href="../../shared/style.css">
   <style>
     .pf-tabs { display: flex; flex-wrap: wrap; gap: 0.25rem; margin: 0.5rem 0 0.75rem; border-bottom: 1px solid #c8c8c8; }
@@ -17,6 +17,15 @@
     .pf-panel[hidden] { display: none; }
     .pf-figure { display: flex; flex-direction: column; align-items: center; }
     .pf-figure > .graphic { width: 360px; max-width: 100%; }
+    .pf-obstacle-side { display: flex; flex-direction: column; gap: 0.35rem; }
+    .pf-obstacle-side .ctl-pad-fields { flex-wrap: nowrap; }
+    .pf-obstacle-side .ctl-pad-fields .ctl-field { width: 3.6em; }
+    .pf-obstacle-buttons { display: flex; gap: 0.35rem; }
+    .pf-count { font-size: 0.8rem; color: var(--muted, #5b6573); }
+    .pf-swatch { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 50%; margin-right: 0.25em; vertical-align: middle; }
+    .pf-locator { stroke: #fff; stroke-width: 1.5; cursor: grab; }
+    .pf-locator.is-selected { stroke: #1d2733; stroke-width: 2.5; }
+    .pf-locator:focus { outline: none; stroke: #1d2733; stroke-width: 3; }
     .pf-label { text-align: center; font-size: 0.9rem; min-height: 1.2em; margin-bottom: 0.25rem; }
   </style>
   <script type="importmap">{ "imports": { "three": "../../vendor/three/three.module.js", "three/addons/": "../../vendor/three/addons/" } }</script>
@@ -24,8 +33,8 @@
 </head>
 <body>
   <main class="page">
-    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Potential Fields</div>
-    <h1 class="demo-title">Potential Fields</h1>
+    <div class="crumbs" data-testid="crumbs"><a href="../../index.html">All demos</a> › Artificial Potential Fields</div>
+    <h1 class="demo-title">Artificial Potential Fields</h1>
 
     <div class="pf-tabs" role="tablist" aria-label="The notebook's four demonstrations" data-testid="tabs">
       <button type="button" role="tab" id="tab-att" data-testid="tab-att" aria-controls="panel-att" aria-selected="true">Attractive</button>
@@ -76,12 +85,13 @@
       </div>
     </section>
 
-    <p class="caption">Potential fields for robot motion planning. An attractive potential pulls the robot towards the goal
-      at the origin: it grows quadratically up to the distance <i>d</i><sub>i</sub> (the red circle, where the two parts
-      meet) and linearly beyond, with gain <i>ζ</i><sub>i</sub>. A repulsive potential pushes the robot away from an
-      obstacle: it is 0 beyond the distance <i>ρ</i><sub>0</sub> and grows without bound at the obstacle, with gain
-      <i>η</i><sub>i</sub>. The last two tabs add the attractive potential and two obstacles, as a surface and as a contour
-      plot; drag the two pads to move the obstacles.
+    <p class="caption">Artificial potential fields for robot motion planning. An attractive potential pulls the robot
+      towards the goal at the origin: it grows quadratically up to the distance <i>d</i><sub>i</sub> (the red circle,
+      where the two parts meet) and linearly beyond, with gain <i>ζ</i><sub>i</sub>. A repulsive potential pushes the
+      robot away from each obstacle: it is 0 beyond the distance <i>ρ</i><sub>0</sub> (the white circles) and grows
+      without bound at the obstacle, with gain <i>η</i><sub>i</sub>. The last two tabs add the attractive potential and
+      the obstacles, as a surface and as a contour plot. Drag the coloured locators in the obstacle pad to move the
+      obstacles; Add and Remove change how many there are.
       <span class="port-text">(This caption is the port's: the lecture notebook has none.)</span></p>
 
     <details class="details" data-testid="details">
@@ -91,16 +101,22 @@
         <i>U</i><sub>att</sub> = ½ <i>ζ D</i>² for <i>D</i> ≤ <i>d</i> and <i>d ζ</i> (<i>D</i> − ½ <i>d</i>) beyond;
         <i>U</i><sub>rep</sub> = ½ <i>η</i> (1/<i>ρ</i> − 1/<i>ρ</i><sub>0</sub>)² for <i>ρ</i> ≤ <i>ρ</i><sub>0</sub> and 0 beyond.
         A robot following the negative gradient of the sum slides towards the goal and around the obstacles, unless it
-        stops in a local minimum. In the last two tabs <i>η</i> = 1 and <i>ρ</i><sub>0</sub> = 2.</p>
+        stops in a local minimum. With several obstacles their <i>U</i><sub>rep</sub> add up. In the last two tabs
+        <i>η</i> = 1.</p>
+      <p>Obstacles: drag a coloured locator in the obstacle pad, or press the pad to move the nearest one there;
+        <b>Add</b> puts a new obstacle in a free spot and <b>Remove</b> takes away the selected one (ringed). A focused
+        locator moves with the arrow keys (Shift for larger steps) and Delete removes it.</p>
       <p>Port notes: the heights above the plot range are cut off as Mathematica does (a flat, light top on the
-        surfaces; white in the contour plot); the red curves in the last two tabs mark where the notebook's
-        <code>If</code> conditions switch, as Mathematica's <code>ExclusionsStyle -> Red</code> draws them. See the design
+        surfaces; white in the contour plot); the curves in the last two tabs mark where the notebook's
+        <code>If</code> conditions switch: red at the distance <i>d</i><sub>i</sub> from the goal, white at
+        <i>ρ</i><sub>0</sub> from each obstacle. Changed from the notebook at Dr. Becker's request: a list of obstacles
+        instead of fixed one or two, a <i>ρ</i><sub>0</sub> slider for the sum, white <i>ρ</i><sub>0</sub> circles. See the design
         document for how the automatic height range is chosen.</p>
     </details>
 
     <p class="port-note">Browser port of a Mathematica notebook. All computation runs in your browser.</p>
     <div class="credits" data-testid="credits">
-      Adapted from "Demonstration of Attractive, Repulsive, and Combination Potential Fields" (Potential Fields) by Aaron T. Becker, ECE 6311 Lecture 22 notebook (not a published Demonstration; licensed as the
+      Adapted from "Demonstration of Attractive, Repulsive, and Combination Potential Fields" (Artificial Potential Fields) by Aaron T. Becker, ECE 6311 Lecture 22 notebook (not a published Demonstration; licensed as the
       author's Demonstrations,
       <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC-SA 3.0</a>).
       This JavaScript translation by Tico Hannan (© 2026) is released under the

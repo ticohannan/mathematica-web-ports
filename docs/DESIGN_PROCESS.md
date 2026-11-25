@@ -84,7 +84,7 @@ it is verified:
 | Rotating a Tesseract in Perspective | [`demos/tesseract-perspective/DESIGN.md`](../demos/tesseract-perspective/DESIGN.md) | `demos/tesseract-perspective/` |
 | Simple Crystal Structures and Miller Indices | [`demos/crystal-structures-miller/DESIGN.md`](../demos/crystal-structures-miller/DESIGN.md) | `demos/crystal-structures-miller/` |
 | Lotka-Volterra Competition Model | [`demos/lotka-volterra-competition/DESIGN.md`](../demos/lotka-volterra-competition/DESIGN.md) | `demos/lotka-volterra-competition/` |
-| Potential Fields | [`demos/potential-fields/DESIGN.md`](../demos/potential-fields/DESIGN.md) | `demos/potential-fields/` |
+| Artificial Potential Fields | [`demos/potential-fields/DESIGN.md`](../demos/potential-fields/DESIGN.md) | `demos/potential-fields/` |
 
 The originals came without design documents. Version 0.1.6 added best-effort design documents
 reconstructed from the original notebooks (their code, captions and details text) and from the

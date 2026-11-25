@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.42 |
+| Code version: | 0.1.43 |
 | Document revision | 2 (2026-11-13) — the port |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Method of Sections to Solve a Truss", contributed by Rachael L. Baumann and John L. Falconer, published 2017-09-08 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/MethodOfSectionsToSolveATruss/> |
@@ -125,6 +125,7 @@ Proposals for this app are tracked separately.
 | 2 | v0.1.40 | 2026-11-13 | the port: the 18 balances, the reaction and cut views with Mouseover, the solved truss, the equations picture; switch for E-TX-01, E-TX-02 |
 | 3 | v0.1.41 | 2026-11-17 | version number (v0.1.41: fourteen ports, five on waves, five on fields and machines and four on geometry and ecology; shared additions, all opt-in: the TogglerBar and Animator controls, the Trigger options AppearanceElements and AnimationRepetitions, LocatorAutoCreate with All and count limits, Interpolation, Plot3D with Hue colours, StreamPlot and ContourPlot of an equation, Drop[list, {n}]; a Trigger over an infinite range runs at 1 unit per second, and automatic 3D ticks of a zero-width range give one tick); no change to this app's code, behaviour or picture |
 | 4 | v0.1.42 | 2026-11-23 | version number (v0.1.42: one new app, Potential Fields, from Dr. Becker's Lecture 22 notebook; no shared code changed); no change to this app's code, behaviour or picture |
+| 5 | v0.1.43 | 2026-11-25 | version number (v0.1.43: Dr. Becker's changes to Artificial Potential Fields; no shared code changed); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

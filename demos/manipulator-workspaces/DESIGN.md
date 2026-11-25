@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.42 |
+| Code version: | 0.1.43 |
 | Document revision | 1 (2026-10-18) — first implementation |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Robot Manipulator Workspaces", contributed by Aaron T. Becker, Benedict Isichei, Muhammad Sultan and Maruthi S. Chemudupati, published 2017-12-13 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/RobotManipulatorWorkspaces/>. Readable source: [`docs/original-source/manipulator-workspaces.txt`](../../docs/original-source/manipulator-workspaces.txt); snapshots: `docs/original-snapshots/manipulator-workspaces-1.png` … `-8.png` (the notebook's snapshot cells 9 and 10 are empty); golden data: `tests/golden/manipulator-workspaces.original-states.json` (written with `tools/extract_state.py --snapshots` from the raw notebook, COMMON-DECISIONS §1: `states[0]` = the live output-cell state, `snapshots[1…8]` = the snapshot cells' Settings — each with its robot, ranges and the original's `workspace3D`, raw notebook lines 8885, 11436, 13864, 15630, 17367, 19228, 21886, 24150 — and `specs` = the initial settings) |
@@ -270,6 +270,7 @@ Proposals for this app are tracked separately.
 | 25 | v0.1.40 | 2026-11-13 | version number (v0.1.40: three truss ports; shared/truss.js is new; shared/graphics.js gains Mouseover, RotatedText, rounded and line-less Framed, Arrowheads[Large] and heads at given places, Grid alignment at "=", styled scripts and fitPlotRange — the changes to existing drawing are a styled script keeping its style and the baseline after it, and framed or backed labels keeping their outer spaces); no change to this app's code or behaviour |
 | 26 | v0.1.41 | 2026-11-17 | version number (v0.1.41: fourteen ports, five on waves, five on fields and machines and four on geometry and ecology; shared additions, all opt-in: the TogglerBar and Animator controls, the Trigger options AppearanceElements and AnimationRepetitions, LocatorAutoCreate with All and count limits, Interpolation, Plot3D with Hue colours, StreamPlot and ContourPlot of an equation, Drop[list, {n}]; a Trigger over an infinite range runs at 1 unit per second, and automatic 3D ticks of a zero-width range give one tick); no change to this app's code, behaviour or picture |
 | 27 | v0.1.42 | 2026-11-23 | version number (v0.1.42: one new app, Potential Fields, from Dr. Becker's Lecture 22 notebook; no shared code changed); no change to this app's code, behaviour or picture |
+| 28 | v0.1.43 | 2026-11-25 | version number (v0.1.43: Dr. Becker's changes to Artificial Potential Fields; no shared code changed); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 
