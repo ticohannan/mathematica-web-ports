@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.43 |
+| Code version: | 0.1.44 |
 | Document revision | 2 (2026-11-02) — implemented after Tico's approval; compared with Tico's three screenshots of the original |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Lecture notebook "Lecture-18-lineparameterization.nb" (Aaron T. Becker, course lecture material; created with Mathematica 10.0, last saved with Mathematica 13.2 for macOS). Not a published Wolfram Demonstration: no public page, no licence statement in the file. Dr. Becker gave the notebook to Tico to convert; licensed as his Demonstrations, CC BY-NC-SA 3.0, until he says otherwise (Tico, 2026-11-02). The dial and the arrow arc are the same definitions as in Dr. Becker's CC BY-NC-SA 3.0 Demonstrations. Private copy: `_internal/originals/lectures/Lecture-18-lineparameterization.nb` (SHA-256 `0116714b…7e`) |
@@ -163,6 +163,7 @@ Proposals for this app are tracked separately.
 | 12 | v0.1.41 | 2026-11-17 | version number (v0.1.41: fourteen ports, five on waves, five on fields and machines and four on geometry and ecology; shared additions, all opt-in: the TogglerBar and Animator controls, the Trigger options AppearanceElements and AnimationRepetitions, LocatorAutoCreate with All and count limits, Interpolation, Plot3D with Hue colours, StreamPlot and ContourPlot of an equation, Drop[list, {n}]; a Trigger over an infinite range runs at 1 unit per second, and automatic 3D ticks of a zero-width range give one tick); no change to this app's code, behaviour or picture |
 | 13 | v0.1.42 | 2026-11-23 | version number (v0.1.42: one new app, Potential Fields, from Dr. Becker's Lecture 22 notebook; no shared code changed); no change to this app's code, behaviour or picture |
 | 14 | v0.1.43 | 2026-11-25 | version number (v0.1.43: Dr. Becker's changes to Artificial Potential Fields; no shared code changed); no change to this app's code, behaviour or picture |
+| 15 | v0.1.44 | 2026-11-27 | version number (v0.1.44: eight new apps, on predator–prey agents, Gaussian autocorrelation, solar mountings, asteroid-belt resonances, a planetary atmosphere, batch distillation, degrees of freedom of a distillation and Carnot cycles; no shared code changed); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

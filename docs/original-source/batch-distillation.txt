@@ -1,0 +1,431 @@
+
+### [Title]
+Batch Distillation
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+\<In this Demonstration, one mole of a binary mixture undergoes a batch distillation.\>
+
+### [Text]
+\<The first slider sets the mole fraction of the starting liquid. When you click the "click to collect" button, liquid evaporates and the distillate is collected in a collection flask. The amount collected into each flask is set with the second slider. The collection flask is then set aside and an empty flask is substituted.\>
+
+### [Text]
+\<The process repeats when you click the "click to collect button" again, until finally 0.2 mol remains in the still.\>
+
+### [Text]
+\<The equilibrium temperature is shown next to the thermometer.\>
+
+### [Text]
+Select either the collection flasks, an x-y plot, or a T-x-y plot to be displayed on the right.
+
+### [Text]
+Click "reset" to display one of the plots or to start over.
+
+### [Text]
+\<You can choose either an ideal solution (no azeotrope), a minimum-boiling temperature azeotrope or a maximum-temperature azeotrope with the drop-down menu.\>
+
+### [Text]
+\<Hovering the mouse over an object reveals further information about that object.\>
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+columnPart1={FaceForm[LightBlue],
+Polygon[{{1,7.25},{1.2,7.45},{1.33,7.33},{1.57,7.59},{1.83,7.35},{1.59,7.08},{4.45,4.45},{3.85,3.8},{4.25,4.25}}],
+Polygon[{{4.05,4.05},{3.85,3.8},{3.72,3.92},{3.48,3.66},{3.22,3.9},{3.46,4.16},{0.6,6.8},{0.8,7.05}}],
+EdgeForm[Black],
+FaceForm[Lighter[Orange,0.7]],
+FilledCurve[BSplineCurve[{{-0.4,3.25},{-0.5,3},{-1.5,3},{-1.5,1.5},{-1.5,0},{0,0},{1.5,0},{1.5,1.5},{1.5,3},{0.5,3},{0.4,3.25}},SplineDegree->2]]};
+
+### [Input] (init)
+columnPart3={EdgeForm[Black],FaceForm[{Opacity[0.1],Orange}],
+FilledCurve[BSplineCurve[{{0.4,6.95},{0.45,6.95},{0.45,7.15},{0.45,7.25},{0.45,7.35},{0.8,7.05},{0.8,7.05},{1,7.25},{0.5,7.65},{0.45,7.65},{0.45,7.95},{0,7.95},{-0.45,7.95},{-0.45,7.65},{-0.45,7.25},{-0.45,6.95},{-0.35,7},{-0.4,3.25},{-0.4,3.25},{-0.5,3},{-1.5,3},{-1.5,1.5},{-1.5,0},{0,0},{1.5,0},{1.5,1.5},{1.5,3},{0.5,3},{0.4,3.25}},SplineDegree->2]],
+Line[{{1.83,7.35},{1.59,7.08},{4.45,4.45},{3.85,3.8},{3.72,3.92},{3.48,3.66}}],
+Line[{{3.22,3.9},{3.46,4.16},{0.6,6.8},{1.2,7.45},{1.33,7.33},{1.57,7.59}}],
+EdgeForm[None],Opacity[1],FaceForm[{Lighter[Orange,0.9]}],Polygon[{{4.73,3.75},{4.375,3.75},{0.44,7.33},{0.47,7.73}}],
+EdgeForm[Black],
+EdgeForm[None],Polygon[{{4.73,3.55},{4.73,3.75},{1,7.25},{0.8,7.05},{4.59,3.55}}],
+EdgeForm[Black],
+Line[{{4.73,3.55},{4.73,3.75},{0.47,7.73}}],Line[{{0.44,7.33},{4.59,3.55}}],
+Black,Arrowheads@0.02,Arrow[{{2.3,8.12},{1.7,7.47}}],Arrow[{{3.35,3.78},{2.75,3.13}}],Text[Style["\<coolant\>",16],{2.4,8.22},Left]};
+
+### [Input] (init)
+coil={Arrowheads@0.02,EdgeForm[AbsoluteThickness[1]],FaceForm[Lighter[Red,0.8]],Rectangle[{-1.7,-0.65},{1.7,-0.05}],
+BSplineCurve[Table[{-1.7+0.01i+0.1*Sin[(π)/(10)*i],-0.35+0.2*Cos[(π)/(10)*i]},{i,0,340}],SplineDegree->2]};
+
+### [Input] (init)
+thermometer[t_]:={EdgeForm[{Thick,Black}],FaceForm[Opacity[0]],Rectangle[{-1.13,7},{-0.87,8.5},RoundingRadius->Scaled[0.01]],FaceForm[{Red,Opacity[1]}],Disk[{-1,7},0.25],Thick,Black,Circle[{-1,7},0.25,{1.25π/2,4.75π/2}],Red,EdgeForm[None],Tooltip[Rectangle[{-1.1,7},{-0.9,7.25+((t-80.7))/(30)*1.25}],"\<The liquid and vapor are in equilibrium at \>"<>ToString[NumberForm[t,{4,1}]]<>"\< °C.\>",TooltipDelay->0]}
+
+### [Input] (init)
+flaskShape={{2.5,0.6},{3.7,0.6},{3.8,0.7},{3.7,0.9},{2.7,2.5},{2.7,2.6},{2.7,2.8},{2.7,2.85},{2.75,2.85},{2.8,2.9},{2.75,2.95},{2.7,2.95},{2.5,2.95},{2.3,2.95},{2.25,2.95},{2.2,2.9},{2.25,2.85},{2.3,2.85},{2.3,2.8},{2.3,2.6},{2.3,2.5},{1.3,0.9},{1.2,0.7},{1.3,0.6},{2.5,0.6}};
+
+### [Input] (init)
+(*The following functions are for dynamic graphics / animations.*)
+modfuncy[n_]:=If[n==0,0,-6.5+2*Mod[(9-n),9]+2*Mod[n+1,2]]
+
+### [Input] (init)
+modfuncx[n_]:=If[n==0,0,5+6.8*Mod[n+1,2]]
+
+### [Input] (init)
+dynamicFlaskCoords[n_,lvl_]:=Table[{N[flaskShape[[i]][[1]]+2.15+modfuncx[n],2],N[flaskShape[[i]][[2]]+0.4+modfuncy[n],2]},{i,1,Length[flaskShape]}]
+
+### [Input] (init)
+flask[n_,lvl_]:={Lighter[Orange,0.7],FilledCurve[BSplineCurve[dynamicFlaskCoords[n,lvl]]],White,Rectangle[{3.35+modfuncx[n],1+6*lvl+modfuncy[n]},{5.95+modfuncx[n],3.4+modfuncy[n]}],Black,BSplineCurve[dynamicFlaskCoords[n,lvl]],FaceForm[Lighter[Orange,0.7]],EdgeForm[Black],Disk[{4.65+modfuncx[n],1+6*lvl+modfuncy[n]},{-0.3*3.75*lvl+(0.25-lvl)*2.52+(0.7*Sin[(π)/(0.2)*Clip[lvl*3.75,{0,0.1}]]^0.8),0.02*Sin[(π)/(0.2)Clip[lvl*3.75,{0,0.1}]]^0.8}]}
+
+### [Input] (init)
+columnPart2[lvl_]:={EdgeForm[None],FaceForm[{Opacity[1],White}],Rectangle[{-1.55,2.4*lvl},{1.55,3.5}],
+EdgeForm[Black],FaceForm[Lighter[Orange,0.6]],Disk[{0,2.4*lvl},{1+(0.5*Sin[(π)/(0.5)*Clip[lvl,{0,0.25}]]^0.8),0.12*Sin[(π)/(0.5)Clip[lvl,{0,0.25}]]^0.8}]}
+
+### [Input] (init)
+superScript[j_]:=Which[j==1,"\<st\>",j==2,"\<nd\>",j==3,"\<rd\>",j>=4,"\<th\>"]
+(*___________________________End Graphics___________________________________*)
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Quiet@DynamicModule[{eqdata,eqtempdata,collectedVol,collectedB,T,molb,molt,compb,compt,sol,eqplot,eqtempplot,columnGraphic,flasksGraphic,labelCoordsLiq,labelCoordsVap,vapColor,liqColor},
+
+(*These equations are the equilibrium data for an imaginary azeotropic compound. Data is not based on any real substance, thus the Antoine equation and Raoult's law is not used.*)
+eqdata[x_]:=Switch[az,
+1,x+0.25*Sin[π*x^0.8]^0.9,
+2,x^0.75+0.12*Sin[2π*x],
+3,x^0.9-0.14*Sin[2π*x]];
+(*The temperature data is also invented, to approximately model what the temperature profile would look like.*)
+eqtempdata[x_]:=Switch[az,
+1,379-29x-5*Sin[π*x],
+2,380-20*x-15*Sin[1.022*π*x],
+3,343+41*x+20*Sin[π*(x+0.26)]];
+
+(*The total volume that has been collected into flasks.*)
+collectedVol = Sum[flasksMol[[k]],{k,1,stage}];
+(*The total volume of the less volatile component collected into flasks.*)
+collectedB=Sum[flasksMol[[k]]*flasksFrac[[k]],{k,1,stage}];
+
+(*amount of liquid (moles) in the "\<bottom\>" kettle (molb) and "\<top\>" flask (molt). User chooses the # of moles to evaporate, then evapProg is the percent completion of the animation.*)
+molt=evapProg*molesToEvap;
+(* "\<1 -\>" term here is because the bottom kettle starts with 1 mole.*)
+molb=1-collectedVol-molt;
+
+(*Solution to the Rayleigh equation with zero reflux. "\<Which[]\>" statement was added to reduce the search time of FindRoot.*)
+sol=FindRoot[
+NIntegrate[(1)/(eqdata[x]-x),{x,xbf,(z-collectedB)/(1-collectedVol)},AccuracyGoal->6, PrecisionGoal->6]==Log[(1-collectedVol)/(molb)],
+Which[az==1,{xbf,#,0.0001,0.9999},
+az==2&&z>0.61517,{xbf,#,0.61518,0.9999},
+az==2&&z<=0.61517,{xbf,#,0.0001,0.61516},
+az==3&&z>0.45717,{xbf,#,0.45718,0.999},
+az==3&&z<=0.45717,{xbf,#,0.0001,0.45716}
+],AccuracyGoal->6, PrecisionGoal->6]&[If[stage>1,(z-collectedB)/(1-collectedVol),z]];
+
+(*Composition in the bottom and top section, respectively. To avoid a 1/0 infinite expression, top composition is initially equal to the vapor composition using an "\<if[]\>" statement. Otherwise just a mass balance.*)
+compb=Re[(xbf/.sol)];
+compt=If[molt<0.01,eqdata[compb],(z-collectedB-compb*molb)/molt];
+
+(*Temperature using previous equation.*)
+T=eqtempdata[compb]-273.15;
+
+(*Coordinates for the "\<xB,still\>" and "\<yB\>" text on the plots.*)
+labelCoordsLiq=Switch[az,
+1,{0.05+0.9*compb,T+1.5},
+2,{0.05+0.9*compb,T-1.5},
+3,{0.05+0.9*compb,T-1.5}];
+labelCoordsVap=Switch[az,
+1,{0.05+0.9*eqdata[compb],T-1.5},
+2,{0.05+0.9*eqdata[compb],T+1.5},
+3,{0.05+0.9*eqdata[compb],T+1.5}];
+vapColor=Darker[Blue];
+liqColor=Gray;
+
+(********** Plots *********)
+eqplot=ParametricPlot[Tooltip[{(t-353)/(31),eqdata[(t-353)/(31)]},#,TooltipDelay->0],{t,353,384},Epilog->{PointSize@0.035,Point@{compb,eqdata[compb]}},PlotStyle->{Thick,Darker[Blue]}]&["\<This equilibrium line shows the mole fractions of B
+for liquid and vapor in equilibrium.\>"];
+
+eqtempplot=ParametricPlot[{Tooltip[{(t-353)/(31),eqtempdata[(t-353)/(31)]-273.15},"\<bubble point line\>",TooltipDelay->0],Tooltip[{eqdata[(t-353)/(31)],eqtempdata[(t-353)/(31)]-273.15},"\<dew point line\>",TooltipDelay->0]},{t,353,384},PlotStyle->{{Thick,Darker[Blue]},{Thin,Black,Opacity[0.7],Dashed}},
+Epilog->{PointSize@0.035,vapColor,Point@{compb,T},liqColor,Point@{eqdata[compb],T},Style[Text[Subscript[Style["\<x\>",Italic],"\<B, still\>"],labelCoordsLiq],15,vapColor,Background->White],
+Style[Text[Subscript[Style["\<y\>",Italic],"\<B\>"],labelCoordsVap],15,liqColor,Background->White]}];
+
+(*Column graphic. Has some nice tooltips for improved user experience.*)
+columnGraphic={
+columnPart1,
+columnPart2[molb],
+columnPart3,
+Tooltip[coil,"\<This electrical heating coil heats
+the liquid in the still.\>",TooltipDelay->0],Tooltip[flask[0,molt],Row@{"\<The distillate collection flask will be
+set aside after collecting some distillate.\>"},TooltipDelay->0],Tooltip[thermometer[T],"\<The liquid and vapor are in equilibrium at \>"<>ToString[NumberForm[T,{4,1}]]<>"\< °C.\>",TooltipDelay->0],
+Tooltip[Text[Style[Column@{Row@{Subscript[Style["\<x\>",Italic],"\<B, still\>"],"\< = \>",NumberForm[compb,{3,2}]},Row@{NumberForm[molb,{5,2}],"\< mol\>"}},16],{0,1}],"\<The mol fraction of B in the liquid is \>"<>ToString[NumberForm[compb,{3,2}]]<>"\<.\>",TooltipDelay->0],
+Tooltip[Text[Style[Column@{If[molb+molt<=0.2,"\<\>",Row@{Subscript[Style["\<x\>",Italic],Row@{"\<B, \>",stage}],"\< = \>",NumberForm[Clip[compt,{0,0.99}],{3,2}]}],If[molb+molt<=0.2,"\<\>",Row@{NumberForm[molt,{5,2}],"\< mol\>"}]},16],{4.9,0}],"\<The composition of the distillate depends on
+the mole fraction in the still and the amount collected.\>",TooltipDelay->0],
+Tooltip[Text[Style[If[molb+molt<=0.2,"\<\>",Row@{Subscript[Style["\<y\>",Italic],"\<B\>"],"\< = \>",NumberForm[eqdata[compb],{3,2}]}],16],{-0.8,5.5},Right],
+"\<The mol fraction of B in the vapor is \>"<>ToString[NumberForm[eqdata[compb],{3,2}]]<>"\<.\>",TooltipDelay->0],
+Tooltip[Style[Text[Row@{NumberForm[T,{7,1}],"\<° C\>"},{0.35,8.35}],17],"\<The liquid and vapor are in equilibrium at \>"<>ToString[NumberForm[T,{4,1}]]<>"\< °C.\>",TooltipDelay->0],
+Opacity[0],Tooltip[Rectangle[{-0.45,4},{0.45,7}],"\<The mol fraction of B in the vapor is \>"<>ToString[NumberForm[eqdata[compb],{3,2}]]<>"\<.\>",TooltipDelay->0],
+If[molb+molt>0.2,{Black,Opacity[1],Arrowheads@0.02,
+Arrow[{{-0.75,5.5},{0.05,5.7}}]}]
+};
+
+(*Shows the collection flasks on the right hand side.*)
+flasksGraphic={
+If[stage>=2,
+Table[{
+Tooltip[flask[j-1,flasksMol[[j-1]]],
+Row@{ToString[j-1],superScript[j-1],"\< flask of liquid collected\>"},
+TooltipDelay->0],
+Style[Text[
+Column@{
+Tooltip[
+Row@{NumberForm[flasksMol[[j-1]],{5,If[0<flasksMol[[j-1]]<0.01,4,2]}],"\< mol\>"},Row@{ToString[NumberForm[flasksMol[[j-1]],{5,If[0<flasksMol[[j-1]]<0.01,4,2]}]],"\< moles were collected into the \>",ToString[j-1],superScript[j-1],"\< flask\>"},
+TooltipDelay->0],
+Tooltip[
+Row@{Subscript[Style["\<x\>",Italic],Row@{"\<B, \>",j-1}],"\< = \>",NumberForm[Clip[flasksFrac[[j-1]],{0,0.99}],{5,2}]},
+Row@{"\<The \>",ToString[j-1],superScript[j-1],"\< flask has mol fraction \>",ToString[NumberForm[Clip[flasksFrac[[j-1]],{0,0.99}],{5,2}]],"\< of B\>"},
+TooltipDelay->0]},
+{11.3 +6.8*Mod[j,2],19.8-2*j-2*Mod[j,2,1]},Left],
+Black,16,TextAlignment->Right],
+Style[Text[Row@{"\< \>",j-1,"\< \>"},{9.7+6.8 *Mod[j,2],19.5-2*j-2*Mod[j,2,1]}],
+Black,Bold,16,TextAlignment->Right,Background->Opacity[0.6,White]]
+},{j,2,stage}]
+]};
+
+(*Connects a module variable to a control variable after iteration. I think I did this to avoid storing a reference instead of a value. Can't remember, but it works so I won't change it.*)
+xb=compb;
+xt=compt;
+
+(*This is used to disable some controls when the animation is running, or the process is finished.*)
+If[molb<=0.2||stage==9||evapProg>0,inProg=True,inProg=False];
+
+(*Adds data to the "\<flasks\>" tables at the end of each animation, and resets to time=0. Increments to next stage.*)
+If[evapProg==1,{flasksFrac[[stage]]=xt,flasksMol[[stage]]=Clip[molesToEvap,{0,1-If[stage>1,collectedVol,0]}],evapProg=0,stage++}];
+
+(*Prevents the user from boiling the bottom kettle below 0.2 moles.*)
+If[Not[inProg] && molb - molesToEvap < 0.2, molesToEvap = molb-0.2; boilDry=True,boilDry=False];
+
+(*Inset[] allowed much more consistent graphics behavior compared to GraphicsRow[].*)
+Show[Graphics[{columnGraphic,
+Inset[Switch[graph,
+1,Show[Graphics[flasksGraphic],
+PlotRange->{{7.7,22},{-2,13}},
+AspectRatio->Full,
+ImageSize->{300,340}],
+2,Show[eqplot,
+Plot[Tooltip[x,Row@{Subscript["\<y\>","\<B\>"],"\< = \>",Subscript["\<x\>","\<B\>"]},TooltipDelay->0] ,{x,0,1},PlotStyle->{Thin,Dashed,Opacity[0.5],Black}],
+Frame->True,
+FrameLabel->{Subscript[Style["\<x\>",Italic],"\<B, still\>"],Subscript[Style["\<y\>",Italic],"\<B\>"]},
+LabelStyle->{17,Black},
+AxesOrigin->{0,0},
+PlotRange->{{0.01,1},{0,1}},
+ImageSize->{300,340},
+AspectRatio->Full],
+3,Show[eqtempplot,
+PlotRange->{{0,1},Switch[az,1,{349-273,380-273},2,{352-273,381-273},3,{355-273,379-273}]},
+AxesOrigin->{0,0},
+FrameLabel->{Row@{"\<mole fraction \>",Style["\<B\>",Italic]},"\<temperature (°C)\>"},
+LabelStyle->{17,Black},
+ImageSize->{300,340},
+AspectRatio->Full,
+Frame->True]
+],{11,4}]}],PlotRange->{{-3,16},{-0.8,9}},ImageSize->{600,340},AspectRatio->Full]
+],
+Column[{
+Row[{
+Control[{{z,0.5,Style["\<initial mole fraction in still \>",12]},0.05,0.95,0.01,Enabled->If[Dynamic@Not[inProg]&&stage<2,True,False],Appearance->"\<Labeled\>",ImageSize->135}],
+Button["\<reset\>",Dynamic[{stage=1,flasksMol[[;;]]=0,z=0.5,flasksFrac[[;;]]=0}],ImageSize->{70,30},Enabled->Dynamic@If[evapProg==0,True,False]],
+Control[{{az,1,"\<\>"},{1->Style["\<no azeotrope\>",#],2->Style["\<minimum boiling azeotrope\>",#],3->Style["\<maximum boiling azeotrope\>",#]}&@(If[Not[inProg]&&stage<2,Black,GrayLevel[0.4]]),PopupMenu,Enabled->If[Dynamic@Not[inProg]&&stage<2,True,False]}]
+}],
+Row[{
+Tooltip[Control[{{molesToEvap,0.1,Style["\<amount to evaporate (moles)\>",12]},0.05,0.25,0.01,Enabled->Dynamic@Not[inProg],Appearance->"\<Labeled\>",ImageSize->120}],"\<Boiling the pot dry will damage it!\>",TooltipDelay->Dynamic@If[boilDry,0,∞]],
+Column@{"\<click to\>","\<collect:\>"},
+Trigger[Dynamic[evapProg],{0,1},DefaultDuration->4,AppearanceElements->{"\<PlayButton\>"},DisplayAllSteps->True,AnimationRepetitions->1,ImageSize->{40,40},Enabled->Dynamic@Not[inProg]],Spacer@10,
+
+Control[{{graph,1,"\<display: \>"},{1->"\<flasks\>",2->Row[{Style["\<x\>",Italic],"\<-\>",Style["\<y\>",Italic],"\< plot\>"}],3->Row[{Style["\<T\>",Italic],"\<-\>",Style["\<x\>",Italic],"\<-\>",Style["\<y\>",Italic],"\< plot\>"}]},RadioButtonBar,Appearance->"\<Vertical\>"}],
+
+Row[{
+Control[{{inProg,False},None}],
+Control[{{xb,z},None}],
+Control[{{xt,z},None}],
+Control[{{stage,1},None}],
+Control[{{flasksMol,ConstantArray[0,10]},None}],
+Control[{{flasksFrac,ConstantArray[0,10]},None}],
+Control[{{evapProg,0},None}],
+Control[{{boilDry,False},None}]},ImageSize->None]
+}]
+}],SaveDefinitions->True,TrackedSymbols:> {z,az,graph,inProg,xb,xt,stage,flasksMol,flasksFrac,evapProg,boilDry,molesToEvap,evapProg}
+]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Neil Hendren
+
+### [Text]
+John L. Falconer
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+In batch distillation of a binary mixture, a fixed amount of the feed mixture F (mol), with initial mole fraction Subscript[x, F], evaporates into a distillate collection flask; Subscript[D, i] (mol) is the mass of distillate collected into flask i, and Subscript[x, D, i] is the mole fraction within distillate flask i. This process is repeated to fill several distillate collection flasks. The overall mass balance is:
+
+### [Text]
+F=Subscript[B, final]+Subscript[D, total]						(1)
+
+### [Text]
+and the balance for the more volatile component is:
+
+### [Text]
+F Subscript[x, F]=Subscript[B, final]Subscript[x, B, final]+Subscript[D, total]Subscript[x, D, avg],				(2)
+
+### [Text]
+where Subscript[x, D, avg] is the average mole fraction within the distillate collection flasks and Subscript[B, final] and Subscript[x, B, final] are the final mass and mole fraction within the bottom (boiler) vessel. The value of Subscript[x, D, avg] can be calculated as:
+
+### [Text]
+Subscript[x, D, avg]=<<UnderoverscriptBox>>(Subscript[D, i]Subscript[x, D, i]+Subscript[D, i+1]Subscript[x, D, i+1]\[Ellipsis] Subscript[D, n]Subscript[x, D, n])/Subscript[D, total],		(3)
+
+### [Text]
+where the total number of collection stages is n (equivalent to the total number of distillate collection flasks). 
+
+### [Text]
+Total distillate is given by:
+
+### [Text]
+Subscript[D, total]=<<UnderoverscriptBox>>Subscript[D, i]+Subscript[D, i+1]\[Ellipsis] Subscript[D, n].					(4)
+
+### [Text]
+Because the saturated vapor is in thermodynamic equilibrium with the saturated liquid in the vessel (and there is only one equilibrium stage: the boiler/bottom vessel), the composition of the vapor Subscript[y, B] is a function of the composition in the bottom vessel. During evaporation, both compositions change with time, except when the composition of the liquid is an azeotrope. An equilibrium function is:
+
+### [Text]
+Subscript[y, B]=f(Subscript[x, B]).							(5)
+
+### [Text]
+Numerical approximations such as Antoine's equation are often used to model f(Subscript[x, B]) using experimental data. Other cases, such as constant relative volatility, may also be used to approximate this relationship.
+
+### [Text]
+Composition of Subscript[x, B, i+1] can be calculated by integration. Equation (5) must be substituted for Subscript[y, B].
+
+### [Text]
+Subscript[\[Integral],Subscript[B, i]]^Subscript[B, i+1](1)/(B)dB=Subscript[\[Integral],Subscript[x, B, i]]^Subscript[x, B, i+1](1)/(Subscript[y, B] - Subscript[x, B])d\[VeryThinSpace]Subscript[x, B].					(6)
+
+### [Text]
+Finally, a mass balance can be used to solve for the distillate composition, Subscript[x, D, i+1]:
+
+### [Text]
+Subscript[x, D, i+1]=(Subscript[B, i]Subscript[x, B,i]-Subscript[B, i+1]Subscript[x, B,i+1])/(Subscript[B, i]-Subscript[B, i+1]).					(7)
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] P. C. Wankat, "Chapter 9: Batch Distillation," Separation Process Engineering: Includes Mass Transfer Analysis, 3rd ed., Upper Saddle River, NJ: Prentice Hall, 2012 pp. 329\[Dash]347.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+phase equilibrium
+
+### [Item]
+chemical engineering
+
+### [Item]
+separations
+
+### [Item]
+thermodynamics
+
+### [Item]
+mass balance
+
+### [Item]
+x-y diagram
+
+### [Item]
+T-x-y diagram
+
+### [Item]
+azeotrope
+
+### [Item]
+phase diagram
+
+### [Item]
+batch process
+
+### [Item]
+batch distillation
+
+### [Item]
+distillation
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Item]
+Link to external information
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2019-05-30
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

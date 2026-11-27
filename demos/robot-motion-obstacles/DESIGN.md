@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.43 |
+| Code version: | 0.1.44 |
 | Document revision | 1 (2026-10-17) — first implementation |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Robot Motion with Obstacles", contributed by Aaron T. Becker and Haoran Zhao, published 2016-04-18 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/RobotMotionWithObstacles/>. Readable source: `docs/original-source/robot-motion-obstacles.txt`; snapshots: `docs/original-snapshots/robot-motion-obstacles-1.png` … `-4.png` (the extraction's pictures 5 and 6 are the Wolfram logo, N-RM-03); stored output cell (Body, Initialization, Specifications and the initial settings): raw definition notebook lines 1074–1340 (Body 1133, Specifications 1281, Initialization 1305); fixture `tests/golden/robot-motion-obstacles.original-states.json` (`states[0]` live state, raw line 1076; `snapshots[1…4]` the snapshot Settings, raw lines 2117, 2946, 3747, 4533; `specs` the initial settings) |
@@ -292,6 +292,7 @@ Proposals for this app are tracked separately.
 | 27 | v0.1.41 | 2026-11-17 | version number (v0.1.41: fourteen ports, five on waves, five on fields and machines and four on geometry and ecology; shared additions, all opt-in: the TogglerBar and Animator controls, the Trigger options AppearanceElements and AnimationRepetitions, LocatorAutoCreate with All and count limits, Interpolation, Plot3D with Hue colours, StreamPlot and ContourPlot of an equation, Drop[list, {n}]; a Trigger over an infinite range runs at 1 unit per second, and automatic 3D ticks of a zero-width range give one tick); no change to this app's code, behaviour or picture |
 | 28 | v0.1.42 | 2026-11-23 | version number (v0.1.42: one new app, Potential Fields, from Dr. Becker's Lecture 22 notebook; no shared code changed); no change to this app's code, behaviour or picture |
 | 29 | v0.1.43 | 2026-11-25 | version number (v0.1.43: Dr. Becker's changes to Artificial Potential Fields; no shared code changed); no change to this app's code, behaviour or picture |
+| 30 | v0.1.44 | 2026-11-27 | version number (v0.1.44: eight new apps, on predator–prey agents, Gaussian autocorrelation, solar mountings, asteroid-belt resonances, a planetary atmosphere, batch distillation, degrees of freedom of a distillation and Carnot cycles; no shared code changed); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

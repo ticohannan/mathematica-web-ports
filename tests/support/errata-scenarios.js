@@ -80,4 +80,8 @@ export const SCENARIOS = {
   // E-LV-01: α = 1.45, β = 1.4, r1 = r2 = 0.05 (the saddle at (0.437, 0.388)): the unstable separatrix towards (0, 1) ends near the saddle
   // after t = 1000 in the original; it tends to the stable node (0, 1) (phase-plane theory; unit test: an independent RK4 to t = 10⁴)
   'lotka-volterra-competition': { state: { α: 1.45, β: 1.4, r1: 0.05, r2: 0.05 }, probe: '(v) => v.sepEnds[1][1]', original: 0.39, corrected: 1, digits: 2 },
+  'carnot-irreversible-heat-transfer': { state: { csb: 2, 'ΔT1': 8, 'ΔT2': 36 }, probe: '(v) => v.labels.performance', original: 'COP = 2.5', corrected: 'COP = 3.5' },
+  'asteroid-belt-resonance': { state: { k: 1 }, probe: '(v) => v.shownGap.radius', original: 1.7345, corrected: 2.5015, digits: 3 },
+  'planetary-atmosphere-single-layer': { state: { planet: 3, 'ϵ': 0.8, 'α': 0.75, d: 1 }, probe: '(v) => v.labels.Tp', original: '224 K = −49 °C', corrected: '264 K = −9 °C', reapply: true },
+  'solar-yield-mounting-systems': { state: {}, probe: '(v) => v.yieldLabel', original: 'Energy Yield kW/h/da', corrected: 'Energy Yield kWh/m2/day' },
 };

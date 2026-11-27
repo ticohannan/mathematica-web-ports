@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.43 |
+| Code version: | 0.1.44 |
 | Document revision | 2 (2026-11-17) — the port |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "How to Catch a Standing Wave", contributed by D. Meliga, S. Z. Lavagnino and A. Ratti, published 2017-09-20 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/HowToCatchAStandingWave/> |
@@ -145,6 +145,7 @@ Proposals for this app are tracked separately.
 | 2 | v0.1.41 | 2026-11-17 | the port: the two plots (Plot and ListLinePlot of shared/plot.js), the reversed vertical frequency slider, the Trigger with faster/slower buttons, the harmonics and "first harmonic" setters, pt holding the expression {π/f, 0} until moved, the LocatorPane over both plots; unit and browser tests, checklist items 07–11 |
 | 3 | v0.1.42 | 2026-11-23 | version number (v0.1.42: one new app, Potential Fields, from Dr. Becker's Lecture 22 notebook; no shared code changed); no change to this app's code, behaviour or picture |
 | 4 | v0.1.43 | 2026-11-25 | version number (v0.1.43: Dr. Becker's changes to Artificial Potential Fields; no shared code changed); no change to this app's code, behaviour or picture |
+| 5 | v0.1.44 | 2026-11-27 | version number (v0.1.44: eight new apps, on predator–prey agents, Gaussian autocorrelation, solar mountings, asteroid-belt resonances, a planetary atmosphere, batch distillation, degrees of freedom of a distillation and Carnot cycles; no shared code changed); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

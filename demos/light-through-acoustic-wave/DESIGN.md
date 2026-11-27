@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.43 |
+| Code version: | 0.1.44 |
 | Document revision | 2 (2026-11-17) — the port |
 | Status | describes the app as implemented; changes are proposed and approved before they are built |
 | Original | Wolfram Demonstrations Project, "Path of Light through an Acoustic Wave", contributed by Brendon O'Leary, published 2010-07-15 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/PathOfLightThroughAnAcousticWave/> |
@@ -125,6 +125,7 @@ Proposals for this app are tracked separately.
 | 2 | v0.1.41 | 2026-11-17 | the port: the light path and the acoustic wave in one Plot, four sliders with the maximum of m following n, the body's If on m, the Details' differential equation checked in the unit tests (§11) |
 | 3 | v0.1.42 | 2026-11-23 | version number (v0.1.42: one new app, Potential Fields, from Dr. Becker's Lecture 22 notebook; no shared code changed); no change to this app's code, behaviour or picture |
 | 4 | v0.1.43 | 2026-11-25 | version number (v0.1.43: Dr. Becker's changes to Artificial Potential Fields; no shared code changed); no change to this app's code, behaviour or picture |
+| 5 | v0.1.44 | 2026-11-27 | version number (v0.1.44: eight new apps, on predator–prey agents, Gaussian autocorrelation, solar mountings, asteroid-belt resonances, a planetary atmosphere, batch distillation, degrees of freedom of a distillation and Carnot cycles; no shared code changed); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

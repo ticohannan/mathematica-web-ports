@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.43 |
+| Code version: | 0.1.44 |
 | Document revision | 1 (2026-10-18) — first implementation |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Probabilistic Roadmap Method in 3D", contributed by Aaron T. Becker and Yitong Lu, published 2020-02-26 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ProbabilisticRoadmapMethodIn3D/>. Readable source: [`docs/original-source/prm-3d.txt`](../../docs/original-source/prm-3d.txt); snapshots: `docs/original-snapshots/prm-3d-1.png` … `-5.png` (files 6 and 7 of the extraction are 96 × 100 placeholder icons); golden data: `tests/golden/prm-3d.original-states.json` (written with `tools/extract_state.py --snapshots` from the raw notebook, COMMON-DECISIONS §1: `states[0]` = the live state, `snapshots[1…5]` = the five snapshot cells' Settings — complete states with samples, roadmaps and, in 3 and 4, the RegionPlot3D volumes; raw notebook lines 10908, 12996, 16776, 21566, 24913 — and `specs` = the initial settings, equal to the live state up to the option form of `freeConfigSpacea/b`; Greek names and exact 1/2 kept, N-P3-01) |
@@ -320,6 +320,7 @@ Proposals for this app are tracked separately.
 | 27 | v0.1.41 | 2026-11-17 | version number (v0.1.41: fourteen ports, five on waves, five on fields and machines and four on geometry and ecology; shared additions, all opt-in: the TogglerBar and Animator controls, the Trigger options AppearanceElements and AnimationRepetitions, LocatorAutoCreate with All and count limits, Interpolation, Plot3D with Hue colours, StreamPlot and ContourPlot of an equation, Drop[list, {n}]; a Trigger over an infinite range runs at 1 unit per second, and automatic 3D ticks of a zero-width range give one tick); no change to this app's code, behaviour or picture |
 | 28 | v0.1.42 | 2026-11-23 | version number (v0.1.42: one new app, Potential Fields, from Dr. Becker's Lecture 22 notebook; no shared code changed); no change to this app's code, behaviour or picture |
 | 29 | v0.1.43 | 2026-11-25 | version number (v0.1.43: Dr. Becker's changes to Artificial Potential Fields; no shared code changed); no change to this app's code, behaviour or picture |
+| 30 | v0.1.44 | 2026-11-27 | version number (v0.1.44: eight new apps, on predator–prey agents, Gaussian autocorrelation, solar mountings, asteroid-belt resonances, a planetary atmosphere, batch distillation, degrees of freedom of a distillation and Carnot cycles; no shared code changed); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

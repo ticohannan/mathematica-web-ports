@@ -2,7 +2,7 @@
 
 ## Summary
 
-The seventy-nine web applications in `demos/` are **adaptations** (JavaScript / SVG / WebGL translations)
+The eighty-seven web applications in `demos/` are **adaptations** (JavaScript / SVG / WebGL translations)
 of Wolfram Demonstrations Project content (two, line-parameterization and potential-fields, of lecture notebooks by a Demonstrations author, licensed alike), which is licensed under the
 **Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported licence (CC BY-NC-SA 3.0)**,
 <https://creativecommons.org/licenses/by-nc-sa/3.0/>
@@ -108,6 +108,14 @@ Licence texts: [`LICENSES/CC-BY-NC-SA-3.0.txt`](LICENSES/CC-BY-NC-SA-3.0.txt) an
 | `demos/crystal-structures-miller/**`, `tests/unit/crystal-structures-miller.test.js`, `tests/e2e/crystal-structures-miller.spec.js`, `docs/checklists/crystal-structures-miller.md` | CC BY-NC-SA 3.0 | the port of "Simple Crystal Structures and Miller Indices" (Yunfeng Shi and Adam Bross), its tests and its manual checklist |
 | `demos/lotka-volterra-competition/**`, `tests/unit/lotka-volterra-competition.test.js`, `tests/e2e/lotka-volterra-competition.spec.js`, `docs/checklists/lotka-volterra-competition.md` | CC BY-NC-SA 3.0 | the port of "Lotka-Volterra Competition Model" (Richard Cangelosi), its tests and its manual checklist |
 | `demos/potential-fields/**`, `tests/unit/potential-fields.test.js`, `tests/e2e/potential-fields.spec.js`, `docs/checklists/potential-fields.md` | CC BY-NC-SA 3.0 | the port of "Artificial Potential Fields" (Aaron T. Becker), its tests and its manual checklist |
+| `demos/carnot-irreversible-heat-transfer/**`, `tests/unit/carnot-irreversible-heat-transfer.test.js`, `tests/e2e/carnot-irreversible-heat-transfer.spec.js`, `docs/checklists/carnot-irreversible-heat-transfer.md` | CC BY-NC-SA 3.0 | the port of "Carnot Cycles with Irreversible Heat Transfer" (Rachael L. Baumann, Megan Maguire and John L. Falconer), its tests and its manual checklist |
+| `demos/asteroid-belt-resonance/**`, `tests/unit/asteroid-belt-resonance.test.js`, `tests/e2e/asteroid-belt-resonance.spec.js`, `docs/checklists/asteroid-belt-resonance.md` | CC BY-NC-SA 3.0 | the port of "Orbital Resonance in the Asteroid Belt" (S. M. Blinder), its tests and its manual checklist |
+| `demos/planetary-atmosphere-single-layer/**`, `tests/unit/planetary-atmosphere-single-layer.test.js`, `tests/e2e/planetary-atmosphere-single-layer.spec.js`, `docs/checklists/planetary-atmosphere-single-layer.md` | CC BY-NC-SA 3.0 | the port of "Single-Layer Model for Planetary Atmospheres" (Sergio Hannibal Mejía and Simon Lorimer), its tests and its manual checklist |
+| `demos/gaussian-autocorrelation-conditional/**`, `tests/unit/gaussian-autocorrelation-conditional.test.js`, `tests/e2e/gaussian-autocorrelation-conditional.spec.js`, `docs/checklists/gaussian-autocorrelation-conditional.md` | CC BY-NC-SA 3.0 | the port of "Linking Autocorrelation of Gaussian Random Process to Conditional Probabilities" (Victor S. Frost), its tests and its manual checklist |
+| `demos/solar-yield-mounting-systems/**`, `tests/unit/solar-yield-mounting-systems.test.js`, `tests/e2e/solar-yield-mounting-systems.spec.js`, `docs/checklists/solar-yield-mounting-systems.md` | CC BY-NC-SA 3.0 | the port of "Solar Energy Yield for Three Mounting Systems" (Michel de Spot), its tests and its manual checklist |
+| `demos/distillation-degrees-of-freedom/**`, `tests/unit/distillation-degrees-of-freedom.test.js`, `tests/e2e/distillation-degrees-of-freedom.spec.js`, `docs/checklists/distillation-degrees-of-freedom.md` | CC BY-NC-SA 3.0 | the port of "Degree-of-Freedom Analysis on a Distillation Process" (Rachael L. Baumann, Janet deGrazia, John L. Falconer, Nathan S. Nelson and Nick Bongiardina), its tests and its manual checklist |
+| `demos/predator-prey-agents/**`, `tests/unit/predator-prey-agents.test.js`, `tests/e2e/predator-prey-agents.spec.js`, `docs/checklists/predator-prey-agents.md` | CC BY-NC-SA 3.0 | the port of "Predator-Prey Ecosystem: A Real-Time Agent-Based Simulation" (Hiroki Sayama), its tests and its manual checklist |
+| `demos/batch-distillation/**`, `tests/unit/batch-distillation.test.js`, `tests/e2e/batch-distillation.spec.js`, `docs/checklists/batch-distillation.md` | CC BY-NC-SA 3.0 | the port of "Batch Distillation" (Neil Hendren and John L. Falconer), its tests and its manual checklist |
 | `index.html`, `README.md`, `LICENSE.md` | CC BY-NC-SA 3.0 | describe and present the adaptations |
 | `docs/original-source/**`, `docs/original-snapshots/**`, `docs/MANUAL_TEST_CHECKLIST.md`, `docs/checklists/**` | CC BY-NC-SA 3.0 | readable copies of / pictures from / derived from the originals |
 | `demos/distance-norms/**`, `tests/unit/distance-norms.test.js`, `tests/golden/distance-norms.golden.test.js`, `tests/golden/distance-norms.original-states.json`, `tests/e2e/distance-norms.spec.js`, `docs/original-source/distance-norms.txt`, `docs/original-snapshots/distance-norms-*.png`, `docs/checklists/distance-norms.md` (batch A) | CC BY-NC-SA 3.0 | the "Distance Norms in Robot Workspace and Phase Space" port, its tests and the data and pictures taken from its original |
@@ -206,8 +214,16 @@ Licence texts: [`LICENSES/CC-BY-NC-SA-3.0.txt`](LICENSES/CC-BY-NC-SA-3.0.txt) an
 | `demos/crystal-structures-miller/` | "Simple Crystal Structures and Miller Indices" — <https://demonstrations.wolfram.com/SimpleCrystalStructuresAndMillerIndices/> (published 2018-04-02) | Yunfeng Shi and Adam Bross |
 | `demos/lotka-volterra-competition/` | "Lotka-Volterra Competition Model" — <https://demonstrations.wolfram.com/LotkaVolterraCompetitionModel/> (published 2021-06-04) | Richard Cangelosi |
 | `demos/potential-fields/` | "Demonstration of Attractive, Repulsive, and Combination Potential Fields" — ECE 6311 Lecture 22 notebook | Aaron T. Becker |
+| `demos/carnot-irreversible-heat-transfer/` | "Carnot Cycles with Irreversible Heat Transfer" — <https://demonstrations.wolfram.com/CarnotCyclesWithIrreversibleHeatTransfer/> (published 2014-07-02) | Rachael L. Baumann, Megan Maguire and John L. Falconer |
+| `demos/asteroid-belt-resonance/` | "Orbital Resonance in the Asteroid Belt" — <https://demonstrations.wolfram.com/OrbitalResonanceInTheAsteroidBelt/> (published 2018-04-04) | S. M. Blinder |
+| `demos/planetary-atmosphere-single-layer/` | "Single-Layer Model for Planetary Atmospheres" — <https://demonstrations.wolfram.com/SingleLayerModelForPlanetaryAtmospheres/> (published 2022-07-11) | Sergio Hannibal Mejía and Simon Lorimer |
+| `demos/gaussian-autocorrelation-conditional/` | "Linking Autocorrelation of Gaussian Random Process to Conditional Probabilities" — <https://demonstrations.wolfram.com/LinkingAutocorrelationOfGaussianRandomProcessToConditionalPr/> (published 2023-09-06) | Victor S. Frost |
+| `demos/solar-yield-mounting-systems/` | "Solar Energy Yield for Three Mounting Systems" — <https://demonstrations.wolfram.com/SolarEnergyYieldForThreeMountingSystems/> (published 2013-12-04) | Michel de Spot |
+| `demos/distillation-degrees-of-freedom/` | "Degree-of-Freedom Analysis on a Distillation Process" — <https://demonstrations.wolfram.com/DegreeOfFreedomAnalysisOnADistillationProcess/> (published 2016-03-30) | Rachael L. Baumann, Janet deGrazia, John L. Falconer, Nathan S. Nelson and Nick Bongiardina |
+| `demos/predator-prey-agents/` | "Predator-Prey Ecosystem: A Real-Time Agent-Based Simulation" — <https://demonstrations.wolfram.com/PredatorPreyEcosystemARealTimeAgentBasedSimulation/> (published 2011-03-07) | Hiroki Sayama |
+| `demos/batch-distillation/` | "Batch Distillation" — <https://demonstrations.wolfram.com/BatchDistillation/> (published 2019-05-30) | Neil Hendren and John L. Falconer |
 
-Seventy-seven were published by the Wolfram Demonstrations Project under CC BY-NC-SA 3.0. Two (line-parameterization,
+Eighty-five were published by the Wolfram Demonstrations Project under CC BY-NC-SA 3.0. Two (line-parameterization,
 potential-fields) are adapted from lecture notebooks Aaron T. Becker gave Tico to convert; they are licensed as his
 Demonstrations, CC BY-NC-SA 3.0.
 

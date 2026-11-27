@@ -1,0 +1,187 @@
+
+### [Title]
+Solar Energy Yield for Three Mounting Systems
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+\<This Demonstration compares daily solar energy yield obtained with five type of mounting systems: fixed (yellow), horizontal (orange dashed), polar (blue dashed), vertical axis (red dashed), and two-axis tracker (green), based on solar data and latitude of the SunMine project in Kimberley, BC, Canada.\>
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input]
+sunvect[dd_,hr_,lat_]:=Module[{ζ=Cos[0.017453* ((10. +dd)*360./365.24 +360*0.0167/π* Sin[0.017453 (-2. +dd)* 360./365.24])]},{-\[Sqrt](1.0\[VeryThinSpace]-0.158236* ζ^2) Sin[(1)/(12) (12.-hr) π],0.39779 * Cos[° lat]* ζ+Cos[(1)/(12) (12-hr) π] \[Sqrt](1.0-0.158236*ζ ^2) Sin[° lat],Cos[° lat] Cos[(1)/(12) (12.-hr) π] \[Sqrt](1.\[VeryThinSpace]-0.158236* ζ^2)-0.39779 * ζ* Sin[° lat]}]
+
+### [Input]
+efull[dd_,hr_,lat_]:=
+With[{sr=sunvect[dd,hr,lat],\[Iota]0x=1380.,Alpha1=0.87,
+Beta1=0.17,εx=(1+0.033412*Cos[2*π*(dd-2)/365 ])},
+{sr,{\[Iota]0x*εx*Alpha1*Exp[-Beta1/sr[[3]]],\[Iota]0x*εx*sr[[3]]*(0.271-0.2939*Alpha1*Exp[-Beta1/sr[[3]]])}}]
+
+### [Input]
+pnlrot[{σ_,ρ_}]:={-Sin[° ρ] Sin[° σ],Cos[° ρ] Sin[° σ],Cos[° σ]}
+
+### [Input]
+polrot[σ_,hr_]:=RotationMatrix[(hr-12)*15 °,RotationMatrix[-σ °,{1,0,0}].{0,1,0}].RotationMatrix[-σ °,{1,0,0}].{0,0,1}
+
+### [Input]
+trkall[dd_,hr_,lat_,σ_,ρ_]:=With[{ef=efull[dd,hr,lat]},Block[{asp,prt,x},prt=Insert[pnlrot[#]&/@{{σ,ArcTan[ef[[1,1]],ef[[1,2]]]/ ° - 90},{(π/2-ArcSin[ef[[1,3]]])/ °,0},{σ,0}},polrot[σ,hr],2];asp=#.ef[[1]]&/@prt;
+Flatten@{Total @ef[[2]],ef[[2,1]]*#*Boole[#>0]&/@asp+ef[[2,2]]}]]
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+pr=hlim/.Quiet@NSolve[sunvect[dp,hlim,lat][[3]]==0 ,hlim];
+Quiet@Plot[Evaluate@{trkall[dp,hr,lat,sl,0]},{hr,pr[[1]],pr[[2]]},
+Filling->{{5->{Bottom,Directive[Yellow,Opacity[.1]]}},{1->{{5},Directive[Hue[.4,1,1],Opacity[.1]]}}},
+PlotStyle->{Directive[Hue[.4,1,.5]],Directive[Red,Dashed,Thick],Directive[Hue[.6],Dashed],Directive[Orange,Thick,Dotted],Directive[Thin,Hue[.15,1,.5]]},GridLines->Automatic,
+PlotLabel->Style["\<daily solar energy yield\>",Bold,Hue[.38,.50,.50]],
+PlotRange->{{2,22},{0,1100}},AxesLabel->(Style[#,Bold,FontFamily->"\<Arial\>"]&/@{"\<hour\>","\<wh/m2\>"}),PlotLegends->Placed[Style[#,10,FontFamily->"\<Arial\>"]&/@{"\<Full\>","\<Vert.\>","\<Polar\>","\<Horiz.\>","\<Fixed\>"},Bottom],
+ImageSize->.95{380,380}
+]
+,
+Column[
+
+{
+Panel[Column[{Item[Style[Dynamic["\<latitude \>"<>ToString[lat]<>"\< °\>"],Bold,12,Hue[0]]],
+Control@{{lat,49.7,"\<\>"},24,65.,.1}},Alignment->Center]],
+Panel[Column[{
+Item[Style[Dynamic["\<panel angle \>"<>ToString[sl]<>"\< °\>"],Bold,12,Darker[Orange]]],
+Control@{{sl,58,"\<\>"},0,90,.1},
+Style["\<optimized @\>",12],
+Control@{{sl,,"\<\>"},{(lat+23.4)->"\<winter solstice\>",(lat-23.4)->"\<summer solstice\>"},ControlType->SetterBar},
+Control@{{sl,,"\<\>"},{lat->"\<equinox\>"},ControlType->SetterBar}
+},Alignment->Center]],
+Panel[Column[{
+Item[Style[Dynamic[DateString[DatePlus[{2013,1,1},dp],{"\<MonthName\>","\< \>","\<Day\>"}]],Bold,12,Blue]],
+Control@{{dp,171,"\<\>"},1,365,1},
+Control@{{dp,,"\<\>"},{354->"\<winter\>",79->"\<spring\>",171->"\<summer\>",263->"\<autumn\>"},ControlType->SetterBar}
+}
+,Alignment->Center]],
+Dynamic[ControlActive[bc,bc=If[ValueQ[pr],BarChart[MapThread[Labeled[#1,#2,Center]&,{Sum[trkall[dp,hr,lat,sl,0],{hr,Ceiling[pr[[1]],.1],Floor[pr[[2]],.1],.1}]/10000,{"\<Full\>","\<Vert.\>","\<Polar\>","\<Horiz.\>","\<Fixed\>"}}],ChartStyle->{Hue[.4,1,1,.5],Hue[0,1,1,.3],LightBlue,LightOrange, LightYellow},PlotRange->{1,13},GridLines->{None,Automatic}],Item["\<calculating\>"]]],SynchronousUpdating->Automatic],
+Item[Style["\<Energy Yield kW/h/da \>",12,Gray]]}
+,Alignment->Center],
+ControlPlacement->Left,TrackedSymbols:>{lat,sl,dp},
+SaveDefinitions-> True]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Item]
+Michel de Spot
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+This graphic is provided in the context of the SunMine project in Kimberley. It compares the solar energy captured by five different solar panels' mounting systems:
+
+### [Text]
+\<\[Bullet] fixed at at an angle normally set to optimize the yearly energy yield,\>
+
+### [Text]
+\[Bullet] horizontal (rotating around an east-west axis),
+
+### [Text]
+\<\[Bullet] polar (rotating around an axis more or less parallel to the Earth's axis),\>
+
+### [Text]
+\<\[Bullet] vertical axis tracker ( a fixed-slope panel rotating from east to west to follow the sun's azimuth),\>
+
+### [Text]
+\<\[Bullet] dual axis ( following the sun in both directions (azimuth and elevation).\>
+
+### [Text]
+\<The graphic shows the total daily solar energy yield for the five systems, based on a clear sunny day, every day. Solar energy is composed of a varying proportion of direct and diffuse irradiation. The efficiencies of the trackers are greater on days with clear skies than on cloudy days.\>
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+Solar Energy
+
+### [Item]
+Solar Tracking
+
+### [Item]
+SunMine
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Item]
+Link to external information
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2013-12-04
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

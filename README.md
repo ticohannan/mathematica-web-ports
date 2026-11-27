@@ -2,7 +2,7 @@
 
 **Live site:** <https://ticohannan.github.io/mathematica-web-ports/> · **Source:** <https://github.com/ticohannan/mathematica-web-ports>
 
-Seventy-seven Mathematica `Manipulate` demonstrations (and two lecture notebooks) re-implemented as a **static website**:
+Eighty-five Mathematica `Manipulate` demonstrations (and two lecture notebooks) re-implemented as a **static website**:
 plain HTML + JavaScript (ES modules, no build step), SVG for 2D, three.js/WebGL for 3D.
 
 | Demo | Folder | Rendering | Interaction |
@@ -86,6 +86,14 @@ plain HTML + JavaScript (ES modules, no build step), SVG for 2D, three.js/WebGL 
 | Simple Crystal Structures and Miller Indices | `demos/crystal-structures-miller/` | WebGL 2 | crystal structure, repeats and shifts, radii, cell face, Miller indices; spheres, unit cell and plane families; errors switch |
 | Lotka-Volterra Competition Model | `demos/lotka-volterra-competition/` | SVG | competition coefficients, growth rates and carrying capacities, reset; StreamPlot phase portrait with nullclines or separatrices and basins; time plot; errors switch |
 | Artificial Potential Fields | `demos/potential-fields/` | WebGL 2 + SVG | four tabs: attractive, repulsive, attractive + repulsive (surfaces with d<sub>i</sub>, ζ<sub>i</sub>, η<sub>i</sub>, ρ<sub>0</sub> sliders and one obstacle pad with a locator per obstacle, add and remove) and its contour plot (a lecture notebook, not a Demonstration) |
+| Carnot Cycles with Irreversible Heat Transfer | `demos/carnot-irreversible-heat-transfer/` | SVG | heat engine or heat pump between two reservoirs with ΔT<sub>1</sub>, ΔT<sub>2</sub> sliders: the cycle on a T–S diagram, heats, work, entropy changes, efficiency or COP |
+| Orbital Resonance in the Asteroid Belt | `demos/asteroid-belt-resonance/` | SVG | the asteroid belt with Jupiter, the Kirkwood gaps of the 3:1 … 2:1 resonances, a time slider |
+| Single-Layer Model for Planetary Atmospheres | `demos/planetary-atmosphere-single-layer/` | SVG | Mercury … Mars: albedo, emissivity and distance sliders, the energy flows through one atmospheric layer, surface temperature in K, °C or °F |
+| Linking Autocorrelation of Gaussian Random Process to Conditional Probabilities | `demos/gaussian-autocorrelation-conditional/` | SVG | three autocorrelation functions with their power spectra, the conditional probability P(X(t+τ) > L | X(t) = y) against τ and the conditional density |
+| Solar Energy Yield for Three Mounting Systems | `demos/solar-yield-mounting-systems/` | SVG | latitude, panel angle and day: the power through the day of fixed, one-axis and two-axis mountings and their daily yields |
+| Degree-of-Freedom Analysis on a Distillation Process | `demos/distillation-degrees-of-freedom/` | SVG | a distillation flowsheet with random known streams; degrees of freedom of the column, condenser, reboiler or whole process |
+| Predator-Prey Ecosystem: A Real-Time Agent-Based Simulation | `demos/predator-prey-agents/` | SVG | foxes and rabbits as agents in a square, run in real time; growth rates, mobilities and fox endurance |
+| Batch Distillation | `demos/batch-distillation/` | SVG | one mole of a binary mixture distilled flask by flask: the still, the condenser, the flasks, x–y and T–x–y plots for no, minimum- and maximum-boiling azeotropes |
 
 The apps came in groups: the first three (motion planning, rotations, Euler angles); seven more from the
 seven-link PRM to robot singularities, added in v0.1.12 as further proofs of concept (developed first in a separate,
@@ -104,7 +112,8 @@ v0.1.40; fourteen in v0.1.41: five on waves, from the vibrating string to the vi
 five on fields and machines, from three charges on a line to solar energy on the Earth's surface, and four on geometry
 and ecology, from a hypercube rotating in 4D to the Lotka-Volterra competition model; and, from Dr. Becker's Lecture 22
 notebook, attractive and repulsive potential fields in four tabs in v0.1.42, renamed Artificial Potential Fields with
-an obstacle pad (add, remove and drag coloured locators) and a ρ<sub>0</sub> slider for the sum in v0.1.43.
+an obstacle pad (add, remove and drag coloured locators) and a ρ<sub>0</sub> slider for the sum in v0.1.43; and eight by other authors in v0.1.44, from a Carnot cycle with irreversible
+heat transfer to batch distillation.
 
 ## Where the code runs
 

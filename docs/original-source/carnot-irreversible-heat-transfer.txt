@@ -1,0 +1,233 @@
+
+### [Title]
+Carnot Cycles with Irreversible Heat Transfer
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+This Demonstration models a Carnot cycle as either a heat engine or a heat pump. Change the temperature differences between the reservoirs and the Carnot cycle with sliders. The entropy changes for the reservoirs (ΔSubscript[S, h] and ΔSubscript[S, c]) and the overall entropy change ΔSubscript[S, total] are calculated. When the temperature differences between the reservoirs and the engine/pump are zero, the total entropy change is zero and the process is reversible. The entropy change of the engine/pump, which is at steady state, is zero. All energies and entropy changes are per unit time, since these are continuous processes, but the time scale is arbitrary. The cycle efficiency η is calculated for the heat engine, and the coefficient of performance COP is calculated for the heat pump. As the temperature differences between the reservoirs and the engine/pump increase, the efficiency/coefficient of performance decreases. For the heat engine, Subscript[Q, H] is held constant at 1250 J, and for the heat pump, Subscript[Q, C] is held constant at 600 J.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [CodeText]
+If you provide initialization code, include a SaveDefinitions->True option in the Manipulate.
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{Th,Tc,TH,TC,QH,QC,η,COP,W,ΔSh,ΔSc,cycle,labels},
+Th=If[csb==1,500,325];Tc=275;
+
+TH=Th+If[csb==1,-ΔT1,ΔT1];
+TC=Tc+If[csb==1,ΔT2,-ΔT2];
+
+QH=If[csb==1,-1250,-QC*(TH)/(TC)];
+QC=If[csb==1,-QH*(TC)/(TH),-600];
+
+η=(TH-TC)/(TH);COP=(TC)/(TH-TC);
+
+W=If[csb==1,η*QH,-(QC)/(COP)];
+
+ΔSh=QH/Th;ΔSc=QC/Tc;
+
+cycle=Graphics[{
+Circle[{0,0},2],
+{Thick,Arrowheads[If[csb==1,Abs,Reverse]@{0,-0.03,-0.03,-0.03}],
+Blue,Arrow[{{-Sqrt[3],1},{Sqrt[3],1}}],Arrow[{{Sqrt[3],-1},{-Sqrt[3],-1}}],
+RGBColor[0,.6,0],Arrow[{{Sqrt[3],1},{Sqrt[3],-1}}],Arrow[{{-Sqrt[3],-1},{-Sqrt[3],1}}]},
+Arrowheads[If[csb==1,{0,0.05},{-0.05,0}]],
+Arrow[{{2,0},{5,0}}],(*work*)
+Arrow[{{0,5},{0,2}}],(*to/from hot res*)
+Arrow[{{0,-2},{0,-5}}],(*to/from cold res*)
+Line[{{-5,5},{5,5}}],(*hot res*)
+Line[{{-5,-5},{5,-5}}],(*cold res*)
+{EdgeForm[Black],
+If[csb==1,LightRed,LightGreen],Rectangle[{5.10,-0.5},{8.95,0.5}],
+White,Rectangle[{-5.65,-0.5},{-2.45,0.5}],
+LightBlue,Rectangle[{-6.25,-2.5},{-1.75,-1.5}],
+LightYellow,Rectangle[{-6.25,3.5},{-1.75,4.5}],Rectangle[{-6.25,-3.5},{-1.75,-4.5}],Rectangle[{1.65,1.75},{6.35,2.75}],Rectangle[{1.65,-1.75},{6.35,-2.75}]}
+}];
+
+labels=Graphics[{
+Text[Style["\<hot reservoir\>",18],{-5,5},{-1,-1}],Text[Style["\<cold reservoir\>",18],{-5,-5},{-1,1}],
+Text[Style[Row@{Subscript[Style["\<W\>",Italic],"\<S\>"],"\< = \>",NumberForm[N@W,{4,0}],"\< J\>"},18],{7,0}],
+Text[Style[If[csb==1,Row[{Style["\<η\>",Italic],"\< = \>",NumberForm[N@η,2]}],Row[{Style["\<COP\>",Italic],"\< = \>",NumberForm[N@COP,2]}]],18],{-4,0}],
+Text[Style[Row@{Subscript[Style["\<T\>",Italic],#1],"\< = \>",#2,"\< K\>"},18],#3,#4]&@@@{{"\<h\>",Th,{0,5},{0,-1}},{"\<c\>",Tc,{0,-5},{0,1}},{"\<H\>",TH,{3.75,1},{0,0}},{"\<C\>",TC,{3.75,-1},{0,0}}},
+Text[Style[Row@{Subscript[Style["\<Q\>",Italic],#1],"\< = \>",NumberForm[N@#2,{4,0}],"\< J\>"},18],#3,#4]&@@@{{"\<h\>",QH,{5,5},{1,-1}},{"\<c\>",QC,{5,-5},{1,1}},{"\<H\>",-QH,{4,2.25},{0,0}},{"\<C\>",-QC,{4,-2.25},{0,0}}},
+Text[Style[Row@{"\<Δ\>",Subscript[Style["\<S\>",Italic],#1],"\< = \>",NumberForm[N@#2,{3,2}],"\< J/K\>"},18],{-4,#3}]&@@@{{"\<h\>",ΔSh,4},{"\<c\>",ΔSc,-4},{"\<total\>",ΔSh+ΔSc,-2}}
+}];
+
+Show[cycle,labels,ImageSize->{600,430}]
+],
+Grid[{{
+Control[{{csb,1,"\<\>"},{1->"\< heat engine \>",2->"\< heat pump \>"},Setter}],Spacer@10,
+Control[{{ΔT1,10,Row[{"\<|\>",Subscript[Style["\<T\>",Italic],"\<h\>"],"\< - \>",Subscript[Style["\<T\>",Italic],"\<H\>"],"\<\[VerticalSeparator]\>"}]},0,50,2,Appearance->"\<Labeled\>",ImageSize->Small}],
+Control[{{ΔT2,12,Row[{"\<|\>",Subscript[Style["\<T\>",Italic],"\<c\>"],"\< - \>",Subscript[Style["\<T\>",Italic],"\<C\>"],"\<\[VerticalSeparator]\>"}]},0,50,2,Appearance->"\<Labeled\>",ImageSize->Small}]
+}}]
+]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Rachael L. Baumann
+
+### [Text]
+Megan Maguire
+
+### [Text]
+John L. Falconer
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+ΔSubscript[T, 1]=|Subscript[T, h]-Subscript[T, H]|,
+ΔSubscript[T, 2]=|Subscript[T, c]-Subscript[T, C]|,
+
+### [Text]
+ΔSubscript[S, h]=(Subscript[Q, h])/(Subscript[T, h]),
+
+### [Text]
+ΔSubscript[S, c]=(Subscript[Q, c])/(Subscript[T, c]),
+
+### [Text]
+ΔSubscript[S, h]+ΔSubscript[S, c]=ΔSubscript[S, total],
+
+### [Text]
+where ΔSubscript[T, 1] and ΔSubscript[T, 2] are user-defined differences in reservoir and Carnot cycle temperatures (K). The subscripts h and c refer to the hot or cold reservoirs, and the subscripts H and C refer to the hot or cold temperatures of the Carnot cycle. T is temperature (K), ΔS is the change in entropy (J/K), and Q is heat gained or lost (J).
+
+### [Text]
+For a Carnot heat engine, heat is transferred from a hot reservoir to a cold reservoir and the engine does work (W). For a real process, Subscript[T, h]>=Subscript[T, H] and Subscript[T, c]<=Subscript[T, C]. The efficiency η of a Carnot engine, in terms of the engine temperatures, is:
+
+### [Text]
+η=(Subscript[T, H]-Subscript[T, C])/(Subscript[T, H]),
+
+### [Text]
+Subscript[Q, C]=-Subscript[Q, H] (Subscript[T, C])/(Subscript[T, H]),
+
+### [Text]
+\[VerticalSeparator]W\[VerticalSeparator]=η Subscript[Q, H].
+
+### [Text]
+For a Carnot heat pump, heat is transferred from the cold reservoir to the hot reservoir and work is added. For a real process, Subscript[T, h]<=Subscript[T, H] and Subscript[T, c]>=Subscript[T, C] to have a reasonable rate of heat transfer. The coefficient of performance COP is
+
+### [Text]
+COP=(Subscript[T, C])/(Subscript[T, H]-Subscript[T, C]),
+
+### [Text]
+Subscript[Q, H]=-Subscript[Q, C] (Subscript[T, H])/(Subscript[T, C]),
+
+### [Text]
+\[VerticalSeparator]W\[VerticalSeparator]=(Subscript[Q, C])/(COP).
+
+### [Text]
+\<The screencast video at[2] explains how to use this Demonstration.\>
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] J. R. Elliott and C. T. Lira, Introductory Chemical Engineering Thermodynamics, New York: Pearson Education, 2012 pp. 157\[Dash]158.
+
+### [Text]
+[2] Carnot Cycle with Irreversible Heat Transfer. www.colorado.edu/learncheme/thermodynamics/CarnotCycles.html.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+Carnot cycle
+
+### [Item]
+heat pump
+
+### [Item]
+heat engine
+
+### [Item]
+thermodynamics
+
+### [Item]
+chemical engineering
+
+### [Item]
+irreversible process
+
+### [Item]
+efficiency
+
+### [Item]
+coefficient of performance
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Item]
+Link to external information
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2014-07-02
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

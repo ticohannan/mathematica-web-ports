@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.43 |
+| Code version: | 0.1.44 |
 | Document revision | 2 (2026-11-17) — the port |
 | Status | describes the app as implemented; changes are proposed and approved before they are built |
 | Original | Wolfram Demonstrations Project, "Electrostatics of a Linear System of Three Charged Particles", contributed by Whasington Silvestre, published 2022-12-01 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/ElectrostaticsOfALinearSystemOfThreeChargedParticles/> |
@@ -177,6 +177,7 @@ Proposals for this app are tracked separately.
 | 2 | v0.1.41 | 2026-11-17 | the port: model, controls (charge sliders over the list without 0), plot with the two tables, the equilibrium and the arrow figures; compared with the four snapshots |
 | 3 | v0.1.42 | 2026-11-23 | version number (v0.1.42: one new app, Potential Fields, from Dr. Becker's Lecture 22 notebook; no shared code changed); no change to this app's code, behaviour or picture |
 | 4 | v0.1.43 | 2026-11-25 | version number (v0.1.43: Dr. Becker's changes to Artificial Potential Fields; no shared code changed); no change to this app's code, behaviour or picture |
+| 5 | v0.1.44 | 2026-11-27 | version number (v0.1.44: eight new apps, on predator–prey agents, Gaussian autocorrelation, solar mountings, asteroid-belt resonances, a planetary atmosphere, batch distillation, degrees of freedom of a distillation and Carnot cycles; no shared code changed); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

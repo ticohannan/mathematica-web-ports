@@ -1,0 +1,245 @@
+
+### [Title]
+Degree-of-Freedom Analysis on a Distillation Process
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+In this Demonstration, a degree-of-freedom analysis is performed on a distillation process to determine whether the system has sufficient information to solve for the unknown variables. Use buttons to select the unit on which to do mass balances (distillation column, condenser or reboiler) or to do a balance on the overall system. When the condenser is selected, use buttons to select a partial or total condenser. Set the total number of unknowns with a slider; unknown variables are blue on the diagram and known variables are black. The known variables are selected randomly and change when you click the "new problem" button. Use buttons to select how species B is represented: as Subscript[z, B] or as 1-Subscript[z, A]; the degree-of-freedom analysis is different for each representation. An explanation of the analysis is shown on the right. For zero degrees of freedom, the balances are solvable. The system is overspecified if it has more equations than unknowns and it is underspecified if it has more unknowns than equations. For the reboiler, the equilibrium ratio Subscript[K, r] is known, and for a partial condenser the equilibrium ratio Subscript[K, c] is known. Temperatures and pressures are known for this analysis. Mass balances and phase-equilibrium relations are solved to determine unknown variables.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input] (init)
+labels[number_,cmp_,pos_,opt_]:={
+Text[Style[Subscript[Style["\<m\>",Italic],number],17],{pos[[1]],pos[[2]]+0.55}],
+{Text[Style[Subscript[Style[cmp,Italic],Row@{number,"\<,A\>"}],17],{pos[[1]],pos[[2]]-0.55}],
+Text[Style[Switch[opt,
+1,Row@{Style["\<1-\>",Transparent],Subscript[Style[cmp,Italic],Row@{number,"\<,A\>"}]},
+2,Subscript[Style[cmp,Italic],Row@{number,"\<,B\>"}]
+],17],{pos[[1]],pos[[2]]-1.55}]}}
+
+### [Input] (init)
+variables[opt_]:={labels[1,"\<z\>",{-2.9,0},opt],labels[2,"\<y\>",{3.05,5.25},opt],labels[3,"\<x\>",{2.75,-5.25},opt],labels[4,"\<y\>",{9.2,5.25},opt],labels[5,"\<x\>",{9.2,-5.25},opt],labels[6,"\<x\>",{3.3,2},opt],labels[7,"\<y\>",{3.05,-2},opt]}
+
+### [Input] (init)
+heads=Text[Style[Row@{"\<1-\>",Style[Subscript[Style[#1,Italic],Row@{#2,"\<,A\>"}],Transparent]},17],{#3[[1]],#3[[2]]-1.55}]&@@@{{1,"\<z\>",{-2.9,0}},{2,"\<y\>",{3.05,5.25}},{3,"\<x\>",{2.75,-5.25}},{4,"\<y\>",{9.2,5.25}},{5,"\<x\>",{9.2,-5.25}},{6,"\<x\>",{3.3,2}},{7,"\<y\>",{3.05,-2}}};
+
+### [Input] (init)
+equipment=Append[{
+Rectangle[{#2[[1]]-1.5,#2[[2]]-#3*1.5},{#2[[1]]+1.5,#2[[2]]+#3*1.5}],
+Rectangle[{#2[[1]]-1.9,#2[[2]]-(#3*1.5+0.4)},{#2[[1]]+1.9,#2[[2]]+(#3*1.5+0.4)}],
+Text[Style[Column[Flatten@{#1},Center],16],#2],Row@Flatten@{Riffle[Flatten@{#1},"\< \>"]}
+}&@@@{{{"\<distillation\>","\<column\>"},{0,0},2.5},{"\<condenser\>",{6,5.25},1},{"\<reboiler\>",{6,-5.25},1}},
+{Text@"\<\>",Rectangle[{-3.9,-7.45},{10.25,7.5}],Text@"\<\>","\<overall\>"}];
+
+### [Input] (init)
+streams={Arrow[{{-4.2,0},{-1.5,0}}],Arrow[{{0,3.75},{0,5.25},{4.5,5.25}}],Arrow[{{0,-3.75},{0,-5.25},{4.5,-5.25}}],Arrow[{{7.5,5.25},{11,5.25}}],Arrow[{{7.5,-5.25},{11,-5.25}}],Arrow[{{6,3.75},{6,2},{1.5,2}}],Arrow[{{6,-3.75},{6,-2},{1.5,-2}}]};
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Module[{varSelect,unknowns,random,replace,varKnown,varUnknown,newvarSelect,unitStreams,balUnknown,extraInfo,dof},
+varSelect=If[view==1,Delete[variables@view,{#,2,2}&/@Range@Length@variables@view],variables@view];(*deletes 1-A*)
+
+unknowns=Switch[view,1,u1,2,u2];
+SeedRandom[reset];random=RandomSample[Flatten@varSelect,Length@Flatten@varSelect-unknowns];(*random known*)
+
+replace=(variables[view][[4,2,#]]->labels[4,If[cond==1,"\<y\>","\<x\>"],{9.2,5.25},view][[2,#]]&/@{1,2});
+varKnown=If[view==1,
+Join[random,DeleteCases[If[MemberQ[random,variables[1][[#,2,1]]],variables[1][[#,2,2]]]&/@Range@Length@variables@view,Null]],
+random]/.replace;
+varUnknown=Complement[Flatten@variables@view/.replace,varKnown];
+
+newvarSelect=varSelect/.replace;
+unitStreams=Flatten[newvarSelect[[#]]&/@Switch[select,1,{1,2,3,6,7},2,{2,4,6},3,{3,5,7},4,{1,4,5}]];(*balances*)
+balUnknown=DeleteCases[If[MemberQ[unitStreams,varUnknown[[#]]],varUnknown[[#]]]&/@Range@Length@varUnknown,Null];
+
+extraInfo=If[view==2,
+DeleteCases[If[Length@DeleteCases[Table[MemberQ[balUnknown,newvarSelect[[#1,2,i]]],{i,{1,2}}],False]>0,Row@{"\<\[Sum]\>",Subscript[Style[#2,Italic],#1],"\< = 1\>"}]&@@@{{1,"\<z\>"},{2,"\<y\>"},{3,"\<x\>"},{4,If[cond==1,"\<y\>","\<x\>"]},{5,"\<x\>"},{6,"\<x\>"},{7,"\<y\>"}},Null]];
+
+dof=Length@balUnknown-2-Length@extraInfo-Switch[select,1,0,2,If[cond==1,1,2],3,1,4,0];
+
+Grid[{
+{Text@Style[Row@{Style["\<unknowns\>",Blue],"\< - species balances - extra information = degrees of freedom\>"},17],SpanFromLeft},
+{Graphics[{
+{FaceForm@None,EdgeForm@Thick,equipment[[All,1]],EdgeForm@{Thick,Dashed,RGBColor[0,0.6,0]},equipment[[select,2]]},
+Style[equipment[[select,3]],Bold,RGBColor[0,0.6,0]],
+Delete[equipment[[All,3]],select],
+{Thick,streams,RGBColor[0,0.6,0],streams[[#]]&/@Switch[select,1,{1,2,3,6,7},2,{2,4,6},3,{3,5,7},4,{1,4,5}]},
+varKnown,Style[#,Blue]&/@varUnknown,If[view==1,heads]
+},ImageSize->{405,375},AspectRatio->Full,PlotRange->{-7.51,7.51}],
+(************************)
+Graphics[{
+Text@Style[Column[Flatten@{
+Style[equipment[[select,4]],Bold],
+Row@{"\<unknowns = \>",Length@balUnknown},
+Grid@ArrayReshape[Graphics[{#},ImageSize->{27,15}]&/@Flatten@{Style[#,Blue]&/@balUnknown,ConstantArray[Text@"\<\>",13]},{If[Length@balUnknown<=5,1,2],5}],Spacer[0],"\<species balances = 2\>",
+If[view==2,Grid@{{"\<A\>","\<B\>"}}],Spacer[0],
+Row@{"\<extra information = \>",Length@extraInfo+Switch[select,1,0,2,If[cond==1,1,2],3,1,4,0]},
+If[view==2,Grid@ArrayReshape[Join[extraInfo,ConstantArray[Text@"\<\>",3]],{If[Length@extraInfo<=3,1,2],3}]],
+If[select==2\[And]cond==2,Row@Riffle[Subscript[Style[#1,Italic],#2]&@@@{{"\<y\>",2},{"\<x\>",4},{"\<x\>",6}},"\< = \>"]],
+If[select==2\[And]cond==1,Row@{Subscript[Style["\<K\>",Italic],"\<c\>"],"\< = \>",Subscript[Style["\<y\>",Italic],4],"\</\>",Subscript[Style["\<x\>",Italic],6]}],
+If[select==3,Row@{Subscript[Style["\<K\>",Italic],"\<r\>"],"\< = \>",Subscript[Style["\<y\>",Italic],7],"\</\>",Subscript[Style["\<x\>",Italic],5]}],Spacer[0],
+Row@{"\<degrees of freedom = \>",dof},
+Which[dof==0,Framed["\<solvable\>",Background->Opacity[0.3,Green],FrameMargins->Small],
+dof<0,Framed["\<overspecified\>",Background->Opacity[0.6,Yellow],FrameMargins->Small],
+dof>0,Framed["\<underspecified\>",Background->Opacity[0.35,Red],FrameMargins->Small]]
+},Center]/.Null->Nothing,17]
+},ImageSize->{195,375},AspectRatio->Full]}
+}]
+],
+Grid[{
+{Control[{{select,2,"\<balance on\>"},{1->"\<column\>",2->"\<condenser\>",3->"\<reboiler\>",4->"\<overall\>"},PopupMenu}],
+Control[{{view,1,"\<species B representation\>"},{1->Row@{"\< 1-\>",Subscript[Style["\<z\>",Italic],"\<A\>"]},2->Subscript[Style["\< z\>",Italic],"\<B\>"]},Setter}],
+Button["\< new problem \>",If[reset<1000,reset=reset+1,reset=reset-1],Background->RGBColor[0,1,1],ImageSize->Medium],
+Control[{{reset,1},1,1000,1,None}]},
+{PaneSelector[{
+1->Control[{{u1,5,"\<total number of unknowns\>"},1,13,1,Appearance->"\<Labeled\>"}],
+2->Control[{{u2,10,"\<total number of unknowns\>"},1,20,1,Appearance->"\<Labeled\>"}]
+},Dynamic@view],SpanFromLeft,
+PaneSelector[{2->Control[{{cond,1,"\<\>"},{1->"\< partial condenser \>",2->"\< total condenser \>"},Setter}]},Dynamic@select]}
+}],
+SaveDefinitions->True]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Rachael L. Baumann
+
+### [Text]
+Janet deGrazia,
+
+### [Text]
+John L. Falconer
+
+### [Text]
+Nathan S, Nelson
+
+### [Text]
+Nick Bongiardina
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+\<When solving material balances for this distillation process, start with a unit that has zero degrees of freedom or start with the complete system if it has zero degrees of freedom. Then, do a degree-of-freedom analysis on another unit to see if it now has zero degrees of freedom. Repeat this procedure until all of the unknown variables are determined.\>
+
+### [Text]
+\<View the screencast videos[1, 2] for more examples of degree-of-freedom analysis.\>
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] Degree of Freedom Analysis on a Single Unit[Video]. (Nov 14, 2011) www.youtube.com/watch?v=6Rx2ry1P6ME.
+
+### [Text]
+[2] Multiple Unit Material Balance: Degree of Freedom Analysis[Video]. (Oct 30, 2013) www.youtube.com/watch?v=JfD5iyoKD8w.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+degree-of-freedom
+
+### [Item]
+degrees of freedom
+
+### [Item]
+distillation column
+
+### [Item]
+condenser
+
+### [Item]
+reboiler
+
+### [Item]
+material balance
+
+### [Item]
+mass balance
+
+### [Item]
+energy balance
+
+### [Item]
+chemical engineering
+
+### [Item]
+environmental engineering
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Evaporative Crystallization with Recycle
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2016-03-30
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

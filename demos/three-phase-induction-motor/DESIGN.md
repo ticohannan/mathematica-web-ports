@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.43 |
+| Code version: | 0.1.44 |
 | Document revision | 2 (2026-11-17) |
 | Status | describes the app as implemented; changes go through Proposed changes (§8) |
 | Original | Wolfram Demonstrations Project, "Operating an AC Three-Phase Induction Motor", contributed by Harley H. Hartman, published 2008-06-18 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/OperatingAnACThreePhaseInductionMotor/> Source as text: [`docs/original-source/three-phase-induction-motor.txt`](../../docs/original-source/three-phase-induction-motor.txt); snapshots `docs/original-snapshots/three-phase-induction-motor-1…4.png`; saved states `tests/golden/three-phase-induction-motor.original-states.json` (`states[0]` the live state, `snapshots` the four snapshots' settings) |
@@ -196,6 +196,7 @@ Proposals for this app are tracked separately.
 | 2 | v0.1.41 | 2026-11-17 | the port: the original's Animator and four sliders, the rotor angle, the 3D motor with its six phase bands, rotor, shaft, holes and skewed bars, and the plot of the three-phase supply, in simple mode; opening state from the notebook; errors in the original (§11) |
 | 3 | v0.1.42 | 2026-11-23 | version number (v0.1.42: one new app, Potential Fields, from Dr. Becker's Lecture 22 notebook; no shared code changed); no change to this app's code, behaviour or picture |
 | 4 | v0.1.43 | 2026-11-25 | version number (v0.1.43: Dr. Becker's changes to Artificial Potential Fields; no shared code changed); no change to this app's code, behaviour or picture |
+| 5 | v0.1.44 | 2026-11-27 | version number (v0.1.44: eight new apps, on predator–prey agents, Gaussian autocorrelation, solar mountings, asteroid-belt resonances, a planetary atmosphere, batch distillation, degrees of freedom of a distillation and Carnot cycles; no shared code changed); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

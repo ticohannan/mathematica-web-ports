@@ -15,7 +15,7 @@ Since v0.1.34 the apps listed here have a switch beside "Initial settings": **er
 
 To go back to the last version without the switch: tag `pre-fixed-mode-v0.1.33` (= v0.1.33, commit `b4569b0`).
 
-Apps with the switch: 32; corrections: 61. Code version 0.1.43.
+Apps with the switch: 36; corrections: 67. Code version 0.1.44.
 
 ## Motion Planning for Robot Path around Obstacles (`demos/motion-planning/`)
 
@@ -237,3 +237,29 @@ Apps with the switch: 32; corrections: 61. Code version 0.1.43.
 | Finding | The original (kept) | Corrected |
 |---|---|---|
 | E-LV-01 | the separatrices of the saddle are integrated over the fixed time span −1000 … 1000 from points 10<sup>−7</sup> of the saddle's distance from the origin away from it. Their speed is proportional to the growth rates: below about r1 = r2 = 0.1 (with α = 1.45, β = 1.4) the curves to (0, 1) and (1, 0) stop short of these points (at r1 = r2 = 0.05 they hardly leave the saddle), the basin polygons built from them are wrong, and the colours no longer show the basins of attraction. | each separatrix is integrated until it leaves the square, comes back to the saddle or reaches another equilibrium (no fixed time span), so the curves end at (0, 0), (0, 1) and (1, 0) and the basins are coloured correctly for every growth rate. With the opening settings the picture is the same as the original's. |
+
+## Carnot Cycles with Irreversible Heat Transfer (`demos/carnot-irreversible-heat-transfer/`, since v0.1.44)
+
+| Finding | The original (kept) | Corrected |
+|---|---|---|
+| E-CI-01 | the heat pump's "COP" is T_C/(T_H − T_C) = Q_C/W, the coefficient of performance of a refrigerator (heat taken from the cold side per unit of work); a heat pump's COP is the heat delivered to the hot side per unit of work (ΔT1 = 8, ΔT2 = 36: "COP = 2.5"). | the label shows the heat pump's COP T_H/(T_H − T_C) = Q_H/W, the heat given to the hot side per unit of work ("COP = 3.5" there); the work and the heats are unchanged. |
+
+## Orbital Resonance in the Asteroid Belt (`demos/asteroid-belt-resonance/`, since v0.1.44)
+
+| Finding | The original (kept) | Corrected |
+|---|---|---|
+| E-OR-01 | the Kirkwood gaps are drawn at Jupiter's distance times the period ratio, 5.20336 × 1/3, 2/5, 3/7 and 1/2 = 1.73, 2.08, 2.23 and 2.60 AU: by Kepler's third law a period ratio p belongs to the distance ratio p^(2/3), so the 3:1 gap lies at 2.50 AU, not 1.73 AU (between Mars and the belt's inner edge). | the gaps are drawn at 5.20336 × p^(2/3) = 2.50 (3:1), 2.82 (5:2), 2.96 (7:3) and 3.28 AU (2:1), in the belt where the real Kirkwood gaps are; the Hilda distance 3.97 AU of the original already uses this law. |
+
+## Single-Layer Model for Planetary Atmospheres (`demos/planetary-atmosphere-single-layer/`, since v0.1.44)
+
+| Finding | The original (kept) | Corrected |
+|---|---|---|
+| E-AT-01 | choosing a planet sets the solar distance only for Earth (d = 1): the three tests of Which[planet == 1, d = 1, planet == 1, d = 1.52, planet == 1, d = .72] all ask for planet 1, so Mars and Venus keep the slider's distance (Venus with ε = 0.8, α = 0.75 at d = 1 AU: Tp = 224 K). | Mars sets d = 1.52 AU and Venus d = 0.72 AU, as the Which was written to do (Venus: S̄ = 660, Tp = 264 K); Earth and "my own" are unchanged. |
+| E-AT-02 | the picture says "radiation measurements are in kW/m²", but the numbers (S̄ = 342 for Earth, σ Tp⁴ = 381) are in W/m². | the label says W/m². |
+
+## Solar Energy Yield for Three Mounting Systems (`demos/solar-yield-mounting-systems/`, since v0.1.44)
+
+| Finding | The original (kept) | Corrected |
+|---|---|---|
+| E-SY-01 | the plot's vertical axis is labelled "wh/m2", an energy per area, but the curves are irradiances, powers per area in W/m² (the full tracker's 1032 at noon on June 21 is 1032 W/m²). | the axis is labelled "W/m2". |
+| E-SY-02 | the bar chart's unit "Energy Yield kW/h/da" reads as kilowatts per hour per day; the bars are energies per area and day, kWh/m² per day (the sum of the irradiances over the day in steps of 0.1 h, divided by 10000). | the unit reads "Energy Yield kWh/m2/day". |

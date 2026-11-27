@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.43 |
+| Code version: | 0.1.44 |
 | Document revision | 2 (2026-11-17) — the port |
 | Status | describes the app as implemented; changes are proposed and approved before they are built |
 | Original | Wolfram Demonstrations Project, "The Vibrating String", contributed by Alain Goriely and Mark Robertson-Tessi, published 2007-11-27 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/TheVibratingString/> |
@@ -145,6 +145,7 @@ Proposals for this app are tracked separately.
 | 2 | v0.1.41 | 2026-11-17 | the port: the two interpolations (Hermite by `Interpolation` of shared/numeric.js), the periodic odd extension and d'Alembert's sum, the Fourier coefficients and the three mode plots, the Trigger, the Locator list with `LocatorAutoCreate -> {All, {1, 10}}` (new in shared/manipulate.js and shared/svg-plot.js); switch for E-VS-03, E-VS-04 |
 | 3 | v0.1.42 | 2026-11-23 | version number (v0.1.42: one new app, Potential Fields, from Dr. Becker's Lecture 22 notebook; no shared code changed); no change to this app's code, behaviour or picture |
 | 4 | v0.1.43 | 2026-11-25 | version number (v0.1.43: Dr. Becker's changes to Artificial Potential Fields; no shared code changed); no change to this app's code, behaviour or picture |
+| 5 | v0.1.44 | 2026-11-27 | version number (v0.1.44: eight new apps, on predator–prey agents, Gaussian autocorrelation, solar mountings, asteroid-belt resonances, a planetary atmosphere, batch distillation, degrees of freedom of a distillation and Carnot cycles; no shared code changed); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

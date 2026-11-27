@@ -1,0 +1,34 @@
+{
+ "source": "BatchDistillation.nb",
+ "note": "Manipulate states saved in the ORIGINAL notebook, computed by the original Mathematica code: states[0] = the live state of the output cell, specs = the initial settings (the Manipulate's stored \"Variables\"), snapshots = the Settings stored with each snapshot cell. Extracted with tools/extract_state.py --snapshots. Golden parity fixture (CC BY-NC-SA 3.0, as the original).",
+ "format": "Numbers: a JSON integer is an exact Wolfram integer (|x| <= 2^53 - 1; larger ones are {\"wl\": digits}); a JSON number written with a decimal point or an exponent is a machine real (the shortest text that reads back as the identical double); any other exact number (Rational, rational multiple of Pi, arbitrary-precision real, an unevaluated Sin[...], Infinity) is {\"wl\": a Wolfram-readable form (not necessarily InputForm: compare exact values by value), \"n\": its double} - \"n\" is the correctly rounded double for a Rational or rational multiple of Pi, Python's double evaluation otherwise, and absent for Infinity. Symbols are {\"sym\": name}, other expressions {\"head\": name, \"args\": [...]}; variable names without context and $$, Greek letters as Unicode. packedTypes maps the JSON pointer of a decoded packed array that was stored with a narrower element type (CompressedData tag b) to that type. snapshots[\"k\"] belongs to the picture docs/original-snapshots/<dir>-k.png (cells in file order).",
+ "specs": {
+  "az": 1,
+  "boilDry": false,
+  "evapProg": 0.0,
+  "flasksFrac": [0,0,0,0,0,0,0,0,0,0],
+  "flasksMol": [0,0,0,0,0,0,0,0,0,0],
+  "graph": 1,
+  "inProg": false,
+  "molesToEvap": 0.1,
+  "stage": 1,
+  "xb": {"sym":"z"},
+  "xt": 0.7438817893939389,
+  "z": 0.5
+ },
+ "states": [
+  {"az":1,"boilDry":false,"evapProg":0.0,"flasksFrac":[0,0,0,0,0,0,0,0,0,0],"flasksMol":[0,0,0,0,0,0,0,0,0,0],"graph":1,"inProg":false,"molesToEvap":0.1,"stage":1,"xb":{"sym":"z"},"xt":0.7438817893939389,"z":0.5}
+ ],
+ "snapshots": {
+  "1": {"z":0.5,"az":1,"molesToEvap":0.1,"graph":1,"inProg":false,"xb":{"sym":"z"},"xt":0.7438817893939389,"stage":1,"flasksMol":[0,0,0,0,0,0,0,0,0,0],"flasksFrac":[0,0,0,0,0,0,0,0,0,0],"evapProg":0.0,"boilDry":false},
+  "2": {"z":0.5,"az":2,"molesToEvap":0.13,"graph":2,"inProg":false,"xb":0.5,"xt":0.5946035575013605,"stage":1,"flasksMol":[0,0,0,0,0,0,0,0,0,0],"flasksFrac":[0,0,0,0,0,0,0,0,0,0],"evapProg":0.0,"boilDry":false},
+  "3": {"z":0.5,"az":3,"molesToEvap":0.13,"graph":2,"inProg":false,"xb":0.5,"xt":0.5358867312681466,"stage":1,"flasksMol":[0,0,0,0,0,0,0,0,0,0],"flasksFrac":[0,0,0,0,0,0,0,0,0,0],"evapProg":0.0,"boilDry":false},
+  "4": {"z":0.48,"az":1,"molesToEvap":0.1,"graph":3,"inProg":false,"xb":0.48,"xt":0.7265372427379422,"stage":1,"flasksMol":[0,0,0,0,0,0,0,0,0,0],"flasksFrac":[0,0,0,0,0,0,0,0,0,0],"evapProg":0.0,"boilDry":false}
+ },
+ "snapshotCellIds": {
+  "1": 362731499,
+  "2": 1939109850,
+  "3": 407422078,
+  "4": 1364998310
+ }
+}

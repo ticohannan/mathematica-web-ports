@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.43 |
+| Code version: | 0.1.44 |
 | Document revision | 2 (2026-11-17) — the port |
 | Status | describes the app as implemented; changes are proposed and approved before they are built |
 | Original | Wolfram Demonstrations Project, "Solar Energy Incident on Earth's Surface", contributed by Stephen Wilkerson, Frank A. Wattenberg and Russell Park, published 2013-08-09 (CC BY-NC-SA 3.0). <https://demonstrations.wolfram.com/SolarEnergyIncidentOnEarthsSurface/> |
@@ -157,6 +157,7 @@ Proposals for this app are tracked separately.
 | 2 | v0.1.41 | 2026-11-17 | the port: the model, the globe without the map picture (D-SE-01), the energy plot with its legend and the accumulated plot, the three sliders, the opening state of the notebook, the errors switch for E-SE-01 … E-SE-04 (A-SE-08) |
 | 3 | v0.1.42 | 2026-11-23 | version number (v0.1.42: one new app, Potential Fields, from Dr. Becker's Lecture 22 notebook; no shared code changed); no change to this app's code, behaviour or picture |
 | 4 | v0.1.43 | 2026-11-25 | version number (v0.1.43: Dr. Becker's changes to Artificial Potential Fields; no shared code changed); no change to this app's code, behaviour or picture |
+| 5 | v0.1.44 | 2026-11-27 | version number (v0.1.44: eight new apps, on predator–prey agents, Gaussian autocorrelation, solar mountings, asteroid-belt resonances, a planetary atmosphere, batch distillation, degrees of freedom of a distillation and Carnot cycles; no shared code changed); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

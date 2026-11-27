@@ -1,0 +1,208 @@
+
+### [Title]
+\<Linking Autocorrelation of Gaussian Random Process to Conditional Probabilities\>
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+For a zero-mean Gaussian random process X(t), the probability density function (pdf) of the conditional random variable X(t+τ)|X(t)=y is Gaussian. Its properties can be calculated from the autocorrelation (or power spectral density) of the process, Subscript[R, xx](τ) (or Subscript[S, X](f)).
+
+### [Text]
+The conditional expected value is E(X(t+τ)|X(t)=y)=(Subscript[R, xx](τ))/(Subscript[R, xx](0))y and the conditional variance is given by
+
+### [Text]
+Var[X(t+τ)|X(t)=y]=Subscript[R, xx](0)(1-((Subscript[R, xx](τ))/(Subscript[R, xx](0)))^2).
+
+### [Text]
+The probability P(X(t+τ)|X(t)=y)>L is calculated in Wolfram Language as
+
+### [Text]
+Probability[x>L, x~NormalDistribution[(Subscript[R, xx](τ))/(Subscript[R, xx](0))y,Sqrt[Subscript[R, xx](0)(1-((Subscript[R, xx](τ))/(Subscript[R, xx](0)))^2)]]].
+
+### [Text]
+The connection between the autocorrelation function and the probability P(X(t+τ)|X(t)=y)>L is highlighted here. Three autocorrelation functions are considered: Subscript[R, xx](τ)=10sinc(10πτ), 10\[CapitalLambda](τ) and 10e^(-10|τ|). The autocorrelation function and associated power spectral density are plotted. The correlation time Subscript[τ, c] for each autocorrelation function is shown, where Subscript[τ, c]=(Subscript[\[Integral],-∞]^∞Subscript[R, xx](τ)dτ)/(Subscript[R, xx](0)).
+
+### [Text]
+P(X(t+τ)|X(t)=y)>L is shown as a function of the threshold L and lag τ. This plot shows that P(X(t+τ)|X(t)=y)>L approaches P(X(t+τ)>L) as lag τ increases beyond the correlation time. This behavior is expected since the random variables X(t+τ) and X(t) are approximately uncorrelated and, for multivariate Gaussian random variables, uncorrelated implies statistical independence.
+
+### [Text]
+The conditional pdf Subscript[f, x](X(t+τ)|X(t)=y) is plotted and the conditional expected value, conditional variance and P(X(t+τ)|X(t)=y)>L shown; P(X(t+τ)|X(t)=y)>L is shown as the shaded area. The conditional pdf and the shaded area change as the lag τ, threshold L and conditional variable y are varied.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [CodeText]
+If you provide initialization code, include a SaveDefinitions->True option in the Manipulate.
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[Q[z_]:=Probability[x>z,x\[Distributed]NormalDistribution[0, 1]];
+f1[t_]:=10*Sinc[10*π*t];
+f2[t_]:=10*UnitTriangle[t];
+f3[t_]:=10*Exp[-10.*Abs[t]];
+Rxx[t_]:=fun[t];
+ti[expr_String]:=Style[expr,Italic];
+varx= Rxx[0];
+
+Rplot=Plot[ (Rxx[t])/(varx),{t,0.00001,1.1}, 
+PlotLabel->"\<correlation coefficient\>",Frame->True, 
+FrameLabel->{"\<lag τ\>","\<ρ(τ)\>"},PlotRange->{{0,1.1},{-0.3,1}},GridLines->Automatic,ImageSize->{270,190}];
+
+Pplot=Plot[{Q[(L)/(Sqrt[varx])],Q[(L-((Rxx[t])/(varx)*(y)))/(Sqrt[varx*(1.-((Rxx[t])/(varx))^2)])]},{t,0,1.1}, 
+PlotLabel->"\<conditional probability\>",Frame->True, 
+FrameLabel->{"\<lag τ\>",Row[{ti["\<P\>"],"\<(\>",ti["\<X\>"],"\<(\>",ti["\<t\>"],"\<+τ)>\>",ti["\<L\>"],"\<|\>",ti["\<X\>"],"\<(\>",ti["\<t\>"],"\<)=\>",ti["\<y\>"],"\<)\>"}]},PlotRange->{{0,1.1},{0,1}}, 
+PlotLegends->Placed[LineLegend[{Row[{ti["\<P\>"],"\<(\>",ti["\<X\>"],"\<(\>",ti["\<t\>"],"\<+τ)>\>",ti["\<L\>"],"\<) assuming \>",ti["\<X\>"],"\<(\>",ti["\<t\>"],"\<) and \>",ti["\<X\>"],"\<(\>",ti["\<t\>"],"\<+τ) SI\>"}],
+Row[{ti["\<P\>"],"\<(\>",ti["\<X\>"],"\<(\>",ti["\<t\>"],"\<+τ)>\>",ti["\<L\>"],"\<|\>",ti["\<X\>"],"\<(\>",ti["\<t\>"],"\<)=\>",ti["\<y\>"],"\<)\>"}]}],Below],
+LabelStyle->{FontSize->10}, GridLines->Automatic,ImageSize->{270,190}];
+
+PdfPlot=Plot[{PDF[NormalDistribution[((Rxx[t])/(varx)*(y)),Sqrt[varx*(1.-((Rxx[t])/(varx))^2)]],x], UnitStep[L-x]*PDF[NormalDistribution[((Rxx[t])/(varx)*(y)),Sqrt[varx*(1.-((Rxx[t])/(varx))^2)]],x]}, {x,-7,7}, Filling->{1->{2}},PlotRange->All, GridLines->Automatic,ImageSize->{270,190}, 
+Epilog->{Red,Line[{{L,0},{L,10}}]},Frame->True,
+FrameLabel->{ti["\<x\>"],Row[{ti["\<\!\(\*SubscriptBox[\(f\), \(X\)]\)\>"],"\<(\>",ti["\<X\>"],"\<(\>",ti["\<t\>"],"\<+τ)>\>",ti["\<L\>"],"\<|\>",ti["\<X\>"],"\<(\>",ti["\<t\>"],"\<)=\>",ti["\<y\>"],"\<)\>"}]}, 
+PlotLabel->"\<conditional pdf\>"
+];
+If[Rxx[t]==10*Sinc[10*π*t], PSD[f_]=(1)/(2) (Sign[5-f]+Sign[5+f]),1];
+If[Rxx[t]==10*UnitTriangle[t], PSD[f_]=10 Sinc[f π]^2,1];
+If[Rxx[t]==10*Exp[-10.*Abs[t]], PSD[f_]=(5.06605918211689`)/(2.533029591058445`\[VeryThinSpace]+1.` f^2),1];
+
+PSDPlot=Plot[PSD[f],{f,-6.,6.},GridLines->Automatic,  ExclusionsStyle->Automatic,PlotRange->All,ImageSize->{270,190},Frame->True, 
+FrameLabel->{Row[{"\<frequency \>",ti["\<f\>"]}],Row[{Subscript[ti["\<S\>"], ti["\<X\>"]],"\<(\>",ti["\<f\>"],"\<)\>"}]}, 
+PlotLabel->Row[{"\< power spectral density\>"}]];
+
+Grid[{{Item[Rplot],Item[PSDPlot]},
+{Item[Pplot],
+Item[Text@Grid[{
+{PdfPlot},
+{Row[{"\<conditional expected value = \>",ToString[NumberForm[Chop[((Rxx[t])/(varx)*(y))],4]]}]},
+{Row[{"\<conditional variance = \>",ToString[NumberForm[Chop[varx*(1.-((Rxx[t])/(varx))^2)],4]]}]},
+{Row[{"\<conditional probability = \>",ToString[NumberForm[Chop[Q[(L-((Rxx[t])/(varx)*(y)))/(Sqrt[varx*(1.-((Rxx[t])/(varx))^2)])]],4]]}]}
+},BaseStyle->10]]}},
+ItemSize->Automatic,Frame->All,Alignment->{{Center},Top}],
+Row[{Control@{{t,0.05,"\<lag τ\>"},0.0001,1.1,.001,Appearance->"\<Labeled\>", ImageSize-> Tiny},Spacer[20],
+Control@{{y,1,ti["\<y\>"]},-4,4,.1, Appearance->"\<Labeled\>", ImageSize-> Tiny},Spacer[20],
+Control@{{L,1,Row[{"\<threshold \>",ti["\<L\>"]}]},-4,4,.05,Appearance->"\<Labeled\>", ImageSize-> Tiny} }], 
+{{fun,f1,Row[{"\<autocorrelation function \>",Subscript[ti["\<R\>"], "\<XX\>"],"\<(τ) = \>"}]},
+{f1->"\<10 sinc(10πτ) correlation time=0.1\>",
+f2->"\<10 tri(τ) correlation time=1.0\>",
+f3->Row[{"\<10 \>",ti["\<e\>"]^"\<-10|τ|\>","\< correlation time=0.2\>"}]}}, 
+ControlPlacement->Top,SaveDefinitions->True,TrackedSymbols:>{t,y,L,fun}]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Victor S. Frost
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+Details, references or citation information
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] K. S. Shanmugan and A. M. Breiphol, Random Signals: Detection, Estimation and Data Analysis, New York: Wiley, 1988.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+Gaussian random process
+
+### [Item]
+conditional expected value
+
+### [Item]
+conditional variance
+
+### [Item]
+conditional probability
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+The Bivariate Normal Distribution
+
+### [Text]
+Joint Density of Bivariate Gaussian Random Variables
+
+### [Text]
+Correlation and Covariance of Random Discrete Signals
+
+### [Text]
+A Conditional Probability Mass Function
+
+### [Text]
+The Bivariate Normal and Conditional Distributions
+
+### [Text]
+Whitening of a Multivariate Gaussian Random Vector
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2023-09-06
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

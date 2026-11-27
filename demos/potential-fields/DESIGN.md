@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Code version: | 0.1.43 |
+| Code version: | 0.1.44 |
 | Document revision | 4 (2026-11-24) — Dr. Becker's changes: the name, the obstacle pad, ρ<sub>0</sub> for the sum, the circle colours |
 | Status | describes the app as implemented; changes are proposed and approved before they are built |
 | Original | "Demonstration of Attractive, Repulsive, and Combination Potential Fields" by Aaron T. Becker: ECE 6311 Lecture 22 notebook `Lecture-22-PotentialFields.nb` (not a published Demonstration; CC BY-NC-SA 3.0, as the author's Demonstrations) |
@@ -201,6 +201,7 @@ Proposals for this app are tracked separately.
 | 2 | v0.1.42 | 2026-11-23 | the port: the notebook's four Manipulates as four tabs (A-PF-08), Uatt and Urep, three Plot3D tabs with the cut-off tops and red exclusion curves, the contour tab checked against the notebook's saved contour picture (levels, band colours), an automatic height range fitted to it (D-PF-04) |
 | 3 | v0.1.42 | 2026-11-23 | the look of Tico's screenshots: orange surfaces, box and axes as Mathematica (K-PF-01 closed), grey caps, the white gap ring of the repulsive tab, the current contour colours and an automatic range fitted to the screenshots (D-PF-03 … D-PF-06) |
 | 4 | v0.1.43 | 2026-11-24 | Dr. Becker's changes: the name "Artificial Potential Fields" (A-PF-14), one obstacle pad per tab with coloured locators, Add and Remove (A-PF-11), a ρ<sub>0</sub> slider for the sum (A-PF-10), white ρ<sub>0</sub> and red d<sub>i</sub> circles (A-PF-12), labels with subscripts (A-PF-13) |
+| 5 | v0.1.44 | 2026-11-27 | version number (v0.1.44: eight new apps, on predator–prey agents, Gaussian autocorrelation, solar mountings, asteroid-belt resonances, a planetary atmosphere, batch distillation, degrees of freedom of a distillation and Carnot cycles; no shared code changed); no change to this app's code, behaviour or picture |
 
 ## 10. Improvements to consider (not implemented)
 

@@ -85,6 +85,14 @@ it is verified:
 | Simple Crystal Structures and Miller Indices | [`demos/crystal-structures-miller/DESIGN.md`](../demos/crystal-structures-miller/DESIGN.md) | `demos/crystal-structures-miller/` |
 | Lotka-Volterra Competition Model | [`demos/lotka-volterra-competition/DESIGN.md`](../demos/lotka-volterra-competition/DESIGN.md) | `demos/lotka-volterra-competition/` |
 | Artificial Potential Fields | [`demos/potential-fields/DESIGN.md`](../demos/potential-fields/DESIGN.md) | `demos/potential-fields/` |
+| Carnot Cycles with Irreversible Heat Transfer | [`demos/carnot-irreversible-heat-transfer/DESIGN.md`](../demos/carnot-irreversible-heat-transfer/DESIGN.md) | `demos/carnot-irreversible-heat-transfer/` |
+| Orbital Resonance in the Asteroid Belt | [`demos/asteroid-belt-resonance/DESIGN.md`](../demos/asteroid-belt-resonance/DESIGN.md) | `demos/asteroid-belt-resonance/` |
+| Single-Layer Model for Planetary Atmospheres | [`demos/planetary-atmosphere-single-layer/DESIGN.md`](../demos/planetary-atmosphere-single-layer/DESIGN.md) | `demos/planetary-atmosphere-single-layer/` |
+| Linking Autocorrelation of Gaussian Random Process to Conditional Probabilities | [`demos/gaussian-autocorrelation-conditional/DESIGN.md`](../demos/gaussian-autocorrelation-conditional/DESIGN.md) | `demos/gaussian-autocorrelation-conditional/` |
+| Solar Energy Yield for Three Mounting Systems | [`demos/solar-yield-mounting-systems/DESIGN.md`](../demos/solar-yield-mounting-systems/DESIGN.md) | `demos/solar-yield-mounting-systems/` |
+| Degree-of-Freedom Analysis on a Distillation Process | [`demos/distillation-degrees-of-freedom/DESIGN.md`](../demos/distillation-degrees-of-freedom/DESIGN.md) | `demos/distillation-degrees-of-freedom/` |
+| Predator-Prey Ecosystem: A Real-Time Agent-Based Simulation | [`demos/predator-prey-agents/DESIGN.md`](../demos/predator-prey-agents/DESIGN.md) | `demos/predator-prey-agents/` |
+| Batch Distillation | [`demos/batch-distillation/DESIGN.md`](../demos/batch-distillation/DESIGN.md) | `demos/batch-distillation/` |
 
 The originals came without design documents. Version 0.1.6 added best-effort design documents
 reconstructed from the original notebooks (their code, captions and details text) and from the

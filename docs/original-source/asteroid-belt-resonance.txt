@@ -1,0 +1,142 @@
+
+### [Title]
+Orbital Resonance in the Asteroid Belt
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+The asteroid belt, located roughly between the orbits of the planets Mars and Jupiter, between about 2.2 to 3.2 astronomical units (310 to 500 million km) from the Sun, is a large collection of several hundred thousand irregularly shaped bodies variously called asteroids, planetesimals or minor planets.
+
+### [Text]
+An orbital resonance occurs when two bodies orbiting the Sun exert a regular, periodic gravitational influence on one other, caused by their orbital periods being related by a ratio of small integers, such as 3:1, 5:2, 7:3, 2:1 and so on. In an orbital resonance of an asteroid with the giant planet Jupiter, there is a regular periodic perturbation of the smaller body caused by the gravitational attraction to Jupiter. Over the course of several billion years, the cumulative effect of this perturbation ejects the asteroid into a nonresonant orbit. This gives rise to depleted regions in the asteroid belt, known as Kirkwood gaps. In this Demonstration, the formation of the principal Kirkwood gaps is simulated as the time slider is moved over a multi-billion year (Gyr) range.
+
+### [Text]
+Also shown on the graphic are the Trojan asteroids, which share the orbit of Jupiter, equivalent to a 1:1 resonance. These are clustered around the Lagrange points L4 and L5, at 60° angles ahead of and behind Jupiter in its orbit. The Hilda asteroids form an approximate equilateral triangle in a 3:2 resonance with Jupiter, clustered around the Lagrange points L3, L4 and L5.
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [CodeText]
+If you provide initialization code, include a SaveDefinitions->True option in the Manipulate.
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[Graphics[{Blue,Rectangle[{-8,-7},{8,7}],White,Circle[{0,0},1],Circle[{0,0},.387],Circle[{0,0},.723],Circle[{0,0},1.524],Circle[{0,0},5.203],PointSize[.015],Orange,Point[{0,0}],Orange,Point[{5.203Cos[π/8+Theta/11.86],5.203Sin[π/8+Theta/11.86]}],PointSize[.01],Red,Point[{1.524Cos[π/8+Theta/1.881],1.524Sin[π/8+Theta/1.881]}],Lighter[Blue],Point[{Cos[Theta],Sin[Theta]}],Yellow,Point[{.723Cos[9π/8+Theta/.615],.723Sin[9π/8+Theta/.615]}],Gray,Point[{.387Cos[-π/16+Theta/.241],.387Sin[-π/16+Theta/.241]}],PointSize[.001],White,Point[Table[{r[[n]]Cos[t+Theta/3.6+Phi[[n]]],r[[n]]Sin[t+Theta/3.6+Phi[[n]]]},{n,1,5000}]],
+RGBColor[1-T,1,1-T],PointSize[.001(1+1.5 T)],Point[Table[{j[[n]]Cos[π/8+π/3+Theta/11.86+Phi1[[n]]],j[[n]]Sin[π/8+π/3+Theta/11.86+Phi1[[n]]]},{n,1,750}]],Point[Table[{j[[n]]Cos[π/8-π/3+Theta/11.86+Phi1[[n]]],j[[n]]Sin[π/8-π/3+Theta/11.86+Phi1[[n]]]},{n,1,750}]],
+
+RGBColor[1,1-H,1-H],PointSize[.001(1+2H)],Point[Table[{h[[n]]Cos[π/8+π/3+Theta/11.86+Phi2[[n]]],h[[n]]Sin[π/8+π/3+Theta/11.86+Phi2[[n]]]},{n,1,100}]],Point[Table[{h[[n]]Cos[π/8-π/3+Theta/11.86+Phi2[[n]]],h[[n]]Sin[π/8-π/3+Theta/11.86+Phi2[[n]]]},{n,1,100}]],
+Point[Table[{h[[n]]Cos[9π/8+Theta/11.86+Phi2[[n]]],h[[n]]Sin[9π/8+Theta/11.86+Phi2[[n]]]},{n,1,100}]],
+Point[Table[{h1[[n]]Cos[π/8+2π/3+Theta/11.86+Phi3[[n]]],h1[[n]]Sin[π/8+2π/3+Theta/11.86+Phi3[[n]]]},{n,1,100}]],Point[Table[{h1[[n]]Cos[π/8+Theta/11.86+Phi3[[n]]],h1[[n]]Sin[π/8+Theta/11.86+Phi3[[n]]]},{n,1,100}]],
+Point[Table[{h1[[n]]Cos[9π/8+π/3+Theta/11.86+Phi3[[n]]],h1[[n]]Sin[9π/8+π/3+Theta/11.86+Phi3[[n]]]},{n,1,100}]],
+
+Blue,Thickness[.005Erf[.02t]],Circle[{0,0},5.20336*1/3],Circle[{0,0},5.20336*2/5],Circle[{0,0},5.20336*1/2],Circle[{0,0},5.20336*3/7],Yellow,Thick,Which[k==1,Circle[{0,0},5.20336*1/3],k==2,Circle[{0,0},5.20336*2/5],k==3,Circle[{0,0},5.20336*3/7],k==4,Circle[{0,0},5.20336*1/2]],
+White,Text[Row[{"\<Sun \>",Style[\[FilledCircle],Orange],Spacer[10],"\<Mercury \>",Style[\[FilledCircle],Gray],Spacer[10],"\<Venus \>",Style[\[FilledCircle],Yellow],Spacer[10],"\<Earth \>",Style[\[FilledCircle],Lighter[Blue]],Spacer[10],"\<Mars \>",Style[\[FilledCircle],Red],Spacer[10],"\<Jupiter \>",Style[\[FilledCircle],Orange]}],{0,-6}]},PlotRange->7.7,ImageSize->.95{575,450}],Row[{Control[{{Theta,0,"\<planetary orbits\>"},0,50,Appearance->"\<Labeled\>"}],Spacer[10],Control[{{t,0,"\<time (Gyr)\>"},0,200,Appearance->"\<Labeled\>"}]}],Row[{Control[{{k,0,"\<show Kirkwood gaps\>"},{0->"\<none\>",1->"\<3:1\>",2->"\<5:2\>",3->"\<7:3\>",4->"\<2:1\>"},Setter}],Spacer[30],Control[{{T,0,"\<show Trojan asteroids\>"},{0,1},Checkbox}],Spacer[30],Control[{{H,0,"\<show Hilda asteroids\>"},{0,1},Checkbox}]}],
+TrackedSymbols:>{Theta,t,k,T,H,z},
+
+ControlPlacement->Top,
+Initialization:>(
+r=RandomVariate[NormalDistribution[2.71,.4],5000];Phi=RandomReal[{0,2π},5000];Phi1=RandomReal[{-π/6,π/6},750];
+Phi2=RandomReal[{-π/8,π/8},100];
+Phi3=RandomReal[{-π,π},100];
+j=RandomVariate[NormalDistribution[5.203,.3],750];h=RandomVariate[NormalDistribution[3.97,.35],100];h1=RandomVariate[NormalDistribution[2.75,.25],100];)
+]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Item]
+S. M. Blinder
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+Details, references or citation information
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] Wikipedia. "Asteroid Belt." (Mar 27, 2018). en.wikipedia.org/wiki/Asteroid_belt.
+
+### [Text]
+[2] Wikipedia. "Orbital Resonance." (Mar 27, 2018). en.wikipedia.org/wiki/Orbital_resonance.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+keyword 1
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Item]
+Link to external information
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2018-04-04
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

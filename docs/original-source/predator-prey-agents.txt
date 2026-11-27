@@ -1,0 +1,255 @@
+
+### [Title]
+Predator-Prey Ecosystem: A Real-Time Agent-Based Simulation
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+\<This Demonstration simulates the dynamics of predators (foxes, in orange) and prey (rabbits, in purple) in a 2D bounded square habitat. An individual of each species is simulated as a particle moving in a random walk. The initial condition is such that there are 100 particles randomly distributed in the space, 10% of which are foxes and the rest rabbits. A rabbit particle can replicate itself at a given growth rate. A fox particle has to eat (i.e., collide into) a rabbit particle in order to replicate itself, and will die if it doesn't eat any rabbit particles for a certain time period. The maximum population of each species is bounded to 500. Depending on the parameter settings, this ecosystem shows several distinct behaviors, including extinction of foxes (or both species), oscillation of populations, and spatial waves of foxes chasing clusters of rabbits. You can stop and restart the real-time simulation using the "run simulation" checkbox.\>
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [Input]
+Fox=1.;
+Rabbit=2.;
+maxRabbits=500.;
+maxFoxes=500.;
+dummyPoint={-1.,-1.};
+
+### [Input]
+initialAgents[]:=Developer`ToPackedArray[
+Table[
+Join[
+RandomReal[{0,1},2],(* Location *)
+{0.,If[RandomReal[]<0.1,Fox,Rabbit]}
+]
+,{100}
+]
+]
+
+### [Input]
+visualize[agents_]:=Module[{foxes=Take[#,2]&/@Select[agents,(#[[4]]==Fox)&],rabbits=Take[#,2]&/@Select[agents,(#[[4]]==Rabbit)&],dummyList={dummyPoint}},
+Show[
+(* Plotting foxes *)
+Graphics[{
+AbsolutePointSize[10],RGBColor[.9,.42,.17],
+Point@If[foxes=={},dummyList,foxes]
+}],
+
+(* Plotting rabbits *)
+Graphics[{
+AbsolutePointSize[10],RGBColor[.48,.11,.56],
+Point@If[rabbits=={},dummyList,rabbits]
+}],
+
+ImageSize->{375,375},
+AspectRatio->Automatic,
+Frame->False,
+Axes->False,
+PlotRange->{{0,1},{0,1}}
+]
+]
+
+### [Input]
+updateAgents[agents_,rabbitGrowthRate_,rabbitMobility_,foxGrowthRate_,foxMobility_,foxEndurance_]:=Module[{
+foxPop=Length[Select[agents,(#[[4]]==Fox)&]],
+rabbitPop=Length[Select[agents,(#[[4]]==Rabbit)&]],
+nearestFoxes=Nearest[Append[Take[#,2]&/@Select[agents,(#[[4]]==Fox)&],dummyPoint]],
+nearestRabbits=Nearest[Append[Take[#,2]&/@Select[agents,(#[[4]]==Rabbit)&],dummyPoint]],
+i,nextLocation,survivors
+},
+
+Table[
+
+survivors={};
+
+nextLocation =agents[[i,{1,2}]]+
+If[agents[[i,4]]==Rabbit,
+RandomReal[{-rabbitMobility,rabbitMobility},2],
+RandomReal[{-foxMobility,foxMobility},2]
+];
+nextLocation=Clip[nextLocation,{0.,1.}];
+
+If[agents[[i,4]]==Rabbit,
+
+(* rabbits' behavior *)
+If[
+Norm[nearestFoxes[nextLocation][[1]]-nextLocation]>0.02,
+
+survivors={Join[nextLocation,{0.,Rabbit}]};
+If[RandomReal[]<rabbitGrowthRate(1.-rabbitPop/maxRabbits),
+AppendTo[survivors,Join[nextLocation,{0.,Rabbit}]]
+];(* Probabilistic reproduction with logistic growth restriction; adding one more rabbit *)
+
+],
+
+(* foxes' behavior *)
+If[
+Norm[nearestRabbits[nextLocation][[1]]-nextLocation]>0.02,
+
+If[agents[[i,3]]<foxEndurance,
+(* starving but still survive *)
+survivors={Join[nextLocation,{agents[[i,3]]+1.,Fox}]};
+],
+
+(* just ate rabbit(s) and survive *)
+survivors={Join[nextLocation,{0.,Fox}]};
+If[RandomReal[]<foxGrowthRate(1.-foxPop/maxFoxes),
+AppendTo[survivors,Join[nextLocation,{0.,Fox}]]
+];(* Probabilistic reproduction; adding one more fox *)
+
+]
+];
+
+survivors
+
+,{i,Length[agents]}
+
+]//Flatten[#,1]&//Developer`ToPackedArray
+]
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[
+Refresh[
+If[moving,ag=updateAgents[ag,rabbitGrowthRate,rabbitMobility,foxGrowthRate,foxMobility,foxEndurance]];
+visualize[ag]
+,UpdateInterval->If[moving,0,Infinity]
+]
+,{{rabbitGrowthRate,0.5,"\<growth rate of rabbits\>"},0,1,ImageSize->Tiny}
+,{{rabbitMobility,0.03,"\<mobility of rabbits\>"},0,0.05,ImageSize->Tiny}
+,{{foxGrowthRate,0.5,"\<growth rate of foxes\>"},0,1,ImageSize->Tiny}
+,{{foxMobility,0.05,"\<mobility of foxes\>"},0,0.05,ImageSize->Tiny}
+,{{foxEndurance,10,"\<number of steps
+foxes can survive
+without food\>"},1,20,1,Appearance->"\<Labeled\>",ImageSize->Tiny}
+,"\< \>"
+,{{moving,False,"\<run simulation\>"},{True, False}}
+,{{ag,initialAgents[]},ControlType->None}
+,"\< \>"
+,Button["\<Reset\>",moving=False;ag=initialAgents[],ImageSize->Medium]
+,SaveDefinitions->True,AutorunSequencing->{6},TrackedSymbols:>{moving,ag},
+SynchronousUpdating->True,ControlPlacement->Left
+]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Text]
+Hiroki Sayama
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+Details, references or citation information
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+References for demonstration.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+biology
+
+### [Item]
+ecology
+
+### [Item]
+multi-agent modeling
+
+### [Item]
+particle systems
+
+### [Item]
+random processes
+
+### [Item]
+diffusion
+
+### [Item]
+growth processes
+
+### [Item]
+population dynamics
+
+### [Item]
+Lotka-Volterra equations
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Text]
+Lotka-Volterra Equations
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2011-03-07
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)

@@ -1,0 +1,262 @@
+
+### [Title]
+Single-Layer Model for Planetary Atmospheres
+
+### [Section]
+Caption<<PaneSelectorBox>>
+
+### [Text]
+This Demonstration shows a simple single-layer model of the atmosphere of a planet. This layer diffusely reflects some fraction of incoming radiation and transmits the rest to the surface of the planet. The albedo Alpha is the measure of this reflection. It can be varied by moving the slider: 0 corresponds to a blackbody that absorbs all radiation, 1 to a body that reflects all incident radiation. Thus if the incoming radiation is the average solar radiation per unit area Overscript[S, _] with a value of 342 kW/m^2 for Earth, Overscript[S, _]Alpha will be reflected and Overscript[S, _](1-Alpha) will reach the surface. It is assumed that all radiation that reaches the surface is absorbed by the planet. The average intensity can be calculated using
+
+### [Text]
+Overscript[S, _]Alpha=(S π Subscript[R,p]^2)/(4 π Subscript[R,p]^2)=(S)/(4)
+
+### [Text]
+where S is the solar constant (radiation per unit area per unit of time on a theoretical surface perpendicular to the Sun's rays and at planet's mean distance from the Sun).
+
+### [Text]
+A gray body emits radiation with a power per unit area given by P=σ ε T^4, where σ is the Stefan\[Dash]Boltzmann constant (σ=5.67×10^(-8) W m^(-2)K^(-4)) and ε is the emissivity. If ε=1, the body is considered a blackbody. For the planet, ε=1. So the planet emits radiation with an intensity (power per unit area) of I=σ Subscript[T,p]^4, where Subscript[T, p] is the temperature of the planet in kelvins.
+
+### [Text]
+The clouds are considered a gray body that both emits and absorbs radiation at a fraction ε of the radiation emitted/absorbed per unit area by a blackbody at the same temperature. Therefore the clouds absorb a portion of the energy emitted by the planet given by P=ε σ Subscript[T,p]^4 and emit radiation in both the upward and downward directions with P=ε σ Subscript[T,a]^4, where Subscript[T, a] is the temperature of the atmosphere.
+
+### [Text]
+Setting the emissivity of the atmosphere to 0 would be equivalent to not having an atmosphere. In such a model, the temperature of Earth would be Subscript[T, p]=255 K=-18 °C.
+
+### [Text]
+Since the clouds are assumed at thermal equilibrium, the radiation absorbed must equal the radiation emitted, thus radiation absorbed: ε σ Subscript[T,p]^4=2ε σ Subscript[T,a]^4: radiation emitted. This equation determines the temperature of the atmosphere: Subscript[T, a]=<<RadicalBox>>.
+
+### [Text]
+\<The temperature of the planet is then determined by applying conservation of energy:\>
+
+### [Text]
+Overscript[S, _](1-Alpha)=(1-ε)σ Subscript[T,p]^4+ε σ Subscript[T,a]^4.
+
+### [Text]
+\<(Radiation absorbed by the planet equals the radiation emitted by the planet from the atmosphere plus the radiation emitted by the atmosphere from the planet.)\>
+
+### [Text]
+\<Inserting the expression for the temperature of the atmosphere and solving for the temperature of the planet gives:\>
+
+### [Text]
+Subscript[T, p]=<<RadicalBox>>.
+
+### [Text]
+This expression is plotted at the bottom of the graphic. Use the sliders to change the emissivity ε (this changes the temperature moving along the curve) or the albedo Alpha (this translates the curve vertically).
+
+### [Text]
+\<This model is simplistic and limited. However, it allows an understanding of how changing the albedo and the emissivity of the clouds affects the temperature of a planet. For a more detailed treatment, see[1].\>
+
+### [Text]
+\<In addition to Earth, you can also select Venus or Mars. Clicking "reset" will give the accepted values of the albedo for those planets. The fact that the predicted temperature of Venus is so far below the measured value indicates the limitations of the model.\>
+
+### [Text]
+You may also select a hypothetical planet or moon: "my own."
+
+### [Section]
+Initialization Code<<PaneSelectorBox>>
+
+### [CodeText]
+If you provide initialization code, include a SaveDefinitions->True option in the Manipulate.
+
+### [Section]
+Manipulate<<PaneSelectorBox>>
+
+### [Input]
+Manipulate[Module[{S,σ=5.67*10^(-8),Tp,Ta,color},
+
+Which[planet==1,d=1,planet==1,d=1.52,planet==1,d=.72];
+If[reset,{Which[planet==1,{ε=.742,Alpha=.3},planet==2,{ε=.3,Alpha=.25},planet==3,{Alpha=.75,ε=.8}],reset=False}];
+
+Tp=((2(1- Alpha )S)/(σ(2-ε)))^(1/4);
+Ta=((Tp^4)/(2))^(1/4);
+S=342/d^2;
+color=Which[planet==1,LightGreen,planet==2,Lighter[Orange],planet==3,Gray,planet==4,Cyan];
+Column[{
+Graphics[{
+Black,Disk[{0,-20},30],color,Disk[{0,-20},25],
+Blue,Circle[{0,-20},25],
+Green,Thickness[0.05],Lighter[Blue],Darker[color],Circle[{0,-30},30.2],
+Yellow,
+Thickness[.1],Arrowheads[0.3],Arrow[{{-4,9},{-3,5}}],
+Thickness[.1*Alpha],Arrowheads[0.3Alpha],Arrow[{{-3,5},{-2,8}}],
+Thickness[.1(1-Alpha)],Arrowheads[0.3(1-Alpha)],Arrow[{{-3,5},{-2,0}}],
+Blue,
+Thickness[.1],Opacity[.1+.8ε],Circle[{0,-20},25],
+Lighter[Red],
+Opacity[1],Thickness[0.1 (1-ε) σ Tp^4/S],Arrowheads[.3(1-ε)σ Tp^4/S],Arrow[{{-.5,5},{-.5,8}}],
+Thickness[0.1 ε σ Ta^4/S],Arrowheads[.3 ε σ Ta^4/S],
+Arrow[{{1.7,4.95},{2.,8}}],Arrow[{{1.7,5},{1.5,2}}],
+Lighter[Red],
+Thickness[.1 σ Tp^4/S],Arrowheads[0.3 σ Tp^4/S],Opacity[1],Arrow[{{-0.5,-.5},{-0.5,5}}],
+{FontSize->17,
+Style[Text[Tooltip[Row[{"\<\!\(\*OverscriptBox[\(S\), \(_\)]\) = \>",ToString[Round[S]]}],"\<\!\(\*OverscriptBox[\(S\), \(_\)]\) average intensity \>"],{-3.6,7},{0,0},{-Cos[4.4],Sin[4.4]}],Lighter[Blue]],
+Style[Text[Tooltip[Row[{ToString[Round[S Alpha]]}],"\<\!\(\*OverscriptBox[\(S\), \(_\)]\)Alpha\>"],{-2.3,7},{0,0},{-Cos[1.93],Sin[1.93]}],Lighter[Blue]],
+Style[Text[Tooltip[Row[{Round[S (1-Alpha)]}],"\<\!\(\*OverscriptBox[\(S\), \(_\)]\)(1-Alpha)\>"],{-2.5,3},{0,0},{-Cos[4.52],Sin[4.52]}],Blue],
+Style[Text[Tooltip[Row[{ToString[Round[σ Tp^4]]}],Row[{"\<σ \>",Subscript[Style["\<T\>",Italic], "\<p\>"]^4}]],{-0.5,1.5},{0,0},{Cos[π/2],Sin[π/2]}],Blue],
+Style[Text[Tooltip[Row[{ToString[Round[(1-ε)σ Tp^4]]}],Row[{"\<(1-ε)σ \>",Subscript[Style["\<T\>",Italic], "\<p\>"]^4}]],{-0.5,6.5},{0,0},{Cos[π/2],Sin[π/2]}],Blue],
+Style[Text[Tooltip[Row[{ToString[Round[ε σ Ta^4]]}],Row[{"\<εσ\>",Subscript[Style["\<T\>",Italic], "\<a\>"]^4}]],{1.6,3.2},{0,0},{Cos[1.48],Sin[1.48]}],Blue],
+Style[Text[Tooltip[Row[{ToString[Round[ε σ Ta^4]]}],Row[{"\<εσ\>",Subscript[Style["\<T\>",Italic], "\<a\>"]^4}]],{1.85,6.6},{0,0},{Cos[1.48],Sin[1.48]}],Blue]},
+Black,FontSize->14,Opacity[1],
+Style[Text[Row[{"\<mean solar distance: \>",Style["\<d\>",Italic],"\< = \>",ToString[d],"\< AU\>"}],{1.75,8.2}],White],
+{Blue,Text[Row[{"\<radiation measurements are in kW/m\>"^2}],{-1.6,.65}]},
+Style[Text[Row[{Subscript[Style["\<T\>",Italic], "\<p\>"] ,"\< = \>",Round[Quantity[Tp,"\<Kelvins\>"]],"\< = \>",Round[UnitConvert[Quantity[Tp, "\<Kelvins\>"] ,scale]]}],{3,1.75}]],
+Style[Text[Row[{Subscript[Style["\<T\>",Italic], "\<a\>"] ,"\< = \>",Round[Quantity[Ta,"\<Kelvins\>"]],"\< = \>",Round[UnitConvert[Quantity[Ta, "\<Kelvins\>"] ,scale]]}],{3,1}]]
+},
+PlotRange->{{-5,5},{0,8.5}},ImageSize->360],
+"\< \>",
+Show[{
+Plot[<<RadicalBox>>,{e,0,1},ImageSize->{360,160},AspectRatio->.4,PlotRange->{{0,1},{00,400}},
+AxesLabel->{"\<ε\>",Row[{Subscript[Style["\<T\>",Italic], "\<p\>"],"\< (K)\>"}]},PlotLabel->"\<planetary temperature versus emissivity\>",
+GridLines->{Range[0,1,.1],Range[00,400,50]},Ticks->{Range[0,1,.1],Range[00,400,50]}],
+Graphics[{PointSize[0.02],Tooltip[Point[{ε,<<RadicalBox>>}],Row[{"\<\!\(\*SubscriptBox[\(T\), \(p\)]\)\>",Round[Quantity[Tp,"\<Kelvins\>"]],"\< = \>",
+Round[UnitConvert[Quantity[Tp, "\<Kelvins\>"] ,scale]]}]]}]},ImageSize->{380,170}]
+
+}, Alignment-> Center]],
+"\<albedo Alpha\>",
+{{Alpha,.3,"\<\>"},0,1,0.01, ImageSize-> Tiny,Appearance->"\<Labeled\>"},"\<\>",
+"\<emissivity ε\>",
+{{ε,.742,"\<\>"},0,1,0.01, ImageSize-> Tiny,Appearance->"\<Labeled\>"},"\<\>",
+Row[{"\<solar distance \>",Style["\<d\>",Italic],"\< (AU)\>"}],
+{{d,1,"\<\>"},0.3,10,.1, ImageSize-> Tiny,Appearance->"\<Labeled\>"},"\<\>",
+{{planet,1,"\<planet\>"},{1->"\<Earth\>",2->"\<Mars\>",3->"\<Venus\>",4->"\<my own\>"}},"\<\>",
+{{reset,False,"\<reset\>"},{True,False}},"\<\>",{{scale,"\<DegreesCelsius\>","\<scale\>"},{"\<DegreesCelsius\>"->"\<°C\>","\<DegreesFahrenheit\>"->"\<°F\>"}},
+ControlPlacement-> Left]
+
+### [Output] (skipped cached output)
+
+### [Section]
+Snapshots<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Output] (skipped cached output)
+
+### [Section]
+Source & Additional Information
+
+### [Subsection]
+Contributed By<<PaneSelectorBox>>
+
+### [Item]
+Sergio Hannibal Mej\[IAcute]a
+
+### [Item]
+Simon Lorimer
+
+### [Subsection]
+Details & Citations<<PaneSelectorBox>>
+
+### [Text]
+\<Snapshot 1: note the sensitivity of the temperature of the planet to small changes in emissivity; the mean temperature on Earth is now 15 °C (59 °F)[2]\>
+
+### [Text]
+\<Snapshot 2: select Mars and then reset for a good model for the Martian atmosphere; mean temperature on Mars is around -65 °C (85 °F) (Future Martian explorers, please remember to bring a good jacket!)\>
+
+### [Text]
+\<Snapshot 3: selecting Venus and then reset gives a rather poor model for the thick Venusian atmosphere; the measured temperature on Venus is 464 °C (-867 °F)\>
+
+### [Text]
+\<Snapshot 4: Europa, the smallest of the four Galilean moons orbiting Jupiter, has an emissivity of 0.94, and its mean distance from the Sun is 5 AU. The icy crust gives it an albedo of 0.64, the highest for all the moons in the solar system. Surface temperature reaches around 110 K. So our model seems quite accurate[3].\>
+
+### [Subsection]
+References<<PaneSelectorBox>>
+
+### [Text]
+[1] ACS Chemistry for Life. "A Single-Layer Atmosphere Model." (May 20, 2022) www.acs.org/content/acs/en/climatescience/atmosphericwarming/singlelayermodel.html.
+
+### [Text]
+[2] NASA Planetary Fact Sheet. "Solar System Temperatures." (May 20, 2022) solarsystem.nasa.gov/resources/681/solar-system-temperatures.
+
+### [Text]
+[3] Y. Ashkenazy, "The Surface Temperature of Europa," Heliyon, 5(6), 2019 e01908. doi:10.1016/j.heliyon.2019.e01908.
+
+### [Subsection]
+Submission Notes<<PaneSelectorBox>>
+
+### [Text]
+Additional information for the reviewer.
+
+### [Subsection]
+Keywords<<PaneSelectorBox>>
+
+### [Item]
+Atmosphere
+
+### [Item]
+Stefan-Boltzmann
+
+### [Item]
+Greenhouse
+
+### [Item]
+Climate Change
+
+### [Item]
+Global warming
+
+### [Item]
+Planetary models
+
+### [Item]
+Earth
+
+### [Item]
+Mars
+
+### [Item]
+Venus
+
+### [Subsection]
+Categories<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsection]
+Related Demonstrations<<PaneSelectorBox>>
+
+### [Item]
+Link to a related demonstration
+
+### [Subsection]
+External Links<<PaneSelectorBox>>
+
+### [Item]
+Link to external information
+
+### [Subsection]
+Related Symbols<<PaneSelectorBox>>
+
+### [Item]
+SymbolName (documented Wolfram Language symbol)
+
+### [Subsection]
+Published Date<<PaneSelectorBox>>
+
+### [Text]
+2022-07-11
+
+### [Subsection]
+Compatibility<<PaneSelectorBox>>
+
+### [Subsubsection]
+AR Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
+
+### [Subsubsection]
+Wolfram Language Version<<PaneSelectorBox>>
+
+### [Text]
+6
+
+### [Subsubsection]
+Cloud Support<<PaneSelectorBox>>
+
+### [Output] (skipped cached output)
